@@ -12,3 +12,85 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum UserRole {
+  BASIC
+  FARMER
+  AUDITOR
+  COMMITTEE
+  ADMIN
+}
+
+model User {
+  userId    String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      UserRole @default(BASIC)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  farmer    Farmer?
+  auditor   Auditor?
+  committee Committee?
+  admin     Admin?
+}
+
+model Farmer {
+  farmerId             String   @id @default(uuid())
+  userId               String   @unique
+  user                 User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  namePrefix           String
+  firstName            String
+  lastName             String
+  identificationNumber String   @unique
+  birthDate            DateTime
+  gender               String
+  houseNo              String
+  villageName          String
+  moo                  Int
+  road                 String
+  alley                String
+  subDistrict          String
+  district             String
+  provinceName         String
+  zipCode              String
+  phoneNumber          String
+  mobilePhoneNumber    String
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+model Auditor {
+  auditorId  String   @id @default(uuid())
+  userId     String   @unique
+  user       User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  namePrefix String
+  firstName  String
+  lastName   String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Committee {
+  committeeId String   @id @default(uuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  namePrefix  String
+  firstName   String
+  lastName    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Admin {
+  adminId    String   @id @default(uuid())
+  userId     String   @unique
+  user       User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  namePrefix String
+  firstName  String
+  lastName   String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
