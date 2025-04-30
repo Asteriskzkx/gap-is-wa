@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { userController } from '@/utils/dependencyInjections';
 
-// Route handlers
+// Route handlers สำหรับ /api/v1/users เท่านั้น
 export async function GET(req: NextRequest) {
+    // ไม่ต้องตรวจสอบ pathname เพราะมั่นใจว่าเป็น /api/v1/users แล้ว
+
     // Check if it's a get current user request
     const authHeader = req.headers.get('Authorization');
     if (authHeader) {
@@ -14,17 +16,6 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-    // Get the path to determine the action
-    const path = req.nextUrl.pathname;
-
-    if (path.endsWith('/register')) {
-        return userController.register(req);
-    } else if (path.endsWith('/login')) {
-        return userController.login(req);
-    } else if (path.endsWith('/change-password')) {
-        return userController.changePassword(req);
-    }
-
-    // Default to create a new user
+    // เฉพาะสำหรับการสร้างผู้ใช้ใหม่เท่านั้น
     return userController.create(req);
 }
