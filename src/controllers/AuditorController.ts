@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { BaseController } from './BaseController';
 import { AuditorModel } from '../models/AuditorModel';
 import { AuditorService } from '../services/AuditorService';
+import { requireValidId, isValidId } from '../utils/ParamUtils';
 
 export class AuditorController extends BaseController<AuditorModel> {
     private auditorService: AuditorService;
@@ -9,6 +10,38 @@ export class AuditorController extends BaseController<AuditorModel> {
     constructor(auditorService: AuditorService) {
         super(auditorService);
         this.auditorService = auditorService;
+    }
+
+    async login(req: NextRequest): Promise<NextResponse> {
+        try {
+            const data = await req.json();
+            const { email, password } = data;
+
+            if (!email || !password) {
+                return NextResponse.json(
+                    { message: 'Email and password are required' },
+                    { status: 400 }
+                );
+            }
+
+            const result = await this.auditorService.login(email, password);
+
+            if (!result) {
+                return NextResponse.json(
+                    { message: 'Invalid email or password' },
+                    { status: 401 }
+                );
+            }
+
+            const { auditor, token } = result;
+
+            // Remove sensitive data before returning
+            const auditorJson = auditor.toJSON();
+
+            return NextResponse.json({ auditor: auditorJson, token }, { status: 200 });
+        } catch (error) {
+            return this.handleControllerError(error);
+        }
     }
 
     async registerAuditor(req: NextRequest): Promise<NextResponse> {
@@ -51,7 +84,17 @@ export class AuditorController extends BaseController<AuditorModel> {
 
     async getAuditorProfile(req: NextRequest, { params }: { params: { userId: string } }): Promise<NextResponse> {
         try {
-            const userId = params.userId;
+            // แปลง userId จาก string เป็น number
+            let userId: number;
+            try {
+                userId = requireValidId(params.userId, 'userId');
+            } catch (error: any) {
+                return NextResponse.json(
+                    { message: error.message },
+                    { status: 400 }
+                );
+            }
+
             const auditor = await this.auditorService.getAuditorByUserId(userId);
 
             if (!auditor) {
@@ -69,7 +112,17 @@ export class AuditorController extends BaseController<AuditorModel> {
 
     async updateAuditorProfile(req: NextRequest, { params }: { params: { id: string } }): Promise<NextResponse> {
         try {
-            const auditorId = params.id;
+            // แปลง auditorId จาก string เป็น number
+            let auditorId: number;
+            try {
+                auditorId = requireValidId(params.id, 'auditorId');
+            } catch (error: any) {
+                return NextResponse.json(
+                    { message: error.message },
+                    { status: 400 }
+                );
+            }
+
             const data = await req.json();
 
             const updatedAuditor = await this.auditorService.updateAuditorProfile(auditorId, data);
@@ -95,7 +148,17 @@ export class AuditorController extends BaseController<AuditorModel> {
 
     async assignAuditorToRegion(req: NextRequest, { params }: { params: { id: string } }): Promise<NextResponse> {
         try {
-            const auditorId = params.id;
+            // แปลง auditorId จาก string เป็น number
+            let auditorId: number;
+            try {
+                auditorId = requireValidId(params.id, 'auditorId');
+            } catch (error: any) {
+                return NextResponse.json(
+                    { message: error.message },
+                    { status: 400 }
+                );
+            }
+
             const data = await req.json();
             const { region } = data;
 
@@ -125,7 +188,17 @@ export class AuditorController extends BaseController<AuditorModel> {
 
     async getAuditorAssignments(req: NextRequest, { params }: { params: { id: string } }): Promise<NextResponse> {
         try {
-            const auditorId = params.id;
+            // แปลง auditorId จาก string เป็น number
+            let auditorId: number;
+            try {
+                auditorId = requireValidId(params.id, 'auditorId');
+            } catch (error: any) {
+                return NextResponse.json(
+                    { message: error.message },
+                    { status: 400 }
+                );
+            }
+
             const assignments = await this.auditorService.getAuditorAssignments(auditorId);
 
             return NextResponse.json({ assignments }, { status: 200 });

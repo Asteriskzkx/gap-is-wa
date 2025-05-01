@@ -38,7 +38,7 @@ export class AuditorRepository extends BaseRepository<AuditorModel> {
         }
     }
 
-    async findById(id: string): Promise<AuditorModel | null> {
+    async findById(id: number): Promise<AuditorModel | null> { // เปลี่ยนจาก string เป็น number
         try {
             const auditor = await this.prisma.auditor.findUnique({
                 where: { auditorId: id },
@@ -54,7 +54,7 @@ export class AuditorRepository extends BaseRepository<AuditorModel> {
         }
     }
 
-    async findByUserId(userId: string): Promise<AuditorModel | null> {
+    async findByUserId(userId: number): Promise<AuditorModel | null> { // เปลี่ยนจาก string เป็น number
         try {
             const auditor = await this.prisma.auditor.findUnique({
                 where: { userId },
@@ -87,7 +87,7 @@ export class AuditorRepository extends BaseRepository<AuditorModel> {
         }
     }
 
-    async update(id: string, data: Partial<AuditorModel>): Promise<AuditorModel | null> {
+    async update(id: number, data: Partial<AuditorModel>): Promise<AuditorModel | null> { // เปลี่ยนจาก string เป็น number
         try {
             // First, find the auditor to get the userId
             const existingAuditor = await this.prisma.auditor.findUnique({
@@ -130,7 +130,7 @@ export class AuditorRepository extends BaseRepository<AuditorModel> {
         }
     }
 
-    async delete(id: string): Promise<boolean> {
+    async delete(id: number): Promise<boolean> { // เปลี่ยนจาก string เป็น number
         try {
             // Find the auditor to get the userId
             const auditor = await this.prisma.auditor.findUnique({
@@ -156,12 +156,12 @@ export class AuditorRepository extends BaseRepository<AuditorModel> {
 
     private mapToModel(user: PrismaUser, auditor: PrismaAuditor): AuditorModel {
         return new AuditorModel(
-            user.userId,
+            user.userId, // ใช้ ID ที่เป็นตัวเลขจาก Prisma
             user.email,
             '', // We don't store or return plain text passwords
             user.hashedPassword,
             user.name,
-            auditor.auditorId,
+            auditor.auditorId, // ใช้ ID ที่เป็นตัวเลขจาก Prisma
             auditor.namePrefix,
             auditor.firstName,
             auditor.lastName,
