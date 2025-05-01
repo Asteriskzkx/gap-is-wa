@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { BaseController } from './BaseController';
 import { UserModel } from '../models/UserModel';
 import { UserService } from '../services/UserService';
+import { requireValidId, isValidId } from '../utils/ParamUtils';
 
 export class UserController extends BaseController<UserModel> {
     private userService: UserService;
@@ -84,12 +85,13 @@ export class UserController extends BaseController<UserModel> {
                 );
             }
 
-            // แปลง userId เป็น number
-            const userIdNum = typeof userId === 'string' ? parseInt(userId, 10) : userId;
-
-            if (isNaN(userIdNum)) {
+            // ใช้ requireValidId เพื่อตรวจสอบและแปลงค่า userId
+            let userIdNum: number;
+            try {
+                userIdNum = requireValidId(userId, 'userId');
+            } catch (error: any) {
                 return NextResponse.json(
-                    { message: 'Invalid user ID format' },
+                    { message: error.message },
                     { status: 400 }
                 );
             }
@@ -130,12 +132,13 @@ export class UserController extends BaseController<UserModel> {
                 );
             }
 
-            // แปลง userId เป็น number ถ้าจำเป็น
-            const userId = typeof decoded.userId === 'string' ? parseInt(decoded.userId, 10) : decoded.userId;
-
-            if (isNaN(userId)) {
+            // ใช้ requireValidId เพื่อตรวจสอบและแปลงค่า userId จาก token
+            let userId: number;
+            try {
+                userId = requireValidId(decoded.userId, 'userId in token');
+            } catch (error: any) {
                 return NextResponse.json(
-                    { message: 'Invalid user ID in token' },
+                    { message: error.message },
                     { status: 400 }
                 );
             }
