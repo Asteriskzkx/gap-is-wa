@@ -2,6 +2,7 @@ import { PrismaClient, Farmer as PrismaFarmer, User as PrismaUser } from '@prism
 import { BaseRepository } from './BaseRepository';
 import { FarmerModel } from '../models/FarmerModel';
 import { UserRole } from '../models/UserModel';
+import { requireValidId } from '../utils/ParamUtils';
 
 export class FarmerRepository extends BaseRepository<FarmerModel> {
 
@@ -52,7 +53,7 @@ export class FarmerRepository extends BaseRepository<FarmerModel> {
         }
     }
 
-    async findById(id: string): Promise<FarmerModel | null> {
+    async findById(id: number): Promise<FarmerModel | null> { // เปลี่ยนจาก string เป็น number
         try {
             const farmer = await this.prisma.farmer.findUnique({
                 where: { farmerId: id },
@@ -68,7 +69,7 @@ export class FarmerRepository extends BaseRepository<FarmerModel> {
         }
     }
 
-    async findByUserId(userId: string): Promise<FarmerModel | null> {
+    async findByUserId(userId: number): Promise<FarmerModel | null> { // เปลี่ยนจาก string เป็น number
         try {
             const farmer = await this.prisma.farmer.findUnique({
                 where: { userId },
@@ -101,7 +102,7 @@ export class FarmerRepository extends BaseRepository<FarmerModel> {
         }
     }
 
-    async update(id: string, data: Partial<FarmerModel>): Promise<FarmerModel | null> {
+    async update(id: number, data: Partial<FarmerModel>): Promise<FarmerModel | null> { // เปลี่ยนจาก string เป็น number
         try {
             // First, find the farmer to get the userId
             const existingFarmer = await this.prisma.farmer.findUnique({
@@ -158,7 +159,7 @@ export class FarmerRepository extends BaseRepository<FarmerModel> {
         }
     }
 
-    async delete(id: string): Promise<boolean> {
+    async delete(id: number): Promise<boolean> { // เปลี่ยนจาก string เป็น number
         try {
             // Find the farmer to get the userId
             const farmer = await this.prisma.farmer.findUnique({
@@ -184,12 +185,12 @@ export class FarmerRepository extends BaseRepository<FarmerModel> {
 
     private mapToModel(user: PrismaUser, farmer: PrismaFarmer): FarmerModel {
         return new FarmerModel(
-            user.userId,
+            user.userId, // ใช้ ID ที่เป็นตัวเลขจาก Prisma
             user.email,
             '', // We don't store or return plain text passwords
             user.hashedPassword,
             user.name,
-            farmer.farmerId,
+            farmer.farmerId, // ใช้ ID ที่เป็นตัวเลขจาก Prisma
             farmer.namePrefix,
             farmer.firstName,
             farmer.lastName,

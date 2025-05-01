@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { farmerController } from '@/utils/dependencyInjections';
 
-// Route handlers
+// Route handlers สำหรับ /api/v1/farmers เท่านั้น
 export async function GET(req: NextRequest) {
-    // Check if it's a filtered request
+    // ตรวจสอบว่าเป็นการร้องขอแบบใช้ filter หรือไม่
     const url = new URL(req.url);
 
     if (url.searchParams.has('district')) {
@@ -12,18 +12,11 @@ export async function GET(req: NextRequest) {
         return farmerController.getFarmersByProvince(req);
     }
 
-    // Otherwise return all farmers
+    // ถ้าไม่มี filter ให้ดึงข้อมูลเกษตรกรทั้งหมด
     return farmerController.getAll(req);
 }
 
 export async function POST(req: NextRequest) {
-    // For farmer registration
-    const path = req.nextUrl.pathname;
-
-    if (path.endsWith('/register')) {
-        return farmerController.registerFarmer(req);
-    }
-
-    // Default to create a new farmer
+    // ถ้าไม่ใช่การลงทะเบียน ให้สร้างเกษตรกรใหม่ (สำหรับ admin)
     return farmerController.create(req);
 }
