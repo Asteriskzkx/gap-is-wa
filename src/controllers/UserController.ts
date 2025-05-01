@@ -84,7 +84,17 @@ export class UserController extends BaseController<UserModel> {
                 );
             }
 
-            const success = await this.userService.changePassword(userId, currentPassword, newPassword);
+            // แปลง userId เป็น number
+            const userIdNum = typeof userId === 'string' ? parseInt(userId, 10) : userId;
+
+            if (isNaN(userIdNum)) {
+                return NextResponse.json(
+                    { message: 'Invalid user ID format' },
+                    { status: 400 }
+                );
+            }
+
+            const success = await this.userService.changePassword(userIdNum, currentPassword, newPassword);
 
             if (!success) {
                 return NextResponse.json(
@@ -120,7 +130,17 @@ export class UserController extends BaseController<UserModel> {
                 );
             }
 
-            const user = await this.userService.getById(decoded.userId);
+            // แปลง userId เป็น number ถ้าจำเป็น
+            const userId = typeof decoded.userId === 'string' ? parseInt(decoded.userId, 10) : decoded.userId;
+
+            if (isNaN(userId)) {
+                return NextResponse.json(
+                    { message: 'Invalid user ID in token' },
+                    { status: 400 }
+                );
+            }
+
+            const user = await this.userService.getById(userId);
 
             if (!user) {
                 return NextResponse.json(

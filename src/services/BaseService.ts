@@ -8,7 +8,7 @@ export abstract class BaseService<T extends BaseModel> {
         this.repository = repository;
     }
 
-    async getById(id: string): Promise<T | null> {
+    async getById(id: number): Promise<T | null> { // เปลี่ยนจาก string เป็น number
         try {
             return await this.repository.findById(id);
         } catch (error) {
@@ -38,7 +38,7 @@ export abstract class BaseService<T extends BaseModel> {
         }
     }
 
-    async update(id: string, data: Partial<T>): Promise<T | null> {
+    async update(id: number, data: Partial<T>): Promise<T | null> { // เปลี่ยนจาก string เป็น number
         try {
             return await this.repository.update(id, data);
         } catch (error) {
@@ -47,7 +47,7 @@ export abstract class BaseService<T extends BaseModel> {
         }
     }
 
-    async delete(id: string): Promise<boolean> {
+    async delete(id: number): Promise<boolean> { // เปลี่ยนจาก string เป็น number
         try {
             return await this.repository.delete(id);
         } catch (error) {
