@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { BaseModel } from '../models/BaseModel';
 import { BaseService } from '../services/BaseService';
+import { requireValidId, isValidId } from '../utils/ParamUtils';
 
 export abstract class BaseController<T extends BaseModel> {
     protected service: BaseService<T>;
@@ -20,8 +21,11 @@ export abstract class BaseController<T extends BaseModel> {
 
     async getById(req: NextRequest, { params }: { params: { id: string } }): Promise<NextResponse> {
         try {
-            const id = parseInt(params.id, 10); // แปลง string เป็น number
-            if (isNaN(id)) {
+            // ใช้ requireValidId เพื่อแปลงและตรวจสอบ ID
+            let id: number;
+            try {
+                id = requireValidId(params.id);
+            } catch (error) {
                 return NextResponse.json({ message: 'Invalid ID format' }, { status: 400 });
             }
 
@@ -50,8 +54,11 @@ export abstract class BaseController<T extends BaseModel> {
 
     async update(req: NextRequest, { params }: { params: { id: string } }): Promise<NextResponse> {
         try {
-            const id = parseInt(params.id, 10); // แปลง string เป็น number
-            if (isNaN(id)) {
+            // ใช้ requireValidId เพื่อแปลงและตรวจสอบ ID
+            let id: number;
+            try {
+                id = requireValidId(params.id);
+            } catch (error) {
                 return NextResponse.json({ message: 'Invalid ID format' }, { status: 400 });
             }
 
@@ -70,8 +77,11 @@ export abstract class BaseController<T extends BaseModel> {
 
     async delete(req: NextRequest, { params }: { params: { id: string } }): Promise<NextResponse> {
         try {
-            const id = parseInt(params.id, 10); // แปลง string เป็น number
-            if (isNaN(id)) {
+            // ใช้ requireValidId เพื่อแปลงและตรวจสอบ ID
+            let id: number;
+            try {
+                id = requireValidId(params.id);
+            } catch (error) {
                 return NextResponse.json({ message: 'Invalid ID format' }, { status: 400 });
             }
 
