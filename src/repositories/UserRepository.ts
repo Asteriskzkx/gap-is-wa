@@ -22,7 +22,7 @@ export class UserRepository extends BaseRepository<UserModel> {
         }
     }
 
-    async findById(id: string): Promise<UserModel | null> {
+    async findById(id: number): Promise<UserModel | null> { // เปลี่ยนจาก string เป็น number
         try {
             const user = await this.prisma.user.findUnique({
                 where: { userId: id }
@@ -58,7 +58,7 @@ export class UserRepository extends BaseRepository<UserModel> {
         }
     }
 
-    async update(id: string, data: Partial<UserModel>): Promise<UserModel | null> {
+    async update(id: number, data: Partial<UserModel>): Promise<UserModel | null> { // เปลี่ยนจาก string เป็น number
         try {
             const user = await this.prisma.user.update({
                 where: { userId: id },
@@ -78,7 +78,7 @@ export class UserRepository extends BaseRepository<UserModel> {
         }
     }
 
-    async delete(id: string): Promise<boolean> {
+    async delete(id: number): Promise<boolean> { // เปลี่ยนจาก string เป็น number
         try {
             await this.prisma.user.delete({
                 where: { userId: id }
@@ -93,7 +93,7 @@ export class UserRepository extends BaseRepository<UserModel> {
 
     private mapToModel(prismaUser: PrismaUser): UserModel {
         return new UserModel(
-            prismaUser.userId,
+            prismaUser.userId, // อ้างอิงตาม schema.prisma ที่เป็น Int
             prismaUser.email,
             '', // We don't store or return plain text passwords
             prismaUser.hashedPassword,

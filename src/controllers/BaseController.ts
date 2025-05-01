@@ -20,7 +20,11 @@ export abstract class BaseController<T extends BaseModel> {
 
     async getById(req: NextRequest, { params }: { params: { id: string } }): Promise<NextResponse> {
         try {
-            const id = params.id;
+            const id = parseInt(params.id, 10); // แปลง string เป็น number
+            if (isNaN(id)) {
+                return NextResponse.json({ message: 'Invalid ID format' }, { status: 400 });
+            }
+
             const item = await this.service.getById(id);
 
             if (!item) {
@@ -46,7 +50,11 @@ export abstract class BaseController<T extends BaseModel> {
 
     async update(req: NextRequest, { params }: { params: { id: string } }): Promise<NextResponse> {
         try {
-            const id = params.id;
+            const id = parseInt(params.id, 10); // แปลง string เป็น number
+            if (isNaN(id)) {
+                return NextResponse.json({ message: 'Invalid ID format' }, { status: 400 });
+            }
+
             const data = await req.json();
             const updatedItem = await this.service.update(id, data);
 
@@ -62,7 +70,11 @@ export abstract class BaseController<T extends BaseModel> {
 
     async delete(req: NextRequest, { params }: { params: { id: string } }): Promise<NextResponse> {
         try {
-            const id = params.id;
+            const id = parseInt(params.id, 10); // แปลง string เป็น number
+            if (isNaN(id)) {
+                return NextResponse.json({ message: 'Invalid ID format' }, { status: 400 });
+            }
+
             const isDeleted = await this.service.delete(id);
 
             if (!isDeleted) {

@@ -71,7 +71,7 @@ export class UserService extends BaseService<UserModel> {
         }
     }
 
-    async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<boolean> {
+    async changePassword(userId: number, currentPassword: string, newPassword: string): Promise<boolean> { // เปลี่ยนจาก string เป็น number
         try {
             const user = await this.getById(userId);
             if (!user) {
@@ -87,7 +87,7 @@ export class UserService extends BaseService<UserModel> {
             await this.update(userId, {
                 password: newPassword,
                 hashedPassword
-            });
+            } as Partial<UserModel>);
 
             return true;
         } catch (error) {

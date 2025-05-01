@@ -9,10 +9,10 @@ export abstract class BaseRepository<T extends BaseModel> {
     }
 
     abstract create(model: T): Promise<T>;
-    abstract findById(id: string): Promise<T | null>;
+    abstract findById(id: number): Promise<T | null>; // เปลี่ยนจาก string เป็น number
     abstract findAll(): Promise<T[]>;
-    abstract update(id: string, data: Partial<T>): Promise<T | null>;
-    abstract delete(id: string): Promise<boolean>;
+    abstract update(id: number, data: Partial<T>): Promise<T | null>; // เปลี่ยนจาก string เป็น number
+    abstract delete(id: number): Promise<boolean>; // เปลี่ยนจาก string เป็น number
 
     // Common utility methods can be added here
     protected handleDatabaseError(error: any): never {

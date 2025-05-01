@@ -22,7 +22,7 @@ enum UserRole {
 }
 
 model User {
-  userId         String   @id @default(uuid())
+  userId         Int      @id @default(autoincrement())
   email          String   @unique
   password       String
   hashedPassword String
@@ -39,8 +39,8 @@ model User {
 }
 
 model Farmer {
-  farmerId             String   @id @default(uuid())
-  userId               String   @unique
+  farmerId             Int      @id @default(autoincrement())
+  userId               Int      @unique
   user                 User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
   namePrefix           String
   firstName            String
@@ -64,8 +64,8 @@ model Farmer {
 }
 
 model Auditor {
-  auditorId  String   @id @default(uuid())
-  userId     String   @unique
+  auditorId  Int      @id @default(autoincrement())
+  userId     Int      @unique
   user       User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
   namePrefix String
   firstName  String
@@ -75,8 +75,8 @@ model Auditor {
 }
 
 model Committee {
-  committeeId String   @id @default(uuid())
-  userId      String   @unique
+  committeeId Int      @id @default(autoincrement())
+  userId      Int      @unique
   user        User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
   namePrefix  String
   firstName   String
@@ -86,8 +86,8 @@ model Committee {
 }
 
 model Admin {
-  adminId    String   @id @default(uuid())
-  userId     String   @unique
+  adminId    Int      @id @default(autoincrement())
+  userId     Int      @unique
   user       User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
   namePrefix String
   firstName  String
