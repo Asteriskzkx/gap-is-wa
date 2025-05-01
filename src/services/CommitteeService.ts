@@ -2,15 +2,48 @@ import { BaseService } from './BaseService';
 import { CommitteeModel } from '../models/CommitteeModel';
 import { CommitteeRepository } from '../repositories/CommitteeRepository';
 import { UserService } from './UserService';
+import jwt from 'jsonwebtoken';
 
 export class CommitteeService extends BaseService<CommitteeModel> {
     private committeeRepository: CommitteeRepository;
     private userService: UserService;
+    private jwtSecret: string;
 
     constructor(committeeRepository: CommitteeRepository, userService: UserService) {
         super(committeeRepository);
         this.committeeRepository = committeeRepository;
         this.userService = userService;
+        this.jwtSecret = process.env.JWT_SECRET || 'default-secret-key-change-in-production';
+    }
+
+    async login(email: string, password: string): Promise<{ committee: CommitteeModel; token: string } | null> {
+        try {
+            // First authenticate using UserService
+            const userResult = await this.userService.login(email, password);
+            if (!userResult) {
+                return null;
+            }
+
+            // Check if the user is a committee member
+            const { user, token } = userResult;
+            if (user.role !== 'COMMITTEE') {
+                return null;
+            }
+
+            // Get committee profile
+            const committee = await this.committeeRepository.findByUserId(user.id);
+            if (!committee) {
+                return null;
+            }
+
+            // Generate committee-specific token with more info
+            const committeeToken = this.generateToken(committee);
+
+            return { committee, token: committeeToken };
+        } catch (error) {
+            this.handleServiceError(error);
+            return null;
+        }
     }
 
     async registerCommittee(committeeData: {
@@ -43,7 +76,7 @@ export class CommitteeService extends BaseService<CommitteeModel> {
         }
     }
 
-    async getCommitteeByUserId(userId: string): Promise<CommitteeModel | null> {
+    async getCommitteeByUserId(userId: number): Promise<CommitteeModel | null> {
         try {
             return await this.committeeRepository.findByUserId(userId);
         } catch (error) {
@@ -52,7 +85,7 @@ export class CommitteeService extends BaseService<CommitteeModel> {
         }
     }
 
-    async updateCommitteeProfile(committeeId: string, data: Partial<CommitteeModel>): Promise<CommitteeModel | null> {
+    async updateCommitteeProfile(committeeId: number, data: Partial<CommitteeModel>): Promise<CommitteeModel | null> {
         try {
             // If updating email, check if it's already in use
             if (data.email) {
@@ -70,7 +103,7 @@ export class CommitteeService extends BaseService<CommitteeModel> {
     }
 
     // Committee-specific business logic
-    async reviewAudit(auditId: string, committeeId: string, decision: string, comments: string): Promise<boolean> {
+    async reviewAudit(auditId: number, committeeId: number, decision: string, comments: string): Promise<boolean> {
         // This would be implemented based on your specific business requirements
         // For now, returning a placeholder implementation
         try {
@@ -83,7 +116,7 @@ export class CommitteeService extends BaseService<CommitteeModel> {
         }
     }
 
-    async approveCertification(applicationId: string, committeeId: string): Promise<boolean> {
+    async approveCertification(applicationId: number, committeeId: number): Promise<boolean> {
         // This would be implemented based on your specific business requirements
         // For now, returning a placeholder implementation
         try {
@@ -93,6 +126,29 @@ export class CommitteeService extends BaseService<CommitteeModel> {
         } catch (error) {
             this.handleServiceError(error);
             return false;
+        }
+    }
+
+    private generateToken(committee: CommitteeModel): string {
+        return jwt.sign(
+            {
+                userId: committee.id,
+                committeeId: committee.committeeId,
+                email: committee.email,
+                role: committee.role,
+                name: committee.name,
+                fullName: `${committee.namePrefix}${committee.firstName} ${committee.lastName}`
+            },
+            this.jwtSecret,
+            { expiresIn: '24h' }
+        );
+    }
+
+    verifyToken(token: string): any {
+        try {
+            return jwt.verify(token, this.jwtSecret);
+        } catch (error) {
+            return null;
         }
     }
 }

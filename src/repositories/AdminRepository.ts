@@ -38,7 +38,7 @@ export class AdminRepository extends BaseRepository<AdminModel> {
         }
     }
 
-    async findById(id: string): Promise<AdminModel | null> {
+    async findById(id: number): Promise<AdminModel | null> {
         try {
             const admin = await this.prisma.admin.findUnique({
                 where: { adminId: id },
@@ -54,7 +54,7 @@ export class AdminRepository extends BaseRepository<AdminModel> {
         }
     }
 
-    async findByUserId(userId: string): Promise<AdminModel | null> {
+    async findByUserId(userId: number): Promise<AdminModel | null> {
         try {
             const admin = await this.prisma.admin.findUnique({
                 where: { userId },
@@ -87,7 +87,7 @@ export class AdminRepository extends BaseRepository<AdminModel> {
         }
     }
 
-    async update(id: string, data: Partial<AdminModel>): Promise<AdminModel | null> {
+    async update(id: number, data: Partial<AdminModel>): Promise<AdminModel | null> {
         try {
             // First, find the admin to get the userId
             const existingAdmin = await this.prisma.admin.findUnique({
@@ -130,7 +130,7 @@ export class AdminRepository extends BaseRepository<AdminModel> {
         }
     }
 
-    async delete(id: string): Promise<boolean> {
+    async delete(id: number): Promise<boolean> {
         try {
             // Find the admin to get the userId
             const admin = await this.prisma.admin.findUnique({

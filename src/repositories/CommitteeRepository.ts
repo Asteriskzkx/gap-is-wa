@@ -38,7 +38,7 @@ export class CommitteeRepository extends BaseRepository<CommitteeModel> {
         }
     }
 
-    async findById(id: string): Promise<CommitteeModel | null> {
+    async findById(id: number): Promise<CommitteeModel | null> {
         try {
             const committee = await this.prisma.committee.findUnique({
                 where: { committeeId: id },
@@ -54,7 +54,7 @@ export class CommitteeRepository extends BaseRepository<CommitteeModel> {
         }
     }
 
-    async findByUserId(userId: string): Promise<CommitteeModel | null> {
+    async findByUserId(userId: number): Promise<CommitteeModel | null> {
         try {
             const committee = await this.prisma.committee.findUnique({
                 where: { userId },
@@ -87,7 +87,7 @@ export class CommitteeRepository extends BaseRepository<CommitteeModel> {
         }
     }
 
-    async update(id: string, data: Partial<CommitteeModel>): Promise<CommitteeModel | null> {
+    async update(id: number, data: Partial<CommitteeModel>): Promise<CommitteeModel | null> {
         try {
             // First, find the committee to get the userId
             const existingCommittee = await this.prisma.committee.findUnique({
@@ -130,7 +130,7 @@ export class CommitteeRepository extends BaseRepository<CommitteeModel> {
         }
     }
 
-    async delete(id: string): Promise<boolean> {
+    async delete(id: number): Promise<boolean> {
         try {
             // Find the committee to get the userId
             const committee = await this.prisma.committee.findUnique({

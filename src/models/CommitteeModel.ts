@@ -2,18 +2,18 @@ import { UserModel, UserRole } from "./UserModel";
 import bcrypt from "bcrypt";
 
 export class CommitteeModel extends UserModel {
-    committeeId: string;
+    committeeId: number;
     namePrefix: string;
     firstName: string;
     lastName: string;
 
     constructor(
-        userId: string,
+        userId: number,
         email: string,
         password: string,
         hashedPassword: string,
         name: string,
-        committeeId: string,
+        committeeId: number,
         namePrefix: string,
         firstName: string,
         lastName: string,
@@ -38,12 +38,12 @@ export class CommitteeModel extends UserModel {
         const name = `${namePrefix}${firstName} ${lastName}`;
 
         return new CommitteeModel(
-            '', // userId will be generated
+            0, // userId will be generated
             email,
             password,
             hashedPassword,
             name,
-            '', // committeeId will be generated
+            0, // committeeId will be generated
             namePrefix,
             firstName,
             lastName
