@@ -3,15 +3,48 @@ import { AdminModel } from '../models/AdminModel';
 import { AdminRepository } from '../repositories/AdminRepository';
 import { UserService } from './UserService';
 import { UserModel, UserRole } from '../models/UserModel';
+import jwt from 'jsonwebtoken';
 
 export class AdminService extends BaseService<AdminModel> {
     private adminRepository: AdminRepository;
     private userService: UserService;
+    private jwtSecret: string;
 
     constructor(adminRepository: AdminRepository, userService: UserService) {
         super(adminRepository);
         this.adminRepository = adminRepository;
         this.userService = userService;
+        this.jwtSecret = process.env.JWT_SECRET || 'default-secret-key-change-in-production';
+    }
+
+    async login(email: string, password: string): Promise<{ admin: AdminModel; token: string } | null> {
+        try {
+            // First authenticate using UserService
+            const userResult = await this.userService.login(email, password);
+            if (!userResult) {
+                return null;
+            }
+
+            // Check if the user is an admin
+            const { user, token } = userResult;
+            if (user.role !== 'ADMIN') {
+                return null;
+            }
+
+            // Get admin profile
+            const admin = await this.adminRepository.findByUserId(user.id);
+            if (!admin) {
+                return null;
+            }
+
+            // Generate admin-specific token with more info
+            const adminToken = this.generateToken(admin);
+
+            return { admin, token: adminToken };
+        } catch (error) {
+            this.handleServiceError(error);
+            return null;
+        }
     }
 
     async registerAdmin(adminData: {
@@ -44,7 +77,7 @@ export class AdminService extends BaseService<AdminModel> {
         }
     }
 
-    async getAdminByUserId(userId: string): Promise<AdminModel | null> {
+    async getAdminByUserId(userId: number): Promise<AdminModel | null> {
         try {
             return await this.adminRepository.findByUserId(userId);
         } catch (error) {
@@ -53,7 +86,7 @@ export class AdminService extends BaseService<AdminModel> {
         }
     }
 
-    async updateAdminProfile(adminId: string, data: Partial<AdminModel>): Promise<AdminModel | null> {
+    async updateAdminProfile(adminId: number, data: Partial<AdminModel>): Promise<AdminModel | null> {
         try {
             // If updating email, check if it's already in use
             if (data.email) {
@@ -112,7 +145,7 @@ export class AdminService extends BaseService<AdminModel> {
     }
 
     // Change a user's role
-    async changeUserRole(userId: string, newRole: UserRole): Promise<UserModel | null> {
+    async changeUserRole(userId: number, newRole: UserRole): Promise<UserModel | null> {
         try {
             return await this.userService.update(userId, { role: newRole });
         } catch (error) {
@@ -145,6 +178,29 @@ export class AdminService extends BaseService<AdminModel> {
         } catch (error) {
             this.handleServiceError(error);
             return false;
+        }
+    }
+
+    private generateToken(admin: AdminModel): string {
+        return jwt.sign(
+            {
+                userId: admin.id,
+                adminId: admin.adminId,
+                email: admin.email,
+                role: admin.role,
+                name: admin.name,
+                fullName: `${admin.namePrefix}${admin.firstName} ${admin.lastName}`
+            },
+            this.jwtSecret,
+            { expiresIn: '24h' }
+        );
+    }
+
+    verifyToken(token: string): any {
+        try {
+            return jwt.verify(token, this.jwtSecret);
+        } catch (error) {
+            return null;
         }
     }
 }

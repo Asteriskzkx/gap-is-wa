@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { BaseController } from './BaseController';
 import { CommitteeModel } from '../models/CommitteeModel';
 import { CommitteeService } from '../services/CommitteeService';
+import { requireValidId, isValidId } from '../utils/ParamUtils';
 
 export class CommitteeController extends BaseController<CommitteeModel> {
     private committeeService: CommitteeService;
@@ -9,6 +10,38 @@ export class CommitteeController extends BaseController<CommitteeModel> {
     constructor(committeeService: CommitteeService) {
         super(committeeService);
         this.committeeService = committeeService;
+    }
+
+    async login(req: NextRequest): Promise<NextResponse> {
+        try {
+            const data = await req.json();
+            const { email, password } = data;
+
+            if (!email || !password) {
+                return NextResponse.json(
+                    { message: 'Email and password are required' },
+                    { status: 400 }
+                );
+            }
+
+            const result = await this.committeeService.login(email, password);
+
+            if (!result) {
+                return NextResponse.json(
+                    { message: 'Invalid email or password' },
+                    { status: 401 }
+                );
+            }
+
+            const { committee, token } = result;
+
+            // Remove sensitive data before returning
+            const committeeJson = committee.toJSON();
+
+            return NextResponse.json({ committee: committeeJson, token }, { status: 200 });
+        } catch (error) {
+            return this.handleControllerError(error);
+        }
     }
 
     async registerCommittee(req: NextRequest): Promise<NextResponse> {
@@ -51,7 +84,17 @@ export class CommitteeController extends BaseController<CommitteeModel> {
 
     async getCommitteeProfile(req: NextRequest, { params }: { params: { userId: string } }): Promise<NextResponse> {
         try {
-            const userId = params.userId;
+            // Convert userId from string to number
+            let userId: number;
+            try {
+                userId = requireValidId(params.userId, 'userId');
+            } catch (error: any) {
+                return NextResponse.json(
+                    { message: error.message },
+                    { status: 400 }
+                );
+            }
+
             const committee = await this.committeeService.getCommitteeByUserId(userId);
 
             if (!committee) {
@@ -69,7 +112,17 @@ export class CommitteeController extends BaseController<CommitteeModel> {
 
     async updateCommitteeProfile(req: NextRequest, { params }: { params: { id: string } }): Promise<NextResponse> {
         try {
-            const committeeId = params.id;
+            // Convert committeeId from string to number
+            let committeeId: number;
+            try {
+                committeeId = requireValidId(params.id, 'committeeId');
+            } catch (error: any) {
+                return NextResponse.json(
+                    { message: error.message },
+                    { status: 400 }
+                );
+            }
+
             const data = await req.json();
 
             const updatedCommittee = await this.committeeService.updateCommitteeProfile(committeeId, data);
@@ -95,7 +148,17 @@ export class CommitteeController extends BaseController<CommitteeModel> {
 
     async reviewAudit(req: NextRequest, { params }: { params: { id: string } }): Promise<NextResponse> {
         try {
-            const committeeId = params.id;
+            // Convert committeeId from string to number
+            let committeeId: number;
+            try {
+                committeeId = requireValidId(params.id, 'committeeId');
+            } catch (error: any) {
+                return NextResponse.json(
+                    { message: error.message },
+                    { status: 400 }
+                );
+            }
+
             const data = await req.json();
             const { auditId, decision, comments } = data;
 
@@ -106,7 +169,18 @@ export class CommitteeController extends BaseController<CommitteeModel> {
                 );
             }
 
-            const success = await this.committeeService.reviewAudit(auditId, committeeId, decision, comments || '');
+            // Convert auditId from string to number if needed
+            let auditIdNum: number;
+            try {
+                auditIdNum = requireValidId(auditId, 'auditId');
+            } catch (error: any) {
+                return NextResponse.json(
+                    { message: error.message },
+                    { status: 400 }
+                );
+            }
+
+            const success = await this.committeeService.reviewAudit(auditIdNum, committeeId, decision, comments || '');
 
             if (!success) {
                 return NextResponse.json(
@@ -125,7 +199,17 @@ export class CommitteeController extends BaseController<CommitteeModel> {
 
     async approveCertification(req: NextRequest, { params }: { params: { id: string } }): Promise<NextResponse> {
         try {
-            const committeeId = params.id;
+            // Convert committeeId from string to number
+            let committeeId: number;
+            try {
+                committeeId = requireValidId(params.id, 'committeeId');
+            } catch (error: any) {
+                return NextResponse.json(
+                    { message: error.message },
+                    { status: 400 }
+                );
+            }
+
             const data = await req.json();
             const { applicationId } = data;
 
@@ -136,7 +220,18 @@ export class CommitteeController extends BaseController<CommitteeModel> {
                 );
             }
 
-            const success = await this.committeeService.approveCertification(applicationId, committeeId);
+            // Convert applicationId from string to number if needed
+            let applicationIdNum: number;
+            try {
+                applicationIdNum = requireValidId(applicationId, 'applicationId');
+            } catch (error: any) {
+                return NextResponse.json(
+                    { message: error.message },
+                    { status: 400 }
+                );
+            }
+
+            const success = await this.committeeService.approveCertification(applicationIdNum, committeeId);
 
             if (!success) {
                 return NextResponse.json(
@@ -162,4 +257,5 @@ export class CommitteeController extends BaseController<CommitteeModel> {
             data.lastName
         );
     }
+
 }
