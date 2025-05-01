@@ -2,15 +2,48 @@ import { BaseService } from './BaseService';
 import { AuditorModel } from '../models/AuditorModel';
 import { AuditorRepository } from '../repositories/AuditorRepository';
 import { UserService } from './UserService';
+import jwt from 'jsonwebtoken';
 
 export class AuditorService extends BaseService<AuditorModel> {
     private auditorRepository: AuditorRepository;
     private userService: UserService;
+    private jwtSecret: string;
 
     constructor(auditorRepository: AuditorRepository, userService: UserService) {
         super(auditorRepository);
         this.auditorRepository = auditorRepository;
         this.userService = userService;
+        this.jwtSecret = process.env.JWT_SECRET || 'default-secret-key-change-in-production';
+    }
+
+    async login(email: string, password: string): Promise<{ auditor: AuditorModel; token: string } | null> {
+        try {
+            // First authenticate using UserService
+            const userResult = await this.userService.login(email, password);
+            if (!userResult) {
+                return null;
+            }
+
+            // Check if the user is an auditor
+            const { user, token } = userResult;
+            if (user.role !== 'AUDITOR') {
+                return null;
+            }
+
+            // Get auditor profile
+            const auditor = await this.auditorRepository.findByUserId(user.id);
+            if (!auditor) {
+                return null;
+            }
+
+            // Generate auditor-specific token with more info
+            const auditorToken = this.generateToken(auditor);
+
+            return { auditor, token: auditorToken };
+        } catch (error) {
+            this.handleServiceError(error);
+            return null;
+        }
     }
 
     async registerAuditor(auditorData: {
@@ -43,7 +76,7 @@ export class AuditorService extends BaseService<AuditorModel> {
         }
     }
 
-    async getAuditorByUserId(userId: string): Promise<AuditorModel | null> {
+    async getAuditorByUserId(userId: number): Promise<AuditorModel | null> { // เปลี่ยนจาก string เป็น number
         try {
             return await this.auditorRepository.findByUserId(userId);
         } catch (error) {
@@ -52,7 +85,7 @@ export class AuditorService extends BaseService<AuditorModel> {
         }
     }
 
-    async updateAuditorProfile(auditorId: string, data: Partial<AuditorModel>): Promise<AuditorModel | null> {
+    async updateAuditorProfile(auditorId: number, data: Partial<AuditorModel>): Promise<AuditorModel | null> { // เปลี่ยนจาก string เป็น number
         try {
             // If updating email, check if it's already in use
             if (data.email) {
@@ -70,7 +103,7 @@ export class AuditorService extends BaseService<AuditorModel> {
     }
 
     // Additional auditor-specific business logic can be added here
-    async assignAuditorToRegion(auditorId: string, region: string): Promise<boolean> {
+    async assignAuditorToRegion(auditorId: number, region: string): Promise<boolean> { // เปลี่ยนจาก string เป็น number
         // This would be implemented based on your specific business requirements
         // For now, returning a placeholder implementation
         try {
@@ -83,7 +116,7 @@ export class AuditorService extends BaseService<AuditorModel> {
         }
     }
 
-    async getAuditorAssignments(auditorId: string): Promise<string[]> {
+    async getAuditorAssignments(auditorId: number): Promise<string[]> { // เปลี่ยนจาก string เป็น number
         // This would be implemented based on your specific business requirements
         // For now, returning a placeholder implementation
         try {
@@ -93,6 +126,29 @@ export class AuditorService extends BaseService<AuditorModel> {
         } catch (error) {
             this.handleServiceError(error);
             return [];
+        }
+    }
+
+    private generateToken(auditor: AuditorModel): string {
+        return jwt.sign(
+            {
+                userId: auditor.id,
+                auditorId: auditor.auditorId,
+                email: auditor.email,
+                role: auditor.role,
+                name: auditor.name,
+                fullName: `${auditor.namePrefix}${auditor.firstName} ${auditor.lastName}`
+            },
+            this.jwtSecret,
+            { expiresIn: '24h' }
+        );
+    }
+
+    verifyToken(token: string): any {
+        try {
+            return jwt.verify(token, this.jwtSecret);
+        } catch (error) {
+            return null;
         }
     }
 }

@@ -2,18 +2,18 @@ import { UserModel, UserRole } from "./UserModel";
 import bcrypt from "bcrypt";
 
 export class AuditorModel extends UserModel {
-    auditorId: string;
+    auditorId: number;
     namePrefix: string;
     firstName: string;
     lastName: string;
 
     constructor(
-        userId: string,
+        userId: number,
         email: string,
         password: string,
         hashedPassword: string,
         name: string,
-        auditorId: string,
+        auditorId: number,
         namePrefix: string,
         firstName: string,
         lastName: string,
@@ -38,12 +38,12 @@ export class AuditorModel extends UserModel {
         const name = `${namePrefix}${firstName} ${lastName}`;
 
         return new AuditorModel(
-            '', // userId will be generated
+            0, // userId will be generated
             email,
             password,
             hashedPassword,
             name,
-            '', // auditorId will be generated
+            0, // auditorId will be generated
             namePrefix,
             firstName,
             lastName
