@@ -2,7 +2,7 @@ import { UserModel, UserRole } from "./UserModel";
 import bcrypt from "bcrypt";
 
 export class FarmerModel extends UserModel {
-    farmerId: string;
+    farmerId: number; // เปลี่ยนจาก string เป็น number
     namePrefix: string;
     firstName: string;
     lastName: string;
@@ -22,12 +22,12 @@ export class FarmerModel extends UserModel {
     mobilePhoneNumber: string;
 
     constructor(
-        userId: string,
+        userId: number, // เปลี่ยนจาก string เป็น number
         email: string,
         password: string,
         hashedPassword: string,
         name: string,
-        farmerId: string,
+        farmerId: number, // เปลี่ยนจาก string เป็น number
         namePrefix: string,
         firstName: string,
         lastName: string,
@@ -94,12 +94,12 @@ export class FarmerModel extends UserModel {
         const name = `${namePrefix}${firstName} ${lastName}`;
 
         return new FarmerModel(
-            '', // userId will be generated
+            0, // userId จะถูกสร้างโดยฐานข้อมูล (เปลี่ยนจาก '' เป็น 0)
             email,
             password,
             hashedPassword,
             name,
-            '', // farmerId will be generated
+            0, // farmerId จะถูกสร้างโดยฐานข้อมูล (เปลี่ยนจาก '' เป็น 0)
             namePrefix,
             firstName,
             lastName,

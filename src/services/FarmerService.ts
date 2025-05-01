@@ -2,15 +2,48 @@ import { BaseService } from './BaseService';
 import { FarmerModel } from '../models/FarmerModel';
 import { FarmerRepository } from '../repositories/FarmerRepository';
 import { UserService } from './UserService';
+import jwt from 'jsonwebtoken';
 
 export class FarmerService extends BaseService<FarmerModel> {
     private farmerRepository: FarmerRepository;
     private userService: UserService;
+    private jwtSecret: string;
 
     constructor(farmerRepository: FarmerRepository, userService: UserService) {
         super(farmerRepository);
         this.farmerRepository = farmerRepository;
         this.userService = userService;
+        this.jwtSecret = process.env.JWT_SECRET || 'default-secret-key-change-in-production';
+    }
+
+    async login(email: string, password: string): Promise<{ farmer: FarmerModel; token: string } | null> {
+        try {
+            // First authenticate using UserService
+            const userResult = await this.userService.login(email, password);
+            if (!userResult) {
+                return null;
+            }
+
+            // Check if the user is a farmer
+            const { user, token } = userResult;
+            if (user.role !== 'FARMER') {
+                return null;
+            }
+
+            // Get farmer profile
+            const farmer = await this.farmerRepository.findByUserId(user.id);
+            if (!farmer) {
+                return null;
+            }
+
+            // Generate farmer-specific token with more info
+            const farmerToken = this.generateToken(farmer);
+
+            return { farmer, token: farmerToken };
+        } catch (error) {
+            this.handleServiceError(error);
+            return null;
+        }
     }
 
     async registerFarmer(farmerData: {
@@ -71,7 +104,7 @@ export class FarmerService extends BaseService<FarmerModel> {
         }
     }
 
-    async getFarmerByUserId(userId: string): Promise<FarmerModel | null> {
+    async getFarmerByUserId(userId: number): Promise<FarmerModel | null> { // เปลี่ยนจาก string เป็น number
         try {
             return await this.farmerRepository.findByUserId(userId);
         } catch (error) {
@@ -80,7 +113,7 @@ export class FarmerService extends BaseService<FarmerModel> {
         }
     }
 
-    async updateFarmerProfile(farmerId: string, data: Partial<FarmerModel>): Promise<FarmerModel | null> {
+    async updateFarmerProfile(farmerId: number, data: Partial<FarmerModel>): Promise<FarmerModel | null> { // เปลี่ยนจาก string เป็น number
         try {
             // If updating email, check if it's already in use
             if (data.email) {
@@ -125,5 +158,30 @@ export class FarmerService extends BaseService<FarmerModel> {
         // Basic check for the ID pattern and calculation
         // This is a simplified version - real implementation would be more complex
         return /^[0-9]{13}$/.test(id);
+    }
+
+    private generateToken(farmer: FarmerModel): string {
+        return jwt.sign(
+            {
+                userId: farmer.id,
+                farmerId: farmer.farmerId,
+                email: farmer.email,
+                role: farmer.role,
+                name: farmer.name,
+                fullName: `${farmer.namePrefix}${farmer.firstName} ${farmer.lastName}`,
+                district: farmer.district,
+                province: farmer.provinceName
+            },
+            this.jwtSecret,
+            { expiresIn: '24h' }
+        );
+    }
+
+    verifyToken(token: string): any {
+        try {
+            return jwt.verify(token, this.jwtSecret);
+        } catch (error) {
+            return null;
+        }
     }
 }

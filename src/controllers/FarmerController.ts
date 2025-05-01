@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { BaseController } from './BaseController';
 import { FarmerModel } from '../models/FarmerModel';
 import { FarmerService } from '../services/FarmerService';
+import { requireValidId, isValidId } from '../utils/ParamUtils';
 
 export class FarmerController extends BaseController<FarmerModel> {
     private farmerService: FarmerService;
@@ -9,6 +10,38 @@ export class FarmerController extends BaseController<FarmerModel> {
     constructor(farmerService: FarmerService) {
         super(farmerService);
         this.farmerService = farmerService;
+    }
+
+    async login(req: NextRequest): Promise<NextResponse> {
+        try {
+            const data = await req.json();
+            const { email, password } = data;
+
+            if (!email || !password) {
+                return NextResponse.json(
+                    { message: 'Email and password are required' },
+                    { status: 400 }
+                );
+            }
+
+            const result = await this.farmerService.login(email, password);
+
+            if (!result) {
+                return NextResponse.json(
+                    { message: 'Invalid email or password' },
+                    { status: 401 }
+                );
+            }
+
+            const { farmer, token } = result;
+
+            // Remove sensitive data before returning
+            const farmerJson = farmer.toJSON();
+
+            return NextResponse.json({ farmer: farmerJson, token }, { status: 200 });
+        } catch (error) {
+            return this.handleControllerError(error);
+        }
     }
 
     async registerFarmer(req: NextRequest): Promise<NextResponse> {
@@ -80,7 +113,17 @@ export class FarmerController extends BaseController<FarmerModel> {
 
     async getFarmerProfile(req: NextRequest, { params }: { params: { userId: string } }): Promise<NextResponse> {
         try {
-            const userId = params.userId;
+            // แปลง userId จาก string เป็น number
+            let userId: number;
+            try {
+                userId = requireValidId(params.userId, 'userId');
+            } catch (error: any) {
+                return NextResponse.json(
+                    { message: error.message },
+                    { status: 400 }
+                );
+            }
+
             const farmer = await this.farmerService.getFarmerByUserId(userId);
 
             if (!farmer) {
@@ -98,7 +141,17 @@ export class FarmerController extends BaseController<FarmerModel> {
 
     async updateFarmerProfile(req: NextRequest, { params }: { params: { id: string } }): Promise<NextResponse> {
         try {
-            const farmerId = params.id;
+            // แปลง farmerId จาก string เป็น number
+            let farmerId: number;
+            try {
+                farmerId = requireValidId(params.id, 'farmerId');
+            } catch (error: any) {
+                return NextResponse.json(
+                    { message: error.message },
+                    { status: 400 }
+                );
+            }
+
             const data = await req.json();
 
             // If updating ID number, validate it

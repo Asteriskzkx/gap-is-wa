@@ -16,6 +16,6 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-    // เฉพาะสำหรับการสร้างผู้ใช้ใหม่เท่านั้น
+    // เฉพาะสำหรับการสร้างผู้ใช้ใหม่เท่านั้น (สำหรับ admin)
     return userController.create(req);
 }
