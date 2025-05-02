@@ -111,6 +111,48 @@ export class FarmerController extends BaseController<FarmerModel> {
         }
     }
 
+    // Addition to src/controllers/FarmerController.ts
+
+    async getCurrentFarmer(req: NextRequest): Promise<NextResponse> {
+        try {
+            const authHeader = req.headers.get('Authorization');
+
+            if (!authHeader || !authHeader.startsWith('Bearer ')) {
+                return NextResponse.json(
+                    { message: 'No authentication token provided' },
+                    { status: 401 }
+                );
+            }
+
+            const token = authHeader.split(' ')[1];
+            const decoded = this.farmerService.verifyToken(token);
+
+            if (!decoded || decoded.role !== 'FARMER') {
+                return NextResponse.json(
+                    { message: 'Invalid or expired token, or user is not a farmer' },
+                    { status: 401 }
+                );
+            }
+
+            // Get farmer profile using the userId from the decoded token
+            const farmer = await this.farmerService.getFarmerByUserId(decoded.userId);
+
+            if (!farmer) {
+                return NextResponse.json(
+                    { message: 'Farmer profile not found' },
+                    { status: 404 }
+                );
+            }
+
+            // Remove sensitive data before returning
+            const farmerJson = farmer.toJSON();
+
+            return NextResponse.json(farmerJson, { status: 200 });
+        } catch (error) {
+            return this.handleControllerError(error);
+        }
+    }
+
     async getFarmerProfile(req: NextRequest, { params }: { params: { userId: string } }): Promise<NextResponse> {
         try {
             // แปลง userId จาก string เป็น number

@@ -82,6 +82,46 @@ export class AuditorController extends BaseController<AuditorModel> {
         }
     }
 
+    async getCurrentAuditor(req: NextRequest): Promise<NextResponse> {
+        try {
+            // Extract the authorization token from the request header
+            const authHeader = req.headers.get('Authorization');
+            if (!authHeader || !authHeader.startsWith('Bearer ')) {
+                return NextResponse.json(
+                    { message: 'Authorization token is required' },
+                    { status: 401 }
+                );
+            }
+
+            // Get the token part after 'Bearer '
+            const token = authHeader.split(' ')[1];
+            if (!token) {
+                return NextResponse.json(
+                    { message: 'Invalid authorization token' },
+                    { status: 401 }
+                );
+            }
+
+            // ใช้ getAuditorByToken เพื่อดึงข้อมูลผู้ตรวจสอบจาก token
+            const auditor = await this.auditorService.getAuditorByToken(token);
+            if (!auditor) {
+                return NextResponse.json(
+                    { message: 'Invalid token or auditor not found' },
+                    { status: 401 }
+                );
+            }
+
+            // Return the auditor data without sensitive information
+            const auditorData = auditor.toJSON();
+            delete auditorData.password; // Ensure password is not included
+            delete auditorData.hashedPassword; // Ensure hashed password is not included
+
+            return NextResponse.json(auditorData, { status: 200 });
+        } catch (error) {
+            return this.handleControllerError(error);
+        }
+    }
+
     async getAuditorProfile(req: NextRequest, { params }: { params: { userId: string } }): Promise<NextResponse> {
         try {
             // แปลง userId จาก string เป็น number
