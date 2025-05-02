@@ -105,6 +105,46 @@ export default function AuditorDashboardPage() {
         </svg>
       ),
     },
+    {
+      title: "บันทึกข้อมูลประจำสวนยาง",
+      href: "/auditor/garden-data",
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={1.5}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V7.875c0-.621-.504-1.125-1.125-1.125H12a9.06 9.06 0 00-1.5.124"
+          />
+        </svg>
+      ),
+    },
+    {
+      title: "บันทึกการให้คำปรึกษาและข้อบกพร่อง",
+      href: "/auditor/consultations",
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={1.5}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"
+          />
+        </svg>
+      ),
+    },
   ];
 
   useEffect(() => {
@@ -474,7 +514,11 @@ export default function AuditorDashboardPage() {
                             ? "bg-blue-100 text-blue-600"
                             : index === 1
                             ? "bg-green-100 text-green-600"
-                            : "bg-purple-100 text-purple-600"
+                            : index === 2
+                            ? "bg-purple-100 text-purple-600"
+                            : index === 3
+                            ? "bg-amber-100 text-amber-600"
+                            : "bg-indigo-100 text-indigo-600"
                         }`}
                       >
                         {item.icon}
@@ -484,10 +528,14 @@ export default function AuditorDashboardPage() {
                       </h3>
                       <p className="text-sm text-gray-500 flex-grow">
                         {index === 0
-                          ? "ดำเนินการตรวจประเมินแหล่งผลิตยางพาราตามมาตรฐานจีเอพี"
+                          ? "ดำเนินการตรวจประเมินแหล่งผลิตยางพาราตามมาตรฐาน GAP"
                           : index === 1
                           ? "กำหนดและแจ้งวันตรวจประเมินแหล่งผลิตแก่เกษตรกร"
-                          : "สรุปและบันทึกผลการตรวจประเมินแหล่งผลิตยางพารา"}
+                          : index === 2
+                          ? "สรุปและบันทึกผลการตรวจประเมินแหล่งผลิตยางพารา"
+                          : index === 3
+                          ? "จัดเก็บข้อมูลสำคัญของสวนยางพาราที่ได้รับการตรวจประเมิน"
+                          : "บันทึกรายละเอียดคำแนะนำและข้อบกพร่องที่พบระหว่างการตรวจ"}
                       </p>
                       <div className="mt-4 flex items-center text-blue-600 font-medium text-sm">
                         <span>เข้าสู่เมนู</span>
@@ -640,7 +688,7 @@ export default function AuditorDashboardPage() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   <tr>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      MOCKUP000001
+                      1
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       นายสมชาย ใจดี
@@ -664,7 +712,7 @@ export default function AuditorDashboardPage() {
                   </tr>
                   <tr>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      MOCKUP000002
+                      2
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       นางสาวสมหญิง รักดี
@@ -688,7 +736,7 @@ export default function AuditorDashboardPage() {
                   </tr>
                   <tr>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      MOCKUP000003
+                      3
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       นายมานะ อดทน

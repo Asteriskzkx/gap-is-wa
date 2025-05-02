@@ -82,6 +82,44 @@ export class CommitteeController extends BaseController<CommitteeModel> {
         }
     }
 
+    async getCurrentCommittee(req: NextRequest): Promise<NextResponse> {
+        try {
+            // ดึง userId จาก token
+            const token = req.headers.get('Authorization')?.replace('Bearer ', '');
+
+            if (!token) {
+                return NextResponse.json(
+                    { message: 'Authentication token is required' },
+                    { status: 401 }
+                );
+            }
+
+            // ตรวจสอบความถูกต้องของ token และดึงข้อมูล userId
+            const tokenData = this.committeeService.verifyToken(token);
+
+            if (!tokenData || !tokenData.userId) {
+                return NextResponse.json(
+                    { message: 'Invalid or expired token' },
+                    { status: 401 }
+                );
+            }
+
+            // ใช้ userId ดึงข้อมูลคณะกรรมการ
+            const committee = await this.committeeService.getCommitteeByUserId(tokenData.userId);
+
+            if (!committee) {
+                return NextResponse.json(
+                    { message: 'Committee profile not found' },
+                    { status: 404 }
+                );
+            }
+
+            return NextResponse.json(committee.toJSON(), { status: 200 });
+        } catch (error) {
+            return this.handleControllerError(error);
+        }
+    }
+
     async getCommitteeProfile(req: NextRequest, { params }: { params: { userId: string } }): Promise<NextResponse> {
         try {
             // Convert userId from string to number
