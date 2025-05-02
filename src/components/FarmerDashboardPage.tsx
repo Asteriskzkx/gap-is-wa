@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function FarmerDashboardPage() {
+  // โค้ดส่วน state และฟังก์ชัน functions เหมือนเดิม
   const router = useRouter();
   const [farmer, setFarmer] = useState({
     namePrefix: "",
@@ -14,6 +15,8 @@ export default function FarmerDashboardPage() {
     isLoading: true,
   });
 
+  // State for sidebar visibility
+  const [sidebarVisible, setSidebarVisible] = useState(false);
   // State for sidebar collapse
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   // State to track screen size for responsive behavior
@@ -141,9 +144,16 @@ export default function FarmerDashboardPage() {
 
     // Check if the screen is mobile size
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-      if (window.innerWidth < 768) {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+
+      // On mobile, sidebar is hidden by default
+      if (mobile) {
+        setSidebarVisible(false);
         setSidebarCollapsed(true);
+      } else {
+        // On desktop, sidebar is always visible
+        setSidebarVisible(true);
       }
     };
 
@@ -157,9 +167,26 @@ export default function FarmerDashboardPage() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Toggle sidebar collapsed state
-  const toggleSidebar = () => {
+  // Toggle sidebar collapsed state (for desktop)
+  const toggleSidebarCollapse = () => {
     setSidebarCollapsed(!sidebarCollapsed);
+  };
+
+  // Toggle sidebar visibility (for mobile)
+  const toggleSidebarVisibility = () => {
+    setSidebarVisible(!sidebarVisible);
+    // When we show the sidebar on mobile, also close any open dropdown
+    if (!sidebarVisible) {
+      setDropdownOpen(false);
+    }
+  };
+
+  // Handle navigation click on mobile
+  const handleNavClick = () => {
+    // On mobile, hide the sidebar after clicking a navigation item
+    if (isMobile) {
+      setSidebarVisible(false);
+    }
   };
 
   // Handle logout
@@ -171,98 +198,159 @@ export default function FarmerDashboardPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#EBFFF3]">
-      {/* Sidebar - always visible but width changes */}
-      <div
-        className={`bg-white shadow-md transition-all duration-300 h-screen fixed z-10 ${
-          sidebarCollapsed ? "w-14" : "w-64"
-        } flex flex-col`}
-      >
-        {/* Toggle button at top */}
-        <div className="p-3 flex justify-end border-b">
-          <button
-            onClick={toggleSidebar}
-            className="p-1 rounded-md hover:bg-gray-100"
-            aria-label={
-              sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"
-            }
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 text-gray-500"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+    <div className="flex flex-col min-h-screen bg-[#EBFFF3]">
+      {/* Mobile Overlay - only visible when sidebar is shown on mobile */}
+      {isMobile && sidebarVisible && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-20"
+          onClick={toggleSidebarVisibility}
+        ></div>
+      )}
+
+      {/* Sidebar - shown/hidden based on state */}
+      {sidebarVisible && (
+        <div
+          className={`bg-white shadow-md transition-all duration-300 h-screen fixed z-30 ${
+            sidebarCollapsed ? "w-14" : "w-64"
+          } ${isMobile ? "left-0" : ""} flex flex-col`}
+        >
+          {/* Toggle button at top */}
+          <div className="p-3 flex justify-end border-b">
+            <button
+              onClick={
+                isMobile ? toggleSidebarVisibility : toggleSidebarCollapse
+              }
+              className="p-1 rounded-md hover:bg-gray-100"
+              aria-label={
+                isMobile
+                  ? "Close sidebar"
+                  : sidebarCollapsed
+                  ? "Expand sidebar"
+                  : "Collapse sidebar"
+              }
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M4 6h16M4 12h16M4 18h16"
-              />
-            </svg>
-          </button>
-        </div>
-
-        {/* Navigation Links */}
-        <nav className="flex-1 py-4">
-          <ul className="space-y-6">
-            {navItems.map((item, index) => (
-              <li key={index}>
-                <Link
-                  href={item.href}
-                  className={`flex items-center ${
-                    sidebarCollapsed ? "justify-center px-3" : "px-4"
-                  } py-2 text-gray-700 hover:text-gray-900`}
+              {isMobile ? (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6 text-gray-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
                 >
-                  <div className="text-gray-500">{item.icon}</div>
-                  {!sidebarCollapsed && (
-                    <span className="ml-3 text-sm font-medium">
-                      {item.title}
-                    </span>
-                  )}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              ) : (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6 text-gray-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
+                </svg>
+              )}
+            </button>
+          </div>
 
-        {/* User section at bottom (optional) */}
-        {!sidebarCollapsed && (
-          <div className="p-4 border-t">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-medium">
-                  {farmer.firstName.charAt(0)}
+          {/* Navigation Links */}
+          <nav className="flex-1 py-4">
+            <ul className="space-y-6">
+              {navItems.map((item, index) => (
+                <li key={index}>
+                  <Link
+                    href={item.href}
+                    className={`flex items-center ${
+                      sidebarCollapsed ? "justify-center px-3" : "px-4"
+                    } py-2 text-gray-700 hover:text-gray-900`}
+                    onClick={handleNavClick}
+                  >
+                    <div className="text-gray-500">{item.icon}</div>
+                    {!sidebarCollapsed && (
+                      <span className="ml-3 text-sm font-medium">
+                        {item.title}
+                      </span>
+                    )}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          {/* User section at bottom (optional) */}
+          {!sidebarCollapsed && (
+            <div className="p-4 border-t">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-medium">
+                    {farmer.firstName.charAt(0)}
+                  </div>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-700">
+                    {farmer.namePrefix}
+                    {farmer.firstName} {farmer.lastName}
+                  </p>
+                  <button
+                    onClick={handleLogout}
+                    className="text-xs text-red-500 hover:text-red-700"
+                  >
+                    ออกจากระบบ
+                  </button>
                 </div>
               </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium text-gray-700">
-                  {farmer.namePrefix}
-                  {farmer.firstName} {farmer.lastName}
-                </p>
-                <button
-                  onClick={handleLogout}
-                  className="text-xs text-red-500 hover:text-red-700"
-                >
-                  ออกจากระบบ
-                </button>
-              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
-      {/* Main Content */}
+      {/* Main Content - ใช้ flex และ flex-col เพื่อให้ footer อยู่ด้านล่างเสมอ */}
       <div
-        className={`flex-1 ${
-          sidebarCollapsed ? "ml-14" : "ml-64"
+        className={`flex-1 flex flex-col ${
+          sidebarVisible && !isMobile
+            ? sidebarCollapsed
+              ? "ml-14"
+              : "ml-64"
+            : "ml-0"
         } transition-all duration-300`}
       >
         {/* Header */}
         <header className="bg-white shadow-sm sticky top-0 z-10">
           <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
             <div className="flex items-center">
+              {/* Mobile menu toggle button */}
+              {isMobile && (
+                <button
+                  onClick={toggleSidebarVisibility}
+                  className="mr-2 p-1 rounded-md hover:bg-gray-100"
+                  aria-label="Toggle sidebar"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6 text-gray-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M4 6h16M4 12h16M4 18h16"
+                    />
+                  </svg>
+                </button>
+              )}
               <Image
                 src="/logo_header.png"
                 alt="Rubber Authority of Thailand Logo"
@@ -278,7 +366,8 @@ export default function FarmerDashboardPage() {
                   className="flex items-center space-x-3 focus:outline-none"
                   onClick={() => setDropdownOpen(!dropdownOpen)}
                 >
-                  <span className="text-sm font-medium text-gray-700">
+                  {/* ชื่อผู้ใช้ */}
+                  <span className="hidden sm:block text-sm font-medium text-gray-700">
                     {farmer.isLoading ? (
                       <div className="animate-pulse h-5 w-24 bg-gray-200 rounded"></div>
                     ) : (
@@ -337,8 +426,8 @@ export default function FarmerDashboardPage() {
           </div>
         </header>
 
-        {/* Main Content Area */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Main Content Area - ใช้ flex-grow เพื่อขยายพื้นที่ให้เต็ม */}
+        <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Page Title */}
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-gray-900">หน้าหลัก</h1>
@@ -349,55 +438,57 @@ export default function FarmerDashboardPage() {
 
           {/* Action Cards Row */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {navItems.map((item, index) => (
-              <div
-                key={index}
-                className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-6"
-              >
-                <Link href={item.href} className="block">
-                  <div className="flex flex-col h-full">
-                    <div
-                      className={`p-3 rounded-full mb-4 w-12 h-12 flex items-center justify-center ${
-                        index === 0
-                          ? "bg-green-100 text-green-600"
-                          : index === 1
-                          ? "bg-orange-100 text-orange-600"
-                          : "bg-blue-100 text-blue-600"
-                      }`}
-                    >
-                      {item.icon}
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      {item.title}
-                    </h3>
-                    <p className="text-sm text-gray-500 flex-grow">
-                      {index === 0
-                        ? "ยื่นคำขอรับรองแหล่งผลิตยางพาราตามมาตรฐาน GAP"
-                        : index === 1
-                        ? "ตรวจสอบสถานะคำขอและผลการรับรองแหล่งผลิต"
-                        : "จัดการข้อมูลสวนยางพาราของท่าน"}
-                    </p>
-                    <div className="mt-4 flex items-center text-green-600 font-medium text-sm">
-                      <span>เข้าสู่เมนู</span>
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4 ml-1"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
+            {navItems
+              .filter((item) => item.title !== "หน้าหลัก") // กรองการ์ดที่ไม่ต้องการแสดง
+              .map((item, index) => (
+                <div
+                  key={index}
+                  className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-6"
+                >
+                  <Link href={item.href} className="block">
+                    <div className="flex flex-col h-full">
+                      <div
+                        className={`p-3 rounded-full mb-4 w-12 h-12 flex items-center justify-center ${
+                          index === 0
+                            ? "bg-green-100 text-green-600"
+                            : index === 1
+                            ? "bg-orange-100 text-orange-600"
+                            : "bg-blue-100 text-blue-600"
+                        }`}
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 5l7 7-7 7"
-                        />
-                      </svg>
+                        {item.icon}
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        {item.title}
+                      </h3>
+                      <p className="text-sm text-gray-500 flex-grow">
+                        {index === 0
+                          ? "ยื่นคำขอรับรองแหล่งผลิตยางพาราตามมาตรฐาน GAP"
+                          : index === 1
+                          ? "ตรวจสอบสถานะคำขอและผลการรับรองแหล่งผลิต"
+                          : "จัดการข้อมูลสวนยางพาราของท่าน"}
+                      </p>
+                      <div className="mt-4 flex items-center text-green-600 font-medium text-sm">
+                        <span>เข้าสู่เมนู</span>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4 ml-1"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 5l7 7-7 7"
+                          />
+                        </svg>
+                      </div>
                     </div>
-                  </div>
-                </Link>
-              </div>
-            ))}
+                  </Link>
+                </div>
+              ))}
           </div>
 
           {/* Status Section */}
@@ -443,38 +534,6 @@ export default function FarmerDashboardPage() {
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
               ข่าวสารและประกาศ
             </h2>
-            {/* <div className="space-y-4">
-              <div className="border-b border-gray-200 pb-4">
-                <h3 className="text-base font-medium text-gray-900">
-                  ประกาศรับสมัครเกษตรกรเข้าร่วมโครงการ GAP ยางพารา ปี 2568
-                </h3>
-                <p className="text-sm text-gray-500 mt-1">
-                  การยางแห่งประเทศไทยเปิดรับสมัครเกษตรกรเข้าร่วมโครงการรับรองแหล่งผลิตยางพาราตามมาตรฐาน
-                  GAP ประจำปี 2568
-                </p>
-                <p className="text-xs text-gray-400 mt-2">1 พฤษภาคม 2568</p>
-              </div>
-              <div className="border-b border-gray-200 pb-4">
-                <h3 className="text-base font-medium text-gray-900">
-                  แนวทางการปฏิบัติตามมาตรฐาน GAP ยางพารา
-                </h3>
-                <p className="text-sm text-gray-500 mt-1">
-                  คู่มือและแนวทางการปฏิบัติตามมาตรฐาน GAP
-                  สำหรับเกษตรกรชาวสวนยางพารา
-                </p>
-                <p className="text-xs text-gray-400 mt-2">24 เมษายน 2568</p>
-              </div>
-              <div>
-                <h3 className="text-base font-medium text-gray-900">
-                  ราคายางประจำวันที่ 1 พฤษภาคม 2568
-                </h3>
-                <p className="text-sm text-gray-500 mt-1">
-                  ราคายางแผ่นดิบ ราคายางแผ่นรมควัน และราคาน้ำยางสด ประจำวันที่ 1
-                  พฤษภาคม 2568
-                </p>
-                <p className="text-xs text-gray-400 mt-2">1 พฤษภาคม 2568</p>
-              </div>
-            </div> */}
             <button className="mt-4 text-sm font-medium text-green-600 hover:text-green-700 flex items-center">
               ดูข่าวสารทั้งหมด
               <svg
@@ -495,8 +554,8 @@ export default function FarmerDashboardPage() {
           </div>
         </main>
 
-        {/* Footer */}
-        <footer className="bg-white mt-auto py-6 border-t">
+        {/* Footer - เพิ่ม mt-auto เพื่อให้อยู่ด้านล่างสุดเสมอ */}
+        <footer className="bg-white py-6 border-t mt-auto">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col md:flex-row justify-between items-center">
               <div className="flex items-center">
