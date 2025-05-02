@@ -255,7 +255,7 @@ export default function FarmerDashboardPage() {
           } ${isMobile ? "left-0" : ""} flex flex-col`}
         >
           {/* Toggle button at top */}
-          <div className="p-3 flex justify-end border-b">
+          <div className="p-3 flex justify-end border-b border-gray-200">
             <button
               onClick={
                 isMobile ? toggleSidebarVisibility : toggleSidebarCollapse
@@ -365,7 +365,7 @@ export default function FarmerDashboardPage() {
         } transition-all duration-300`}
       >
         {/* Header */}
-        <header className="bg-white shadow-sm sticky top-0 z-10">
+        <header className="bg-white shadow-sm sticky top-0 z-10 border-b border-gray-200">
           <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
             <div className="flex items-center">
               {/* Mobile menu toggle button */}
@@ -472,7 +472,7 @@ export default function FarmerDashboardPage() {
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-gray-900">หน้าหลัก</h1>
             <p className="mt-1 text-sm text-gray-500">
-              ยินดีต้อนรับสู่ระบบการรับรองแหล่งผลิตยางพาราตามมาตรฐาน GAP
+              ยินดีต้อนรับสู่ระบบสารสนเทศสำหรับการจัดการข้อมูลทางการเกษตรผลผลิตยางพาราตามมาตรฐานจีเอพี
             </p>
           </div>
 
