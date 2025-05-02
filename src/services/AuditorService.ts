@@ -151,4 +151,21 @@ export class AuditorService extends BaseService<AuditorModel> {
             return null;
         }
     }
+
+    async getAuditorByToken(token: string): Promise<AuditorModel | null> {
+        try {
+            // ตรวจสอบความถูกต้องของ token
+            const decoded = this.verifyToken(token);
+            if (!decoded || !decoded.userId) {
+                return null;
+            }
+
+            // หากเป็น token ที่ถูกต้อง ดึงข้อมูล auditor จาก userId
+            const auditor = await this.getAuditorByUserId(decoded.userId);
+            return auditor;
+        } catch (error) {
+            this.handleServiceError(error);
+            return null;
+        }
+    }
 }

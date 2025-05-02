@@ -75,7 +75,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n  \"email\": \"auditor01@example.com\",\r\n  \"password\": \"auditpassword123\",\r\n  \"namePrefix\": \"นาย\",\r\n  \"firstName\": \"audit\",\r\n  \"lastName\": \"gap\"\r\n}",
+					"raw": "{\r\n  \"email\": \"taxexpert@company.com\",\r\n  \"password\": \"taxCompliance!\",\r\n  \"namePrefix\": \"ดร.\",\r\n  \"firstName\": \"พิชิต\",\r\n  \"lastName\": \"ภาษี\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -503,7 +503,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:3000/api/v1/farmers/1",
+					"raw": "http://localhost:3000/api/v1/farmers/3",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -513,7 +513,7 @@
 						"api",
 						"v1",
 						"farmers",
-						"1"
+						"3"
 					]
 				}
 			},
