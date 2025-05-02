@@ -86,6 +86,46 @@ export default function FarmerDashboardPage() {
         </svg>
       ),
     },
+    {
+      title: "ขอแก้ไขข้อมูลใบรับรองแหล่งผลิต",
+      href: "/farmer/applications/edit",
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={1.5}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+          />
+        </svg>
+      ),
+    },
+    {
+      title: "ขอยกเลิกใบรับรองแหล่งผลิต",
+      href: "/farmer/applications/cancel",
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={1.5}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+          />
+        </svg>
+      ),
+    },
   ];
 
   useEffect(() => {
@@ -453,7 +493,9 @@ export default function FarmerDashboardPage() {
                             ? "bg-green-100 text-green-600"
                             : index === 1
                             ? "bg-orange-100 text-orange-600"
-                            : "bg-blue-100 text-blue-600"
+                            : index === 2
+                            ? "bg-blue-100 text-blue-600"
+                            : "bg-red-100 text-red-600"
                         }`}
                       >
                         {item.icon}
@@ -466,7 +508,9 @@ export default function FarmerDashboardPage() {
                           ? "ยื่นคำขอรับรองแหล่งผลิตยางพาราตามมาตรฐาน GAP"
                           : index === 1
                           ? "ตรวจสอบสถานะคำขอและผลการรับรองแหล่งผลิต"
-                          : "จัดการข้อมูลสวนยางพาราของท่าน"}
+                          : index === 2
+                          ? "ขอแก้ไขข้อมูลใบรับรองแหล่งผลิตที่ได้รับการอนุมัติแล้ว"
+                          : "ขอยกเลิกใบรับรองแหล่งผลิตที่ไม่ต้องการใช้งาน"}
                       </p>
                       <div className="mt-4 flex items-center text-green-600 font-medium text-sm">
                         <span>เข้าสู่เมนู</span>
