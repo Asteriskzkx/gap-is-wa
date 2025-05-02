@@ -528,7 +528,7 @@ export default function AuditorDashboardPage() {
                       </h3>
                       <p className="text-sm text-gray-500 flex-grow">
                         {index === 0
-                          ? "ดำเนินการตรวจประเมินแหล่งผลิตยางพาราตามมาตรฐาน GAP"
+                          ? "ดำเนินการตรวจประเมินแหล่งผลิตยางพาราตามมาตรฐานจีเอพี"
                           : index === 1
                           ? "กำหนดและแจ้งวันตรวจประเมินแหล่งผลิตแก่เกษตรกร"
                           : index === 2
