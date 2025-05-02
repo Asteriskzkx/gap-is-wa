@@ -61,6 +61,9 @@ model Farmer {
   mobilePhoneNumber    String
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
+
+  // Relation to RubberFarm
+  rubberFarms RubberFarm[]
 }
 
 model Auditor {
@@ -72,6 +75,12 @@ model Auditor {
   lastName   String
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+
+  // Relation to AuditorInspection (many-to-many)
+  auditorInspections AuditorInspection[]
+
+  // Relation to Inspection as chief
+  inspectionsAsChief Inspection[]
 }
 
 model Committee {
@@ -83,6 +92,9 @@ model Committee {
   lastName    String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  // Relation to CommitteeCertificate (many-to-many)
+  committeeCertificates CommitteeCertificate[]
 }
 
 model Admin {
@@ -94,4 +106,155 @@ model Admin {
   lastName   String
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+}
+
+model RubberFarm {
+  rubberFarmId Int      @id @default(autoincrement())
+  farmerId     Int
+  farmer       Farmer   @relation(fields: [farmerId], references: [farmerId], onDelete: Cascade)
+  villageName  String
+  moo          Int
+  road         String
+  alley        String
+  subDistrict  String
+  district     String
+  province     String
+  location     Json // For GeoJSON data
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  plantingDetails PlantingDetail[]
+  inspections     Inspection[]
+}
+
+model PlantingDetail {
+  plantingDetailId Int        @id @default(autoincrement())
+  rubberFarmId     Int
+  rubberFarm       RubberFarm @relation(fields: [rubberFarmId], references: [rubberFarmId], onDelete: Cascade)
+  specie           String
+  areaOfPlot       Float
+  numberOfRubber   Int
+  numberOfTapping  Int
+  ageOfRubber      Int
+  yearOfTapping    DateTime
+  monthOfTapping   DateTime
+  totalProduction  Float
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+}
+
+model Inspection {
+  inspectionId          Int        @id @default(autoincrement())
+  inspectionNo          Int
+  inspectionDateAndTime DateTime
+  inspectionType        String
+  inspectionStatus      String
+  inspectionResult      String
+  auditorChiefId        Int
+  auditorChief          Auditor    @relation(fields: [auditorChiefId], references: [auditorId])
+  rubberFarmId          Int
+  rubberFarm            RubberFarm @relation(fields: [rubberFarmId], references: [rubberFarmId])
+  createdAt             DateTime   @default(now())
+  updatedAt             DateTime   @updatedAt
+
+  // Relations
+  auditorInspections AuditorInspection[]
+  inspectionItems    InspectionItem[]
+  dataRecord         DataRecord?
+  adviceAndDefect    AdviceAndDefect?
+  certificate        Certificate?
+}
+
+model AuditorInspection {
+  auditorInspectionId Int        @id @default(autoincrement())
+  auditorId           Int
+  auditor             Auditor    @relation(fields: [auditorId], references: [auditorId])
+  inspectionId        Int
+  inspection          Inspection @relation(fields: [inspectionId], references: [inspectionId])
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  @@unique([auditorId, inspectionId]) // Ensure no duplicate entries
+}
+
+model InspectionItem {
+  inspectionItemId     Int        @id @default(autoincrement())
+  inspectionId         Int
+  inspection           Inspection @relation(fields: [inspectionId], references: [inspectionId], onDelete: Cascade)
+  inspectionItemNo     Int
+  inspectionItemName   String
+  inspectionItemResult String
+  otherConditions      Json // Store list of strings as JSON
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+
+  // Relation to Requirement
+  requirements Requirement[]
+}
+
+model Requirement {
+  requirementId      Int            @id @default(autoincrement())
+  inspectionItemId   Int
+  inspectionItem     InspectionItem @relation(fields: [inspectionItemId], references: [inspectionItemId], onDelete: Cascade)
+  requirementNo      Int
+  requirementName    String
+  requirementLevel   String
+  requirementLevelNo String
+  evaluationResult   String
+  evaluationMethod   String
+  note               String
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+}
+
+model DataRecord {
+  dataRecordId         Int        @id @default(autoincrement())
+  inspectionId         Int        @unique
+  inspection           Inspection @relation(fields: [inspectionId], references: [inspectionId], onDelete: Cascade)
+  species              Json
+  waterSystem          Json
+  fertilizers          Json
+  previouslyCultivated Json
+  plantDisease         Json
+  relatedPlants        Json
+  moreInfo             String
+  map                  Json // For GeoJSON data
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+}
+
+model AdviceAndDefect {
+  adviceAndDefectId Int        @id @default(autoincrement())
+  inspectionId      Int        @unique
+  inspection        Inspection @relation(fields: [inspectionId], references: [inspectionId], onDelete: Cascade)
+  date              DateTime
+  adviceList        Json
+  defectList        Json
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+}
+
+model Certificate {
+  certificateId Int        @id @default(autoincrement())
+  inspectionId  Int        @unique
+  inspection    Inspection @relation(fields: [inspectionId], references: [inspectionId], onDelete: Cascade)
+  pdfFileUrl    String // Store S3 URL reference to the PDF file
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  // Relation to CommitteeCertificate (many-to-many)
+  committeeCertificates CommitteeCertificate[]
+}
+
+model CommitteeCertificate {
+  committeeCertificateId Int         @id @default(autoincrement())
+  committeeId            Int
+  committee              Committee   @relation(fields: [committeeId], references: [committeeId])
+  certificateId          Int
+  certificate            Certificate @relation(fields: [certificateId], references: [certificateId])
+  createdAt              DateTime    @default(now())
+  updatedAt              DateTime    @updatedAt
+
+  @@unique([committeeId, certificateId]) // Ensure no duplicate entries
 }
