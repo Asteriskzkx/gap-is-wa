@@ -339,7 +339,7 @@ export default function FarmerRegisterPage() {
             ลงทะเบียนเกษตรกรใหม่
           </h1>
           <p className="mt-2 text-gray-600">
-            สร้างบัญชีผู้ใช้สำหรับระบบรับรองมาตรฐานสวนยาง GAP
+            สร้างบัญชีผู้ใช้สำหรับระบบสารสนเทศสำหรับการจัดการข้อมูลทางการเกษตรผลผลิตยางพาราตามมาตรฐานจีเอพี
           </p>
         </div>
 
@@ -365,7 +365,7 @@ export default function FarmerRegisterPage() {
                 {s}
                 <div
                   className="absolute -bottom-6 w-24 text-center text-xs font-medium"
-                  style={{ left: "-8px" }}
+                  style={{ left: "50%", transform: "translateX(-50%)" }}
                 >
                   {s === 1
                     ? "บัญชีผู้ใช้"
