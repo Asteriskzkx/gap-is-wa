@@ -237,7 +237,7 @@ export default function CommitteeDashboardPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F0F4FF]">
+    <div className="flex flex-col min-h-screen bg-[#EBFFF3]">
       {" "}
       {/* เปลี่ยนสีพื้นหลังเป็นโทนน้ำเงินอ่อน */}
       {/* Mobile Overlay - only visible when sidebar is shown on mobile */}
@@ -473,7 +473,7 @@ export default function CommitteeDashboardPage() {
               หน้าหลักคณะกรรมการ
             </h1>
             <p className="mt-1 text-sm text-gray-500">
-              ยินดีต้อนรับสู่ระบบจัดการการรับรองแหล่งผลิตยางพาราตามมาตรฐาน GAP
+              ยินดีต้อนรับสู่ระบบสารสนเทศสำหรับการจัดการข้อมูลทางการเกษตรผลผลิตยางพาราตามมาตรฐานจีเอพี
             </p>
           </div>
 
@@ -510,8 +510,8 @@ export default function CommitteeDashboardPage() {
                           : index === 1
                           ? "ออกใบรับรองแหล่งผลิตยางพาราที่ผ่านการตรวจประเมิน"
                           : index === 2
-                          ? "ยกเลิกใบรับรองแหล่งผลิตที่ไม่เป็นไปตามมาตรฐาน"
-                          : "ดูรายงานสรุปและสถิติการรับรองแหล่งผลิต"}
+                          ? "ยกเลิกใบรับรองแหล่งผลิต"
+                          : "ดูรายงานสรุปข้อมูลต่างๆ"}
                       </p>
                       <div className="mt-4 flex items-center text-indigo-600 font-medium text-sm">
                         <span>เข้าสู่เมนู</span>
