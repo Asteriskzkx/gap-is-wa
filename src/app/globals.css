@@ -2,12 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+/* นำเข้าฟอนต์ TH Sarabun New จาก Google Fonts */
+@import url("https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap");
+
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
 }
 
+/* ยกเลิกโหมดมืดเพื่อเลี่ยงปัญหาสีข้อความในช่อง input */
+/*
 @media (prefers-color-scheme: dark) {
   :root {
     --foreground-rgb: 255, 255, 255;
@@ -15,6 +20,7 @@
     --background-end-rgb: 0, 0, 0;
   }
 }
+*/
 
 body {
   color: rgb(var(--foreground-rgb));
@@ -24,6 +30,16 @@ body {
       rgb(var(--background-end-rgb))
     )
     rgb(var(--background-start-rgb));
+  font-family: "Sarabun", sans-serif;
+}
+
+/* กำหนดสีตัวอักษรในฟอร์มทั้งหมดให้เป็นสีเข้ม */
+input,
+textarea,
+select,
+button {
+  color: #1a202c; /* ตรงกับ text-gray-900 ใน Tailwind */
+  font-family: "Sarabun", sans-serif;
 }
 
 @layer utilities {
