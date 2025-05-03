@@ -74,7 +74,7 @@ export default function RubberFarmRegistrationForm() {
   const [tambons, setTambons] = useState<Tambon[]>([]);
   const [isLoadingProvinces, setIsLoadingProvinces] = useState(true);
 
-  // ข้อมูลรายละเอียดการปลูก (Planting Details)
+  // ข้อมูลรายละเอียดการปลูก (Planting Details) - แก้ไขเพื่อใช้ ISO string เต็มรูปแบบ
   const [plantingDetails, setPlantingDetails] = useState<PlantingDetail[]>([
     {
       specie: "",
@@ -82,8 +82,8 @@ export default function RubberFarmRegistrationForm() {
       numberOfRubber: 0,
       numberOfTapping: 0,
       ageOfRubber: 0,
-      yearOfTapping: new Date().toISOString(), // เปลี่ยนจาก .split("T")[0]
-      monthOfTapping: new Date().toISOString(), // เปลี่ยนจาก .split("T")[0]
+      yearOfTapping: new Date().toISOString(), // เปลี่ยนเป็น ISO string เต็มรูปแบบ
+      monthOfTapping: new Date().toISOString(), // เปลี่ยนเป็น ISO string เต็มรูปแบบ
       totalProduction: 0,
     },
     {
@@ -92,8 +92,8 @@ export default function RubberFarmRegistrationForm() {
       numberOfRubber: 0,
       numberOfTapping: 0,
       ageOfRubber: 0,
-      yearOfTapping: new Date().toISOString().split("T")[0],
-      monthOfTapping: new Date().toISOString().split("T")[0],
+      yearOfTapping: new Date().toISOString(),
+      monthOfTapping: new Date().toISOString(),
       totalProduction: 0,
     },
     {
@@ -102,8 +102,8 @@ export default function RubberFarmRegistrationForm() {
       numberOfRubber: 0,
       numberOfTapping: 0,
       ageOfRubber: 0,
-      yearOfTapping: new Date().toISOString().split("T")[0],
-      monthOfTapping: new Date().toISOString().split("T")[0],
+      yearOfTapping: new Date().toISOString(),
+      monthOfTapping: new Date().toISOString(),
       totalProduction: 0,
     },
     {
@@ -112,8 +112,8 @@ export default function RubberFarmRegistrationForm() {
       numberOfRubber: 0,
       numberOfTapping: 0,
       ageOfRubber: 0,
-      yearOfTapping: new Date().toISOString().split("T")[0],
-      monthOfTapping: new Date().toISOString().split("T")[0],
+      yearOfTapping: new Date().toISOString(),
+      monthOfTapping: new Date().toISOString(),
       totalProduction: 0,
     },
   ]);
@@ -136,6 +136,7 @@ export default function RubberFarmRegistrationForm() {
     },
     plantingDetails: [],
   });
+
   // ดึงข้อมูล farmer ID จาก localStorage เมื่อ component โหลด
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -158,7 +159,7 @@ export default function RubberFarmRegistrationForm() {
 
       if (response.ok) {
         const data = await response.json();
-        console.log("Farmer data:", data); // เพิ่มบรรทัดนี้เพื่อดูโครงสร้างข้อมูลที่ได้รับ
+        console.log("Farmer data:", data);
 
         // ตรวจสอบโครงสร้างของข้อมูลที่ได้รับ
         if (data && data.farmerId) {
@@ -294,7 +295,7 @@ export default function RubberFarmRegistrationForm() {
     }
   };
 
-  // อัปเดตข้อมูลรายละเอียดการปลูก
+  // อัปเดตข้อมูลรายละเอียดการปลูก - แก้ไขการจัดการวันที่
   const updatePlantingDetail = (
     index: number,
     field: keyof PlantingDetail,
@@ -314,10 +315,12 @@ export default function RubberFarmRegistrationForm() {
     } else if (field === "specie") {
       updatedDetails[index][field] = String(value);
     } else if (field === "yearOfTapping" || field === "monthOfTapping") {
-      // เวลาใช้ input type="date" ค่าที่ได้จะเป็น YYYY-MM-DD
-      // ต้องแปลงให้เป็น ISO string เต็มรูปแบบ
+      // เมื่อได้รับค่าจาก input type="date" ให้แปลงเป็น ISO string เต็มรูปแบบ
       const date = new Date(value as string);
-      updatedDetails[index][field] = date.toISOString();
+      if (!isNaN(date.getTime())) {
+        // ตรวจสอบว่าเป็นวันที่ที่ถูกต้อง
+        updatedDetails[index][field] = date.toISOString();
+      }
     }
 
     setPlantingDetails(updatedDetails);
@@ -384,10 +387,7 @@ export default function RubberFarmRegistrationForm() {
           subDistrict: rubberFarm.subDistrict,
           district: rubberFarm.district,
           province: rubberFarm.province,
-          location: {
-            type: "Point",
-            coordinates: [100.523186, 13.736717], // ตัวอย่างพิกัด กรุงเทพฯ
-          },
+          location: rubberFarm.location,
         },
         plantingDetailsData: validPlantingDetails,
       };
@@ -413,7 +413,7 @@ export default function RubberFarmRegistrationForm() {
 
       // รอสักครู่แล้วเปลี่ยนหน้า
       setTimeout(() => {
-        router.push("/farmer/applications");
+        router.push("/farmer/dashboard"); // เปลี่ยนไปยังหน้า dashboard ของเกษตรกร
       }, 2000);
     } catch (error: any) {
       console.error("Error submitting farm data:", error);
@@ -663,7 +663,7 @@ export default function RubberFarmRegistrationForm() {
               </div>
 
               {/* เพิ่มส่วนแผนที่ */}
-              <div className="mt-6">
+              <div className="col-span-3 mt-6">
                 <label
                   htmlFor="location"
                   className="block text-sm font-medium text-gray-700 mb-1"
