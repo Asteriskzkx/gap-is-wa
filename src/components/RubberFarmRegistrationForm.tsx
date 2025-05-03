@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import thaiProvinceData from "@/data/thai-provinces.json";
 import DynamicMapSelector from "./maps/DynamicMap";
+import ReactDatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { format, parseISO } from "date-fns";
 
 // ประเภทข้อมูลสำหรับโครงสร้าง API จังหวัด อำเภอ ตำบล (ตามที่มีใน FarmerRegisterPage)
 interface Tambon {
@@ -543,6 +546,8 @@ export default function RubberFarmRegistrationForm() {
                   required
                   value={rubberFarm.moo || ""}
                   onChange={updateFarmData}
+                  min={0}
+                  max={1000}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
                 />
               </div>
@@ -739,6 +744,7 @@ export default function RubberFarmRegistrationForm() {
                     <input
                       type="number"
                       step="0.01"
+                      min={0}
                       value={detail.areaOfPlot || ""}
                       onChange={(e) =>
                         updatePlantingDetail(
@@ -760,6 +766,7 @@ export default function RubberFarmRegistrationForm() {
                     <input
                       type="number"
                       value={detail.numberOfRubber || ""}
+                      min={0}
                       onChange={(e) =>
                         updatePlantingDetail(
                           index,
@@ -778,6 +785,7 @@ export default function RubberFarmRegistrationForm() {
                     <input
                       type="number"
                       value={detail.numberOfTapping || ""}
+                      min={0}
                       onChange={(e) =>
                         updatePlantingDetail(
                           index,
@@ -796,6 +804,7 @@ export default function RubberFarmRegistrationForm() {
                     <input
                       type="number"
                       value={detail.ageOfRubber || ""}
+                      min={0}
                       onChange={(e) =>
                         updatePlantingDetail(
                           index,
@@ -813,16 +822,20 @@ export default function RubberFarmRegistrationForm() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       ปีที่เริ่มกรีด
                     </label>
-                    <input
-                      type="date"
-                      value={detail.yearOfTapping.split("T")[0]} // แปลงจาก ISO string เป็น YYYY-MM-DD สำหรับแสดงผล
-                      onChange={(e) =>
+                    <ReactDatePicker
+                      selected={
+                        detail.yearOfTapping
+                          ? parseISO(detail.yearOfTapping)
+                          : null
+                      }
+                      onChange={(date) =>
                         updatePlantingDetail(
                           index,
                           "yearOfTapping",
-                          e.target.value
+                          date ? date.toISOString() : ""
                         )
                       }
+                      dateFormat="dd/MM/yyyy"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     />
                   </div>
@@ -831,16 +844,20 @@ export default function RubberFarmRegistrationForm() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       เดือนที่เริ่มกรีด
                     </label>
-                    <input
-                      type="date"
-                      value={detail.monthOfTapping.split("T")[0]} // แปลงจาก ISO string เป็น YYYY-MM-DD สำหรับแสดงผล
-                      onChange={(e) =>
+                    <ReactDatePicker
+                      selected={
+                        detail.monthOfTapping
+                          ? parseISO(detail.monthOfTapping)
+                          : null
+                      }
+                      onChange={(date) =>
                         updatePlantingDetail(
                           index,
                           "monthOfTapping",
-                          e.target.value
+                          date ? date.toISOString() : ""
                         )
                       }
+                      dateFormat="dd/MM/yyyy"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     />
                   </div>
@@ -852,6 +869,7 @@ export default function RubberFarmRegistrationForm() {
                     <input
                       type="number"
                       step="0.01"
+                      min={0}
                       value={detail.totalProduction || ""}
                       onChange={(e) =>
                         updatePlantingDetail(
