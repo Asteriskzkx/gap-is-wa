@@ -648,7 +648,7 @@ export default function AuditorDashboardPage() {
           </div>
 
           {/* Task List */}
-          <div className="bg-white rounded-xl shadow-sm p-6">
+          {/* <div className="bg-white rounded-xl shadow-sm p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
               รายการตรวจประเมินที่ต้องดำเนินการ
             </h2>
@@ -783,7 +783,7 @@ export default function AuditorDashboardPage() {
                 </svg>
               </Link>
             </div>
-          </div>
+          </div> */}
         </main>
 
         {/* Footer - เพิ่ม mt-auto เพื่อให้อยู่ด้านล่างสุดเสมอ */}
