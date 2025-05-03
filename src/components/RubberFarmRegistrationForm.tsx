@@ -584,7 +584,7 @@ export default function RubberFarmRegistrationForm() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Dropdown จังหวัด */}
               <div>
                 <label
@@ -661,8 +661,10 @@ export default function RubberFarmRegistrationForm() {
                   ))}
                 </select>
               </div>
+            </div>
 
-              {/* เพิ่มส่วนแผนที่ */}
+            {/* เพิ่มส่วนแผนที่ */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="col-span-3 mt-6">
                 <label
                   htmlFor="location"

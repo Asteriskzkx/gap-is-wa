@@ -18,17 +18,17 @@ export default function RubberFarmApplication() {
                 alt="Rubber Authority of Thailand Logo"
                 width={180}
                 height={180}
-                className="mr-2"
+                className="mr-2 w-[140px] sm:w-[180px]"
               />
             </Link>
           </div>
           <Link
             href="/farmer/dashboard"
-            className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50"
+            className="inline-flex items-center px-2 sm:px-4 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 ml-2 sm:ml-4"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="-ml-1 mr-2 h-5 w-5"
+              className="hidden sm:block -ml-1 mr-2 h-5 w-5"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -40,7 +40,9 @@ export default function RubberFarmApplication() {
                 d="M10 19l-7-7m0 0l7-7m-7 7h18"
               />
             </svg>
-            กลับสู่หน้าหลัก
+            <span className="sm:hidden">กลับ</span> {/* แสดงคำย่อบนมือถือ */}
+            <span className="hidden sm:inline">กลับสู่หน้าหลัก</span>{" "}
+            {/* แสดงข้อความเต็มบน desktop */}
           </Link>
         </div>
       </header>

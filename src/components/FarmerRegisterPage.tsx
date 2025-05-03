@@ -174,6 +174,15 @@ export default function FarmerRegisterPage() {
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
+
+    // ตรวจสอบเฉพาะตัวอักษร
+    if (name === "firstName") {
+      const regex = /^[a-zA-Zก-ฮะ-์\s]*$/; // รองรับตัวอักษรภาษาไทย, ภาษาอังกฤษ, สระ, วรรณยุกต์ และช่องว่าง
+      if (!regex.test(value)) {
+        return; // ถ้าไม่ตรงกับ RegEx จะไม่อัปเดตค่า
+      }
+    }
+
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -323,7 +332,8 @@ export default function FarmerRegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-50 to-white py-10 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen w-screen overflow-x-hidden bg-gradient-to-b from-green-50 to-white py-10 px-4 sm:px-6 lg:px-8">
+      {" "}
       <div className="max-w-3xl mx-auto">
         <div className="text-center mb-8">
           <Link href="/" className="inline-block">
@@ -715,9 +725,16 @@ export default function FarmerRegisterPage() {
                       id="moo"
                       name="moo"
                       type="number"
+                      min={1}
+                      max={1000}
                       required
                       value={formData.moo}
-                      onChange={updateFormData}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value, 10);
+                        if (value >= 1 && value <= 1000) {
+                          updateFormData(e); // อัปเดตค่าเฉพาะเมื่ออยู่ในช่วงที่กำหนด
+                        }
+                      }}
                       className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
                     />
                   </div>
