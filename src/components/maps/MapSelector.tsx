@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -119,13 +119,8 @@ const MapSelector: React.FC<MapSelectorProps> = ({
     });
   }, []);
 
-  // เมื่อเปลี่ยนประเภทให้รีเซ็ตข้อมูล
-  useEffect(() => {
-    resetShape();
-  }, [shapeType]);
-
   // ฟังก์ชั่นรีเซ็ต
-  const resetShape = () => {
+  const resetShape = useCallback(() => {
     switch (shapeType) {
       case "Point":
         // ไม่ต้องทำอะไร จะให้ผู้ใช้คลิกใหม่
@@ -142,7 +137,12 @@ const MapSelector: React.FC<MapSelectorProps> = ({
       default:
         break;
     }
-  };
+  }, [shapeType]);
+
+  // เมื่อเปลี่ยนประเภทให้รีเซ็ตข้อมูล
+  useEffect(() => {
+    resetShape();
+  }, [resetShape]);
 
   // จัดการคลิกบนแผนที่
   const handleMapClick = (e: L.LeafletMouseEvent) => {
