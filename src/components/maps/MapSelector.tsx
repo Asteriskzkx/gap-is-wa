@@ -3,35 +3,25 @@ import {
   MapContainer,
   TileLayer,
   Marker,
+  Popup,
   useMapEvents,
   useMap,
-  Popup,
+  Circle,
   Polygon,
   Rectangle,
-  Circle,
-  Polyline,
-  FeatureGroup,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-// Import GeoSearch components
 import { OpenStreetMapProvider } from "leaflet-geosearch";
 import { GeoSearchControl } from "leaflet-geosearch";
 import "leaflet-geosearch/dist/geosearch.css";
-// Import Leaflet Draw
-import "leaflet-draw/dist/leaflet.draw.css";
-import { EditControl } from "react-leaflet-draw";
-// แก้ไขการ import ESRI Geocoder - ใช้ as any
-import * as EsriLeafletGeocoder from "esri-leaflet-geocoder";
-import "esri-leaflet-geocoder/dist/esri-leaflet-geocoder.css";
 
-// กำหนด type ให้ชัดเจน
+// กำหนด types
 type LatLngPosition = [number, number]; // [latitude, longitude]
 type GeoJSONGeometry =
   | { type: "Point"; coordinates: [number, number] }
   | { type: "LineString"; coordinates: [number, number][] }
-  | { type: "Polygon"; coordinates: [number, number][][] }
-  | { type: "MultiPolygon"; coordinates: [number, number][][][] };
+  | { type: "Polygon"; coordinates: [number, number][][] };
 
 interface MapSelectorProps {
   location: GeoJSONGeometry;
@@ -40,89 +30,83 @@ interface MapSelectorProps {
 }
 
 // Component for the search control
-const SearchField: React.FC = () => {
+const SearchField = () => {
   const map = useMap();
 
   useEffect(() => {
     const provider = new OpenStreetMapProvider();
-
-    // กำหนดตัวเลือกโดยปิดการแสดง marker แต่ให้อัปเดตตำแหน่งแผนที่
     const searchControl = new (GeoSearchControl as any)({
       provider,
       style: "bar",
-      showMarker: false, // ปิดการแสดง marker
-      showPopup: false, // ไม่แสดง popup
+      showMarker: false,
+      showPopup: false,
       autoClose: true,
-      retainZoomLevel: false, // อนุญาตให้เปลี่ยนระดับการซูม
-      animateZoom: true, // อนุญาตให้มีการเคลื่อนไหวแบบ animate
+      retainZoomLevel: false,
+      animateZoom: true,
       autoComplete: true,
       autoCompleteDelay: 250,
-      keepResult: true, // เก็บผลลัพธ์ไว้ในช่องค้นหา
-      updateMap: true, // อนุญาตให้อัปเดตแผนที่อัตโนมัติ - สำคัญสำหรับการเลื่อนไปยังตำแหน่ง
-      searchLabel: "ค้นหาสถานที่",
+      keepResult: true,
+      updateMap: true,
+      searchLabel: "ค้นหาสถานที่หรือที่อยู่",
       position: "topright",
     });
 
-    // เพิ่ม control
     map.addControl(searchControl);
 
-    // ใช้ event ของ map เพื่อลบ marker ที่อาจถูกสร้างขึ้น
-    map.on("geosearch/showlocation", (e: any) => {
-      // ลบ marker ที่อาจถูกสร้างโดย geosearch
-      // (โดยปกติจะไม่มี เพราะเราตั้งค่า showMarker: false แล้ว แต่เพื่อความปลอดภัย)
-      if (e.marker) {
-        map.removeLayer(e.marker);
-      }
-    });
-
     return () => {
-      // ลบ event listener เมื่อ component unmount
-      map.off("geosearch/showlocation");
       map.removeControl(searchControl);
     };
   }, [map]);
 
   return null;
 };
-// Convert Leaflet LatLng to GeoJSON [lng, lat]
-const toGeoJSONCoordinates = (latlng: L.LatLng): [number, number] => [
-  latlng.lng,
-  latlng.lat,
-];
-
-// Convert Leaflet LatLngs to GeoJSON coordinates
-const latLngsToCoordinates = (latLngs: L.LatLng[]): [number, number][] => {
-  return latLngs.map(toGeoJSONCoordinates);
-};
-
-// แปลง array จาก LatLng เป็น coordinates สำหรับ Polygon
-const polygonLatLngsToCoordinates = (
-  latLngs: L.LatLng[][]
-): [number, number][][] => {
-  return latLngs.map((ring) => ring.map(toGeoJSONCoordinates));
-};
 
 // Component หลัก
 const MapSelector: React.FC<MapSelectorProps> = ({
   location,
   onChange,
-  height = "400px",
+  height = "500px",
 }) => {
-  const [mapMode, setMapMode] = useState<"point" | "draw">("point");
-  const [selectedShape, setSelectedShape] = useState<string>("Point");
-  const mapRef = useRef<L.Map | null>(null);
-  const featureGroupRef = useRef<L.FeatureGroup | null>(null);
-  const editableFG = useRef<any>(null);
+  // ตำแหน่งเริ่มต้น (กรุงเทพฯ)
+  const defaultPosition: LatLngPosition = [13.736717, 100.523186];
 
-  // Initial position for the map center
-  const defaultPosition: LatLngPosition = [13.736717, 100.523186]; // Bangkok
-  const [position, setPosition] = useState<LatLngPosition>(
+  // สถานะสำหรับเก็บประเภทที่เลือก
+  const [shapeType, setShapeType] = useState<string>(location.type || "Point");
+
+  // สถานะสำหรับจุด
+  const [pointPosition, setPointPosition] = useState<LatLngPosition>(() => {
+    // ตรวจสอบว่ามีพิกัดที่ถูกต้องหรือไม่
+    if (
+      location.type === "Point" &&
+      location.coordinates &&
+      location.coordinates[0] !== 0 &&
+      location.coordinates[1] !== 0
+    ) {
+      return [location.coordinates[1], location.coordinates[0]];
+    }
+    return defaultPosition; // ใช้กรุงเทพฯเป็นค่าเริ่มต้น
+  });
+
+  // สถานะสำหรับวงกลม
+  const [circleCenter, setCircleCenter] = useState<LatLngPosition>(
     location.type === "Point"
       ? [location.coordinates[1], location.coordinates[0]]
       : defaultPosition
   );
+  const [circleRadius, setCircleRadius] = useState<number>(100);
+  const [isSettingCircle, setIsSettingCircle] = useState<boolean>(false);
 
-  // แก้ไขปัญหาไอคอน marker ที่หายไป
+  // สถานะสำหรับสี่เหลี่ยม
+  const [rectangleStart, setRectangleStart] = useState<LatLngPosition | null>(
+    null
+  );
+  const [rectangleEnd, setRectangleEnd] = useState<LatLngPosition | null>(null);
+  const [isDrawingRectangle, setIsDrawingRectangle] = useState<boolean>(false);
+
+  // Refs
+  const mapRef = useRef<L.Map | null>(null);
+
+  // แก้ไขปัญหา marker icon
   useEffect(() => {
     delete (L.Icon.Default.prototype as any)._getIconUrl;
     L.Icon.Default.mergeOptions({
@@ -135,360 +119,333 @@ const MapSelector: React.FC<MapSelectorProps> = ({
     });
   }, []);
 
-  // อัพเดทค่า map ref เมื่อ map ready
-  const onMapReady = (map: L.Map) => {
-    // เพิ่ม FeatureGroup สำหรับ draw
-    const featureGroup = new L.FeatureGroup();
-    featureGroupRef.current = featureGroup;
-    map.addLayer(featureGroup);
+  // เมื่อเปลี่ยนประเภทให้รีเซ็ตข้อมูล
+  useEffect(() => {
+    resetShape();
+  }, [shapeType]);
 
-    // นำเข้า existing shapes ถ้ามี
-    if (location.type !== "Point") {
-      try {
-        if (location.type === "LineString" && location.coordinates.length > 1) {
-          // สร้าง polyline
-          const latLngs = location.coordinates.map(([lng, lat]) =>
-            L.latLng(lat, lng)
-          );
-          const polyline = L.polyline(latLngs);
-          featureGroup.addLayer(polyline);
-
-          // ปรับมุมมองให้พอดีกับเส้นที่วาด
-          map.fitBounds(polyline.getBounds());
-        } else if (
-          location.type === "Polygon" &&
-          location.coordinates.length > 0
-        ) {
-          // สร้าง polygon
-          const latLngs = location.coordinates[0].map(([lng, lat]) =>
-            L.latLng(lat, lng)
-          );
-          const polygon = L.polygon(latLngs);
-          featureGroup.addLayer(polygon);
-
-          // ปรับมุมมองให้พอดีกับพื้นที่ที่วาด
-          map.fitBounds(polygon.getBounds());
-        }
-      } catch (error) {
-        console.error("Error loading existing shape:", error);
-      }
+  // ฟังก์ชั่นรีเซ็ต
+  const resetShape = () => {
+    switch (shapeType) {
+      case "Point":
+        // ไม่ต้องทำอะไร จะให้ผู้ใช้คลิกใหม่
+        break;
+      case "Circle":
+        setIsSettingCircle(false);
+        setCircleRadius(100);
+        break;
+      case "Rectangle":
+        setRectangleStart(null);
+        setRectangleEnd(null);
+        setIsDrawingRectangle(false);
+        break;
+      default:
+        break;
     }
   };
 
-  // MapView component เพื่อป้องกันการกลับไปที่ตำแหน่งเริ่มต้น
-  const MapView: React.FC = () => {
-    const map = useMap();
-    const isFirstLoad = useRef<boolean>(true);
+  // จัดการคลิกบนแผนที่
+  const handleMapClick = (e: L.LeafletMouseEvent) => {
+    const latlng: LatLngPosition = [e.latlng.lat, e.latlng.lng];
 
-    useEffect(() => {
-      // ตั้งค่าการซูมและตำแหน่งแผนที่เฉพาะครั้งแรกเท่านั้น
-      // และเฉพาะกรณีที่ไม่มีการตั้งค่า bounds อื่นๆ แล้ว
-      if (isFirstLoad.current) {
-        isFirstLoad.current = false;
+    switch (shapeType) {
+      case "Point":
+        // กรณีจุด: วางจุดได้เลย
+        setPointPosition(latlng);
+        onChange({
+          type: "Point",
+          coordinates: [latlng[1], latlng[0]],
+        });
+        break;
 
-        // ตรวจสอบว่ามีการกำหนด fitBounds หรือยัง
-        setTimeout(() => {
-          // ถ้าไม่มีการเปลี่ยนแปลงตำแหน่งหรือการซูม ให้ใช้ค่าเริ่มต้น
-          // ในกรณีที่มีการวาดรูปร่างหรือมีการค้นหา ค่าเหล่านี้จะถูกเปลี่ยนแปลงแล้ว
-        }, 100);
-      }
-    }, [map]);
+      case "Circle":
+        if (!isSettingCircle) {
+          // กำหนดจุดศูนย์กลาง
+          setCircleCenter(latlng);
+          setIsSettingCircle(true);
+        } else {
+          // คำนวณรัศมีจากจุดศูนย์กลางถึงจุดที่คลิก
+          const radius = calculateDistance(circleCenter, latlng);
+          setCircleRadius(radius);
+          setIsSettingCircle(false);
 
+          // สร้าง GeoJSON
+          createCircleGeoJSON(circleCenter, radius);
+        }
+        break;
+
+      case "Rectangle":
+        if (!isDrawingRectangle) {
+          // กำหนดจุดเริ่มต้น
+          setRectangleStart(latlng);
+          setIsDrawingRectangle(true);
+        } else {
+          // กำหนดจุดสิ้นสุด
+          setRectangleEnd(latlng);
+          setIsDrawingRectangle(false);
+
+          // สร้าง GeoJSON
+          if (rectangleStart) {
+            createRectangleGeoJSON(rectangleStart, latlng);
+          }
+        }
+        break;
+    }
+  };
+
+  // คำนวณระยะทางระหว่างจุด (เมตร)
+  const calculateDistance = (
+    point1: LatLngPosition,
+    point2: LatLngPosition
+  ): number => {
+    if (!mapRef.current) return 100; // ค่าเริ่มต้น
+
+    const latlng1 = L.latLng(point1[0], point1[1]);
+    const latlng2 = L.latLng(point2[0], point2[1]);
+
+    return latlng1.distanceTo(latlng2);
+  };
+
+  // เพิ่ม/ลดรัศมีวงกลม
+  const handleCircleRadiusChange = (newRadius: number) => {
+    setCircleRadius(newRadius);
+    createCircleGeoJSON(circleCenter, newRadius);
+  };
+
+  // สร้าง GeoJSON สำหรับวงกลม
+  const createCircleGeoJSON = (center: LatLngPosition, radius: number) => {
+    // แปลงวงกลมเป็น polygon
+    const points = 64;
+    const deg2rad = Math.PI / 180;
+    const coordinates: [number, number][] = [];
+
+    for (let i = 0; i < points; i++) {
+      const angle = (i / points) * 360 * deg2rad;
+      const x =
+        center[1] +
+        ((radius / 111320) * Math.cos(angle)) / Math.cos(center[0] * deg2rad);
+      const y = center[0] + (radius / 111320) * Math.sin(angle);
+      coordinates.push([x, y]);
+    }
+
+    // ปิดวง
+    coordinates.push(coordinates[0]);
+
+    onChange({
+      type: "Polygon",
+      coordinates: [coordinates],
+    });
+  };
+
+  // สร้าง GeoJSON สำหรับสี่เหลี่ยม
+  const createRectangleGeoJSON = (
+    start: LatLngPosition,
+    end: LatLngPosition
+  ) => {
+    // สร้างจุดของสี่เหลี่ยม
+    const rectPoints: [number, number][] = [
+      [start[1], start[0]],
+      [end[1], start[0]],
+      [end[1], end[0]],
+      [start[1], end[0]],
+      [start[1], start[0]], // ปิดวง
+    ];
+
+    onChange({
+      type: "Polygon",
+      coordinates: [rectPoints],
+    });
+  };
+
+  // Component จัดการคลิกบนแผนที่
+  const MapClickHandler = () => {
+    useMapEvents({
+      click: handleMapClick,
+    });
     return null;
   };
 
-  // อัพเดทค่า position เมื่อ click
-  const handleMapClick = (e: L.LeafletMouseEvent) => {
-    if (mapMode === "point") {
-      const newPosition: LatLngPosition = [e.latlng.lat, e.latlng.lng];
-      setPosition(newPosition);
-      onChange({
-        type: "Point",
-        coordinates: [e.latlng.lng, e.latlng.lat], // [lng, lat] for GeoJSON
-      });
+  // แสดงคำแนะนำตามสถานะปัจจุบัน
+  const getInstructions = () => {
+    switch (shapeType) {
+      case "Point":
+        return "คลิกที่แผนที่เพื่อวางหมุดพิกัด";
+      case "Circle":
+        return isSettingCircle
+          ? "คลิกอีกครั้งเพื่อกำหนดขนาดวงกลม"
+          : "คลิกที่แผนที่เพื่อวางจุดศูนย์กลางวงกลม";
+      case "Rectangle":
+        return isDrawingRectangle
+          ? "คลิกอีกครั้งเพื่อกำหนดมุมสี่เหลี่ยม"
+          : "คลิกที่แผนที่เพื่อวางจุดเริ่มต้นสี่เหลี่ยม";
+      default:
+        return "";
     }
-  };
-
-  // จัดการเมื่อมีการสร้าง shape ใหม่
-  const handleCreated = (e: any) => {
-    const { layerType, layer } = e;
-
-    if (layerType === "marker") {
-      const latlng = layer.getLatLng();
-      onChange({
-        type: "Point",
-        coordinates: [latlng.lng, latlng.lat],
-      });
-    } else if (layerType === "polyline") {
-      const latLngs = layer.getLatLngs();
-      onChange({
-        type: "LineString",
-        coordinates: latLngsToCoordinates(latLngs),
-      });
-    } else if (layerType === "polygon") {
-      const latLngs = layer.getLatLngs();
-      // ตรวจสอบโครงสร้างของ latLngs
-      if (Array.isArray(latLngs) && latLngs.length > 0) {
-        if (Array.isArray(latLngs[0])) {
-          // กรณี nested arrays (multi-ring polygon)
-          onChange({
-            type: "Polygon",
-            coordinates: polygonLatLngsToCoordinates(latLngs as L.LatLng[][]),
-          });
-        } else {
-          // กรณี single array (simple polygon)
-          onChange({
-            type: "Polygon",
-            coordinates: [latLngsToCoordinates(latLngs as L.LatLng[])],
-          });
-        }
-      }
-    } else if (layerType === "rectangle") {
-      const latLngs = layer.getLatLngs();
-      if (Array.isArray(latLngs) && latLngs.length > 0) {
-        if (Array.isArray(latLngs[0])) {
-          onChange({
-            type: "Polygon",
-            coordinates: polygonLatLngsToCoordinates(latLngs as L.LatLng[][]),
-          });
-        } else {
-          onChange({
-            type: "Polygon",
-            coordinates: [latLngsToCoordinates(latLngs as L.LatLng[])],
-          });
-        }
-      }
-    } else if (layerType === "circle") {
-      // สำหรับวงกลม เราจะสร้าง polygon ที่ประมาณเป็นวงกลม
-      const center = layer.getLatLng();
-      const radius = layer.getRadius();
-
-      // สร้าง polygon ที่เป็นวงกลมโดยประมาณ
-      const points = 64; // จำนวนจุดรอบวงกลม
-      const deg2rad = Math.PI / 180;
-      const coordinates: [number, number][] = [];
-
-      for (let i = 0; i < points; i++) {
-        const angle = (i / points) * 360 * deg2rad;
-        const x =
-          center.lng +
-          ((radius / 111320) * Math.cos(angle)) /
-            Math.cos(center.lat * deg2rad);
-        const y = center.lat + (radius / 111320) * Math.sin(angle);
-        coordinates.push([x, y]);
-      }
-
-      // เพิ่มจุดแรกกลับมาเป็นจุดสุดท้ายเพื่อปิดวงกลม
-      coordinates.push(coordinates[0]);
-
-      onChange({
-        type: "Polygon",
-        coordinates: [coordinates],
-      });
-    }
-
-    // เก็บเฉพาะ layer ล่าสุด
-    if (featureGroupRef.current) {
-      featureGroupRef.current.clearLayers();
-      featureGroupRef.current.addLayer(layer);
-    }
-  };
-
-  // จัดการเมื่อมีการแก้ไข shape
-  const handleEdited = (e: any) => {
-    const layers = e.layers;
-    layers.eachLayer((layer: any) => {
-      if (layer instanceof L.Marker) {
-        const latlng = layer.getLatLng();
-        onChange({
-          type: "Point",
-          coordinates: [latlng.lng, latlng.lat],
-        });
-      } else if (layer instanceof L.Polyline && !(layer instanceof L.Polygon)) {
-        const latLngs = layer.getLatLngs();
-        if (Array.isArray(latLngs) && !Array.isArray(latLngs[0])) {
-          onChange({
-            type: "LineString",
-            coordinates: latLngsToCoordinates(latLngs as L.LatLng[]),
-          });
-        }
-      } else if (layer instanceof L.Polygon) {
-        const latLngs = layer.getLatLngs();
-        if (Array.isArray(latLngs) && latLngs.length > 0) {
-          if (Array.isArray(latLngs[0])) {
-            onChange({
-              type: "Polygon",
-              coordinates: polygonLatLngsToCoordinates(latLngs as L.LatLng[][]),
-            });
-          } else {
-            onChange({
-              type: "Polygon",
-              coordinates: [latLngsToCoordinates(latLngs as L.LatLng[])],
-            });
-          }
-        }
-      }
-    });
-  };
-
-  // จัดการเมื่อมีการลบ shape
-  const handleDeleted = () => {
-    onChange({
-      type: "Point",
-      coordinates: [position[1], position[0]],
-    });
-    setMapMode("point");
-  };
-
-  // อัพเดท shape tool ที่เลือก
-  const handleModeChange = (mode: "point" | "draw") => {
-    setMapMode(mode);
-
-    if (mapRef.current && featureGroupRef.current) {
-      // ล้าง layers ทั้งหมดเมื่อเปลี่ยนโหมด
-      featureGroupRef.current.clearLayers();
-    }
-  };
-
-  // สำหรับ FeatureGroup ref callback
-  const onFeatureGroupReady = (ref: any) => {
-    editableFG.current = ref;
   };
 
   return (
-    <div className="mt-2 flex flex-col w-full px-0">
-      {/* เครื่องมือควบคุม */}
-      <div className="flex flex-wrap gap-2 mb-2 w-full">
+    <div className="mt-2 flex flex-col w-full">
+      {/* ส่วนควบคุม */}
+      <div className="flex flex-wrap gap-2 mb-2">
         <div className="flex items-center">
-          <span className="text-sm mr-2">โหมด:</span>
-          <button
-            type="button"
-            onClick={() => handleModeChange("point")}
-            className={`px-3 py-1 text-sm rounded ${
-              mapMode === "point"
-                ? "bg-green-600 text-white"
-                : "bg-gray-200 text-gray-700"
-            }`}
+          <span className="text-sm mr-2">รูปแบบพื้นที่:</span>
+          <select
+            value={shapeType}
+            onChange={(e) => setShapeType(e.target.value)}
+            className="px-2 py-1 text-sm border rounded"
           >
-            จุดเดียว
-          </button>
-          <button
-            type="button"
-            onClick={() => handleModeChange("draw")}
-            className={`px-3 py-1 text-sm rounded ml-1 ${
-              mapMode === "draw"
-                ? "bg-green-600 text-white"
-                : "bg-gray-200 text-gray-700"
-            }`}
-          >
-            วาดรูปร่าง
-          </button>
+            <option value="Point">หมุดพิกัด</option>
+            <option value="Circle">วงกลม</option>
+            <option value="Rectangle">สี่เหลี่ยม</option>
+          </select>
         </div>
 
-        {mapMode === "draw" && (
-          <div className="flex items-center">
-            <span className="text-sm mr-2">รูปร่าง:</span>
-            <select
-              value={selectedShape}
-              onChange={(e) => setSelectedShape(e.target.value)}
-              className="px-2 py-1 text-sm border rounded"
+        {/* ควบคุมเพิ่มเติมสำหรับวงกลม */}
+        {shapeType === "Circle" && (
+          <div className="flex items-center ml-4">
+            <span className="text-sm mr-2">รัศมี (เมตร):</span>
+            <input
+              type="number"
+              value={circleRadius}
+              onChange={(e) =>
+                handleCircleRadiusChange(parseFloat(e.target.value) || 100)
+              }
+              min="10"
+              max="10000"
+              step="10"
+              className="w-20 px-2 py-1 text-sm border rounded"
+            />
+            <button
+              type="button"
+              onClick={() => handleCircleRadiusChange(circleRadius - 10)}
+              className="px-2 py-1 ml-1 text-sm rounded bg-gray-200"
+              disabled={circleRadius <= 0.1}
             >
-              <option value="Point">จุด</option>
-              <option value="LineString">เส้น</option>
-              <option value="Polygon">รูปหลายเหลี่ยม</option>
-              <option value="Rectangle">สี่เหลี่ยม</option>
-              <option value="Circle">วงกลม</option>
-            </select>
+              -
+            </button>
+            <button
+              type="button"
+              onClick={() => handleCircleRadiusChange(circleRadius + 10)}
+              className="px-2 py-1 ml-1 text-sm rounded bg-gray-200"
+            >
+              +
+            </button>
           </div>
         )}
+
+        <div className="flex items-center ml-2">
+          <button
+            type="button"
+            onClick={resetShape}
+            className="px-3 py-1 text-sm rounded bg-red-500 text-white"
+          >
+            ล้างพื้นที่
+          </button>
+        </div>
       </div>
 
       {/* แผนที่ */}
-      <div
-        className="w-full h-96 md:h-[500px] relative border rounded overflow-hidden"
-        style={{ margin: 0, padding: 0 }}
-      >
+      <div className="w-full h-96 md:h-[500px] border rounded overflow-hidden relative">
         <MapContainer
-          center={
-            position && position[0] !== 0 ? position : [13.736717, 100.523186]
-          }
+          center={pointPosition}
           zoom={13}
-          style={{ height: "100%", width: "100%", margin: 0, padding: 0 }}
+          style={{ height: "100%", width: "100%" }}
           scrollWheelZoom={true}
           ref={(map) => {
-            if (map) {
-              mapRef.current = map;
-              onMapReady(map);
-            }
+            mapRef.current = map || null;
           }}
         >
+          {/* แผนที่พื้นฐาน */}
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
 
-          {/* แสดง marker เมื่ออยู่ในโหมด point */}
-          {mapMode === "point" && (
-            <Marker position={position}>
+          {/* ส่วนค้นหา */}
+          <SearchField />
+
+          {/* จัดการคลิกบนแผนที่ */}
+          <MapClickHandler />
+
+          {/* แสดงรูปร่าง */}
+          {shapeType === "Point" && (
+            <Marker position={pointPosition}>
               <Popup>
-                ละติจูด: {position[0].toFixed(6)}, ลองจิจูด:{" "}
-                {position[1].toFixed(6)}
+                ละติจูด: {pointPosition[0].toFixed(6)}, ลองจิจูด:{" "}
+                {pointPosition[1].toFixed(6)}
               </Popup>
             </Marker>
           )}
 
-          {/* เพิ่ม event handler สำหรับการคลิก */}
-          {mapMode === "point" && <ClickHandler onClick={handleMapClick} />}
+          {shapeType === "Circle" && (
+            <>
+              {/* แสดงจุดศูนย์กลาง */}
+              <Marker position={circleCenter}>
+                <Popup>จุดศูนย์กลางวงกลม</Popup>
+              </Marker>
 
-          {/* เพิ่ม search control */}
-          <SearchField />
-
-          {/* เพิ่ม draw control เมื่ออยู่ในโหมด draw */}
-          {mapMode === "draw" && (
-            <FeatureGroup ref={onFeatureGroupReady}>
-              <EditControl
-                position="topright"
-                onCreated={handleCreated}
-                onEdited={handleEdited}
-                onDeleted={handleDeleted}
-                draw={{
-                  polyline: selectedShape === "LineString",
-                  polygon: selectedShape === "Polygon",
-                  rectangle: selectedShape === "Rectangle",
-                  circle: selectedShape === "Circle",
-                  marker: selectedShape === "Point",
-                  circlemarker: false,
-                }}
+              {/* แสดงวงกลม */}
+              <Circle
+                center={circleCenter}
+                radius={circleRadius}
+                color="red"
+                fillColor="red"
+                fillOpacity={0.2}
               />
-            </FeatureGroup>
+            </>
+          )}
+
+          {shapeType === "Rectangle" && rectangleStart && rectangleEnd && (
+            <>
+              {/* แสดงมุมทั้งสอง */}
+              <Marker position={rectangleStart}>
+                <Popup>มุมที่ 1</Popup>
+              </Marker>
+              <Marker position={rectangleEnd}>
+                <Popup>มุมที่ 2</Popup>
+              </Marker>
+
+              {/* แสดงสี่เหลี่ยม */}
+              <Rectangle
+                bounds={[rectangleStart, rectangleEnd]}
+                color="blue"
+                fillColor="blue"
+                fillOpacity={0.2}
+              />
+            </>
           )}
         </MapContainer>
       </div>
 
-      {/* แสดงข้อมูลตำแหน่ง */}
-      <div className="mt-2 text-sm text-gray-600">
-        {mapMode === "point" ? (
-          <p>
-            คลิกบนแผนที่เพื่อเลือกตำแหน่ง | ละติจูด: {position[0].toFixed(6)},
-            ลองจิจูด: {position[1].toFixed(6)}
-          </p>
-        ) : (
-          <p>เลือกเครื่องมือจากแถบด้านขวาบนของแผนที่เพื่อวาดรูปร่าง</p>
+      {/* คำแนะนำ */}
+      <div className="mt-2">
+        <div className="text-sm text-gray-600">
+          <p>{getInstructions()}</p>
+        </div>
+
+        {/* ข้อมูลพิกัด */}
+        {shapeType === "Point" && (
+          <div className="mt-1 text-sm">
+            <p>
+              พิกัด: ละติจูด {pointPosition[0].toFixed(6)}, ลองจิจูด{" "}
+              {pointPosition[1].toFixed(6)}
+            </p>
+          </div>
+        )}
+
+        {shapeType === "Circle" && !isSettingCircle && (
+          <div className="mt-1 text-sm">
+            <p>
+              ศูนย์กลาง: ละติจูด {circleCenter[0].toFixed(6)}, ลองจิจูด{" "}
+              {circleCenter[1].toFixed(6)}
+              <br />
+              รัศมี: {circleRadius.toFixed(2)} เมตร
+            </p>
+          </div>
         )}
       </div>
     </div>
   );
-};
-
-// Component สำหรับ handle click event
-const ClickHandler: React.FC<{ onClick: (e: L.LeafletMouseEvent) => void }> = ({
-  onClick,
-}) => {
-  useMapEvents({
-    click: onClick,
-  });
-
-  return null;
 };
 
 export default MapSelector;
