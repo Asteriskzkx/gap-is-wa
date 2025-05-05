@@ -23,15 +23,28 @@ export class PlantingDetailController extends BaseController<PlantingDetailModel
                 );
             }
 
-            // ไม่ต้องแปลง Date อีก เพราะเรารับค่าเป็น ISO string แล้ว
-            // เว้นแต่ว่าเราต้องการตรวจสอบความถูกต้องของวันที่
-            const yearOfTapping = data.yearOfTapping || new Date().toISOString();
-            const monthOfTapping = data.monthOfTapping || new Date().toISOString();
+            // แปลงค่า string ให้เป็น Date object ก่อนเรียก createPlantingDetail
+            const yearOfTapping = data.yearOfTapping ? new Date(data.yearOfTapping) : new Date();
+            const monthOfTapping = data.monthOfTapping ? new Date(data.monthOfTapping) : new Date();
 
-            const plantingDetail = await this.plantingDetailService.createPlantingDetail({
+            // เพิ่ม debugging log
+            console.log("Creating planting detail with data:", {
                 ...data,
                 yearOfTapping,
                 monthOfTapping
+            });
+
+            const plantingDetail = await this.plantingDetailService.createPlantingDetail({
+                ...data,
+                rubberFarmId: Number(data.rubberFarmId),  // ตรวจสอบให้แน่ใจว่าเป็นตัวเลข
+                specie: String(data.specie),
+                areaOfPlot: Number(data.areaOfPlot),
+                numberOfRubber: Number(data.numberOfRubber),
+                numberOfTapping: Number(data.numberOfTapping || 0),
+                ageOfRubber: Number(data.ageOfRubber || 0),
+                yearOfTapping,
+                monthOfTapping,
+                totalProduction: Number(data.totalProduction || 0)
             });
 
             return NextResponse.json(plantingDetail, { status: 201 });
