@@ -17,21 +17,43 @@ export class PlantingDetailService extends BaseService<PlantingDetailModel> {
         numberOfRubber: number;
         numberOfTapping: number;
         ageOfRubber: number;
-        yearOfTapping: Date;
-        monthOfTapping: Date;
+        yearOfTapping: Date | string;
+        monthOfTapping: Date | string;
         totalProduction: number;
     }): Promise<PlantingDetailModel> {
         try {
+            // ตรวจสอบและแปลงค่าทุกชนิดให้ถูกต้อง
+            const yearOfTapping = detailData.yearOfTapping instanceof Date
+                ? detailData.yearOfTapping
+                : new Date(detailData.yearOfTapping || new Date());
+
+            const monthOfTapping = detailData.monthOfTapping instanceof Date
+                ? detailData.monthOfTapping
+                : new Date(detailData.monthOfTapping || new Date());
+
+            // เพิ่ม logs เพื่อ debug
+            console.log("Creating planting detail with validated data:", {
+                rubberFarmId: detailData.rubberFarmId,
+                specie: detailData.specie,
+                areaOfPlot: detailData.areaOfPlot,
+                numberOfRubber: detailData.numberOfRubber,
+                numberOfTapping: detailData.numberOfTapping,
+                ageOfRubber: detailData.ageOfRubber,
+                yearOfTapping,
+                monthOfTapping,
+                totalProduction: detailData.totalProduction
+            });
+
             const plantingDetailModel = PlantingDetailModel.create(
-                detailData.rubberFarmId,
-                detailData.specie,
-                detailData.areaOfPlot,
-                detailData.numberOfRubber,
-                detailData.numberOfTapping,
-                detailData.ageOfRubber,
-                detailData.yearOfTapping,
-                detailData.monthOfTapping,
-                detailData.totalProduction
+                Number(detailData.rubberFarmId),
+                String(detailData.specie).trim(),
+                Number(detailData.areaOfPlot),
+                Number(detailData.numberOfRubber),
+                Number(detailData.numberOfTapping),
+                Number(detailData.ageOfRubber),
+                yearOfTapping,
+                monthOfTapping,
+                Number(detailData.totalProduction)
             );
 
             return await this.create(plantingDetailModel);

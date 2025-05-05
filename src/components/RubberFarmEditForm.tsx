@@ -375,7 +375,7 @@ export default function RubberFarmEditForm() {
   const updatePlantingDetail = (
     index: number,
     field: keyof PlantingDetail,
-    value: string | number
+    value: string | number | Date
   ) => {
     const updatedDetails = [...plantingDetails];
 
@@ -391,9 +391,9 @@ export default function RubberFarmEditForm() {
     } else if (field === "specie") {
       updatedDetails[index][field] = String(value);
     } else if (field === "yearOfTapping" || field === "monthOfTapping") {
-      // Convert date to ISO string และตรวจสอบความถูกต้องของค่า
+      // ทำให้แน่ใจว่าค่าวันที่เป็น ISO string
       try {
-        const date = new Date(value as string);
+        const date = value instanceof Date ? value : new Date(value as string);
         if (!isNaN(date.getTime())) {
           updatedDetails[index][field] = date.toISOString();
         } else {
@@ -417,8 +417,8 @@ export default function RubberFarmEditForm() {
       numberOfRubber: 0,
       numberOfTapping: 0,
       ageOfRubber: 0,
-      yearOfTapping: new Date().toISOString(),
-      monthOfTapping: new Date().toISOString(),
+      yearOfTapping: new Date().toISOString(), // ใช้ ISO string
+      monthOfTapping: new Date().toISOString(), // ใช้ ISO string
       totalProduction: 0,
     };
 
@@ -476,30 +476,24 @@ export default function RubberFarmEditForm() {
         throw new Error("กรุณาเลือกสวนยางที่ต้องการแก้ไข");
       }
 
-      // Filter out valid planting details และตรวจสอบข้อมูลให้ถูกต้อง
-      const validPlantingDetails = plantingDetails
-        .filter(
-          (detail) =>
-            detail.specie && detail.areaOfPlot > 0 && detail.numberOfRubber > 0
-        )
-        .map((detail) => {
-          // ตรวจสอบและแปลงค่าให้ถูกต้องตามที่ API ต้องการ
-          return {
-            ...detail,
-            rubberFarmId: selectedFarmId,
-            plantingDetailId: detail.plantingDetailId || 0,
-            areaOfPlot: Number(detail.areaOfPlot) || 0,
-            numberOfRubber: Number(detail.numberOfRubber) || 0,
-            numberOfTapping: Number(detail.numberOfTapping) || 0,
-            ageOfRubber: Number(detail.ageOfRubber) || 0,
-            totalProduction: Number(detail.totalProduction) || 0,
-            // ตรวจสอบวันที่ถ้าเป็นค่าว่างให้ใช้วันที่ปัจจุบัน
-            yearOfTapping: detail.yearOfTapping || new Date().toISOString(),
-            monthOfTapping: detail.monthOfTapping || new Date().toISOString(),
-          };
-        });
+      // กรองรายการที่กรอกข้อมูลครบถ้วน
+      const validPlantingDetails = plantingDetails.filter(
+        (detail) =>
+          detail.specie && detail.areaOfPlot > 0 && detail.numberOfRubber > 0
+      );
 
-      // Create payload for farm update
+      // แยกรายการที่มีอยู่แล้วและรายการใหม่
+      const existingDetails = validPlantingDetails.filter(
+        (detail) => detail.plantingDetailId && detail.plantingDetailId > 0
+      );
+      const newDetails = validPlantingDetails.filter(
+        (detail) => !detail.plantingDetailId || detail.plantingDetailId <= 0
+      );
+
+      console.log("Existing details:", existingDetails);
+      console.log("New details:", newDetails);
+
+      // สร้าง payload สำหรับอัพเดทฟาร์ม
       const farmUpdatePayload = {
         villageName: rubberFarm.villageName,
         moo: Number(rubberFarm.moo) || 0,
@@ -511,7 +505,7 @@ export default function RubberFarmEditForm() {
         location: rubberFarm.location,
       };
 
-      // Update the farm
+      // อัพเดทข้อมูลฟาร์ม
       const token = localStorage.getItem("token");
       const farmResponse = await fetch(
         `/api/v1/rubber-farms/${selectedFarmId}`,
@@ -530,11 +524,27 @@ export default function RubberFarmEditForm() {
         throw new Error(errorData.message || "ไม่สามารถอัปเดตข้อมูลสวนยางได้");
       }
 
-      // Update planting details
-      for (const detail of validPlantingDetails) {
+      // อัพเดทรายการที่มีอยู่แล้ว
+      for (const detail of existingDetails) {
         try {
-          if (detail.plantingDetailId && detail.plantingDetailId > 0) {
-            // Update existing detail
+          if (detail.plantingDetailId) {
+            // เตรียมข้อมูลสำหรับอัพเดท
+            const detailUpdatePayload = {
+              specie: detail.specie,
+              areaOfPlot: Number(detail.areaOfPlot),
+              numberOfRubber: Number(detail.numberOfRubber),
+              numberOfTapping: Number(detail.numberOfTapping) || 0,
+              ageOfRubber: Number(detail.ageOfRubber) || 0,
+              yearOfTapping: detail.yearOfTapping,
+              monthOfTapping: detail.monthOfTapping,
+              totalProduction: Number(detail.totalProduction) || 0,
+            };
+
+            console.log(
+              `Updating detail ${detail.plantingDetailId}:`,
+              detailUpdatePayload
+            );
+
             const detailResponse = await fetch(
               `/api/v1/planting-details/${detail.plantingDetailId}`,
               {
@@ -543,7 +553,7 @@ export default function RubberFarmEditForm() {
                   "Content-Type": "application/json",
                   Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify(detail),
+                body: JSON.stringify(detailUpdatePayload),
               }
             );
 
@@ -551,52 +561,54 @@ export default function RubberFarmEditForm() {
               const errorData = await detailResponse.json();
               console.error("Error updating planting detail:", errorData);
             }
-          } else {
-            // Create new detail
-            // สร้าง payload ที่ถูกต้องตามที่ API ต้องการ
-            const newDetailPayload = {
-              rubberFarmId: selectedFarmId,
-              specie: detail.specie,
-              areaOfPlot: Number(detail.areaOfPlot),
-              numberOfRubber: Number(detail.numberOfRubber),
-              numberOfTapping: Number(detail.numberOfTapping) || 0,
-              ageOfRubber: Number(detail.ageOfRubber) || 0,
-              yearOfTapping: detail.yearOfTapping || new Date().toISOString(),
-              monthOfTapping: detail.monthOfTapping || new Date().toISOString(),
-              totalProduction: Number(detail.totalProduction) || 0,
-            };
-
-            console.log(
-              "Creating new planting detail with payload:",
-              newDetailPayload
-            );
-
-            const detailResponse = await fetch(`/api/v1/planting-details`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify(newDetailPayload),
-            });
-
-            if (!detailResponse.ok) {
-              const errorData = await detailResponse.json();
-              console.error("Error creating planting detail:", errorData);
-              throw new Error(
-                errorData.message || "ไม่สามารถเพิ่มข้อมูลรายละเอียดการปลูกได้"
-              );
-            }
           }
         } catch (detailError) {
           console.error("Error with planting detail:", detailError);
-          // ไม่ throw error ออกไปเพื่อให้สามารถทำงานกับ detail อื่นๆ ต่อได้
+        }
+      }
+
+      // เพิ่มรายการใหม่
+      for (const detail of newDetails) {
+        try {
+          // สร้าง payload สำหรับรายการใหม่
+          const newDetailPayload = {
+            rubberFarmId: selectedFarmId,
+            specie: detail.specie,
+            areaOfPlot: Number(detail.areaOfPlot),
+            numberOfRubber: Number(detail.numberOfRubber),
+            numberOfTapping: Number(detail.numberOfTapping) || 0,
+            ageOfRubber: Number(detail.ageOfRubber) || 0,
+            yearOfTapping: detail.yearOfTapping,
+            monthOfTapping: detail.monthOfTapping,
+            totalProduction: Number(detail.totalProduction) || 0,
+          };
+
+          console.log("Creating new planting detail:", newDetailPayload);
+
+          const detailResponse = await fetch(`/api/v1/planting-details`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(newDetailPayload),
+          });
+
+          if (!detailResponse.ok) {
+            const errorData = await detailResponse.json();
+            console.error("Error creating planting detail:", errorData);
+            throw new Error(
+              errorData.message || "ไม่สามารถเพิ่มข้อมูลรายละเอียดการปลูกได้"
+            );
+          }
+        } catch (detailError) {
+          console.error("Error with new planting detail:", detailError);
         }
       }
 
       setSuccess(true);
 
-      // Wait a moment and redirect to dashboard
+      // รอสักครู่แล้วเปลี่ยนหน้า
       setTimeout(() => {
         router.push("/farmer/dashboard");
       }, 2000);
