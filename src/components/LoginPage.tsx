@@ -50,7 +50,7 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "การเข้าสู่ระบบล้มเหลว");
+        throw new Error(data.message ?? "การเข้าสู่ระบบล้มเหลว");
       }
 
       // Store the token
@@ -74,7 +74,7 @@ export default function LoginPage() {
           router.push("/dashboard");
       }
     } catch (err: any) {
-      setError(err.message || "เกิดข้อผิดพลาดในการเข้าสู่ระบบ");
+      setError(err.message ?? "เกิดข้อผิดพลาดในการเข้าสู่ระบบ");
     } finally {
       setIsLoading(false);
     }

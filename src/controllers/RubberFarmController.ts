@@ -129,6 +129,122 @@ export class RubberFarmController extends BaseController<RubberFarmModel> {
         }
     }
 
+    /**
+     * Updates rubber farm certification information
+     * This method handles updates specifically for certification purposes
+     */
+    async updateCertification(req: NextRequest): Promise<NextResponse> {
+        try {
+            const data = await req.json();
+            const { farmData, plantingDetailsData } = data;
+
+            // Validate the request data
+            if (!farmData || !farmData.rubberFarmId || !plantingDetailsData) {
+                return NextResponse.json(
+                    { message: 'Missing required fields for certification update' },
+                    { status: 400 }
+                );
+            }
+
+            // Get farm ID
+            const rubberFarmId = farmData.rubberFarmId;
+
+            // First check if the farm exists
+            const existingFarm = await this.rubberFarmService.getById(rubberFarmId);
+            if (!existingFarm) {
+                return NextResponse.json(
+                    { message: 'Rubber farm not found' },
+                    { status: 404 }
+                );
+            }
+
+            // Get the token from the authorization header and validate ownership
+            const authHeader = req.headers.get('Authorization');
+            if (!authHeader || !authHeader.startsWith('Bearer ')) {
+                return NextResponse.json(
+                    { message: 'Authorization required' },
+                    { status: 401 }
+                );
+            }
+
+            const token = authHeader.split(' ')[1];
+            const decodedToken = this.rubberFarmService.verifyToken(token);
+
+            if (!decodedToken || decodedToken.role !== 'FARMER') {
+                return NextResponse.json(
+                    { message: 'Invalid token or insufficient permissions' },
+                    { status: 403 }
+                );
+            }
+
+            // Ensure the farm belongs to the authenticated farmer
+            if (existingFarm.farmerId !== decodedToken.farmerId) {
+                return NextResponse.json(
+                    { message: 'You do not have permission to update this farm' },
+                    { status: 403 }
+                );
+            }
+
+            // Update farm data
+            const updatedFarm = await this.rubberFarmService.updateRubberFarm(
+                rubberFarmId,
+                farmData
+            );
+
+            if (!updatedFarm) {
+                return NextResponse.json(
+                    { message: 'Failed to update farm data' },
+                    { status: 500 }
+                );
+            }
+
+            // Process planting details
+            const updatedDetails = [];
+
+            // Loop through all provided planting details
+            for (const detail of plantingDetailsData) {
+                if (detail.plantingDetailId) {
+                    // Update existing planting detail
+                    const updatedDetail = await this.rubberFarmService.updatePlantingDetail(
+                        detail.plantingDetailId,
+                        detail
+                    );
+
+                    if (updatedDetail) {
+                        updatedDetails.push(updatedDetail);
+                    }
+                } else {
+                    // Create new planting detail
+                    const newDetail = {
+                        ...detail,
+                        rubberFarmId: rubberFarmId
+                    };
+
+                    const createdDetail = await this.rubberFarmService.createPlantingDetail(
+                        newDetail
+                    );
+
+                    if (createdDetail) {
+                        updatedDetails.push(createdDetail);
+                    }
+                }
+            }
+
+            // Return the updated farm with details
+            return NextResponse.json({
+                message: 'Certification update submitted successfully',
+                farm: updatedFarm,
+                plantingDetails: updatedDetails
+            }, { status: 200 });
+        } catch (error: any) {
+            console.error('Error updating certification:', error);
+            return NextResponse.json(
+                { message: error.message || 'Failed to update certification' },
+                { status: 500 }
+            );
+        }
+    }
+
     async deleteRubberFarm(req: NextRequest, { params }: { params: { id: string } }): Promise<NextResponse> {
         try {
             let farmId: number;
