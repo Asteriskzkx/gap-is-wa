@@ -3,6 +3,20 @@ import { RubberFarmModel } from '../models/RubberFarmModel';
 import { PlantingDetailModel } from '../models/PlantingDetailModel';
 import { RubberFarmRepository } from '../repositories/RubberFarmRepository';
 import { PlantingDetailRepository } from '../repositories/PlantingDetailRepository';
+import jwt from 'jsonwebtoken';
+
+// ประกาศ interface สำหรับข้อมูลที่ใช้ในการอัปเดต PlantingDetail
+interface PlantingDetailUpdateData {
+    specie?: string;
+    areaOfPlot?: number;
+    numberOfRubber?: number;
+    numberOfTapping?: number;
+    ageOfRubber?: number;
+    yearOfTapping?: Date;
+    monthOfTapping?: Date;
+    totalProduction?: number;
+    rubberFarmId?: number;
+}
 
 export class RubberFarmService extends BaseService<RubberFarmModel> {
     private rubberFarmRepository: RubberFarmRepository;
@@ -119,6 +133,113 @@ export class RubberFarmService extends BaseService<RubberFarmModel> {
             return await this.update(rubberFarmId, farmData);
         } catch (error) {
             this.handleServiceError(error);
+            return null;
+        }
+    }
+
+    /**
+     * Update a planting detail record
+     * @param plantingDetailId - ID of the planting detail to update
+     * @param detailData - New data for the planting detail
+     * @returns Updated planting detail or null if failed
+     */
+    async updatePlantingDetail(
+        plantingDetailId: number,
+        detailData: PlantingDetailUpdateData
+    ): Promise<PlantingDetailModel | null> {
+        try {
+            // Check if the planting detail exists
+            const existingDetail = await this.plantingDetailRepository.findById(plantingDetailId);
+            if (!existingDetail) {
+                throw new Error('Planting detail not found');
+            }
+
+            // Check if the detail belongs to the farm
+            if (detailData.rubberFarmId && existingDetail.rubberFarmId !== detailData.rubberFarmId) {
+                throw new Error('Planting detail does not belong to this farm');
+            }
+
+            // Create an update data object with the correct type
+            const updatedData: PlantingDetailUpdateData = {
+                specie: detailData.specie || existingDetail.specie,
+                areaOfPlot: detailData.areaOfPlot || existingDetail.areaOfPlot,
+                numberOfRubber: detailData.numberOfRubber || existingDetail.numberOfRubber,
+                numberOfTapping: detailData.numberOfTapping || existingDetail.numberOfTapping,
+                ageOfRubber: detailData.ageOfRubber || existingDetail.ageOfRubber,
+                totalProduction: detailData.totalProduction || existingDetail.totalProduction,
+            };
+
+            // Only update dates if they are provided
+            if (detailData.yearOfTapping) {
+                updatedData.yearOfTapping = new Date(detailData.yearOfTapping);
+            }
+
+            if (detailData.monthOfTapping) {
+                updatedData.monthOfTapping = new Date(detailData.monthOfTapping);
+            }
+
+            // Update the planting detail
+            return await this.plantingDetailRepository.update(plantingDetailId, updatedData);
+        } catch (error) {
+            console.error('Error updating planting detail:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Create a new planting detail record
+     * @param detailData - Data for the new planting detail
+     * @returns Created planting detail or null if failed
+     */
+    async createPlantingDetail(detailData: PlantingDetailUpdateData): Promise<PlantingDetailModel | null> {
+        try {
+            // Check if the farm exists
+            if (!detailData.rubberFarmId) {
+                throw new Error('Rubber farm ID is required');
+            }
+
+            const farm = await this.rubberFarmRepository.findById(detailData.rubberFarmId);
+            if (!farm) {
+                throw new Error('Rubber farm not found');
+            }
+
+            // Make sure dates are properly formatted
+            const yearOfTapping = detailData.yearOfTapping ? new Date(detailData.yearOfTapping) : new Date();
+            const monthOfTapping = detailData.monthOfTapping ? new Date(detailData.monthOfTapping) : new Date();
+
+            // Create a planting detail model using the static factory method
+            const plantingDetailModel = PlantingDetailModel.create(
+                detailData.rubberFarmId,
+                detailData.specie || '',
+                detailData.areaOfPlot || 0,
+                detailData.numberOfRubber || 0,
+                detailData.numberOfTapping || 0,
+                detailData.ageOfRubber || 0,
+                yearOfTapping,
+                monthOfTapping,
+                detailData.totalProduction || 0
+            );
+
+            // Create the planting detail using the repository
+            return await this.plantingDetailRepository.create(plantingDetailModel);
+        } catch (error) {
+            console.error('Error creating planting detail:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Verify JWT token
+     * Helper method to validate user token
+     * @param token - JWT token to verify
+     * @returns Decoded token or null if invalid
+     */
+    verifyToken(token: string): any {
+        try {
+            const jwtSecret = process.env.JWT_SECRET || 'default-secret-key-change-in-production';
+            return jwt.verify(token, jwtSecret);
+        } catch (error) {
+            console.error('Error verifying token:', error);
             return null;
         }
     }
