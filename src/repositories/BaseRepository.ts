@@ -1,12 +1,8 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../utils/db';
 import { BaseModel } from '../models/BaseModel';
 
 export abstract class BaseRepository<T extends BaseModel> {
-    protected prisma: PrismaClient;
-
-    constructor() {
-        this.prisma = new PrismaClient();
-    }
+    protected prisma = prisma;
 
     abstract create(model: T): Promise<T>;
     abstract findById(id: number): Promise<T | null>; // เปลี่ยนจาก string เป็น number
