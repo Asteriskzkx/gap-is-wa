@@ -19,7 +19,7 @@ export class AuditorController extends BaseController<AuditorModel> {
 
             if (!email || !password) {
                 return NextResponse.json(
-                    { message: 'Email and password are required' },
+                    { message: 'กรุณากรอกอีเมลและรหัสผ่านให้ครบถ้วน' },
                     { status: 400 }
                 );
             }
@@ -28,7 +28,7 @@ export class AuditorController extends BaseController<AuditorModel> {
 
             if (!result) {
                 return NextResponse.json(
-                    { message: 'Invalid email or password' },
+                    { message: 'ไม่สามารถยืนยันตัวตนได้ กรุณาตรวจสอบอีเมลหรือรหัสผ่านให้ถูกต้อง' },
                     { status: 401 }
                 );
             }

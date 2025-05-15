@@ -19,7 +19,7 @@ export class FarmerController extends BaseController<FarmerModel> {
 
             if (!email || !password) {
                 return NextResponse.json(
-                    { message: 'Email and password are required' },
+                    { message: 'กรุณากรอกอีเมลและรหัสผ่านให้ครบถ้วน' },
                     { status: 400 }
                 );
             }
@@ -28,7 +28,7 @@ export class FarmerController extends BaseController<FarmerModel> {
 
             if (!result) {
                 return NextResponse.json(
-                    { message: 'Invalid email or password' },
+                    { message: 'ไม่สามารถยืนยันตัวตนได้ กรุณาตรวจสอบอีเมลหรือรหัสผ่านให้ถูกต้อง' },
                     { status: 401 }
                 );
             }
@@ -57,7 +57,7 @@ export class FarmerController extends BaseController<FarmerModel> {
             // Basic validation
             if (!email || !password || !firstName || !lastName || !identificationNumber) {
                 return NextResponse.json(
-                    { message: 'Required fields missing' },
+                    { message: 'กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน' },
                     { status: 400 }
                 );
             }
@@ -66,7 +66,7 @@ export class FarmerController extends BaseController<FarmerModel> {
             const isValidID = await this.farmerService.validateIdentificationNumber(identificationNumber);
             if (!isValidID) {
                 return NextResponse.json(
-                    { message: 'Invalid identification number' },
+                    { message: 'หมายเลขบัตรประจำตัวประชาชนไม่ถูกต้อง กรุณาตรวจสอบและกรอกใหม่ให้ถูกต้อง' },
                     { status: 400 }
                 );
             }
@@ -119,7 +119,7 @@ export class FarmerController extends BaseController<FarmerModel> {
 
             if (!authHeader || !authHeader.startsWith('Bearer ')) {
                 return NextResponse.json(
-                    { message: 'No authentication token provided' },
+                    { message: 'ไม่พบโทเค็นสำหรับการยืนยันตัวตน กรุณาติดต่อเจ้าหน้าที่หากพบปัญหา' },
                     { status: 401 }
                 );
             }
@@ -129,7 +129,7 @@ export class FarmerController extends BaseController<FarmerModel> {
 
             if (!decoded || decoded.role !== 'FARMER') {
                 return NextResponse.json(
-                    { message: 'Invalid or expired token, or user is not a farmer' },
+                    { message: 'โทเค็นไม่ถูกต้องหรือหมดอายุ หรือผู้ใช้งานไม่ใช่เกษตรกร' },
                     { status: 401 }
                 );
             }
@@ -139,7 +139,7 @@ export class FarmerController extends BaseController<FarmerModel> {
 
             if (!farmer) {
                 return NextResponse.json(
-                    { message: 'Farmer profile not found' },
+                    { message: 'ไม่พบข้อมูลโปรไฟล์เกษตรกรในระบบ กรุณาติดต่อเจ้าหน้าที่หากพบปัญหา' },
                     { status: 404 }
                 );
             }
@@ -170,7 +170,7 @@ export class FarmerController extends BaseController<FarmerModel> {
 
             if (!farmer) {
                 return NextResponse.json(
-                    { message: 'Farmer profile not found' },
+                    { message: 'ไม่พบข้อมูลโปรไฟล์เกษตรกรในระบบ กรุณาติดต่อเจ้าหน้าที่หากพบปัญหา' },
                     { status: 404 }
                 );
             }
@@ -201,7 +201,7 @@ export class FarmerController extends BaseController<FarmerModel> {
                 const isValidID = await this.farmerService.validateIdentificationNumber(data.identificationNumber);
                 if (!isValidID) {
                     return NextResponse.json(
-                        { message: 'Invalid identification number' },
+                        { message: 'หมายเลขบัตรประจำตัวประชาชนไม่ถูกต้อง กรุณาตรวจสอบและกรอกใหม่ให้ถูกต้อง' },
                         { status: 400 }
                     );
                 }
@@ -211,7 +211,7 @@ export class FarmerController extends BaseController<FarmerModel> {
 
             if (!updatedFarmer) {
                 return NextResponse.json(
-                    { message: 'Farmer not found or update failed' },
+                    { message: 'ไม่พบข้อมูลเกษตรกรหรือไม่สามารถปรับปรุงข้อมูลได้ กรุณาติดต่อเจ้าหน้าที่หากพบปัญหา' },
                     { status: 404 }
                 );
             }
@@ -235,7 +235,7 @@ export class FarmerController extends BaseController<FarmerModel> {
 
             if (!district) {
                 return NextResponse.json(
-                    { message: 'District parameter is required' },
+                    { message: 'กรุณาระบุอำเภอให้ครบถ้วน เพื่อดำเนินการค้นหาข้อมูลเกษตรกร' },
                     { status: 400 }
                 );
             }
@@ -256,7 +256,7 @@ export class FarmerController extends BaseController<FarmerModel> {
 
             if (!province) {
                 return NextResponse.json(
-                    { message: 'Province parameter is required' },
+                    { message: 'กรุณาระบุจังหวัดให้ครบถ้วน เพื่อดำเนินการค้นหาข้อมูลเกษตรกร' },
                     { status: 400 }
                 );
             }

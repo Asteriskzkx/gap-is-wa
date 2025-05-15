@@ -181,6 +181,7 @@ export class FarmerService extends BaseService<FarmerModel> {
         try {
             return jwt.verify(token, this.jwtSecret);
         } catch (error) {
+            this.handleServiceError(error);
             return null;
         }
     }
