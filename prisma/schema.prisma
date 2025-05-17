@@ -144,19 +144,61 @@ model PlantingDetail {
   updatedAt        DateTime   @updatedAt
 }
 
+model InspectionTypeMaster {
+  inspectionTypeId Int      @id @default(autoincrement())
+  typeName         String   @db.VarChar(100)
+  description      String?  @db.Text
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  inspections     Inspection[]
+  inspectionItems InspectionItemMaster[]
+}
+
+model InspectionItemMaster {
+  inspectionItemId Int                  @id @default(autoincrement())
+  inspectionTypeId Int
+  inspectionType   InspectionTypeMaster @relation(fields: [inspectionTypeId], references: [inspectionTypeId])
+  itemNo           Int
+  itemName         String               @db.VarChar(100)
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+
+  // Relations
+  requirements    RequirementMaster[]
+  inspectionItems InspectionItem[]
+}
+
+model RequirementMaster {
+  requirementId      Int                  @id @default(autoincrement())
+  inspectionItemId   Int
+  inspectionItem     InspectionItemMaster @relation(fields: [inspectionItemId], references: [inspectionItemId])
+  requirementNo      Int
+  requirementName    String               @db.VarChar(255)
+  requirementLevel   String               @db.VarChar(50)
+  requirementLevelNo String               @db.VarChar(50)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  // Relations
+  requirements Requirement[]
+}
+
 model Inspection {
-  inspectionId          Int        @id @default(autoincrement())
+  inspectionId          Int                  @id @default(autoincrement())
   inspectionNo          Int
   inspectionDateAndTime DateTime
-  inspectionType        String     @db.VarChar(100)
-  inspectionStatus      String     @db.VarChar(100)
-  inspectionResult      String     @db.VarChar(100)
+  inspectionTypeId      Int
+  inspectionType        InspectionTypeMaster @relation(fields: [inspectionTypeId], references: [inspectionTypeId])
+  inspectionStatus      String               @db.VarChar(100)
+  inspectionResult      String               @db.VarChar(100)
   auditorChiefId        Int
-  auditorChief          Auditor    @relation(fields: [auditorChiefId], references: [auditorId])
+  auditorChief          Auditor              @relation(fields: [auditorChiefId], references: [auditorId])
   rubberFarmId          Int
-  rubberFarm            RubberFarm @relation(fields: [rubberFarmId], references: [rubberFarmId])
-  createdAt             DateTime   @default(now())
-  updatedAt             DateTime   @updatedAt
+  rubberFarm            RubberFarm           @relation(fields: [rubberFarmId], references: [rubberFarmId])
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
 
   // Relations
   auditorInspections AuditorInspection[]
@@ -179,33 +221,33 @@ model AuditorInspection {
 }
 
 model InspectionItem {
-  inspectionItemId     Int        @id @default(autoincrement())
-  inspectionId         Int
-  inspection           Inspection @relation(fields: [inspectionId], references: [inspectionId], onDelete: Cascade)
-  inspectionItemNo     Int
-  inspectionItemName   String     @db.VarChar(100)
-  inspectionItemResult String     @db.VarChar(100)
-  otherConditions      Json // Store list of strings as JSON
-  createdAt            DateTime   @default(now())
-  updatedAt            DateTime   @updatedAt
+  inspectionItemId       Int                  @id @default(autoincrement())
+  inspectionId           Int
+  inspection             Inspection           @relation(fields: [inspectionId], references: [inspectionId], onDelete: Cascade)
+  inspectionItemMasterId Int
+  inspectionItemMaster   InspectionItemMaster @relation(fields: [inspectionItemMasterId], references: [inspectionItemId])
+  inspectionItemNo       Int
+  inspectionItemResult   String               @db.VarChar(100)
+  otherConditions        Json // Store list of strings as JSON
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
 
   // Relation to Requirement
   requirements Requirement[]
 }
 
 model Requirement {
-  requirementId      Int            @id @default(autoincrement())
-  inspectionItemId   Int
-  inspectionItem     InspectionItem @relation(fields: [inspectionItemId], references: [inspectionItemId], onDelete: Cascade)
-  requirementNo      Int
-  requirementName    String         @db.VarChar(255)
-  requirementLevel   String         @db.VarChar(50)
-  requirementLevelNo String         @db.VarChar(50)
-  evaluationResult   String         @db.VarChar(20)
-  evaluationMethod   String         @db.VarChar(20)
-  note               String         @db.VarChar(255)
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @updatedAt
+  requirementId       Int               @id @default(autoincrement())
+  inspectionItemId    Int
+  inspectionItem      InspectionItem    @relation(fields: [inspectionItemId], references: [inspectionItemId], onDelete: Cascade)
+  requirementMasterId Int
+  requirementMaster   RequirementMaster @relation(fields: [requirementMasterId], references: [requirementId])
+  requirementNo       Int
+  evaluationResult    String            @db.VarChar(20)
+  evaluationMethod    String            @db.VarChar(20)
+  note                String            @db.VarChar(255)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
 }
 
 model DataRecord {
