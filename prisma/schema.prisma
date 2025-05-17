@@ -23,10 +23,10 @@ enum UserRole {
 
 model User {
   userId         Int      @id @default(autoincrement())
-  email          String   @unique
-  password       String
-  hashedPassword String
-  name           String
+  email          String   @unique @db.VarChar(100)
+  password       String   @db.VarChar(100)
+  hashedPassword String   @db.VarChar(60)
+  name           String   @db.VarChar(200)
   role           UserRole @default(BASIC)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -42,23 +42,23 @@ model Farmer {
   farmerId             Int      @id @default(autoincrement())
   userId               Int      @unique
   user                 User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
-  namePrefix           String
-  firstName            String
-  lastName             String
-  identificationNumber String   @unique
+  namePrefix           String   @db.VarChar(25)
+  firstName            String   @db.VarChar(100)
+  lastName             String   @db.VarChar(100)
+  identificationNumber String   @unique @db.VarChar(13)
   birthDate            DateTime
-  gender               String
-  houseNo              String
-  villageName          String
+  gender               String   @db.VarChar(50)
+  houseNo              String   @db.VarChar(10)
+  villageName          String   @db.VarChar(255)
   moo                  Int
-  road                 String
-  alley                String
-  subDistrict          String
-  district             String
-  provinceName         String
-  zipCode              String
-  phoneNumber          String
-  mobilePhoneNumber    String
+  road                 String   @db.VarChar(100)
+  alley                String   @db.VarChar(100)
+  subDistrict          String   @db.VarChar(100)
+  district             String   @db.VarChar(100)
+  provinceName         String   @db.VarChar(100)
+  zipCode              String   @db.VarChar(5)
+  phoneNumber          String   @db.VarChar(10)
+  mobilePhoneNumber    String   @db.VarChar(10)
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
@@ -70,9 +70,9 @@ model Auditor {
   auditorId  Int      @id @default(autoincrement())
   userId     Int      @unique
   user       User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
-  namePrefix String
-  firstName  String
-  lastName   String
+  namePrefix String   @db.VarChar(25)
+  firstName  String   @db.VarChar(100)
+  lastName   String   @db.VarChar(100)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -87,9 +87,9 @@ model Committee {
   committeeId Int      @id @default(autoincrement())
   userId      Int      @unique
   user        User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
-  namePrefix  String
-  firstName   String
-  lastName    String
+  namePrefix  String   @db.VarChar(25)
+  firstName   String   @db.VarChar(100)
+  lastName    String   @db.VarChar(100)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -101,9 +101,9 @@ model Admin {
   adminId    Int      @id @default(autoincrement())
   userId     Int      @unique
   user       User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
-  namePrefix String
-  firstName  String
-  lastName   String
+  namePrefix String   @db.VarChar(25)
+  firstName  String   @db.VarChar(100)
+  lastName   String   @db.VarChar(100)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 }
@@ -112,13 +112,13 @@ model RubberFarm {
   rubberFarmId Int      @id @default(autoincrement())
   farmerId     Int
   farmer       Farmer   @relation(fields: [farmerId], references: [farmerId], onDelete: Cascade)
-  villageName  String
+  villageName  String   @db.VarChar(255)
   moo          Int
-  road         String
-  alley        String
-  subDistrict  String
-  district     String
-  province     String
+  road         String   @db.VarChar(100)
+  alley        String   @db.VarChar(100)
+  subDistrict  String   @db.VarChar(100)
+  district     String   @db.VarChar(100)
+  province     String   @db.VarChar(100)
   location     Json // For GeoJSON data
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -132,7 +132,7 @@ model PlantingDetail {
   plantingDetailId Int        @id @default(autoincrement())
   rubberFarmId     Int
   rubberFarm       RubberFarm @relation(fields: [rubberFarmId], references: [rubberFarmId], onDelete: Cascade)
-  specie           String
+  specie           String     @db.VarChar(100)
   areaOfPlot       Float
   numberOfRubber   Int
   numberOfTapping  Int
@@ -148,9 +148,9 @@ model Inspection {
   inspectionId          Int        @id @default(autoincrement())
   inspectionNo          Int
   inspectionDateAndTime DateTime
-  inspectionType        String
-  inspectionStatus      String
-  inspectionResult      String
+  inspectionType        String     @db.VarChar(100)
+  inspectionStatus      String     @db.VarChar(100)
+  inspectionResult      String     @db.VarChar(100)
   auditorChiefId        Int
   auditorChief          Auditor    @relation(fields: [auditorChiefId], references: [auditorId])
   rubberFarmId          Int
@@ -183,8 +183,8 @@ model InspectionItem {
   inspectionId         Int
   inspection           Inspection @relation(fields: [inspectionId], references: [inspectionId], onDelete: Cascade)
   inspectionItemNo     Int
-  inspectionItemName   String
-  inspectionItemResult String
+  inspectionItemName   String     @db.VarChar(100)
+  inspectionItemResult String     @db.VarChar(100)
   otherConditions      Json // Store list of strings as JSON
   createdAt            DateTime   @default(now())
   updatedAt            DateTime   @updatedAt
@@ -198,12 +198,12 @@ model Requirement {
   inspectionItemId   Int
   inspectionItem     InspectionItem @relation(fields: [inspectionItemId], references: [inspectionItemId], onDelete: Cascade)
   requirementNo      Int
-  requirementName    String
-  requirementLevel   String
-  requirementLevelNo String
-  evaluationResult   String
-  evaluationMethod   String
-  note               String
+  requirementName    String         @db.VarChar(255)
+  requirementLevel   String         @db.VarChar(50)
+  requirementLevelNo String         @db.VarChar(50)
+  evaluationResult   String         @db.VarChar(20)
+  evaluationMethod   String         @db.VarChar(20)
+  note               String         @db.VarChar(255)
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @updatedAt
 }
@@ -218,7 +218,7 @@ model DataRecord {
   previouslyCultivated Json
   plantDisease         Json
   relatedPlants        Json
-  moreInfo             String
+  moreInfo             String     @db.VarChar(255)
   map                  Json // For GeoJSON data
   createdAt            DateTime   @default(now())
   updatedAt            DateTime   @updatedAt
@@ -239,7 +239,7 @@ model Certificate {
   certificateId Int        @id @default(autoincrement())
   inspectionId  Int        @unique
   inspection    Inspection @relation(fields: [inspectionId], references: [inspectionId], onDelete: Cascade)
-  pdfFileUrl    String // Store S3 URL reference to the PDF file
+  pdfFileUrl    String     @db.VarChar(255) // Store S3 URL reference to the PDF file
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
 
