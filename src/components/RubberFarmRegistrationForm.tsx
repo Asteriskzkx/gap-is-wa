@@ -5,9 +5,14 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import thaiProvinceData from "@/data/thai-provinces.json";
 import DynamicMapSelector from "./maps/DynamicMap";
-import ReactDatePicker from "react-datepicker";
+import ReactDatePicker, { registerLocale } from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { format, parseISO } from "date-fns";
+import { th } from "date-fns/locale/th"; // นำเข้า locale ภาษาไทย
+import { addYears } from "date-fns/addYears"; // สำหรับการปรับปีเป็น พ.ศ.
+
+// ลงทะเบียน locale ภาษาไทย
+registerLocale("th", th);
 
 // ประเภทข้อมูลสำหรับโครงสร้าง API จังหวัด อำเภอ ตำบล (ตามที่มีใน FarmerRegisterPage)
 interface Tambon {
@@ -139,6 +144,28 @@ export default function RubberFarmRegistrationForm() {
     },
     plantingDetails: [],
   });
+
+  // ฟังก์ชันสำหรับแสดงวันที่ในรูปแบบต่างๆ
+  const formatThaiDate = (
+    dateString: string | null,
+    format: "year" | "month" | "full" = "full"
+  ): string => {
+    if (!dateString) return "-";
+
+    const date = new Date(dateString);
+
+    if (format === "year") {
+      return date.toLocaleDateString("th-TH", { year: "numeric" });
+    } else if (format === "month") {
+      return date.toLocaleDateString("th-TH", { month: "long" });
+    } else {
+      return date.toLocaleDateString("th-TH", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    }
+  };
 
   // ดึงข้อมูล farmer ID จาก localStorage เมื่อ component โหลด
   useEffect(() => {
@@ -545,8 +572,13 @@ export default function RubberFarmRegistrationForm() {
                   type="number"
                   required
                   value={rubberFarm.moo || ""}
-                  onChange={updateFarmData}
-                  min={0}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value, 10);
+                    if (value >= 1 && value <= 1000) {
+                      updateFarmData(e); // อัปเดตค่าเฉพาะเมื่ออยู่ในช่วงที่กำหนด
+                    }
+                  }}
+                  min={1}
                   max={1000}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
                 />
@@ -559,7 +591,7 @@ export default function RubberFarmRegistrationForm() {
                   htmlFor="road"
                   className="block text-sm font-medium text-gray-700 mb-1"
                 >
-                  ถนน
+                  ถนน <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="road"
@@ -576,7 +608,7 @@ export default function RubberFarmRegistrationForm() {
                   htmlFor="alley"
                   className="block text-sm font-medium text-gray-700 mb-1"
                 >
-                  ซอย
+                  ซอย <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="alley"
@@ -743,16 +775,23 @@ export default function RubberFarmRegistrationForm() {
                     </label>
                     <input
                       type="number"
-                      step="0.01"
+                      step="0.0001"
                       min={0}
+                      max={10000}
+                      required
                       value={detail.areaOfPlot || ""}
-                      onChange={(e) =>
-                        updatePlantingDetail(
-                          index,
-                          "areaOfPlot",
-                          e.target.value
-                        )
-                      }
+                      onChange={(e) => {
+                        const value = parseFloat(e.target.value);
+                        if (value >= 0 && value <= 10000) {
+                          const formattedValue = parseFloat(value.toFixed(4));
+
+                          updatePlantingDetail(
+                            index,
+                            "areaOfPlot",
+                            formattedValue
+                          );
+                        }
+                      }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     />
                   </div>
@@ -767,51 +806,55 @@ export default function RubberFarmRegistrationForm() {
                       type="number"
                       value={detail.numberOfRubber || ""}
                       min={0}
-                      onChange={(e) =>
-                        updatePlantingDetail(
-                          index,
-                          "numberOfRubber",
-                          e.target.value
-                        )
-                      }
+                      max={10000}
+                      required
+                      onChange={(e) => {
+                        const value = parseFloat(e.target.value);
+                        if (value >= 0 && value <= 10000) {
+                          updatePlantingDetail(index, "numberOfRubber", value);
+                        }
+                      }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      จำนวนต้นยางที่กรีดได้
+                      จำนวนต้นยางที่กรีดได้{" "}
+                      <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
                       value={detail.numberOfTapping || ""}
                       min={0}
-                      onChange={(e) =>
-                        updatePlantingDetail(
-                          index,
-                          "numberOfTapping",
-                          e.target.value
-                        )
-                      }
+                      max={10000}
+                      required
+                      onChange={(e) => {
+                        const value = parseFloat(e.target.value);
+                        if (value >= 0 && value <= 10000) {
+                          updatePlantingDetail(index, "numberOfTapping", value);
+                        }
+                      }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      อายุต้นยาง (ปี)
+                      อายุต้นยาง (ปี) <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
                       value={detail.ageOfRubber || ""}
                       min={0}
-                      onChange={(e) =>
-                        updatePlantingDetail(
-                          index,
-                          "ageOfRubber",
-                          e.target.value
-                        )
-                      }
+                      max={100}
+                      required
+                      onChange={(e) => {
+                        const value = parseFloat(e.target.value);
+                        if (value >= 0 && value <= 100) {
+                          updatePlantingDetail(index, "ageOfRubber", value);
+                        }
+                      }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     />
                   </div>
@@ -820,7 +863,7 @@ export default function RubberFarmRegistrationForm() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      ปีที่เริ่มกรีด
+                      ปีที่เริ่มกรีด <span className="text-red-500">*</span>
                     </label>
                     <ReactDatePicker
                       selected={
@@ -828,56 +871,81 @@ export default function RubberFarmRegistrationForm() {
                           ? parseISO(detail.yearOfTapping)
                           : null
                       }
-                      onChange={(date) =>
+                      onChange={(date: Date | null) =>
                         updatePlantingDetail(
                           index,
                           "yearOfTapping",
                           date ? date.toISOString() : ""
                         )
                       }
-                      dateFormat="dd/MM/yyyy"
+                      locale="th"
+                      dateFormat="พ.ศ. yyyy"
+                      showYearPicker
+                      yearItemNumber={6}
+                      renderYearContent={(year) => year + 543} // แสดงปีเป็น พ.ศ. โดยไม่เปลี่ยนค่าจริงของ Date
                       className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      เดือนที่เริ่มกรีด
+                      เดือนที่เริ่มกรีด <span className="text-red-500">*</span>
                     </label>
-                    <ReactDatePicker
-                      selected={
+                    <select
+                      value={
                         detail.monthOfTapping
-                          ? parseISO(detail.monthOfTapping)
-                          : null
+                          ? new Date(detail.monthOfTapping).getMonth()
+                          : ""
                       }
-                      onChange={(date) =>
+                      onChange={(e) => {
+                        const month = parseInt(e.target.value);
+                        const date = new Date();
+                        date.setMonth(month);
                         updatePlantingDetail(
                           index,
                           "monthOfTapping",
-                          date ? date.toISOString() : ""
-                        )
-                      }
-                      dateFormat="dd/MM/yyyy"
+                          date.toISOString()
+                        );
+                      }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    />
+                    >
+                      <option value="0">มกราคม</option>
+                      <option value="1">กุมภาพันธ์</option>
+                      <option value="2">มีนาคม</option>
+                      <option value="3">เมษายน</option>
+                      <option value="4">พฤษภาคม</option>
+                      <option value="5">มิถุนายน</option>
+                      <option value="6">กรกฎาคม</option>
+                      <option value="7">สิงหาคม</option>
+                      <option value="8">กันยายน</option>
+                      <option value="9">ตุลาคม</option>
+                      <option value="10">พฤศจิกายน</option>
+                      <option value="11">ธันวาคม</option>
+                    </select>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      ผลผลิตรวม (กก.)
+                      ผลผลิตรวม (กก.) <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
-                      step="0.01"
+                      step="0.0001"
                       min={0}
+                      max={10000}
                       value={detail.totalProduction || ""}
-                      onChange={(e) =>
-                        updatePlantingDetail(
-                          index,
-                          "totalProduction",
-                          e.target.value
-                        )
-                      }
+                      onChange={(e) => {
+                        const value = parseFloat(e.target.value);
+                        if (value >= 0 && value <= 10000) {
+                          const formattedValue = parseFloat(value.toFixed(4));
+
+                          updatePlantingDetail(
+                            index,
+                            "totalProduction",
+                            formattedValue
+                          );
+                        }
+                      }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     />
                   </div>
@@ -975,16 +1043,7 @@ export default function RubberFarmRegistrationForm() {
                     <div>
                       <p className="text-sm text-gray-500">ปีที่เริ่มกรีด:</p>
                       <p className="font-medium">
-                        {detail.yearOfTapping
-                          ? new Date(detail.yearOfTapping).toLocaleDateString(
-                              "th-TH",
-                              {
-                                year: "numeric",
-                                month: "long",
-                                day: "numeric",
-                              }
-                            )
-                          : "-"}
+                        {formatThaiDate(detail.yearOfTapping, "year")}
                       </p>
                     </div>
                     <div>
@@ -992,16 +1051,7 @@ export default function RubberFarmRegistrationForm() {
                         เดือนที่เริ่มกรีด:
                       </p>
                       <p className="font-medium">
-                        {detail.monthOfTapping
-                          ? new Date(detail.monthOfTapping).toLocaleDateString(
-                              "th-TH",
-                              {
-                                year: "numeric",
-                                month: "long",
-                                day: "numeric",
-                              }
-                            )
-                          : "-"}
+                        {formatThaiDate(detail.monthOfTapping, "month")}
                       </p>
                     </div>
                     <div>
