@@ -1,8 +1,13 @@
 import { PrismaClient, DataRecord as PrismaDataRecord } from "@prisma/client";
 import { BaseRepository } from "./BaseRepository";
 import { DataRecordModel } from "../models/DataRecordModel";
+import { BaseMapper } from "../mappers/BaseMapper";
 
 export class DataRecordRepository extends BaseRepository<DataRecordModel> {
+  constructor(mapper: BaseMapper<any, DataRecordModel>) {
+    super(mapper);
+  }
+
   async create(model: DataRecordModel): Promise<DataRecordModel> {
     try {
       const dataRecord = await this.prisma.dataRecord.create({
@@ -104,19 +109,6 @@ export class DataRecordRepository extends BaseRepository<DataRecordModel> {
   }
 
   private mapToModel(prismaDataRecord: PrismaDataRecord): DataRecordModel {
-    return new DataRecordModel(
-      prismaDataRecord.dataRecordId,
-      prismaDataRecord.inspectionId,
-      prismaDataRecord.species,
-      prismaDataRecord.waterSystem,
-      prismaDataRecord.fertilizers,
-      prismaDataRecord.previouslyCultivated,
-      prismaDataRecord.plantDisease,
-      prismaDataRecord.relatedPlants,
-      prismaDataRecord.moreInfo,
-      prismaDataRecord.map,
-      prismaDataRecord.createdAt,
-      prismaDataRecord.updatedAt
-    );
+    return this.mapper.toDomain(prismaDataRecord);
   }
 }

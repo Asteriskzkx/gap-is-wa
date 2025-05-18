@@ -1,4 +1,3 @@
-// src/repositories/FarmerRepository.ts
 import {
   PrismaClient,
   Farmer as PrismaFarmer,
@@ -55,7 +54,7 @@ export class FarmerRepository extends BaseRepository<FarmerModel> {
         throw new Error("Failed to create farmer record");
       }
 
-      return this.mapper.toDomain({ user, farmer: user.farmer });
+      return this.mapToModel(user, user.farmer);
     } catch (error) {
       return this.handleDatabaseError(error);
     }
@@ -71,7 +70,7 @@ export class FarmerRepository extends BaseRepository<FarmerModel> {
       });
 
       return farmer && farmer.user
-        ? this.mapper.toDomain({ farmer, user: farmer.user })
+        ? this.mapToModel(farmer.user, farmer)
         : null;
     } catch (error) {
       console.error("Error finding farmer by ID:", error);
@@ -89,7 +88,7 @@ export class FarmerRepository extends BaseRepository<FarmerModel> {
       });
 
       return farmer && farmer.user
-        ? this.mapper.toDomain({ farmer, user: farmer.user })
+        ? this.mapToModel(farmer.user, farmer)
         : null;
     } catch (error) {
       console.error("Error finding farmer by user ID:", error);
@@ -107,7 +106,7 @@ export class FarmerRepository extends BaseRepository<FarmerModel> {
 
       return farmers
         .filter((farmer) => farmer.user !== null)
-        .map((farmer) => this.mapper.toDomain({ farmer, user: farmer.user! }));
+        .map((farmer) => this.mapToModel(farmer.user!, farmer));
     } catch (error) {
       console.error("Error finding all farmers:", error);
       return [];
@@ -167,7 +166,7 @@ export class FarmerRepository extends BaseRepository<FarmerModel> {
         }),
       ]);
 
-      return this.mapper.toDomain({ user: updatedUser, farmer: updatedFarmer });
+      return this.mapToModel(updatedUser, updatedFarmer);
     } catch (error) {
       console.error("Error updating farmer:", error);
       return null;
@@ -196,5 +195,9 @@ export class FarmerRepository extends BaseRepository<FarmerModel> {
       console.error("Error deleting farmer:", error);
       return false;
     }
+  }
+
+  private mapToModel(user: PrismaUser, farmer: PrismaFarmer): FarmerModel {
+    return this.mapper.toDomain({ user, farmer });
   }
 }

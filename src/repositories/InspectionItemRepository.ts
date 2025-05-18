@@ -4,8 +4,13 @@ import {
 } from "@prisma/client";
 import { BaseRepository } from "./BaseRepository";
 import { InspectionItemModel } from "../models/InspectionItemModel";
+import { BaseMapper } from "../mappers/BaseMapper";
 
 export class InspectionItemRepository extends BaseRepository<InspectionItemModel> {
+  constructor(mapper: BaseMapper<any, InspectionItemModel>) {
+    super(mapper);
+  }
+
   async create(model: InspectionItemModel): Promise<InspectionItemModel> {
     try {
       const inspectionItem = await this.prisma.inspectionItem.create({
@@ -115,23 +120,6 @@ export class InspectionItemRepository extends BaseRepository<InspectionItemModel
   }
 
   private mapToModel(prismaInspectionItem: any): InspectionItemModel {
-    const inspectionItemModel = new InspectionItemModel(
-      prismaInspectionItem.inspectionItemId,
-      prismaInspectionItem.inspectionId,
-      prismaInspectionItem.inspectionItemMasterId,
-      prismaInspectionItem.inspectionItemNo,
-      prismaInspectionItem.inspectionItemResult,
-      prismaInspectionItem.otherConditions,
-      prismaInspectionItem.createdAt,
-      prismaInspectionItem.updatedAt
-    );
-
-    if (prismaInspectionItem.requirements) {
-      // This would need implementation of the RequirementRepository to map properly
-      // For now, just setting the raw data
-      inspectionItemModel.requirements = prismaInspectionItem.requirements;
-    }
-
-    return inspectionItemModel;
+    return this.mapper.toDomain(prismaInspectionItem);
   }
 }

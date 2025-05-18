@@ -1,8 +1,13 @@
 import { PrismaClient, Requirement as PrismaRequirement } from "@prisma/client";
 import { BaseRepository } from "./BaseRepository";
 import { RequirementModel } from "../models/RequirementModel";
+import { BaseMapper } from "../mappers/BaseMapper";
 
 export class RequirementRepository extends BaseRepository<RequirementModel> {
+  constructor(mapper: BaseMapper<any, RequirementModel>) {
+    super(mapper);
+  }
+
   async create(model: RequirementModel): Promise<RequirementModel> {
     try {
       const requirement = await this.prisma.requirement.create({
@@ -98,16 +103,6 @@ export class RequirementRepository extends BaseRepository<RequirementModel> {
   }
 
   private mapToModel(prismaRequirement: PrismaRequirement): RequirementModel {
-    return new RequirementModel(
-      prismaRequirement.requirementId,
-      prismaRequirement.inspectionItemId,
-      prismaRequirement.requirementMasterId,
-      prismaRequirement.requirementNo,
-      prismaRequirement.evaluationResult,
-      prismaRequirement.evaluationMethod,
-      prismaRequirement.note,
-      prismaRequirement.createdAt,
-      prismaRequirement.updatedAt
-    );
+    return this.mapper.toDomain(prismaRequirement);
   }
 }
