@@ -352,30 +352,44 @@ export default function FarmerRegisterPage() {
             สร้างบัญชีผู้ใช้สำหรับระบบสารสนเทศสำหรับการจัดการข้อมูลทางการเกษตรผลผลิตยางพาราตามมาตรฐานจีเอพี
           </p>
         </div>
-
-        {/* Step Progress */}
-        <div className="relative mb-8">
+        {/* Step progress bar and indicators */}{" "}
+        <div className="relative mb-16">
+          {/* Progress bar */}
           <div className="h-1 bg-gray-200 rounded-full">
             <div
               className="h-1 bg-green-500 rounded-full transition-all duration-300 ease-in-out"
               style={{ width: `${(step / 4) * 100}%` }}
             ></div>
           </div>
+
+          {/* Step circles with labels positioned with more space */}
           <div className="flex justify-between mt-2">
             {[1, 2, 3, 4].map((s) => (
-              <div
-                key={s}
-                className={`relative flex items-center justify-center w-8 h-8 rounded-full border-2 ${
-                  s <= step
-                    ? "bg-green-500 text-white border-green-500"
-                    : "bg-white text-gray-500 border-gray-300"
-                } ${s < step ? "cursor-pointer" : ""}`}
-                onClick={() => s < step && setStep(s)}
-              >
-                {s}
+              <div key={s} className="relative">
+                {/* Circle indicator */}
                 <div
-                  className="absolute -bottom-6 w-24 text-center text-xs font-medium"
-                  style={{ left: "50%", transform: "translateX(-50%)" }}
+                  className={`flex items-center justify-center w-8 h-8 rounded-full border-2 ${
+                    s <= step
+                      ? "bg-green-500 text-white border-green-500"
+                      : "bg-white text-gray-500 border-gray-300"
+                  } ${s < step ? "cursor-pointer" : ""}`}
+                  onClick={() => s < step && setStep(s)}
+                >
+                  {s}
+                </div>
+
+                {/* Label below the circle with improved positioning */}
+                <div
+                  className={`absolute text-center text-xs mt-2 w-20 ${
+                    s <= step
+                      ? "font-medium text-green-700"
+                      : "font-medium text-gray-500"
+                  }`}
+                  style={{
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    top: "100%",
+                  }}
                 >
                   {s === 1
                     ? "บัญชีผู้ใช้"
@@ -383,19 +397,17 @@ export default function FarmerRegisterPage() {
                     ? "ข้อมูลส่วนตัว"
                     : s === 3
                     ? "ที่อยู่"
-                    : "ติดต่อ"}
+                    : "ติดต่อ"}{" "}
                 </div>
               </div>
             ))}
           </div>
         </div>
-
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
             {error}
           </div>
         )}
-
         <div className="bg-white shadow rounded-lg p-6 mb-6">
           <form onSubmit={handleSubmit}>
             {/* Step 1: ข้อมูลบัญชีผู้ใช้ */}
@@ -726,14 +738,17 @@ export default function FarmerRegisterPage() {
                       id="moo"
                       name="moo"
                       type="number"
-                      min={1}
-                      max={1000}
                       required
+                      min={0}
+                      max={1000}
                       value={formData.moo}
                       onChange={(e) => {
                         const value = parseInt(e.target.value, 10);
-                        if (value >= 1 && value <= 1000) {
-                          updateFormData(e); // อัปเดตค่าเฉพาะเมื่ออยู่ในช่วงที่กำหนด
+                        if (
+                          e.target.value === "" ||
+                          (value >= 0 && value <= 1000)
+                        ) {
+                          updateFormData(e); // อัปเดตค่าเฉพาะเมื่ออยู่ในช่วงที่กำหนดหรือค่าว่าง
                         }
                       }}
                       className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
@@ -949,8 +964,15 @@ export default function FarmerRegisterPage() {
                     id="phoneNumber"
                     name="phoneNumber"
                     type="tel"
+                    maxLength={9}
                     value={formData.phoneNumber}
-                    onChange={updateFormData}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, ""); // เอาเฉพาะตัวเลข
+                      setFormData((prev) => ({
+                        ...prev,
+                        phoneNumber: value,
+                      }));
+                    }}
                     className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
                     placeholder="0XXXXXXXX"
                   />
@@ -968,8 +990,15 @@ export default function FarmerRegisterPage() {
                     name="mobilePhoneNumber"
                     type="tel"
                     required
+                    maxLength={10}
                     value={formData.mobilePhoneNumber}
-                    onChange={updateFormData}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, ""); // เอาเฉพาะตัวเลข
+                      setFormData((prev) => ({
+                        ...prev,
+                        mobilePhoneNumber: value,
+                      }));
+                    }}
                     className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
                     placeholder="0XXXXXXXXX"
                   />
@@ -1104,7 +1133,6 @@ export default function FarmerRegisterPage() {
             </div>
           </form>
         </div>
-
         <p className="text-center text-sm text-gray-500">
           มีบัญชีอยู่แล้ว?{" "}
           <Link
