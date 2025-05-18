@@ -484,7 +484,7 @@ export default function RubberFarmRegistrationForm() {
       </div>
 
       {/* Step Progress Indicator */}
-      <div className="relative mb-8">
+      <div className="relative mb-16">
         <div className="h-1 bg-gray-200 rounded-full">
           <div
             className="h-1 bg-green-500 rounded-full transition-all duration-300 ease-in-out"
@@ -493,19 +493,29 @@ export default function RubberFarmRegistrationForm() {
         </div>
         <div className="flex justify-between mt-2">
           {[1, 2, 3].map((s) => (
-            <div
-              key={s}
-              className={`relative flex items-center justify-center w-8 h-8 rounded-full border-2 ${
-                s <= step
-                  ? "bg-green-500 text-white border-green-500"
-                  : "bg-white text-gray-500 border-gray-300"
-              } ${s < step ? "cursor-pointer" : ""}`}
-              onClick={() => s < step && setStep(s)}
-            >
-              {s}
+            <div key={s} className="relative">
               <div
-                className="absolute -bottom-6 w-24 text-center text-xs font-medium"
-                style={{ left: "50%", transform: "translateX(-50%)" }}
+                className={`flex items-center justify-center w-8 h-8 rounded-full border-2 ${
+                  s <= step
+                    ? "bg-green-500 text-white border-green-500"
+                    : "bg-white text-gray-500 border-gray-300"
+                } ${s < step ? "cursor-pointer" : ""}`}
+                onClick={() => s < step && setStep(s)}
+              >
+                {s}
+              </div>
+
+              <div
+                className={`absolute text-center text-xs mt-2 w-28 ${
+                  s <= step
+                    ? "font-medium text-green-700"
+                    : "font-medium text-gray-500"
+                }`}
+                style={{
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  top: "100%",
+                }}
               >
                 {s === 1
                   ? "ข้อมูลสวนยาง"
@@ -574,7 +584,10 @@ export default function RubberFarmRegistrationForm() {
                   value={rubberFarm.moo || ""}
                   onChange={(e) => {
                     const value = parseInt(e.target.value, 10);
-                    if (value >= 1 && value <= 1000) {
+                    if (
+                      e.target.value === "" ||
+                      (value >= 1 && value <= 1000)
+                    ) {
                       updateFarmData(e); // อัปเดตค่าเฉพาะเมื่ออยู่ในช่วงที่กำหนด
                     }
                   }}
@@ -782,7 +795,10 @@ export default function RubberFarmRegistrationForm() {
                       value={detail.areaOfPlot || ""}
                       onChange={(e) => {
                         const value = parseFloat(e.target.value);
-                        if (value >= 0 && value <= 10000) {
+                        if (
+                          e.target.value === "" ||
+                          (value >= 0 && value <= 10000)
+                        ) {
                           const formattedValue = parseFloat(value.toFixed(4));
 
                           updatePlantingDetail(
@@ -810,7 +826,10 @@ export default function RubberFarmRegistrationForm() {
                       required
                       onChange={(e) => {
                         const value = parseFloat(e.target.value);
-                        if (value >= 0 && value <= 10000) {
+                        if (
+                          e.target.value === "" ||
+                          (value >= 0 && value <= 10000)
+                        ) {
                           updatePlantingDetail(index, "numberOfRubber", value);
                         }
                       }}
@@ -831,7 +850,10 @@ export default function RubberFarmRegistrationForm() {
                       required
                       onChange={(e) => {
                         const value = parseFloat(e.target.value);
-                        if (value >= 0 && value <= 10000) {
+                        if (
+                          e.target.value === "" ||
+                          (value >= 0 && value <= 10000)
+                        ) {
                           updatePlantingDetail(index, "numberOfTapping", value);
                         }
                       }}
@@ -851,7 +873,10 @@ export default function RubberFarmRegistrationForm() {
                       required
                       onChange={(e) => {
                         const value = parseFloat(e.target.value);
-                        if (value >= 0 && value <= 100) {
+                        if (
+                          e.target.value === "" ||
+                          (value >= 0 && value <= 100)
+                        ) {
                           updatePlantingDetail(index, "ageOfRubber", value);
                         }
                       }}
@@ -936,7 +961,10 @@ export default function RubberFarmRegistrationForm() {
                       value={detail.totalProduction || ""}
                       onChange={(e) => {
                         const value = parseFloat(e.target.value);
-                        if (value >= 0 && value <= 10000) {
+                        if (
+                          e.target.value === "" ||
+                          (value >= 0 && value <= 10000)
+                        ) {
                           const formattedValue = parseFloat(value.toFixed(4));
 
                           updatePlantingDetail(

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link"; // เพิ่ม import ที่ขาดหายไป
+import Link from "next/link";
 import DynamicMapSelector from "./maps/DynamicMap";
 import ReactDatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -281,54 +281,61 @@ export default function RubberFarmEditForm() {
       setIsLoading(false);
     }
   };
-  // Update amphures when province changes
+
+  // Update amphures and reset amphure/tambon when province changes
   useEffect(() => {
     if (rubberFarm.provinceId > 0) {
       const selectedProvince = provinces.find(
         (province) => province.id === rubberFarm.provinceId
       );
       if (selectedProvince) {
-        // ป้องกันการตั้งค่าซ้ำซ้อนเมื่อข้อมูลถูกโหลดมาจาก fetchFarmDetails
-        // โดยเช็คว่าถ้ามีการตั้งค่า amphureId แล้ว และ district ไม่ว่าง แสดงว่าข้อมูลถูกโหลดมาจาก fetchFarmDetails แล้ว
-        if (rubberFarm.amphureId === 0 || !rubberFarm.district) {
-          setAmphures(selectedProvince.amphures);
-          setRubberFarm((prev) => ({
-            ...prev,
-            province: selectedProvince.name_th,
-            amphureId: 0,
-            tambonId: 0,
-            district: "",
-            subDistrict: "",
-          }));
-        }
+        setAmphures(selectedProvince.amphures);
+        // รีเซ็ตอำเภอ/เขตและตำบล/แขวง เป็นค่าแรก (หรือค่าว่าง)
+        setTambons([]);
+        setRubberFarm((prev) => ({
+          ...prev,
+          province: selectedProvince.name_th,
+          amphureId: 0,
+          tambonId: 0,
+          district: "",
+          subDistrict: "",
+        }));
       }
     } else {
       setAmphures([]);
       setTambons([]);
+      setRubberFarm((prev) => ({
+        ...prev,
+        amphureId: 0,
+        tambonId: 0,
+        district: "",
+        subDistrict: "",
+      }));
     }
   }, [rubberFarm.provinceId, provinces]);
 
-  // Update tambons when amphure changes
+  // Update tambons and reset tambon when amphure changes
   useEffect(() => {
     if (rubberFarm.amphureId > 0) {
       const selectedAmphure = amphures.find(
         (amphure) => amphure.id === rubberFarm.amphureId
       );
       if (selectedAmphure) {
-        // ป้องกันการตั้งค่าซ้ำซ้อนเมื่อข้อมูลถูกโหลดมาจาก fetchFarmDetails
-        // โดยเช็คว่าถ้ามีการตั้งค่า tambonId แล้ว และ subDistrict ไม่ว่าง แสดงว่าข้อมูลถูกโหลดมาจาก fetchFarmDetails แล้ว
-        if (rubberFarm.tambonId === 0 || !rubberFarm.subDistrict) {
-          setTambons(selectedAmphure.tambons);
-          setRubberFarm((prev) => ({
-            ...prev,
-            district: selectedAmphure.name_th,
-            tambonId: 0,
-            subDistrict: "",
-          }));
-        }
+        setTambons(selectedAmphure.tambons);
+        setRubberFarm((prev) => ({
+          ...prev,
+          district: selectedAmphure.name_th,
+          tambonId: 0,
+          subDistrict: "",
+        }));
       }
     } else {
       setTambons([]);
+      setRubberFarm((prev) => ({
+        ...prev,
+        tambonId: 0,
+        subDistrict: "",
+      }));
     }
   }, [rubberFarm.amphureId, amphures]);
 
@@ -353,15 +360,33 @@ export default function RubberFarmEditForm() {
   ) => {
     const { name, value } = e.target;
 
-    if (
-      name === "provinceId" ||
-      name === "amphureId" ||
-      name === "tambonId" ||
-      name === "moo"
-    ) {
+    if (name === "provinceId") {
       setRubberFarm({
         ...rubberFarm,
-        [name]: parseInt(value) || 0,
+        provinceId: parseInt(value) || 0,
+        amphureId: 0,
+        tambonId: 0,
+        district: "",
+        subDistrict: "",
+      });
+    } else if (name === "amphureId") {
+      setRubberFarm({
+        ...rubberFarm,
+        amphureId: parseInt(value) || 0,
+        tambonId: 0,
+        district: "",
+        subDistrict: "",
+      });
+    } else if (name === "tambonId") {
+      setRubberFarm({
+        ...rubberFarm,
+        tambonId: parseInt(value) || 0,
+        subDistrict: "",
+      });
+    } else if (name === "moo") {
+      setRubberFarm({
+        ...rubberFarm,
+        moo: parseInt(value) || 0,
       });
     } else {
       setRubberFarm({
@@ -425,10 +450,22 @@ export default function RubberFarmEditForm() {
     setPlantingDetails([...plantingDetails, newDetail]);
   };
 
+  // เพิ่ม state สำหรับเก็บ ID ที่ถูกลบ
+  const [deletedPlantingDetailIds, setDeletedPlantingDetailIds] = useState<
+    number[]
+  >([]);
+
   // Remove planting detail
   const removePlantingDetail = (index: number) => {
     const updatedDetails = [...plantingDetails];
-    updatedDetails.splice(index, 1);
+    const [removed] = updatedDetails.splice(index, 1);
+    // ถ้ามี plantingDetailId (คือเป็นข้อมูลเดิมในฐานข้อมูล) ให้เก็บ ID ไว้
+    if (removed && removed.plantingDetailId && removed.plantingDetailId > 0) {
+      setDeletedPlantingDetailIds((prev) => [
+        ...prev,
+        removed.plantingDetailId,
+      ]);
+    }
     setPlantingDetails(updatedDetails);
   };
 
@@ -522,6 +559,23 @@ export default function RubberFarmEditForm() {
       if (!farmResponse.ok) {
         const errorData = await farmResponse.json();
         throw new Error(errorData.message || "ไม่สามารถอัปเดตข้อมูลสวนยางได้");
+      }
+
+      for (const id of deletedPlantingDetailIds) {
+        try {
+          const res = await fetch(`/api/v1/planting-details/${id}`, {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          if (!res.ok) {
+            const errorData = await res.json();
+            console.error("Error deleting planting detail:", errorData);
+          }
+        } catch (err) {
+          console.error("Error deleting planting detail:", err);
+        }
       }
 
       // อัพเดทรายการที่มีอยู่แล้ว
@@ -714,7 +768,7 @@ export default function RubberFarmEditForm() {
       </div>
 
       {/* Step Progress Indicator */}
-      <div className="relative mb-8">
+      <div className="relative mb-16">
         <div className="h-1 bg-gray-200 rounded-full">
           <div
             className="h-1 bg-green-500 rounded-full transition-all duration-300 ease-in-out"
@@ -723,19 +777,31 @@ export default function RubberFarmEditForm() {
         </div>
         <div className="flex justify-between mt-2">
           {[1, 2, 3].map((s) => (
-            <div
-              key={s}
-              className={`relative flex items-center justify-center w-8 h-8 rounded-full border-2 ${
-                s <= step
-                  ? "bg-green-500 text-white border-green-500"
-                  : "bg-white text-gray-500 border-gray-300"
-              } ${s < step ? "cursor-pointer" : ""}`}
-              onClick={() => s < step && setStep(s)}
-            >
-              {s}
+            <div key={s} className="relative">
+              {/* Circle indicator */}
               <div
-                className="absolute -bottom-6 w-24 text-center text-xs font-medium"
-                style={{ left: "50%", transform: "translateX(-50%)" }}
+                className={`flex items-center justify-center w-8 h-8 rounded-full border-2 ${
+                  s <= step
+                    ? "bg-green-500 text-white border-green-500"
+                    : "bg-white text-gray-500 border-gray-300"
+                } ${s < step ? "cursor-pointer" : ""}`}
+                onClick={() => s < step && setStep(s)}
+              >
+                {s}
+              </div>
+
+              {/* Label below the circle with improved positioning */}
+              <div
+                className={`absolute text-center text-xs mt-2 w-20 ${
+                  s <= step
+                    ? "font-medium text-green-700"
+                    : "font-medium text-gray-500"
+                }`}
+                style={{
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  top: "100%",
+                }}
               >
                 {s === 1
                   ? "เลือกสวนยาง"
