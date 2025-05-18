@@ -65,6 +65,18 @@ export class RubberFarmRepository extends BaseRepository<RubberFarmModel> {
     }
   }
 
+  async findByRubberFarmId(rubberFarmId: number): Promise<any> {
+    try {
+      const rubberFarm = await this.prisma.rubberFarm.findUnique({
+        where: { rubberFarmId },
+      });
+      return rubberFarm ? this.mapToModel(rubberFarm) : null;
+    } catch (error) {
+      console.error("Error finding rubber farm:", error);
+      return null;
+    }
+  }
+
   async findAll(): Promise<RubberFarmModel[]> {
     try {
       const rubberFarms = await this.prisma.rubberFarm.findMany({

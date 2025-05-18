@@ -12,6 +12,60 @@ export class InspectionController extends BaseController<InspectionModel> {
     this.inspectionService = inspectionService;
   }
 
+  async scheduleInspection(req: NextRequest): Promise<NextResponse> {
+    try {
+      const data = await req.json();
+      const {
+        rubberFarmId,
+        inspectionTypeId,
+        inspectionDateAndTime,
+        additionalAuditorIds,
+      } = data;
+
+      // ดึง token จาก header
+      const authHeader = req.headers.get("Authorization");
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return NextResponse.json(
+          { message: "Authorization required" },
+          { status: 401 }
+        );
+      }
+      const token = authHeader.split(" ")[1];
+      const decodedToken = this.inspectionService.verifyToken(token);
+
+      if (!decodedToken || !decodedToken.auditorId) {
+        return NextResponse.json(
+          { message: "Invalid token or not an auditor" },
+          { status: 403 }
+        );
+      }
+
+      // Basic validation
+      if (!rubberFarmId || !inspectionTypeId || !inspectionDateAndTime) {
+        return NextResponse.json(
+          { message: "Required fields missing" },
+          { status: 400 }
+        );
+      }
+
+      // ใช้ auditorId จาก token เป็น auditorChiefId โดยอัตโนมัติ
+      const auditorChiefId = decodedToken.auditorId;
+
+      // สร้างการตรวจประเมินพร้อมรายการตรวจและข้อกำหนดตามประเภทที่เลือก
+      const inspection = await this.inspectionService.scheduleInspection(
+        rubberFarmId,
+        inspectionTypeId,
+        new Date(inspectionDateAndTime),
+        auditorChiefId,
+        additionalAuditorIds || []
+      );
+
+      return NextResponse.json(inspection, { status: 201 });
+    } catch (error: any) {
+      return this.handleControllerError(error);
+    }
+  }
+
   async createInspection(req: NextRequest): Promise<NextResponse> {
     try {
       const data = await req.json();
