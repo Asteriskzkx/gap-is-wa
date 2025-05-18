@@ -1,3 +1,19 @@
+import {
+  userMapper,
+  farmerMapper,
+  auditorMapper,
+  committeeMapper,
+  adminMapper,
+  rubberFarmMapper,
+  plantingDetailMapper,
+  inspectionMapper,
+  auditorInspectionMapper,
+  inspectionItemMapper,
+  requirementMapper,
+  dataRecordMapper,
+  adviceAndDefectMapper,
+} from "../mappers";
+
 import { UserRepository } from "@/repositories/UserRepository";
 import { FarmerRepository } from "@/repositories/FarmerRepository";
 import { RubberFarmRepository } from "@/repositories/RubberFarmRepository";
@@ -40,20 +56,43 @@ import { RequirementController } from "@/controllers/RequirementController";
 import { DataRecordController } from "@/controllers/DataRecordController";
 import { AdviceAndDefectController } from "@/controllers/AdviceAndDefectController";
 
+// Repositories with mapper injection
+const userRepository = new UserRepository(userMapper);
+const farmerRepository = new FarmerRepository(farmerMapper);
+const rubberFarmRepository = new RubberFarmRepository(rubberFarmMapper);
+const plantingDetailRepository = new PlantingDetailRepository(
+  plantingDetailMapper
+);
+const auditorRepository = new AuditorRepository(auditorMapper);
+const committeeRepository = new CommitteeRepository(committeeMapper);
+const adminRepository = new AdminRepository(adminMapper);
+const inspectionRepository = new InspectionRepository(inspectionMapper);
+const auditorInspectionRepository = new AuditorInspectionRepository(
+  auditorInspectionMapper
+);
+const inspectionItemRepository = new InspectionItemRepository(
+  inspectionItemMapper
+);
+const requirementRepository = new RequirementRepository(requirementMapper);
+const dataRecordRepository = new DataRecordRepository(dataRecordMapper);
+const adviceAndDefectRepository = new AdviceAndDefectRepository(
+  adviceAndDefectMapper
+);
+
 // Repositories
-const userRepository = new UserRepository();
-const farmerRepository = new FarmerRepository();
-const rubberFarmRepository = new RubberFarmRepository();
-const plantingDetailRepository = new PlantingDetailRepository();
-const auditorRepository = new AuditorRepository();
-const committeeRepository = new CommitteeRepository();
-const adminRepository = new AdminRepository();
-const inspectionRepository = new InspectionRepository();
-const auditorInspectionRepository = new AuditorInspectionRepository();
-const inspectionItemRepository = new InspectionItemRepository();
-const requirementRepository = new RequirementRepository();
-const dataRecordRepository = new DataRecordRepository();
-const adviceAndDefectRepository = new AdviceAndDefectRepository();
+// const userRepository = new UserRepository();
+// const farmerRepository = new FarmerRepository();
+// const rubberFarmRepository = new RubberFarmRepository();
+// const plantingDetailRepository = new PlantingDetailRepository();
+// const auditorRepository = new AuditorRepository();
+// const committeeRepository = new CommitteeRepository();
+// const adminRepository = new AdminRepository();
+// const inspectionRepository = new InspectionRepository();
+// const auditorInspectionRepository = new AuditorInspectionRepository();
+// const inspectionItemRepository = new InspectionItemRepository();
+// const requirementRepository = new RequirementRepository();
+// const dataRecordRepository = new DataRecordRepository();
+// const adviceAndDefectRepository = new AdviceAndDefectRepository();
 
 // Services
 const userService = new UserService(userRepository);
