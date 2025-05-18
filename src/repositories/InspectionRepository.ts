@@ -1,8 +1,13 @@
 import { PrismaClient, Inspection as PrismaInspection } from "@prisma/client";
 import { BaseRepository } from "./BaseRepository";
 import { InspectionModel } from "../models/InspectionModel";
+import { BaseMapper } from "../mappers/BaseMapper";
 
 export class InspectionRepository extends BaseRepository<InspectionModel> {
+  constructor(mapper: BaseMapper<any, InspectionModel>) {
+    super(mapper);
+  }
+
   async create(model: InspectionModel): Promise<InspectionModel> {
     try {
       const inspection = await this.prisma.inspection.create({
@@ -179,44 +184,6 @@ export class InspectionRepository extends BaseRepository<InspectionModel> {
   }
 
   private mapToModel(prismaInspection: any): InspectionModel {
-    const inspectionModel = new InspectionModel(
-      prismaInspection.inspectionId,
-      prismaInspection.inspectionNo,
-      prismaInspection.inspectionDateAndTime,
-      prismaInspection.inspectionTypeId,
-      prismaInspection.inspectionStatus,
-      prismaInspection.inspectionResult,
-      prismaInspection.auditorChiefId,
-      prismaInspection.rubberFarmId,
-      prismaInspection.createdAt,
-      prismaInspection.updatedAt
-    );
-
-    // Map related data if available
-    if (prismaInspection.auditorInspections) {
-      // This would need implementation of the AuditorInspectionRepository to map properly
-      // For now, just setting the raw data
-      inspectionModel.auditorInspections = prismaInspection.auditorInspections;
-    }
-
-    if (prismaInspection.inspectionItems) {
-      // This would need implementation of the InspectionItemRepository to map properly
-      // For now, just setting the raw data
-      inspectionModel.inspectionItems = prismaInspection.inspectionItems;
-    }
-
-    if (prismaInspection.dataRecord) {
-      // This would need implementation of the DataRecordRepository to map properly
-      // For now, just setting the raw data
-      inspectionModel.dataRecord = prismaInspection.dataRecord;
-    }
-
-    if (prismaInspection.adviceAndDefect) {
-      // This would need implementation of the AdviceAndDefectRepository to map properly
-      // For now, just setting the raw data
-      inspectionModel.adviceAndDefect = prismaInspection.adviceAndDefect;
-    }
-
-    return inspectionModel;
+    return this.mapper.toDomain(prismaInspection);
   }
 }

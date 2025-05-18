@@ -4,8 +4,13 @@ import {
 } from "@prisma/client";
 import { BaseRepository } from "./BaseRepository";
 import { AdviceAndDefectModel } from "../models/AdviceAndDefectModel";
+import { BaseMapper } from "../mappers/BaseMapper";
 
 export class AdviceAndDefectRepository extends BaseRepository<AdviceAndDefectModel> {
+  constructor(mapper: BaseMapper<any, AdviceAndDefectModel>) {
+    super(mapper);
+  }
+
   async create(model: AdviceAndDefectModel): Promise<AdviceAndDefectModel> {
     try {
       const adviceAndDefect = await this.prisma.adviceAndDefect.create({
@@ -99,14 +104,6 @@ export class AdviceAndDefectRepository extends BaseRepository<AdviceAndDefectMod
   private mapToModel(
     prismaAdviceAndDefect: PrismaAdviceAndDefect
   ): AdviceAndDefectModel {
-    return new AdviceAndDefectModel(
-      prismaAdviceAndDefect.adviceAndDefectId,
-      prismaAdviceAndDefect.inspectionId,
-      prismaAdviceAndDefect.date,
-      prismaAdviceAndDefect.adviceList,
-      prismaAdviceAndDefect.defectList,
-      prismaAdviceAndDefect.createdAt,
-      prismaAdviceAndDefect.updatedAt
-    );
+    return this.mapper.toDomain(prismaAdviceAndDefect);
   }
 }

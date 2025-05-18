@@ -4,8 +4,13 @@ import {
 } from "@prisma/client";
 import { BaseRepository } from "./BaseRepository";
 import { AuditorInspectionModel } from "../models/AuditorInspectionModel";
+import { BaseMapper } from "../mappers/BaseMapper";
 
 export class AuditorInspectionRepository extends BaseRepository<AuditorInspectionModel> {
+  constructor(mapper: BaseMapper<any, AuditorInspectionModel>) {
+    super(mapper);
+  }
+
   async create(model: AuditorInspectionModel): Promise<AuditorInspectionModel> {
     try {
       const auditorInspection = await this.prisma.auditorInspection.create({
@@ -113,12 +118,6 @@ export class AuditorInspectionRepository extends BaseRepository<AuditorInspectio
   private mapToModel(
     prismaAuditorInspection: PrismaAuditorInspection
   ): AuditorInspectionModel {
-    return new AuditorInspectionModel(
-      prismaAuditorInspection.auditorInspectionId,
-      prismaAuditorInspection.auditorId,
-      prismaAuditorInspection.inspectionId,
-      prismaAuditorInspection.createdAt,
-      prismaAuditorInspection.updatedAt
-    );
+    return this.mapper.toDomain(prismaAuditorInspection);
   }
 }
