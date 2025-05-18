@@ -135,7 +135,7 @@ export class InspectionService extends BaseService<InspectionModel> {
       const pendingInspections =
         await this.inspectionRepository.findByRubberFarmId(rubberFarmId);
       const pendingInspection = pendingInspections.find(
-        (inspection) => inspection.inspectionStatus === "PENDING"
+        (inspection) => inspection.inspectionStatus === "รอการตรวจประเมิน"
       );
 
       if (pendingInspection) {
@@ -161,8 +161,8 @@ export class InspectionService extends BaseService<InspectionModel> {
         inspectionNo,
         inspectionDateAndTime,
         inspectionTypeId,
-        "PENDING", // สถานะรอการตรวจ
-        "NOT_EVALUATED", // ผลการตรวจยังไม่มี
+        "รอการตรวจประเมิน", // สถานะรอการตรวจ
+        "รอผลการตรวจประเมิน", // ผลการตรวจยังไม่มี
         auditorChiefId,
         rubberFarmId
       );
