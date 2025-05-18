@@ -92,6 +92,38 @@ export class RubberFarmRepository extends BaseRepository<RubberFarmModel> {
     }
   }
 
+  async findAllWithFarmerDetails(): Promise<any[]> {
+    try {
+      const rubberFarms = await this.prisma.rubberFarm.findMany({
+        include: {
+          farmer: {
+            include: {
+              user: {
+                select: {
+                  email: true,
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      return rubberFarms.map((farm) => ({
+        ...this.mapToModel(farm),
+        farmerDetails: farm.farmer
+          ? {
+              fullName: `${farm.farmer.namePrefix}${farm.farmer.firstName} ${farm.farmer.lastName}`,
+              email: farm.farmer.user?.email || "N/A",
+            }
+          : null,
+      }));
+    } catch (error) {
+      console.error("Error finding rubber farms with farmer details:", error);
+      return [];
+    }
+  }
+
   async update(
     id: number,
     data: Partial<RubberFarmModel>

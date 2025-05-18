@@ -1,18 +1,33 @@
-import { BaseService } from "./BaseService";
+import jwt from "jsonwebtoken";
 import { AuditorModel } from "../models/AuditorModel";
 import { AuditorRepository } from "../repositories/AuditorRepository";
+import { InspectionTypeMasterRepository } from "../repositories/InspectionTypeMasterRepository"; // เพิ่มการนำเข้า
+import { RubberFarmRepository } from "../repositories/RubberFarmRepository"; // เพิ่มการนำเข้า
+import { BaseService } from "./BaseService";
+import { FarmerService } from "./FarmerService";
 import { UserService } from "./UserService";
-import jwt from "jsonwebtoken";
 
 export class AuditorService extends BaseService<AuditorModel> {
   private auditorRepository: AuditorRepository;
   private userService: UserService;
+  private farmerService: FarmerService;
   private jwtSecret: string;
+  private rubberFarmRepository: RubberFarmRepository;
+  private inspectionTypeMasterRepository: InspectionTypeMasterRepository;
 
-  constructor(auditorRepository: AuditorRepository, userService: UserService) {
+  constructor(
+    auditorRepository: AuditorRepository,
+    userService: UserService,
+    farmerService: FarmerService,
+    rubberFarmRepository: RubberFarmRepository,
+    inspectionTypeMasterRepository: InspectionTypeMasterRepository
+  ) {
     super(auditorRepository);
     this.auditorRepository = auditorRepository;
     this.userService = userService;
+    this.farmerService = farmerService;
+    this.rubberFarmRepository = rubberFarmRepository;
+    this.inspectionTypeMasterRepository = inspectionTypeMasterRepository;
     this.jwtSecret =
       process.env.JWT_SECRET || "default-secret-key-change-in-production";
   }
@@ -184,32 +199,22 @@ export class AuditorService extends BaseService<AuditorModel> {
       return null;
     }
   }
+
+  // แก้ไขเมธอด getAvailableRubberFarms ใน AuditorService
   async getAvailableRubberFarms(): Promise<any[]> {
     try {
-      // ดึงข้อมูล RubberFarm ทั้งหมดที่มีอยู่ในระบบ
-      const rubberFarms = await this.prisma.rubberFarm.findMany({
-        include: {
-          farmer: {
-            include: {
-              user: {
-                select: {
-                  email: true,
-                  name: true,
-                },
-              },
-            },
-          },
-        },
-      });
+      // ใช้เมธอดใหม่ที่ดึงข้อมูลเกษตรกรมาด้วย
+      const rubberFarmsWithFarmers =
+        await this.rubberFarmRepository.findAllWithFarmerDetails();
 
       // แปลงข้อมูลให้เหมาะสมกับการแสดงผล
-      return rubberFarms.map((farm) => ({
+      return rubberFarmsWithFarmers.map((farm) => ({
         id: farm.rubberFarmId,
         location: `${farm.subDistrict}, ${farm.district}, ${farm.province}`,
-        farmerName: farm.farmer
-          ? `${farm.farmer.namePrefix}${farm.farmer.firstName} ${farm.farmer.lastName}`
+        farmerName: farm.farmerDetails
+          ? farm.farmerDetails.fullName
           : "Unknown",
-        farmerEmail: farm.farmer?.user?.email || "N/A",
+        farmerEmail: farm.farmerDetails ? farm.farmerDetails.email : "N/A",
       }));
     } catch (error) {
       this.handleServiceError(error);
@@ -219,8 +224,9 @@ export class AuditorService extends BaseService<AuditorModel> {
 
   async getInspectionTypes(): Promise<any[]> {
     try {
-      // ดึงข้อมูลประเภทการตรวจประเมินทั้งหมด
-      const inspectionTypes = await this.prisma.inspectionTypeMaster.findMany();
+      // ดึงข้อมูลประเภทการตรวจประเมินทั้งหมดผ่าน Repository
+      const inspectionTypes =
+        await this.inspectionTypeMasterRepository.findAll();
       return inspectionTypes;
     } catch (error) {
       this.handleServiceError(error);
@@ -230,27 +236,18 @@ export class AuditorService extends BaseService<AuditorModel> {
 
   async getAuditorListExcept(exceptAuditorId: number): Promise<any[]> {
     try {
-      // ดึงรายชื่อ auditor ทั้งหมดยกเว้น auditor ที่ระบุ
-      const auditors = await this.prisma.auditor.findMany({
-        where: {
-          auditorId: {
-            not: exceptAuditorId,
-          },
-        },
-        include: {
-          user: {
-            select: {
-              email: true,
-              name: true,
-            },
-          },
-        },
-      });
+      // ดึงรายชื่อ auditor ทั้งหมดยกเว้น auditor ที่ระบุผ่าน Repository
+      const allAuditors = await this.auditorRepository.findAll();
 
-      return auditors.map((auditor) => ({
+      // กรองเฉพาะ auditor ที่ไม่ตรงกับ exceptAuditorId
+      const filteredAuditors = allAuditors.filter(
+        (auditor) => auditor.auditorId !== exceptAuditorId
+      );
+
+      return filteredAuditors.map((auditor) => ({
         id: auditor.auditorId,
         name: `${auditor.namePrefix}${auditor.firstName} ${auditor.lastName}`,
-        email: auditor.user?.email || "N/A",
+        email: auditor.email || "N/A",
       }));
     } catch (error) {
       this.handleServiceError(error);
