@@ -184,4 +184,77 @@ export class AuditorService extends BaseService<AuditorModel> {
       return null;
     }
   }
+  async getAvailableRubberFarms(): Promise<any[]> {
+    try {
+      // ดึงข้อมูล RubberFarm ทั้งหมดที่มีอยู่ในระบบ
+      const rubberFarms = await this.prisma.rubberFarm.findMany({
+        include: {
+          farmer: {
+            include: {
+              user: {
+                select: {
+                  email: true,
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      // แปลงข้อมูลให้เหมาะสมกับการแสดงผล
+      return rubberFarms.map((farm) => ({
+        id: farm.rubberFarmId,
+        location: `${farm.subDistrict}, ${farm.district}, ${farm.province}`,
+        farmerName: farm.farmer
+          ? `${farm.farmer.namePrefix}${farm.farmer.firstName} ${farm.farmer.lastName}`
+          : "Unknown",
+        farmerEmail: farm.farmer?.user?.email || "N/A",
+      }));
+    } catch (error) {
+      this.handleServiceError(error);
+      return [];
+    }
+  }
+
+  async getInspectionTypes(): Promise<any[]> {
+    try {
+      // ดึงข้อมูลประเภทการตรวจประเมินทั้งหมด
+      const inspectionTypes = await this.prisma.inspectionTypeMaster.findMany();
+      return inspectionTypes;
+    } catch (error) {
+      this.handleServiceError(error);
+      return [];
+    }
+  }
+
+  async getAuditorListExcept(exceptAuditorId: number): Promise<any[]> {
+    try {
+      // ดึงรายชื่อ auditor ทั้งหมดยกเว้น auditor ที่ระบุ
+      const auditors = await this.prisma.auditor.findMany({
+        where: {
+          auditorId: {
+            not: exceptAuditorId,
+          },
+        },
+        include: {
+          user: {
+            select: {
+              email: true,
+              name: true,
+            },
+          },
+        },
+      });
+
+      return auditors.map((auditor) => ({
+        id: auditor.auditorId,
+        name: `${auditor.namePrefix}${auditor.firstName} ${auditor.lastName}`,
+        email: auditor.user?.email || "N/A",
+      }));
+    } catch (error) {
+      this.handleServiceError(error);
+      return [];
+    }
+  }
 }

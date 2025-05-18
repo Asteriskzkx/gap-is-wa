@@ -11,6 +11,7 @@ import { InspectionItemMapper } from "./InspectionItemMapper";
 import { RequirementMapper } from "./RequirementMapper";
 import { DataRecordMapper } from "./DataRecordMapper";
 import { AdviceAndDefectMapper } from "./AdviceAndDefectMapper";
+import { InspectionTypeMasterMapper } from "./InspectionTypeMasterMapper";
 
 // Initialize mappers
 const userMapper = new UserMapper();
@@ -31,6 +32,7 @@ const inspectionMapper = new InspectionMapper(
   dataRecordMapper,
   adviceAndDefectMapper
 );
+const inspectionTypeMasterMapper = new InspectionTypeMasterMapper();
 
 export {
   userMapper,
@@ -46,4 +48,5 @@ export {
   requirementMapper,
   dataRecordMapper,
   adviceAndDefectMapper,
+  inspectionTypeMasterMapper,
 };
