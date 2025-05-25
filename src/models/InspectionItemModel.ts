@@ -9,6 +9,7 @@ export class InspectionItemModel extends BaseModel {
   otherConditions: any; // JSON data
 
   // Relations
+  inspectionItemMaster?: any;
   requirements?: RequirementModel[];
 
   constructor(
@@ -67,6 +68,7 @@ export class InspectionItemModel extends BaseModel {
       otherConditions: this.otherConditions,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
+      inspectionItemMaster: this.inspectionItemMaster,
       requirements: this.requirements?.map((req) => req.toJSON()) || [],
     };
   }

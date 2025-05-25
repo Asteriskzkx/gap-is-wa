@@ -41,7 +41,18 @@ export class InspectionMapper
       prismaEntity.updatedAt
     );
 
-    // Map relations if they exist
+    if (prismaEntity.inspectionType) {
+      inspectionModel.inspectionType = prismaEntity.inspectionType;
+    }
+
+    if (prismaEntity.rubberFarm) {
+      inspectionModel.rubberFarm = prismaEntity.rubberFarm;
+    }
+
+    if (prismaEntity.auditorChief) {
+      inspectionModel.auditorChief = prismaEntity.auditorChief;
+    }
+
     if (prismaEntity.auditorInspections) {
       inspectionModel.auditorInspections = prismaEntity.auditorInspections.map(
         (ai: any) => this.auditorInspectionMapper.toDomain(ai)

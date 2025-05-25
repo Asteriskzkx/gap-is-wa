@@ -24,6 +24,11 @@ export class InspectionItemMapper
       prismaEntity.updatedAt
     );
 
+    if (prismaEntity.inspectionItemMaster) {
+      inspectionItemModel.inspectionItemMaster =
+        prismaEntity.inspectionItemMaster;
+    }
+
     if (prismaEntity.requirements) {
       inspectionItemModel.requirements = prismaEntity.requirements.map(
         (req: any) => this.requirementMapper.toDomain(req)
