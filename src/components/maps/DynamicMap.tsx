@@ -18,18 +18,23 @@ interface DynamicMapProps {
   location: any; // Using any for flexibility with different geometry types
   onChange: (location: any) => void;
   height?: string;
+  width?: string;
 }
 
 const DynamicMap: React.FC<DynamicMapProps> = ({
   location,
   onChange,
   height,
+  width,
 }) => {
+  console.log("DynamicMap rendering with props:", { location, height, width }); // Debug log
+
   return (
     <DynamicMapSelector
       location={location}
       onChange={onChange}
       height={height}
+      width={width}
     />
   );
 };

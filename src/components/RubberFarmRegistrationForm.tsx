@@ -796,29 +796,46 @@ export default function RubberFarmRegistrationForm() {
               </div>
             </div>
 
-            {/* เพิ่มส่วนแผนที่ */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div className="col-span-3 mt-6">
-                <label
-                  htmlFor="location"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  ตำแหน่งที่ตั้งสวนยาง <span className="text-red-500">*</span>
-                </label>
-                <p className="text-sm text-gray-500 mb-2">
-                  คลิกบนแผนที่หรือใช้เครื่องมือวาดเพื่อระบุตำแหน่งที่ตั้งของสวนยางพารา
-                </p>
+            {/* เพิ่มส่วนแผนที่ - Updated with responsive styles */}
+            <div className="col-span-2 mt-6 mb-8">
+              <label
+                htmlFor="location"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                ตำแหน่งที่ตั้งสวนยาง <span className="text-red-500">*</span>
+              </label>
+              <p className="text-sm text-gray-500 mb-3">
+                คลิกบนแผนที่หรือใช้เครื่องมือวาดเพื่อระบุตำแหน่งที่ตั้งของสวนยางพารา
+              </p>
+
+              {/* Simplified map container */}
+              <div
+                style={{
+                  height: "500px",
+                  width: "100%",
+                  marginBottom: "100px", // เพิ่ม margin-bottom เพื่อให้เว้นระยะกับปุ่ม
+                }}
+              >
                 <DynamicMapSelector
-                  location={rubberFarm.location as any} // ใช้ as any เพื่อแก้ปัญหา TypeScript ชั่วคราว
+                  location={rubberFarm.location as any}
                   onChange={(newLocation) =>
                     setRubberFarm({
                       ...rubberFarm,
-                      location: newLocation as any, // ใช้ as any เพื่อแก้ปัญหา TypeScript ชั่วคราว
+                      location: newLocation as any,
                     })
                   }
-                  height="600px" // ปรับความสูงให้เหมาะสม
+                  height="400px"
                 />
               </div>
+
+              {/* Location coordinates display */}
+              {/* {rubberFarm.location &&
+                rubberFarm.location.coordinates[0] !== 0 && (
+                  <div className="mt-2 text-xs text-gray-500">
+                    พิกัด: {rubberFarm.location.coordinates[1].toFixed(6)},{" "}
+                    {rubberFarm.location.coordinates[0].toFixed(6)}
+                  </div>
+                )} */}
             </div>
           </div>
         )}
