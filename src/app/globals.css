@@ -96,8 +96,16 @@ button {
 
 /* Leaflet map responsive */
 .leaflet-container {
-  width: 100% !important;
-  height: 100% !important;
+  z-index: 1 !important;
+}
+
+.leaflet-control-container {
+  z-index: 2 !important;
+}
+
+/* ป้องกันการทับซ้อนกับ UI elements */
+.leaflet-popup {
+  z-index: 1000 !important;
 }
 
 /* React DatePicker responsive */

@@ -27,6 +27,7 @@ interface MapSelectorProps {
   location: GeoJSONGeometry;
   onChange: (location: GeoJSONGeometry) => void;
   height?: string;
+  width?: string;
 }
 
 // Component for the search control
@@ -66,6 +67,7 @@ const MapSelector: React.FC<MapSelectorProps> = ({
   location,
   onChange,
   height = "500px",
+  width = "100%",
 }) => {
   // ตำแหน่งเริ่มต้น (กรุงเทพฯ)
   const defaultPosition: LatLngPosition = [13.736717, 100.523186];
@@ -105,6 +107,7 @@ const MapSelector: React.FC<MapSelectorProps> = ({
 
   // Refs
   const mapRef = useRef<L.Map | null>(null);
+  const mapContainerRef = useRef<HTMLDivElement | null>(null);
 
   // แก้ไขปัญหา marker icon
   useEffect(() => {
@@ -144,52 +147,56 @@ const MapSelector: React.FC<MapSelectorProps> = ({
     resetShape();
   }, [resetShape]);
 
-  // จัดการคลิกบนแผนที่
+  // จัดการคลิกบนแผนที่ with safety checks
   const handleMapClick = (e: L.LeafletMouseEvent) => {
-    const latlng: LatLngPosition = [e.latlng.lat, e.latlng.lng];
+    try {
+      const latlng: LatLngPosition = [e.latlng.lat, e.latlng.lng];
 
-    switch (shapeType) {
-      case "Point":
-        // กรณีจุด: วางจุดได้เลย
-        setPointPosition(latlng);
-        onChange({
-          type: "Point",
-          coordinates: [latlng[1], latlng[0]],
-        });
-        break;
+      switch (shapeType) {
+        case "Point":
+          // กรณีจุด: วางจุดได้เลย
+          setPointPosition(latlng);
+          onChange({
+            type: "Point",
+            coordinates: [latlng[1], latlng[0]],
+          });
+          break;
 
-      case "Circle":
-        if (!isSettingCircle) {
-          // กำหนดจุดศูนย์กลาง
-          setCircleCenter(latlng);
-          setIsSettingCircle(true);
-        } else {
-          // คำนวณรัศมีจากจุดศูนย์กลางถึงจุดที่คลิก
-          const radius = calculateDistance(circleCenter, latlng);
-          setCircleRadius(radius);
-          setIsSettingCircle(false);
+        case "Circle":
+          if (!isSettingCircle) {
+            // กำหนดจุดศูนย์กลาง
+            setCircleCenter(latlng);
+            setIsSettingCircle(true);
+          } else {
+            // คำนวณรัศมีจากจุดศูนย์กลางถึงจุดที่คลิก
+            const radius = calculateDistance(circleCenter, latlng);
+            setCircleRadius(radius);
+            setIsSettingCircle(false);
 
-          // สร้าง GeoJSON
-          createCircleGeoJSON(circleCenter, radius);
-        }
-        break;
-
-      case "Rectangle":
-        if (!isDrawingRectangle) {
-          // กำหนดจุดเริ่มต้น
-          setRectangleStart(latlng);
-          setIsDrawingRectangle(true);
-        } else {
-          // กำหนดจุดสิ้นสุด
-          setRectangleEnd(latlng);
-          setIsDrawingRectangle(false);
-
-          // สร้าง GeoJSON
-          if (rectangleStart) {
-            createRectangleGeoJSON(rectangleStart, latlng);
+            // สร้าง GeoJSON
+            createCircleGeoJSON(circleCenter, radius);
           }
-        }
-        break;
+          break;
+
+        case "Rectangle":
+          if (!isDrawingRectangle) {
+            // กำหนดจุดเริ่มต้น
+            setRectangleStart(latlng);
+            setIsDrawingRectangle(true);
+          } else {
+            // กำหนดจุดสิ้นสุด
+            setRectangleEnd(latlng);
+            setIsDrawingRectangle(false);
+
+            // สร้าง GeoJSON
+            if (rectangleStart) {
+              createRectangleGeoJSON(rectangleStart, latlng);
+            }
+          }
+          break;
+      }
+    } catch (error) {
+      console.error("Error handling map click:", error);
     }
   };
 
@@ -265,6 +272,28 @@ const MapSelector: React.FC<MapSelectorProps> = ({
     return null;
   };
 
+  // Component สำหรับจัดการ map reference และ resize
+  const MapSetup = () => {
+    const map = useMap();
+
+    useEffect(() => {
+      mapRef.current = map;
+
+      // แค่ force invalidate ครั้งเดียว
+      setTimeout(() => {
+        try {
+          if (map && typeof map.invalidateSize === "function") {
+            map.invalidateSize();
+          }
+        } catch (error) {
+          console.error("Error:", error);
+        }
+      }, 1000);
+    }, [map]);
+
+    return null;
+  };
+
   // แสดงคำแนะนำตามสถานะปัจจุบัน
   const getInstructions = () => {
     switch (shapeType) {
@@ -284,15 +313,25 @@ const MapSelector: React.FC<MapSelectorProps> = ({
   };
 
   return (
-    <div className="mt-2 flex flex-col w-full">
-      {/* ส่วนควบคุม */}
-      <div className="flex flex-wrap gap-2 mb-2">
-        <div className="flex items-center">
-          <span className="text-sm mr-2">รูปแบบพื้นที่:</span>
+    <div
+      className="w-full max-w-full min-w-0"
+      style={{
+        width: "100%",
+        maxWidth: "100%",
+        minWidth: "0",
+        contain: "layout style size",
+      }}
+    >
+      {/* ส่วนควบคุม - Mobile responsive */}
+      <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 mb-3 p-2 bg-gray-50 rounded-md">
+        <div className="flex items-center flex-wrap gap-2">
+          <span className="text-sm font-medium whitespace-nowrap">
+            รูปแบบพื้นที่:
+          </span>
           <select
             value={shapeType}
             onChange={(e) => setShapeType(e.target.value)}
-            className="px-2 py-1 text-sm border rounded"
+            className="px-2 py-1 text-sm border rounded bg-white min-w-0 flex-shrink"
           >
             <option value="Point">หมุดพิกัด</option>
             <option value="Circle">วงกลม</option>
@@ -302,130 +341,161 @@ const MapSelector: React.FC<MapSelectorProps> = ({
 
         {/* ควบคุมเพิ่มเติมสำหรับวงกลม */}
         {shapeType === "Circle" && (
-          <div className="flex items-center ml-4">
-            <span className="text-sm mr-2">รัศมี (เมตร):</span>
-            <input
-              type="number"
-              value={circleRadius}
-              onChange={(e) =>
-                handleCircleRadiusChange(parseFloat(e.target.value) || 100)
-              }
-              min="10"
-              max="10000"
-              step="10"
-              className="w-20 px-2 py-1 text-sm border rounded"
-            />
-            <button
-              type="button"
-              onClick={() => handleCircleRadiusChange(circleRadius - 10)}
-              className="px-2 py-1 ml-1 text-sm rounded bg-gray-200"
-              disabled={circleRadius <= 0.1}
-            >
-              -
-            </button>
-            <button
-              type="button"
-              onClick={() => handleCircleRadiusChange(circleRadius + 10)}
-              className="px-2 py-1 ml-1 text-sm rounded bg-gray-200"
-            >
-              +
-            </button>
+          <div className="flex items-center flex-wrap gap-2">
+            <span className="text-sm font-medium whitespace-nowrap">
+              รัศมี (เมตร):
+            </span>
+            <div className="flex items-center gap-1">
+              <input
+                type="number"
+                value={circleRadius}
+                onChange={(e) =>
+                  handleCircleRadiusChange(parseFloat(e.target.value) || 100)
+                }
+                min="10"
+                max="10000"
+                step="10"
+                className="w-20 px-2 py-1 text-sm border rounded bg-white"
+              />
+              <button
+                type="button"
+                onClick={() =>
+                  handleCircleRadiusChange(Math.max(10, circleRadius - 10))
+                }
+                className="px-2 py-1 text-sm rounded bg-gray-200 hover:bg-gray-300"
+                disabled={circleRadius <= 10}
+              >
+                -
+              </button>
+              <button
+                type="button"
+                onClick={() => handleCircleRadiusChange(circleRadius + 10)}
+                className="px-2 py-1 text-sm rounded bg-gray-200 hover:bg-gray-300"
+              >
+                +
+              </button>
+            </div>
           </div>
         )}
 
-        <div className="flex items-center ml-2">
+        <div className="flex items-center">
           <button
             type="button"
             onClick={resetShape}
-            className="px-3 py-1 text-sm rounded bg-red-500 text-white"
+            className="px-3 py-1 text-sm rounded bg-red-500 text-white hover:bg-red-600 whitespace-nowrap"
           >
             ล้างพื้นที่
           </button>
         </div>
       </div>
 
-      {/* แผนที่ */}
-      <div className="w-full h-96 md:h-[500px] border rounded overflow-hidden relative">
-        <MapContainer
-          center={pointPosition}
-          zoom={13}
-          style={{ height: "100%", width: "100%" }}
-          scrollWheelZoom={true}
-          ref={(map) => {
-            mapRef.current = map || null;
+      {/* แผนที่ - Constrained container */}
+      <div
+        className="w-full border rounded-lg overflow-hidden bg-gray-100"
+        style={{
+          width: "100%",
+          maxWidth: "100%",
+          minWidth: "0",
+          contain: "layout style",
+        }}
+      >
+        <div
+          className="w-full"
+          style={{
+            height: height || "400px",
+            minHeight: "300px",
+            width: "100%",
+            maxWidth: "100%",
+            minWidth: "0",
+            contain: "layout",
           }}
         >
-          {/* แผนที่พื้นฐาน */}
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
+          <MapContainer
+            center={pointPosition}
+            zoom={13}
+            style={{
+              height: "100%",
+              width: "100%",
+              maxWidth: "100%",
+              zIndex: 1,
+            }}
+            scrollWheelZoom={true}
+          >
+            {/* แผนที่พื้นฐาน */}
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
 
-          {/* ส่วนค้นหา */}
-          <SearchField />
+            {/* ส่วนค้นหา */}
+            <SearchField />
 
-          {/* จัดการคลิกบนแผนที่ */}
-          <MapClickHandler />
+            {/* จัดการ map setup และ resize */}
+            <MapSetup />
 
-          {/* แสดงรูปร่าง */}
-          {shapeType === "Point" && (
-            <Marker position={pointPosition}>
-              <Popup>
-                ละติจูด: {pointPosition[0].toFixed(6)}, ลองจิจูด:{" "}
-                {pointPosition[1].toFixed(6)}
-              </Popup>
-            </Marker>
-          )}
+            {/* จัดการคลิกบนแผนที่ */}
+            <MapClickHandler />
 
-          {shapeType === "Circle" && (
-            <>
-              {/* แสดงจุดศูนย์กลาง */}
-              <Marker position={circleCenter}>
-                <Popup>จุดศูนย์กลางวงกลม</Popup>
+            {/* แสดงรูปร่าง */}
+            {shapeType === "Point" && (
+              <Marker position={pointPosition}>
+                <Popup>
+                  ละติจูด: {pointPosition[0].toFixed(6)}, ลองจิจูด:{" "}
+                  {pointPosition[1].toFixed(6)}
+                </Popup>
               </Marker>
+            )}
 
-              {/* แสดงวงกลม */}
-              <Circle
-                center={circleCenter}
-                radius={circleRadius}
-                color="red"
-                fillColor="red"
-                fillOpacity={0.2}
-              />
-            </>
-          )}
+            {shapeType === "Circle" && (
+              <>
+                {/* แสดงจุดศูนย์กลาง */}
+                <Marker position={circleCenter}>
+                  <Popup>จุดศูนย์กลางวงกลม</Popup>
+                </Marker>
 
-          {shapeType === "Rectangle" && rectangleStart && rectangleEnd && (
-            <>
-              {/* แสดงมุมทั้งสอง */}
-              <Marker position={rectangleStart}>
-                <Popup>มุมที่ 1</Popup>
-              </Marker>
-              <Marker position={rectangleEnd}>
-                <Popup>มุมที่ 2</Popup>
-              </Marker>
+                {/* แสดงวงกลม */}
+                <Circle
+                  center={circleCenter}
+                  radius={circleRadius}
+                  color="red"
+                  fillColor="red"
+                  fillOpacity={0.2}
+                />
+              </>
+            )}
 
-              {/* แสดงสี่เหลี่ยม */}
-              <Rectangle
-                bounds={[rectangleStart, rectangleEnd]}
-                color="blue"
-                fillColor="blue"
-                fillOpacity={0.2}
-              />
-            </>
-          )}
-        </MapContainer>
+            {shapeType === "Rectangle" && rectangleStart && rectangleEnd && (
+              <>
+                {/* แสดงมุมทั้งสอง */}
+                <Marker position={rectangleStart}>
+                  <Popup>มุมที่ 1</Popup>
+                </Marker>
+                <Marker position={rectangleEnd}>
+                  <Popup>มุมที่ 2</Popup>
+                </Marker>
+
+                {/* แสดงสี่เหลี่ยม */}
+                <Rectangle
+                  bounds={[rectangleStart, rectangleEnd]}
+                  color="blue"
+                  fillColor="blue"
+                  fillOpacity={0.2}
+                />
+              </>
+            )}
+          </MapContainer>
+        </div>
       </div>
 
-      {/* คำแนะนำ */}
-      <div className="mt-2">
-        <div className="text-sm text-gray-600">
-          <p>{getInstructions()}</p>
+      {/* คำแนะนำและข้อมูลพิกัด */}
+      <div className="mt-3 p-2 bg-gray-50 rounded-md">
+        <div className="text-sm text-gray-700 mb-2">
+          <p className="font-medium">{getInstructions()}</p>
         </div>
 
         {/* ข้อมูลพิกัด */}
         {shapeType === "Point" && (
-          <div className="mt-1 text-sm">
+          <div className="text-sm text-gray-600">
             <p>
               พิกัด: ละติจูด {pointPosition[0].toFixed(6)}, ลองจิจูด{" "}
               {pointPosition[1].toFixed(6)}
@@ -434,7 +504,7 @@ const MapSelector: React.FC<MapSelectorProps> = ({
         )}
 
         {shapeType === "Circle" && !isSettingCircle && (
-          <div className="mt-1 text-sm">
+          <div className="text-sm text-gray-600">
             <p>
               ศูนย์กลาง: ละติจูด {circleCenter[0].toFixed(6)}, ลองจิจูด{" "}
               {circleCenter[1].toFixed(6)}
