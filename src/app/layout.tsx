@@ -4,7 +4,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title:
-    "Information system for agricultural data management of rubber production in compliance with gap standards",
+    "ระบบสารสนเทศสำหรับการจัดการข้อมูลทางการเกษตรผลผลิตยางพารา ตามมาตรฐานจีเอพี",
   description:
     "ระบบสารสนเทศสำหรับการจัดการข้อมูลทางการเกษตรผลผลิตยางพารา ตามมาตรฐานจีเอพี",
 };
