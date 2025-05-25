@@ -7,7 +7,6 @@ export class UserMapper implements BaseMapper<PrismaUser, UserModel> {
     return new UserModel(
       prismaEntity.userId,
       prismaEntity.email,
-      "", // We don't expose plain text passwords
       prismaEntity.hashedPassword,
       prismaEntity.name,
       prismaEntity.role as UserRole,
@@ -19,7 +18,6 @@ export class UserMapper implements BaseMapper<PrismaUser, UserModel> {
   toPrisma(domainEntity: UserModel): any {
     return {
       email: domainEntity.email,
-      password: domainEntity.password, // Needed for certain operations
       hashedPassword: domainEntity.hashedPassword,
       name: domainEntity.name,
       role: domainEntity.role,

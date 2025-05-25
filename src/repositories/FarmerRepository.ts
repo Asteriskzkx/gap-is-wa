@@ -19,7 +19,6 @@ export class FarmerRepository extends BaseRepository<FarmerModel> {
       const user = await this.prisma.user.create({
         data: {
           email: model.email,
-          password: model.password,
           hashedPassword: model.hashedPassword,
           name: model.name,
           role: UserRole.FARMER,

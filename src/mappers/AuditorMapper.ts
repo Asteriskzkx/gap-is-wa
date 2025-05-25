@@ -19,7 +19,6 @@ export class AuditorMapper implements BaseMapper<any, AuditorModel> {
     return new AuditorModel(
       user.id,
       user.email,
-      "", // We don't expose plain text passwords
       user.hashedPassword,
       user.name,
       prismaEntity.auditor.auditorId,

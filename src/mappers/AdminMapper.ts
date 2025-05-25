@@ -16,7 +16,6 @@ export class AdminMapper implements BaseMapper<any, AdminModel> {
     return new AdminModel(
       user.id,
       user.email,
-      "", // We don't expose plain text passwords
       user.hashedPassword,
       user.name,
       prismaEntity.admin.adminId,

@@ -13,7 +13,6 @@ export class UserRepository extends BaseRepository<UserModel> {
       const user = await this.prisma.user.create({
         data: {
           email: model.email,
-          password: model.password,
           hashedPassword: model.hashedPassword,
           name: model.name,
           role: model.role,
@@ -74,7 +73,6 @@ export class UserRepository extends BaseRepository<UserModel> {
           email: data.email,
           name: data.name,
           role: data.role,
-          password: data.password,
           hashedPassword: data.hashedPassword,
           updatedAt: new Date(),
         },

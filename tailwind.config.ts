@@ -14,8 +14,19 @@ const config: Config = {
           "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
       },
       fontFamily: {
-        sans: ['Sarabun', 'sans-serif'],
-      }
+        sans: [
+          "var(--font-sarabun)",
+          "ui-sans-serif",
+          "system-ui",
+          "sans-serif",
+        ],
+        sarabun: [
+          "var(--font-sarabun)",
+          "ui-sans-serif",
+          "system-ui",
+          "sans-serif",
+        ],
+      },
     },
   },
   plugins: [],

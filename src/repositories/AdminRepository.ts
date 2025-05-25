@@ -19,7 +19,6 @@ export class AdminRepository extends BaseRepository<AdminModel> {
       const user = await this.prisma.user.create({
         data: {
           email: model.email,
-          password: model.password,
           hashedPassword: model.hashedPassword,
           name: model.name,
           role: UserRole.ADMIN,

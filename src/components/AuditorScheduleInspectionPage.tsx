@@ -224,12 +224,26 @@ export default function AuditorScheduleInspectionPage() {
         const response = await fetch("/api/v1/auditors/available-farms", {
           headers: { Authorization: `Bearer ${token}` },
         });
+
         if (response.ok) {
-          const data = await response.json();
-          setRubberFarms(data);
+          const result = await response.json();
+          // ตรวจสอบว่า result.data เป็น array หรือไม่
+          if (Array.isArray(result.data)) {
+            setRubberFarms(result.data);
+          } else if (Array.isArray(result)) {
+            // fallback หาก API return array โดยตรง
+            setRubberFarms(result);
+          } else {
+            console.error("Unexpected API response format:", result);
+            setRubberFarms([]);
+          }
+        } else {
+          console.error("Failed to fetch rubber farms:", response.status);
+          setRubberFarms([]);
         }
       } catch (error) {
         console.error("Error fetching rubber farms:", error);
+        setRubberFarms([]);
       } finally {
         setLoading(false);
       }
@@ -414,53 +428,129 @@ export default function AuditorScheduleInspectionPage() {
   // Step indicator component
   const StepIndicator = () => (
     <div className="mb-8">
-      <div className="flex items-center justify-between">
-        {[1, 2, 3, 4, 5].map((step) => (
-          <div key={step} className="flex items-center">
-            <div
-              className={`
-                w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium
-                ${
-                  currentStep >= step
-                    ? "bg-green-600 text-white"
-                    : "bg-gray-200 text-gray-600"
-                }
-              `}
-            >
-              {currentStep > step ? (
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+      {/* Desktop Version */}
+      <div className="hidden md:block">
+        <div className="flex items-center">
+          {[1, 2, 3, 4, 5].map((step, index) => (
+            <React.Fragment key={step}>
+              <div className="flex flex-col items-center flex-shrink-0">
+                <div
+                  className={`
+                  w-12 h-12 rounded-full flex items-center justify-center text-sm font-semibold border-2 transition-all duration-300
+                  ${
+                    currentStep >= step
+                      ? "bg-green-600 border-green-600 text-white shadow-lg"
+                      : currentStep === step - 1
+                      ? "bg-white border-green-300 text-green-600"
+                      : "bg-white border-gray-300 text-gray-400"
+                  }
+                `}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
+                  {currentStep > step ? (
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  ) : (
+                    step
+                  )}
+                </div>
+                <div className="mt-3 text-center max-w-20">
+                  <div
+                    className={`text-xs font-medium transition-colors duration-300 ${
+                      currentStep >= step ? "text-green-600" : "text-gray-500"
+                    }`}
+                  >
+                    {step === 1 && "เลือกสวนยาง"}
+                    {step === 2 && "ประเภทการตรวจ"}
+                    {step === 3 && "คณะผู้ตรวจ"}
+                    {step === 4 && "วันที่ตรวจ"}
+                    {step === 5 && "ยืนยัน"}
+                  </div>
+                </div>
+              </div>
+              {index < 4 && (
+                <div className="flex-1 mx-4 mb-6">
+                  <div
+                    className={`h-1 rounded-full transition-all duration-300 ${
+                      currentStep > step ? "bg-green-600" : "bg-gray-300"
+                    }`}
                   />
-                </svg>
-              ) : (
-                step
+                </div>
               )}
-            </div>
-            {step < 5 && (
-              <div
-                className={`w-full h-1 mx-2 ${
-                  currentStep > step ? "bg-green-600" : "bg-gray-200"
-                }`}
-              />
-            )}
-          </div>
-        ))}
+            </React.Fragment>
+          ))}
+        </div>
       </div>
-      <div className="flex justify-between mt-2">
-        <span className="text-xs text-gray-600">เลือกสวนยาง</span>
-        <span className="text-xs text-gray-600">ประเภทการตรวจ</span>
-        <span className="text-xs text-gray-600">คณะผู้ตรวจ</span>
-        <span className="text-xs text-gray-600">วันที่ตรวจ</span>
-        <span className="text-xs text-gray-600">ยืนยัน</span>
+
+      {/* Mobile Version */}
+      <div className="md:hidden">
+        <div className="flex items-center justify-center mb-4">
+          <div className="flex items-center space-x-2">
+            {[1, 2, 3, 4, 5].map((step, index) => (
+              <React.Fragment key={step}>
+                <div
+                  className={`
+                  w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-all duration-300
+                  ${
+                    currentStep >= step
+                      ? "bg-green-600 text-white"
+                      : currentStep === step - 1
+                      ? "bg-green-100 text-green-600 border border-green-300"
+                      : "bg-gray-200 text-gray-400"
+                  }
+                `}
+                >
+                  {currentStep > step ? (
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  ) : (
+                    step
+                  )}
+                </div>
+                {index < 4 && (
+                  <div
+                    className={`w-6 h-0.5 transition-all duration-300 ${
+                      currentStep > step ? "bg-green-600" : "bg-gray-300"
+                    }`}
+                  />
+                )}
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+        <div className="text-center">
+          <div className="text-sm font-medium text-gray-700">
+            ขั้นตอนที่ {currentStep}: {currentStep === 1 && "เลือกสวนยางพารา"}
+            {currentStep === 2 && "เลือกประเภทการตรวจประเมิน"}
+            {currentStep === 3 && "เลือกคณะผู้ตรวจประเมิน"}
+            {currentStep === 4 && "เลือกวันที่ตรวจประเมิน"}
+            {currentStep === 5 && "ยืนยันข้อมูล"}
+          </div>
+          <div className="text-xs text-gray-500 mt-1">
+            {currentStep} จาก 5 ขั้นตอน
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -715,7 +805,7 @@ export default function AuditorScheduleInspectionPage() {
                           />
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          AD{auditor.id.toString().padStart(5, "0")}
+                          {auditor.id.toString().padStart(5, "0")}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {auditor.name}

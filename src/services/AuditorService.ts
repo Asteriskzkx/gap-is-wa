@@ -1,3 +1,4 @@
+import { InspectionRepository } from "@/repositories/InspectionRepository";
 import jwt from "jsonwebtoken";
 import { AuditorModel } from "../models/AuditorModel";
 import { AuditorRepository } from "../repositories/AuditorRepository";
@@ -14,13 +15,15 @@ export class AuditorService extends BaseService<AuditorModel> {
   private jwtSecret: string;
   private rubberFarmRepository: RubberFarmRepository;
   private inspectionTypeMasterRepository: InspectionTypeMasterRepository;
+  private inspectionRepository: InspectionRepository;
 
   constructor(
     auditorRepository: AuditorRepository,
     userService: UserService,
     farmerService: FarmerService,
     rubberFarmRepository: RubberFarmRepository,
-    inspectionTypeMasterRepository: InspectionTypeMasterRepository
+    inspectionTypeMasterRepository: InspectionTypeMasterRepository,
+    inspectionRepository: InspectionRepository
   ) {
     super(auditorRepository);
     this.auditorRepository = auditorRepository;
@@ -28,6 +31,7 @@ export class AuditorService extends BaseService<AuditorModel> {
     this.farmerService = farmerService;
     this.rubberFarmRepository = rubberFarmRepository;
     this.inspectionTypeMasterRepository = inspectionTypeMasterRepository;
+    this.inspectionRepository = inspectionRepository;
     this.jwtSecret =
       process.env.JWT_SECRET || "default-secret-key-change-in-production";
   }
@@ -200,25 +204,75 @@ export class AuditorService extends BaseService<AuditorModel> {
     }
   }
 
-  // แก้ไขเมธอด getAvailableRubberFarms ใน AuditorService
+  /**
+   * ดึงรายการ rubber farm ที่พร้อมใช้งาน (ไม่มี inspection ที่รอการตรวจประเมิน)
+   */
   async getAvailableRubberFarms(): Promise<any[]> {
     try {
-      // ใช้เมธอดใหม่ที่ดึงข้อมูลเกษตรกรมาด้วย
-      const rubberFarmsWithFarmers =
+      // ดึงข้อมูล rubber farm ทั้งหมดพร้อมรายละเอียดเกษตรกร
+      const allRubberFarmsWithFarmers =
         await this.rubberFarmRepository.findAllWithFarmerDetails();
 
+      // ดึงรายการ inspection ที่มีสถานะ "รอการตรวจประเมิน"
+      const allInspections = await this.inspectionRepository.findAll();
+      const pendingInspections = allInspections.filter(
+        (inspection) => inspection.inspectionStatus === "รอการตรวจประเมิน"
+      );
+
+      // สร้าง Set ของ rubberFarmId ที่มี inspection รอการตรวจประเมิน
+      const pendingFarmIds = new Set(
+        pendingInspections.map((inspection) => inspection.rubberFarmId)
+      );
+
+      // กรองเฉพาะ rubber farm ที่ไม่มี inspection รอการตรวจประเมิน
+      const availableFarms = allRubberFarmsWithFarmers.filter(
+        (farm) => !pendingFarmIds.has(farm.rubberFarmId)
+      );
+
       // แปลงข้อมูลให้เหมาะสมกับการแสดงผล
-      return rubberFarmsWithFarmers.map((farm) => ({
+      return availableFarms.map((farm) => ({
         id: farm.rubberFarmId,
-        location: `${farm.subDistrict}, ${farm.district}, ${farm.province}`,
+        farmerId: farm.farmerId,
+        location: `${farm.villageName}, หมู่ ${farm.moo}, ${farm.subDistrict}, ${farm.district}, ${farm.province}`,
+        address: {
+          villageName: farm.villageName,
+          moo: farm.moo,
+          road: farm.road,
+          alley: farm.alley,
+          subDistrict: farm.subDistrict,
+          district: farm.district,
+          province: farm.province,
+        },
         farmerName: farm.farmerDetails
           ? farm.farmerDetails.fullName
           : "Unknown",
         farmerEmail: farm.farmerDetails ? farm.farmerDetails.email : "N/A",
+        isAvailable: true, // เพิ่มฟิลด์เพื่อระบุว่าพร้อมใช้งาน
       }));
     } catch (error) {
       this.handleServiceError(error);
       return [];
+    }
+  }
+
+  /**
+   * ตรวจสอบว่า rubber farm สามารถใช้งานได้หรือไม่
+   * @param rubberFarmId - ID ของ rubber farm ที่ต้องการตรวจสอบ
+   * @returns true หากพร้อมใช้งาน, false หากมี inspection รอการตรวจประเมิน
+   */
+  async isFarmAvailable(rubberFarmId: number): Promise<boolean> {
+    try {
+      // ตรวจสอบว่ามี inspection ที่รอการตรวจประเมินสำหรับ farm นี้หรือไม่
+      const farmInspections =
+        await this.inspectionRepository.findByRubberFarmId(rubberFarmId);
+      const pendingInspection = farmInspections.find(
+        (inspection) => inspection.inspectionStatus === "รอการตรวจประเมิน"
+      );
+
+      return !pendingInspection; // return true หากไม่มี pending inspection
+    } catch (error) {
+      this.handleServiceError(error);
+      return false;
     }
   }
 
