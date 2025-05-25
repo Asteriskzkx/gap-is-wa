@@ -202,10 +202,14 @@ export default function RubberFarmEditForm() {
     }
   }, [selectedFarmId, provinces, isLoadingProvinces]);
 
+  const [isLoadingFarmData, setIsLoadingFarmData] = useState(false);
+
   // แก้ไข fetchFarmDetails function
   const fetchFarmDetails = async (farmId: number) => {
     try {
       setIsLoading(true);
+      setIsLoadingFarmData(true);
+
       const token = localStorage.getItem("token");
       const response = await fetch(`/api/v1/rubber-farms/${farmId}`, {
         headers: {
@@ -277,23 +281,21 @@ export default function RubberFarmEditForm() {
           );
         }
 
-        // ใช้ setTimeout เพื่อให้ state update เป็นลำดับ
+        // Set ข้อมูลทั้งหมดในครั้งเดียวแทนการใช้ setTimeout
+        setAmphures(province.amphures);
+
         setTimeout(() => {
-          setAmphures(province.amphures);
+          setTambons(selectedAmphure.tambons);
 
           setTimeout(() => {
-            setTambons(selectedAmphure.tambons);
-
-            setTimeout(() => {
-              setRubberFarm({
-                ...data,
-                provinceId: provinceId,
-                amphureId: amphureId,
-                tambonId: tambonId,
-              });
-            }, 50);
-          }, 50);
-        }, 50);
+            setRubberFarm({
+              ...data,
+              provinceId: provinceId,
+              amphureId: amphureId,
+              tambonId: tambonId,
+            });
+          }, 10); // delay เล็กน้อย
+        }, 10);
 
         // Set planting details
         if (data.plantingDetails && data.plantingDetails.length > 0) {
@@ -319,80 +321,94 @@ export default function RubberFarmEditForm() {
       setError("ไม่สามารถดึงข้อมูลสวนยางได้");
     } finally {
       setIsLoading(false);
+      setIsLoadingFarmData(false); // ปิด flag
     }
   };
 
-  // Update amphures and reset amphure/tambon when province changes
+  // แก้ไข useEffect สำหรับ province
   useEffect(() => {
+    // ไม่ทำอะไรถ้ากำลังโหลดข้อมูลฟาร์ม
+    if (isLoadingFarmData) return;
+
     if (rubberFarm.provinceId > 0) {
       const selectedProvince = provinces.find(
         (province) => province.id === rubberFarm.provinceId
       );
       if (selectedProvince) {
-        setAmphures(selectedProvince.amphures);
-        // รีเซ็ตอำเภอ/เขตและตำบล/แขวง เป็นค่าแรก (หรือค่าว่าง)
-        setTambons([]);
-        setRubberFarm((prev) => ({
-          ...prev,
-          province: selectedProvince.name_th,
-          amphureId: 0,
-          tambonId: 0,
-          district: "",
-          subDistrict: "",
-        }));
+        // อัปเดต amphures เฉพาะเมื่อจำเป็น
+        if (
+          amphures.length === 0 ||
+          amphures[0]?.id !== selectedProvince.amphures[0]?.id
+        ) {
+          setAmphures(selectedProvince.amphures);
+        }
+
+        // อัปเดต province name ถ้าไม่ตรงกัน
+        if (rubberFarm.province !== selectedProvince.name_th) {
+          setRubberFarm((prev) => ({
+            ...prev,
+            province: selectedProvince.name_th,
+          }));
+        }
       }
     } else {
-      setAmphures([]);
-      setTambons([]);
-      setRubberFarm((prev) => ({
-        ...prev,
-        amphureId: 0,
-        tambonId: 0,
-        district: "",
-        subDistrict: "",
-      }));
+      if (amphures.length > 0) {
+        setAmphures([]);
+      }
+      if (tambons.length > 0) {
+        setTambons([]);
+      }
     }
-  }, [rubberFarm.provinceId, provinces]);
+  }, [rubberFarm.provinceId, provinces, isLoadingFarmData]); // ลบ amphures ออกจาก dependency
 
-  // Update tambons and reset tambon when amphure changes
+  // แก้ไข useEffect สำหรับ amphure
   useEffect(() => {
+    if (isLoadingFarmData) return;
+
     if (rubberFarm.amphureId > 0) {
       const selectedAmphure = amphures.find(
         (amphure) => amphure.id === rubberFarm.amphureId
       );
       if (selectedAmphure) {
-        setTambons(selectedAmphure.tambons);
-        setRubberFarm((prev) => ({
-          ...prev,
-          district: selectedAmphure.name_th,
-          tambonId: 0,
-          subDistrict: "",
-        }));
+        // อัปเดต tambons เฉพาะเมื่อจำเป็น
+        if (
+          tambons.length === 0 ||
+          tambons[0]?.id !== selectedAmphure.tambons[0]?.id
+        ) {
+          setTambons(selectedAmphure.tambons);
+        }
+
+        // อัปเดต district name ถ้าไม่ตรงกัน
+        if (rubberFarm.district !== selectedAmphure.name_th) {
+          setRubberFarm((prev) => ({
+            ...prev,
+            district: selectedAmphure.name_th,
+          }));
+        }
       }
     } else {
-      setTambons([]);
-      setRubberFarm((prev) => ({
-        ...prev,
-        tambonId: 0,
-        subDistrict: "",
-      }));
+      if (tambons.length > 0) {
+        setTambons([]);
+      }
     }
-  }, [rubberFarm.amphureId, amphures]);
+  }, [rubberFarm.amphureId, amphures, isLoadingFarmData]); // ลบ tambons ออกจาก dependency
 
-  // Update subdistrict when tambon changes
+  // แก้ไข useEffect สำหรับ tambon
   useEffect(() => {
+    if (isLoadingFarmData) return;
+
     if (rubberFarm.tambonId > 0) {
       const selectedTambon = tambons.find(
         (tambon) => tambon.id === rubberFarm.tambonId
       );
-      if (selectedTambon) {
+      if (selectedTambon && rubberFarm.subDistrict !== selectedTambon.name_th) {
         setRubberFarm((prev) => ({
           ...prev,
           subDistrict: selectedTambon.name_th,
         }));
       }
     }
-  }, [rubberFarm.tambonId, tambons]);
+  }, [rubberFarm.tambonId, tambons, isLoadingFarmData]);
 
   // เพิ่ม useEffect เพื่อ debug
   // useEffect(() => {
@@ -413,7 +429,7 @@ export default function RubberFarmEditForm() {
   ) => {
     const { name, value } = e.target;
 
-    if (name === "provinceId") {
+    if (name === "provinceId" && !isLoadingFarmData) {
       const provinceId = parseInt(value) || 0;
       const selectedProvince = provinces.find((p) => p.id === provinceId);
 
@@ -421,7 +437,7 @@ export default function RubberFarmEditForm() {
         ...prev,
         provinceId: provinceId,
         province: selectedProvince ? selectedProvince.name_th : "",
-        amphureId: 0,
+        amphureId: 0, // reset เฉพาะเมื่อผู้ใช้เปลี่ยน
         tambonId: 0,
         district: "",
         subDistrict: "",
@@ -434,7 +450,7 @@ export default function RubberFarmEditForm() {
         setAmphures([]);
       }
       setTambons([]);
-    } else if (name === "amphureId") {
+    } else if (name === "amphureId" && !isLoadingFarmData) {
       const amphureId = parseInt(value) || 0;
       const selectedAmphure = amphures.find((a) => a.id === amphureId);
 
@@ -452,7 +468,7 @@ export default function RubberFarmEditForm() {
       } else {
         setTambons([]);
       }
-    } else if (name === "tambonId") {
+    } else if (name === "tambonId" && !isLoadingFarmData) {
       const tambonId = parseInt(value) || 0;
       const selectedTambon = tambons.find((t) => t.id === tambonId);
 
