@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { sarabun } from "./fonts";
 import "./globals.css";
 
@@ -7,16 +7,18 @@ export const metadata: Metadata = {
     "ระบบสารสนเทศสำหรับการจัดการข้อมูลทางการเกษตรผลผลิตยางพารา ตามมาตรฐานจีเอพี",
   description:
     "ระบบสารสนเทศสำหรับการจัดการข้อมูลทางการเกษตรผลผลิตยางพารา ตามมาตรฐานจีเอพี",
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-  },
-  // เพิ่ม meta tags อื่นๆ
+  // ลบ viewport ออกจาก metadata
   keywords: "GAP, จีเอพี, ยางพารา, การยางแห่งประเทศไทย, เกษตรกร, รับรองมาตรฐาน",
   authors: [{ name: "การยางแห่งประเทศไทย" }],
   creator: "การยางแห่งประเทศไทย",
   robots: "index, follow",
+};
+
+// แยก viewport ออกมาเป็น export แยก
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({

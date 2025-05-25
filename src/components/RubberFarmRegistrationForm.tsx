@@ -1199,14 +1199,29 @@ export default function RubberFarmRegistrationForm() {
                   name="confirm"
                   type="checkbox"
                   required
+                  onInvalid={(e) => {
+                    (e.target as HTMLInputElement).setCustomValidity(
+                      "กรุณายืนยันการรับรองความถูกต้องของข้อมูลก่อนส่งคำขอ"
+                    );
+                  }}
+                  onChange={(e) => {
+                    (e.target as HTMLInputElement).setCustomValidity("");
+                  }}
                   className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
                 />
                 <label
                   htmlFor="confirm"
                   className="ml-2 block text-sm text-gray-700"
                 >
-                  ข้าพเจ้าขอรับรองว่าข้อมูลที่กรอกข้างต้นเป็นความจริงทุกประการ
+                  ข้าพเจ้าขอรับรองว่าข้อมูลที่แจ้งไว้ข้างต้นเป็นความจริงทุกประการ
+                  และยินยอมให้เจ้าหน้าที่ตรวจสอบข้อมูลและสถานที่ตามที่ระบุไว้
                 </label>
+              </div>
+              <div className="text-xs text-gray-500 bg-yellow-50 border border-yellow-200 rounded p-3">
+                <p className="font-medium text-yellow-800 mb-1">หมายเหตุ:</p>
+                <p>
+                  การแจ้งข้อมูลเท็จหรือปกปิดข้อเท็จจริงอาจส่งผลต่อการพิจารณาออกใบรับรองแหล่งผลิต
+                </p>
               </div>
             </div>
           </div>

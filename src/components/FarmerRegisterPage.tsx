@@ -170,6 +170,54 @@ export default function FarmerRegisterPage() {
     }
   }, [formData.tambonId, tambons]);
 
+  const handleBirthDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
+
+    // ถ้าค่าว่างให้ผ่าน
+    if (!value) {
+      setFormData((prev) => ({ ...prev, birthDate: value }));
+      return;
+    }
+
+    // ตรวจสอบรูปแบบ YYYY-MM-DD
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(value)) {
+      return; // ไม่อัปเดตถ้ารูปแบบไม่ถูกต้อง
+    }
+
+    const inputDate = new Date(value);
+    const today = new Date();
+    const minDate = new Date("1900-01-01");
+    const maxDate = new Date();
+
+    // ตั้งเวลาเป็น 00:00:00 เพื่อเปรียบเทียบเฉพาะวันที่
+    maxDate.setHours(23, 59, 59, 999);
+
+    // ตรวจสอบว่าเป็นวันที่ที่ถูกต้อง
+    if (isNaN(inputDate.getTime())) {
+      return; // ไม่อัปเดตถ้าวันที่ไม่ถูกต้อง
+    }
+
+    // ตรวจสอบปี (1900-ปีปัจจุบัน)
+    const year = inputDate.getFullYear();
+    if (year < 1900 || year > today.getFullYear()) {
+      return; // ไม่อัปเดตถ้าปีไม่อยู่ในช่วงที่กำหนด
+    }
+
+    // ตรวจสอบว่าไม่เกินวันปัจจุบัน
+    if (inputDate > maxDate) {
+      return; // ไม่อัปเดตถ้าเป็นวันในอนาคต
+    }
+
+    // ตรวจสอบว่าไม่น้อยกว่าวันที่ขั้นต่ำ
+    if (inputDate < minDate) {
+      return; // ไม่อัปเดตถ้าน้อยกว่า 1900
+    }
+
+    // ถ้าผ่านการตรวจสอบทั้งหมดให้อัปเดต
+    setFormData((prev) => ({ ...prev, birthDate: value }));
+  };
+
   const updateFormData = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -653,6 +701,7 @@ export default function FarmerRegisterPage() {
                       id="firstName"
                       name="firstName"
                       type="text"
+                      maxLength={100}
                       required
                       value={formData.firstName}
                       onChange={updateFormData}
@@ -672,6 +721,7 @@ export default function FarmerRegisterPage() {
                     id="lastName"
                     name="lastName"
                     type="text"
+                    maxLength={100}
                     required
                     value={formData.lastName}
                     onChange={updateFormData}
@@ -712,8 +762,10 @@ export default function FarmerRegisterPage() {
                     name="birthDate"
                     type="date"
                     required
+                    min="1900-01-01"
+                    max={new Date().toISOString().split("T")[0]}
                     value={formData.birthDate}
-                    onChange={updateFormData}
+                    onChange={handleBirthDateChange}
                     className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
                   />
                 </div>
@@ -784,6 +836,7 @@ export default function FarmerRegisterPage() {
                       id="houseNo"
                       name="houseNo"
                       type="text"
+                      maxLength={10}
                       required
                       value={formData.houseNo}
                       onChange={updateFormData}
@@ -802,6 +855,7 @@ export default function FarmerRegisterPage() {
                       id="villageName"
                       name="villageName"
                       type="text"
+                      maxLength={255}
                       required
                       value={formData.villageName}
                       onChange={updateFormData}
@@ -850,6 +904,7 @@ export default function FarmerRegisterPage() {
                       id="road"
                       name="road"
                       type="text"
+                      maxLength={100}
                       required
                       value={formData.road}
                       onChange={updateFormData}
@@ -869,50 +924,13 @@ export default function FarmerRegisterPage() {
                     id="alley"
                     name="alley"
                     type="text"
+                    maxLength={100}
                     required
                     value={formData.alley}
                     onChange={updateFormData}
                     className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
                   />
                 </div>
-
-                {/* <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div>
-                    <label
-                      htmlFor="subDistrict"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      ตำบล/แขวง <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      id="subDistrict"
-                      name="subDistrict"
-                      type="text"
-                      required
-                      value={formData.subDistrict}
-                      onChange={updateFormData}
-                      className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="district"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      อำเภอ/เขต <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      id="district"
-                      name="district"
-                      type="text"
-                      required
-                      value={formData.district}
-                      onChange={updateFormData}
-                      className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
-                    />
-                  </div>
-                </div> */}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   {/* Dropdown จังหวัด */}
@@ -1096,6 +1114,15 @@ export default function FarmerRegisterPage() {
                       type="checkbox"
                       required
                       className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                      onInvalid={(e) => {
+                        (e.target as HTMLInputElement).setCustomValidity(
+                          "กรุณายืนยันการยอมรับเงื่อนไขและข้อตกลงในการใช้งานระบบ"
+                        );
+                      }}
+                      onChange={(e) => {
+                        // ล้างข้อความ error เมื่อมีการเปลี่ยนแปลง
+                        e.target.setCustomValidity("");
+                      }}
                     />
                     <label
                       htmlFor="terms"
@@ -1106,9 +1133,10 @@ export default function FarmerRegisterPage() {
                         href="#"
                         className="text-green-600 hover:text-green-500"
                       >
-                        เงื่อนไขและข้อตกลง
+                        เงื่อนไขและข้อตกลงการใช้งาน
                       </a>{" "}
-                      ในการใช้งานระบบ
+                      ของระบบสารสนเทศสำหรับการจัดการข้อมูลทางการเกษตรผลผลิตยางพาราตามมาตรฐานจีเอพี
+                      การยางแห่งประเทศไทย
                     </label>
                   </div>
                 </div>
