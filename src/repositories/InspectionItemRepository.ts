@@ -55,7 +55,12 @@ export class InspectionItemRepository extends BaseRepository<InspectionItemModel
       const inspectionItems = await this.prisma.inspectionItem.findMany({
         where: { inspectionId },
         include: {
-          requirements: true,
+          inspectionItemMaster: true,
+          requirements: {
+            include: {
+              requirementMaster: true,
+            },
+          },
         },
       });
 

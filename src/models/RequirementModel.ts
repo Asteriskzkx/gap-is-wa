@@ -9,6 +9,9 @@ export class RequirementModel extends BaseModel {
   evaluationMethod: string;
   note: string;
 
+  // Relations
+  requirementMaster?: any;
+
   constructor(
     requirementId: number,
     inspectionItemId: number,
@@ -70,6 +73,7 @@ export class RequirementModel extends BaseModel {
       note: this.note,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
+      requirementMaster: this.requirementMaster,
     };
   }
 }

@@ -15,6 +15,9 @@ export class InspectionModel extends BaseModel {
   rubberFarmId: number;
 
   // Relations
+  inspectionType?: any;
+  rubberFarm?: any;
+  auditorChief?: any;
   auditorInspections?: AuditorInspectionModel[];
   inspectionItems?: InspectionItemModel[];
   dataRecord?: DataRecordModel;
@@ -87,6 +90,9 @@ export class InspectionModel extends BaseModel {
       rubberFarmId: this.rubberFarmId,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
+      inspectionType: this.inspectionType,
+      rubberFarm: this.rubberFarm,
+      auditorChief: this.auditorChief,
       auditorInspections:
         this.auditorInspections?.map((ai) => ai.toJSON()) || [],
       inspectionItems: this.inspectionItems?.map((item) => item.toJSON()) || [],

@@ -5,8 +5,8 @@ import { BaseMapper } from "./BaseMapper";
 export class RequirementMapper
   implements BaseMapper<PrismaRequirement, RequirementModel>
 {
-  toDomain(prismaEntity: PrismaRequirement): RequirementModel {
-    return new RequirementModel(
+  toDomain(prismaEntity: any): RequirementModel {
+    const requirementModel = new RequirementModel(
       prismaEntity.requirementId,
       prismaEntity.inspectionItemId,
       prismaEntity.requirementMasterId,
@@ -17,6 +17,12 @@ export class RequirementMapper
       prismaEntity.createdAt,
       prismaEntity.updatedAt
     );
+
+    if (prismaEntity.requirementMaster) {
+      requirementModel.requirementMaster = prismaEntity.requirementMaster;
+    }
+
+    return requirementModel;
   }
 
   toPrisma(domainEntity: RequirementModel): any {
