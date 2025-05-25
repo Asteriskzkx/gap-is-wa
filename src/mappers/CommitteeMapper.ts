@@ -22,7 +22,6 @@ export class CommitteeMapper implements BaseMapper<any, CommitteeModel> {
     return new CommitteeModel(
       user.id,
       user.email,
-      "", // We don't expose plain text passwords
       user.hashedPassword,
       user.name,
       prismaEntity.committee.committeeId,

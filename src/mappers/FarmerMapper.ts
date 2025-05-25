@@ -19,7 +19,6 @@ export class FarmerMapper implements BaseMapper<any, FarmerModel> {
     return new FarmerModel(
       user.id,
       user.email,
-      "", // We don't expose plain text passwords
       user.hashedPassword,
       user.name,
       prismaEntity.farmer.farmerId,

@@ -97,9 +97,10 @@ const rubberFarmService = new RubberFarmService(
 const auditorService = new AuditorService(
   auditorRepository,
   userService,
-  farmerService, // เพิ่ม farmerService
+  farmerService,
   rubberFarmRepository,
-  inspectionTypeMasterRepository
+  inspectionTypeMasterRepository,
+  inspectionRepository
 );
 const committeeService = new CommitteeService(committeeRepository, userService);
 const adminService = new AdminService(adminRepository, userService);
