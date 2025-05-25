@@ -111,6 +111,16 @@ export default function AuditorInspectionsPage() {
 
       if (response.ok) {
         const data = await response.json();
+        console.log("Fetched inspection items:", data);
+
+        // ตรวจสอบว่าแต่ละ item มี requirements หรือไม่
+        data.forEach((item: any, index: number) => {
+          console.log(
+            `Item ${index + 1} requirements:`,
+            item.requirements?.length || 0
+          );
+        });
+
         setInspectionItems(data);
       }
     } catch (error) {
@@ -157,11 +167,24 @@ export default function AuditorInspectionsPage() {
     const item = updatedItems[itemIndex];
 
     if (item.requirements && item.requirements[requirementIndex]) {
+      // Debug: แสดงการอัพเดท
+      console.log(
+        `Updating requirement ${requirementIndex} - ${field}: ${value}`
+      );
+
+      // สร้าง object ใหม่เพื่อให้ React detect การเปลี่ยนแปลง
       item.requirements[requirementIndex] = {
         ...item.requirements[requirementIndex],
         [field]: value,
       };
+
+      // อัพเดท state
       setInspectionItems(updatedItems);
+
+      // Debug: ตรวจสอบหลังอัพเดท
+      console.log("Updated requirements:", item.requirements);
+    } else {
+      console.error(`Cannot find requirement at index ${requirementIndex}`);
     }
   };
 
@@ -523,13 +546,19 @@ export default function AuditorInspectionsPage() {
   // บันทึกผลการตรวจรายการปัจจุบัน
   const saveCurrentItem = async () => {
     if (!validateCurrentItem()) return;
-
     if (!selectedInspection || !inspectionItems[currentItemIndex]) return;
 
     setSaving(true);
     try {
       const token = localStorage.getItem("token");
       const currentItem = inspectionItems[currentItemIndex];
+
+      // Debug: ตรวจสอบข้อมูล requirements ก่อนส่ง
+      console.log("Current item requirements:", currentItem.requirements);
+      console.log(
+        "Total requirements to save:",
+        currentItem.requirements?.length || 0
+      );
 
       // อัปเดต inspection item
       const itemResponse = await fetch(
@@ -542,38 +571,90 @@ export default function AuditorInspectionsPage() {
           },
           body: JSON.stringify({
             inspectionItemResult: determineItemResult(currentItem),
-            otherConditions: currentItem.otherConditions,
+            otherConditions: currentItem.otherConditions || {},
           }),
         }
       );
 
       if (!itemResponse.ok) {
-        throw new Error("Failed to save inspection item");
+        const errorData = await itemResponse.json();
+        throw new Error(errorData.message || "Failed to save inspection item");
       }
 
-      // อัปเดต requirements
-      if (currentItem.requirements) {
-        for (const requirement of currentItem.requirements) {
-          const reqResponse = await fetch(
-            `/api/v1/requirements/${requirement.requirementId}/evaluation`,
-            {
-              method: "PUT",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify({
-                evaluationResult:
-                  requirement.evaluationResult || "NOT_EVALUATED",
-                evaluationMethod: requirement.evaluationMethod || "PENDING",
-                note: requirement.note || "",
-              }),
-            }
-          );
+      // อัปเดต requirements แบบ Promise.all เพื่อให้แน่ใจว่าทุกตัวถูกบันทึก
+      if (currentItem.requirements && currentItem.requirements.length > 0) {
+        const requirementPromises = currentItem.requirements.map(
+          async (requirement, index) => {
+            // Debug: แสดงข้อมูลแต่ละ requirement
+            console.log(`Saving requirement ${index + 1}:`, {
+              requirementId: requirement.requirementId,
+              evaluationResult: requirement.evaluationResult,
+              evaluationMethod: requirement.evaluationMethod,
+              note: requirement.note,
+            });
 
-          if (!reqResponse.ok) {
-            throw new Error("Failed to save requirement");
+            // ข้ามถ้ายังไม่ได้ประเมิน
+            if (
+              !requirement.evaluationResult ||
+              requirement.evaluationResult === "NOT_EVALUATED"
+            ) {
+              console.log(
+                `Skipping requirement ${requirement.requirementId} - not evaluated`
+              );
+              return null;
+            }
+
+            try {
+              const reqResponse = await fetch(
+                `/api/v1/requirements/${requirement.requirementId}/evaluation`,
+                {
+                  method: "PUT",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                  },
+                  body: JSON.stringify({
+                    evaluationResult: requirement.evaluationResult,
+                    evaluationMethod: requirement.evaluationMethod || "PENDING",
+                    note: requirement.note || "",
+                  }),
+                }
+              );
+
+              if (!reqResponse.ok) {
+                const errorData = await reqResponse.json();
+                console.error(
+                  `Failed to save requirement ${requirement.requirementId}:`,
+                  errorData
+                );
+                throw new Error(
+                  `Failed to save requirement ${requirement.requirementId}: ${errorData.message}`
+                );
+              }
+
+              const savedData = await reqResponse.json();
+              console.log(
+                `Successfully saved requirement ${requirement.requirementId}:`,
+                savedData
+              );
+              return savedData;
+            } catch (error) {
+              console.error(
+                `Error saving requirement ${requirement.requirementId}:`,
+                error
+              );
+              throw error;
+            }
           }
+        );
+
+        // รอให้ทุก requirement ถูกบันทึก
+        const results = await Promise.all(requirementPromises);
+        const successCount = results.filter((r) => r !== null).length;
+        console.log(`Successfully saved ${successCount} requirements`);
+
+        if (successCount === 0) {
+          throw new Error("ไม่สามารถบันทึกข้อกำหนดได้เลย");
         }
       }
 
@@ -585,7 +666,7 @@ export default function AuditorInspectionsPage() {
       }
     } catch (error) {
       console.error("Error saving inspection item:", error);
-      alert("เกิดข้อผิดพลาดในการบันทึก");
+      alert("เกิดข้อผิดพลาดในการบันทึก: " + (error as Error).message);
     } finally {
       setSaving(false);
     }
@@ -660,7 +741,7 @@ export default function AuditorInspectionsPage() {
     <div className="flex flex-col min-h-screen bg-[#EBFFF3]">
       {/* Header */}
       <header className="bg-white shadow-sm sticky top-0 z-10 border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-3 flex justify-between items-center">
           <div className="flex items-center">
             <Link href="/auditor/dashboard">
               <Image
@@ -668,17 +749,17 @@ export default function AuditorInspectionsPage() {
                 alt="Rubber Authority of Thailand Logo"
                 width={180}
                 height={180}
-                className="mr-2"
+                className="mr-2 w-[120px] sm:w-[140px] md:w-[180px]"
               />
             </Link>
           </div>
           <Link
             href="/auditor/dashboard"
-            className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50"
+            className="inline-flex items-center px-2 sm:px-4 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="-ml-1 mr-2 h-5 w-5"
+              className="sm:block -ml-1 mr-1 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -690,7 +771,8 @@ export default function AuditorInspectionsPage() {
                 d="M10 19l-7-7m0 0l7-7m-7 7h18"
               />
             </svg>
-            กลับสู่หน้าหลัก
+            <span className="hidden sm:inline">กลับสู่หน้าหลัก</span>
+            <span className="sm:hidden">กลับ</span>
           </Link>
         </div>
       </header>
@@ -711,73 +793,135 @@ export default function AuditorInspectionsPage() {
                 </p>
               </div>
             ) : (
-              <div className="bg-white rounded-lg shadow overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        เลขที่ตรวจประเมิน
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        ประเภทการตรวจ
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        เกษตรกร
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        สถานที่
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        วันที่นัดหมาย
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        การดำเนินการ
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {inspections.map((inspection) => (
-                      <tr key={inspection.inspectionId}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {inspection.inspectionNo}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              <>
+                <div className="hidden md:block bg-white rounded-lg shadow overflow-hidden">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          เลขที่ตรวจประเมิน
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          ประเภทการตรวจ
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          เกษตรกร
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          สถานที่
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          วันที่นัดหมาย
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          การดำเนินการ
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {inspections.map((inspection) => (
+                        <tr key={inspection.inspectionId}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {inspection.inspectionNo}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {inspection.inspectionType?.typeName || "N/A"}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {inspection.rubberFarm?.farmer ? (
+                              <>
+                                {inspection.rubberFarm.farmer.namePrefix}
+                                {inspection.rubberFarm.farmer.firstName}{" "}
+                                {inspection.rubberFarm.farmer.lastName}
+                              </>
+                            ) : (
+                              "N/A"
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {inspection.rubberFarm
+                              ? `${inspection.rubberFarm.villageName}, ${inspection.rubberFarm.district}, ${inspection.rubberFarm.province}`
+                              : "N/A"}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {new Date(
+                              inspection.inspectionDateAndTime
+                            ).toLocaleString("th-TH")}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            <button
+                              onClick={() => selectInspection(inspection)}
+                              className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+                            >
+                              เริ่มตรวจประเมิน
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="md:hidden space-y-4">
+                  {inspections.map((inspection) => (
+                    <div
+                      key={inspection.inspectionId}
+                      className="bg-white rounded-lg shadow p-4"
+                    >
+                      <div className="mb-3">
+                        <h3 className="font-semibold text-gray-900">
+                          เลขที่: {inspection.inspectionNo}
+                        </h3>
+                        <p className="text-sm text-gray-600 mt-1">
                           {inspection.inspectionType?.typeName || "N/A"}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        </p>
+                      </div>
+
+                      <div className="space-y-2 text-sm">
+                        <div>
+                          <span className="font-medium text-gray-700">
+                            เกษตรกร:{" "}
+                          </span>
                           {inspection.rubberFarm?.farmer ? (
-                            <>
+                            <span>
                               {inspection.rubberFarm.farmer.namePrefix}
                               {inspection.rubberFarm.farmer.firstName}{" "}
                               {inspection.rubberFarm.farmer.lastName}
-                            </>
+                            </span>
                           ) : (
                             "N/A"
                           )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        </div>
+
+                        <div>
+                          <span className="font-medium text-gray-700">
+                            สถานที่:{" "}
+                          </span>
                           {inspection.rubberFarm
-                            ? `${inspection.rubberFarm.villageName}, ${inspection.rubberFarm.district}, ${inspection.rubberFarm.province}`
+                            ? `${inspection.rubberFarm.villageName}, ${inspection.rubberFarm.district}`
                             : "N/A"}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        </div>
+
+                        <div>
+                          <span className="font-medium text-gray-700">
+                            วันที่:{" "}
+                          </span>
                           {new Date(
                             inspection.inspectionDateAndTime
-                          ).toLocaleString("th-TH")}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <button
-                            onClick={() => selectInspection(inspection)}
-                            className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
-                          >
-                            เริ่มตรวจประเมิน
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                          ).toLocaleDateString("th-TH")}
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => selectInspection(inspection)}
+                        className="mt-4 w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+                      >
+                        เริ่มตรวจประเมิน
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </div>
         ) : (
@@ -838,8 +982,8 @@ export default function AuditorInspectionsPage() {
                   {/* ข้อมูลเพิ่มเติมตามประเภทรายการตรวจ */}
                   {renderAdditionalFields(currentItemIndex)}
 
-                  {/* ตารางข้อกำหนด */}
-                  <div className="overflow-x-auto">
+                  {/* ตารางข้อกำหนด for Desktop*/}
+                  <div className="hidden md:block overflow-x-auto">
                     <table className="min-w-full border-collapse border border-gray-300">
                       <thead className="bg-gray-100">
                         <tr>
@@ -1024,6 +1168,157 @@ export default function AuditorInspectionsPage() {
                     </table>
                   </div>
 
+                  {/* Mobile Cards for Requirements */}
+                  <div className="md:hidden space-y-4">
+                    {inspectionItems[currentItemIndex]?.requirements?.map(
+                      (requirement, reqIndex) => (
+                        <div
+                          key={requirement.requirementId}
+                          className="bg-white border rounded-lg p-4"
+                        >
+                          <div className="mb-3">
+                            <span className="text-sm font-semibold text-gray-700">
+                              {
+                                requirement.requirementMaster
+                                  ?.requirementLevelNo
+                              }
+                            </span>
+                            <p className="text-sm text-gray-800 mt-1">
+                              {requirement.requirementMaster?.requirementName}
+                            </p>
+                            <span
+                              className={`inline-block mt-2 px-2 py-1 rounded-full text-xs ${
+                                requirement.requirementMaster
+                                  ?.requirementLevel === "ข้อกำหนดหลัก"
+                                  ? "bg-red-100 text-red-800"
+                                  : requirement.requirementMaster
+                                      ?.requirementLevel === "ข้อกำหนดรอง"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : "bg-blue-100 text-blue-800"
+                              }`}
+                            >
+                              {requirement.requirementMaster?.requirementLevel}
+                            </span>
+                          </div>
+
+                          <div className="space-y-3">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                ผลการตรวจประเมิน
+                              </label>
+                              <div className="flex space-x-4">
+                                <label className="flex items-center">
+                                  <input
+                                    type="radio"
+                                    name={`mobile-result-${requirement.requirementId}`}
+                                    value="ใช่"
+                                    checked={
+                                      requirement.evaluationResult === "ใช่"
+                                    }
+                                    onChange={() =>
+                                      updateRequirementEvaluation(
+                                        currentItemIndex,
+                                        reqIndex,
+                                        "evaluationResult",
+                                        "ใช่"
+                                      )
+                                    }
+                                    className="mr-2 h-4 w-4 text-green-600"
+                                  />
+                                  <span className="text-sm">ใช่</span>
+                                </label>
+                                <label className="flex items-center">
+                                  <input
+                                    type="radio"
+                                    name={`mobile-result-${requirement.requirementId}`}
+                                    value="ไม่ใช่"
+                                    checked={
+                                      requirement.evaluationResult === "ไม่ใช่"
+                                    }
+                                    onChange={() =>
+                                      updateRequirementEvaluation(
+                                        currentItemIndex,
+                                        reqIndex,
+                                        "evaluationResult",
+                                        "ไม่ใช่"
+                                      )
+                                    }
+                                    className="mr-2 h-4 w-4 text-green-600"
+                                  />
+                                  <span className="text-sm">ไม่ใช่</span>
+                                </label>
+                                <label className="flex items-center">
+                                  <input
+                                    type="radio"
+                                    name={`mobile-result-${requirement.requirementId}`}
+                                    value="NA"
+                                    checked={
+                                      requirement.evaluationResult === "NA"
+                                    }
+                                    onChange={() =>
+                                      updateRequirementEvaluation(
+                                        currentItemIndex,
+                                        reqIndex,
+                                        "evaluationResult",
+                                        "NA"
+                                      )
+                                    }
+                                    className="mr-2 h-4 w-4 text-green-600"
+                                  />
+                                  <span className="text-sm">NA</span>
+                                </label>
+                              </div>
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                วิธีการตรวจประเมิน
+                              </label>
+                              <select
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 text-sm"
+                                value={requirement.evaluationMethod || ""}
+                                onChange={(e) =>
+                                  updateRequirementEvaluation(
+                                    currentItemIndex,
+                                    reqIndex,
+                                    "evaluationMethod",
+                                    e.target.value
+                                  )
+                                }
+                              >
+                                <option value="">เลือก</option>
+                                <option value="พินิจ">พินิจ</option>
+                                <option value="สัมภาษณ์">สัมภาษณ์</option>
+                                <option value="วัด">วัด</option>
+                                <option value="ทดสอบ">ทดสอบ</option>
+                              </select>
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                หมายเหตุ
+                              </label>
+                              <input
+                                type="text"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 text-sm"
+                                placeholder="หมายเหตุ"
+                                value={requirement.note || ""}
+                                onChange={(e) =>
+                                  updateRequirementEvaluation(
+                                    currentItemIndex,
+                                    reqIndex,
+                                    "note",
+                                    e.target.value
+                                  )
+                                }
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    )}
+                  </div>
+
                   {/* ผลการตรวจรายการ */}
                   <div className="mt-4 p-3 bg-gray-50 rounded-lg">
                     <p className="text-sm text-gray-700">
@@ -1046,25 +1341,25 @@ export default function AuditorInspectionsPage() {
                     </p>
                   </div>
 
-                  {/* ปุ่มดำเนินการ */}
-                  <div className="mt-6 flex justify-between">
+                  {/* ปุ่มดำเนินการ for desktop and mobile*/}
+                  <div className="mt-6 flex flex-col sm:flex-row justify-between gap-3">
                     <div>
                       {currentItemIndex > 0 && (
                         <button
                           onClick={() =>
                             setCurrentItemIndex(currentItemIndex - 1)
                           }
-                          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500"
+                          className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500"
                         >
                           รายการก่อนหน้า
                         </button>
                       )}
                     </div>
-                    <div className="space-x-3">
+                    <div className="flex flex-col sm:flex-row gap-3">
                       <button
                         onClick={saveCurrentItem}
                         disabled={saving}
-                        className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
+                        className="w-full sm:w-auto px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
                       >
                         {saving ? "กำลังบันทึก..." : "บันทึกผลการตรวจ"}
                       </button>
@@ -1073,14 +1368,14 @@ export default function AuditorInspectionsPage() {
                           onClick={() =>
                             setCurrentItemIndex(currentItemIndex + 1)
                           }
-                          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           รายการถัดไป
                         </button>
                       ) : (
                         <button
                           onClick={completeInspection}
-                          className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          className="w-full sm:w-auto px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
                         >
                           จบการตรวจประเมิน
                         </button>
