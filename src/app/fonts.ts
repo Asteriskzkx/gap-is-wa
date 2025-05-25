@@ -5,4 +5,6 @@ export const sarabun = Sarabun({
   weight: ["300", "400", "500", "600", "700"],
   display: "swap",
   variable: "--font-sarabun",
+  preload: true,
+  adjustFontFallback: false, // ป้องกันปัญหา layout shift
 });
