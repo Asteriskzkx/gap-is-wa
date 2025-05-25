@@ -484,47 +484,130 @@ export default function RubberFarmRegistrationForm() {
       </div>
 
       {/* Step Progress Indicator */}
-      <div className="relative mb-16">
-        <div className="h-1 bg-gray-200 rounded-full">
-          <div
-            className="h-1 bg-green-500 rounded-full transition-all duration-300 ease-in-out"
-            style={{ width: `${(step / maxSteps) * 100}%` }}
-          ></div>
-        </div>
-        <div className="flex justify-between mt-2">
-          {[1, 2, 3].map((s) => (
-            <div key={s} className="relative">
-              <div
-                className={`flex items-center justify-center w-8 h-8 rounded-full border-2 ${
+      <div className="mb-8">
+        {/* Desktop Version */}
+        <div className="hidden md:block">
+          <div className="flex items-center">
+            {[1, 2, 3].map((s, index) => (
+              <React.Fragment key={s}>
+                <div className="flex flex-col items-center flex-shrink-0">
+                  <div
+                    className={`
+                w-12 h-12 rounded-full flex items-center justify-center text-sm font-semibold border-2 transition-all duration-300 cursor-pointer
+                ${
                   s <= step
-                    ? "bg-green-500 text-white border-green-500"
-                    : "bg-white text-gray-500 border-gray-300"
-                } ${s < step ? "cursor-pointer" : ""}`}
-                onClick={() => s < step && setStep(s)}
-              >
-                {s}
-              </div>
+                    ? "bg-green-600 border-green-600 text-white shadow-lg"
+                    : s === step + 1
+                    ? "bg-white border-green-300 text-green-600"
+                    : "bg-white border-gray-300 text-gray-400"
+                }
+              `}
+                    onClick={() => s < step && setStep(s)}
+                  >
+                    {s < step ? (
+                      <svg
+                        className="w-6 h-6"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    ) : (
+                      s
+                    )}
+                  </div>
 
-              <div
-                className={`absolute text-center text-xs mt-2 w-28 ${
+                  <div className="mt-3 text-center">
+                    <div
+                      className={`text-sm font-medium transition-colors duration-300 ${
+                        s <= step ? "text-green-600" : "text-gray-500"
+                      }`}
+                    >
+                      {s === 1 && "ข้อมูลสวนยาง"}
+                      {s === 2 && "รายละเอียดการปลูก"}
+                      {s === 3 && "ยืนยันข้อมูล"}
+                    </div>
+                  </div>
+                </div>
+
+                {index < 2 && (
+                  <div className="flex-1 mx-4 mb-6">
+                    <div
+                      className={`h-1 rounded-full transition-all duration-300 ${
+                        s < step ? "bg-green-600" : "bg-gray-300"
+                      }`}
+                    />
+                  </div>
+                )}
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+
+        {/* Mobile Version */}
+        <div className="md:hidden">
+          <div className="flex items-center justify-center mb-4">
+            <div className="flex items-center space-x-2">
+              {[1, 2, 3].map((s, index) => (
+                <React.Fragment key={s}>
+                  <div
+                    className={`
+                w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300
+                ${
                   s <= step
-                    ? "font-medium text-green-700"
-                    : "font-medium text-gray-500"
-                }`}
-                style={{
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                  top: "100%",
-                }}
-              >
-                {s === 1
-                  ? "ข้อมูลสวนยาง"
-                  : s === 2
-                  ? "รายละเอียดการปลูก"
-                  : "ยืนยันข้อมูล"}
-              </div>
+                    ? "bg-green-600 text-white"
+                    : s === step + 1
+                    ? "bg-green-100 text-green-600 border border-green-300"
+                    : "bg-gray-200 text-gray-400"
+                }
+              `}
+                  >
+                    {s < step ? (
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    ) : (
+                      s
+                    )}
+                  </div>
+                  {index < 2 && (
+                    <div
+                      className={`w-8 h-0.5 transition-all duration-300 ${
+                        s < step ? "bg-green-600" : "bg-gray-300"
+                      }`}
+                    />
+                  )}
+                </React.Fragment>
+              ))}
             </div>
-          ))}
+          </div>
+
+          <div className="text-center">
+            <div className="text-lg font-semibold text-gray-800">
+              ขั้นตอนที่ {step}: {step === 1 && "ข้อมูลสวนยาง"}
+              {step === 2 && "รายละเอียดการปลูก"}
+              {step === 3 && "ยืนยันข้อมูล"}
+            </div>
+            <div className="text-sm text-gray-500 mt-1">
+              {step} จาก {maxSteps} ขั้นตอน
+            </div>
+          </div>
         </div>
       </div>
 

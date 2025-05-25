@@ -352,55 +352,139 @@ export default function FarmerRegisterPage() {
             สร้างบัญชีผู้ใช้สำหรับระบบสารสนเทศสำหรับการจัดการข้อมูลทางการเกษตรผลผลิตยางพาราตามมาตรฐานจีเอพี
           </p>
         </div>
-        {/* Step progress bar and indicators */}{" "}
-        <div className="relative mb-16">
-          {/* Progress bar */}
-          <div className="h-1 bg-gray-200 rounded-full">
-            <div
-              className="h-1 bg-green-500 rounded-full transition-all duration-300 ease-in-out"
-              style={{ width: `${(step / 4) * 100}%` }}
-            ></div>
+        {/* Step progress bar and indicators */}
+        <div className="mb-8">
+          {/* Desktop Version */}
+          <div className="hidden sm:block">
+            <div className="flex items-center">
+              {[1, 2, 3, 4].map((s, index) => (
+                <React.Fragment key={s}>
+                  {/* Step Circle */}
+                  <div className="flex flex-col items-center flex-shrink-0">
+                    <div
+                      className={`
+                w-12 h-12 rounded-full flex items-center justify-center text-sm font-semibold border-2 transition-all duration-300
+                ${
+                  s <= step
+                    ? "bg-green-600 border-green-600 text-white shadow-lg"
+                    : s === step + 1
+                    ? "bg-white border-green-300 text-green-600"
+                    : "bg-white border-gray-300 text-gray-400"
+                }
+                ${s < step ? "cursor-pointer hover:shadow-xl" : ""}
+              `}
+                      onClick={() => s < step && setStep(s)}
+                    >
+                      {s < step ? (
+                        <svg
+                          className="w-6 h-6"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                      ) : (
+                        s
+                      )}
+                    </div>
+
+                    {/* Step Label */}
+                    <div className="mt-3 text-center">
+                      <div
+                        className={`text-sm font-medium transition-colors duration-300 ${
+                          s <= step ? "text-green-600" : "text-gray-500"
+                        }`}
+                      >
+                        {s === 1 && "บัญชีผู้ใช้"}
+                        {s === 2 && "ข้อมูลส่วนตัว"}
+                        {s === 3 && "ที่อยู่"}
+                        {s === 4 && "ติดต่อ"}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Connecting Line */}
+                  {index < 3 && (
+                    <div className="flex-1 mx-4 mb-6">
+                      <div
+                        className={`h-1 rounded-full transition-all duration-500 ${
+                          s < step ? "bg-green-600" : "bg-gray-300"
+                        }`}
+                      />
+                    </div>
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
           </div>
 
-          {/* Step circles with labels positioned with more space */}
-          <div className="flex justify-between mt-2">
-            {[1, 2, 3, 4].map((s) => (
-              <div key={s} className="relative">
-                {/* Circle indicator */}
-                <div
-                  className={`flex items-center justify-center w-8 h-8 rounded-full border-2 ${
-                    s <= step
-                      ? "bg-green-500 text-white border-green-500"
-                      : "bg-white text-gray-500 border-gray-300"
-                  } ${s < step ? "cursor-pointer" : ""}`}
-                  onClick={() => s < step && setStep(s)}
-                >
-                  {s}
-                </div>
-
-                {/* Label below the circle with improved positioning */}
-                <div
-                  className={`absolute text-center text-xs mt-2 w-20 ${
-                    s <= step
-                      ? "font-medium text-green-700"
-                      : "font-medium text-gray-500"
-                  }`}
-                  style={{
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                    top: "100%",
-                  }}
-                >
-                  {s === 1
-                    ? "บัญชีผู้ใช้"
-                    : s === 2
-                    ? "ข้อมูลส่วนตัว"
-                    : s === 3
-                    ? "ที่อยู่"
-                    : "ติดต่อ"}{" "}
-                </div>
+          {/* Mobile Version */}
+          <div className="sm:hidden">
+            {/* Step Indicators */}
+            <div className="flex items-center justify-center mb-4">
+              <div className="flex items-center space-x-3">
+                {[1, 2, 3, 4].map((s, index) => (
+                  <React.Fragment key={s}>
+                    <div
+                      className={`
+                w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300
+                ${
+                  s <= step
+                    ? "bg-green-600 text-white"
+                    : s === step + 1
+                    ? "bg-green-100 text-green-600 border border-green-300"
+                    : "bg-gray-200 text-gray-400"
+                }
+              `}
+                    >
+                      {s < step ? (
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                      ) : (
+                        s
+                      )}
+                    </div>
+                    {index < 3 && (
+                      <div
+                        className={`w-6 h-0.5 transition-all duration-300 ${
+                          s < step ? "bg-green-600" : "bg-gray-300"
+                        }`}
+                      />
+                    )}
+                  </React.Fragment>
+                ))}
               </div>
-            ))}
+            </div>
+
+            {/* Current Step Info */}
+            <div className="text-center">
+              <div className="text-lg font-semibold text-gray-800">
+                ขั้นตอนที่ {step}: {step === 1 && "บัญชีผู้ใช้"}
+                {step === 2 && "ข้อมูลส่วนตัว"}
+                {step === 3 && "ที่อยู่"}
+                {step === 4 && "ติดต่อ"}
+              </div>
+              <div className="text-sm text-gray-500 mt-1">
+                {step} จาก 4 ขั้นตอน
+              </div>
+            </div>
           </div>
         </div>
         {error && (

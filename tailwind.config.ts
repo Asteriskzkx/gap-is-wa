@@ -27,6 +27,9 @@ const config: Config = {
           "sans-serif",
         ],
       },
+      screens: {
+        xs: "475px",
+      },
     },
   },
   plugins: [],
