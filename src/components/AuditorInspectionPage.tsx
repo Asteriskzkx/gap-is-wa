@@ -56,6 +56,31 @@ interface Requirement {
   };
 }
 
+interface RubberFarmDetails {
+  rubberFarmId: number;
+  villageName: string;
+  moo: number;
+  road: string;
+  alley: string;
+  subDistrict: string;
+  district: string;
+  province: string;
+  location: any;
+  plantingDetails: PlantingDetail[];
+}
+
+interface PlantingDetail {
+  plantingDetailId: number;
+  specie: string;
+  areaOfPlot: number;
+  numberOfRubber: number;
+  numberOfTapping: number;
+  ageOfRubber: number;
+  yearOfTapping: string;
+  monthOfTapping: string;
+  totalProduction: number;
+}
+
 export default function AuditorInspectionsPage() {
   const router = useRouter();
   const [inspections, setInspections] = useState<Inspection[]>([]);
@@ -65,6 +90,10 @@ export default function AuditorInspectionsPage() {
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showFarmDetails, setShowFarmDetails] = useState(false);
+  const [selectedFarmDetails, setSelectedFarmDetails] =
+    useState<RubberFarmDetails | null>(null);
+  const [loadingFarmDetails, setLoadingFarmDetails] = useState(false);
 
   // ดึงรายการตรวจประเมินที่รอดำเนินการ
   useEffect(() => {
@@ -125,6 +154,30 @@ export default function AuditorInspectionsPage() {
       }
     } catch (error) {
       console.error("Error fetching inspection items:", error);
+    }
+  };
+
+  // ดึงข้อมูล farm details
+  const fetchFarmDetails = async (farmId: number) => {
+    setLoadingFarmDetails(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`/api/v1/rubber-farms/${farmId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSelectedFarmDetails(data);
+        setShowFarmDetails(true);
+      }
+    } catch (error) {
+      console.error("Error fetching farm details:", error);
+      alert("ไม่สามารถดึงข้อมูลสวนยางได้");
+    } finally {
+      setLoadingFarmDetails(false);
     }
   };
 
@@ -794,26 +847,26 @@ export default function AuditorInspectionsPage() {
               </div>
             ) : (
               <>
-                <div className="hidden md:block bg-white rounded-lg shadow overflow-hidden">
+                <div className="hidden md:block bg-white rounded-lg shadow overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                           เลขที่ตรวจประเมิน
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                           ประเภทการตรวจ
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                           เกษตรกร
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                           สถานที่
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                           วันที่นัดหมาย
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                           การดำเนินการ
                         </th>
                       </tr>
@@ -821,13 +874,13 @@ export default function AuditorInspectionsPage() {
                     <tbody className="bg-white divide-y divide-gray-200">
                       {inspections.map((inspection) => (
                         <tr key={inspection.inspectionId}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                             {inspection.inspectionNo}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                             {inspection.inspectionType?.typeName || "N/A"}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                             {inspection.rubberFarm?.farmer ? (
                               <>
                                 {inspection.rubberFarm.farmer.namePrefix}
@@ -838,23 +891,49 @@ export default function AuditorInspectionsPage() {
                               "N/A"
                             )}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {inspection.rubberFarm
-                              ? `${inspection.rubberFarm.villageName}, ${inspection.rubberFarm.district}, ${inspection.rubberFarm.province}`
-                              : "N/A"}
+                          <td className="px-4 py-4 text-sm text-gray-900">
+                            <div
+                              className="max-w-xs truncate"
+                              title={
+                                inspection.rubberFarm
+                                  ? `${inspection.rubberFarm.villageName}, ${inspection.rubberFarm.district}, ${inspection.rubberFarm.province}`
+                                  : "N/A"
+                              }
+                            >
+                              {inspection.rubberFarm
+                                ? `${inspection.rubberFarm.villageName}, ${inspection.rubberFarm.district}, ${inspection.rubberFarm.province}`
+                                : "N/A"}
+                            </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                             {new Date(
                               inspection.inspectionDateAndTime
-                            ).toLocaleString("th-TH")}
+                            ).toLocaleString("th-TH", {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm">
-                            <button
-                              onClick={() => selectInspection(inspection)}
-                              className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
-                            >
-                              เริ่มตรวจประเมิน
-                            </button>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-center">
+                            <div className="flex justify-center space-x-2">
+                              <button
+                                onClick={() =>
+                                  fetchFarmDetails(inspection.rubberFarmId)
+                                }
+                                className="bg-blue-600 text-white px-3 py-1.5 rounded-md hover:bg-blue-700 text-sm"
+                                disabled={loadingFarmDetails}
+                              >
+                                ดูข้อมูล
+                              </button>
+                              <button
+                                onClick={() => selectInspection(inspection)}
+                                className="bg-green-600 text-white px-3 py-1.5 rounded-md hover:bg-green-700 text-sm"
+                              >
+                                เริ่มตรวจประเมิน
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -912,15 +991,178 @@ export default function AuditorInspectionsPage() {
                         </div>
                       </div>
 
-                      <button
-                        onClick={() => selectInspection(inspection)}
-                        className="mt-4 w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
-                      >
-                        เริ่มตรวจประเมิน
-                      </button>
+                      <div className="mt-4 flex gap-2">
+                        <button
+                          onClick={() =>
+                            fetchFarmDetails(inspection.rubberFarmId)
+                          }
+                          className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                          disabled={loadingFarmDetails}
+                        >
+                          ดูข้อมูล
+                        </button>
+                        <button
+                          onClick={() => selectInspection(inspection)}
+                          className="flex-1 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+                        >
+                          เริ่มตรวจ
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
+
+                {showFarmDetails && selectedFarmDetails && (
+                  <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+                    <div className="relative top-20 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-lg font-bold text-gray-900">
+                          ข้อมูลสวนยางพารา
+                        </h3>
+                        <button
+                          onClick={() => setShowFarmDetails(false)}
+                          className="text-gray-400 hover:text-gray-600"
+                        >
+                          <svg
+                            className="h-6 w-6"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+
+                      <div className="mt-4 space-y-4">
+                        {/* ข้อมูลที่ตั้งสวน */}
+                        <div className="bg-gray-50 p-4 rounded-lg">
+                          <h4 className="font-semibold text-gray-800 mb-2">
+                            ที่ตั้งสวนยาง
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                            <div>
+                              <span className="font-medium text-gray-600">
+                                หมู่บ้าน:
+                              </span>{" "}
+                              {selectedFarmDetails.villageName}
+                            </div>
+                            <div>
+                              <span className="font-medium text-gray-600">
+                                หมู่ที่:
+                              </span>{" "}
+                              {selectedFarmDetails.moo}
+                            </div>
+                            <div>
+                              <span className="font-medium text-gray-600">
+                                ถนน:
+                              </span>{" "}
+                              {selectedFarmDetails.road || "-"}
+                            </div>
+                            <div>
+                              <span className="font-medium text-gray-600">
+                                ซอย:
+                              </span>{" "}
+                              {selectedFarmDetails.alley || "-"}
+                            </div>
+                            <div>
+                              <span className="font-medium text-gray-600">
+                                ตำบล:
+                              </span>{" "}
+                              {selectedFarmDetails.subDistrict}
+                            </div>
+                            <div>
+                              <span className="font-medium text-gray-600">
+                                อำเภอ:
+                              </span>{" "}
+                              {selectedFarmDetails.district}
+                            </div>
+                            <div>
+                              <span className="font-medium text-gray-600">
+                                จังหวัด:
+                              </span>{" "}
+                              {selectedFarmDetails.province}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* ข้อมูลแปลงปลูก */}
+                        <div className="bg-gray-50 p-4 rounded-lg">
+                          <h4 className="font-semibold text-gray-800 mb-2">
+                            รายละเอียดแปลงปลูก
+                          </h4>
+                          {selectedFarmDetails.plantingDetails &&
+                          selectedFarmDetails.plantingDetails.length > 0 ? (
+                            <div className="overflow-x-auto">
+                              <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-100">
+                                  <tr>
+                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                      พันธุ์ยาง
+                                    </th>
+                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                      พื้นที่ (ไร่)
+                                    </th>
+                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                      จำนวนต้น
+                                    </th>
+                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                      อายุ (ปี)
+                                    </th>
+                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                      ผลผลิต (กก.)
+                                    </th>
+                                  </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                  {selectedFarmDetails.plantingDetails.map(
+                                    (detail, index) => (
+                                      <tr key={index}>
+                                        <td className="px-3 py-2 text-sm text-gray-900">
+                                          {detail.specie}
+                                        </td>
+                                        <td className="px-3 py-2 text-sm text-gray-900">
+                                          {detail.areaOfPlot}
+                                        </td>
+                                        <td className="px-3 py-2 text-sm text-gray-900">
+                                          {detail.numberOfRubber}
+                                        </td>
+                                        <td className="px-3 py-2 text-sm text-gray-900">
+                                          {detail.ageOfRubber}
+                                        </td>
+                                        <td className="px-3 py-2 text-sm text-gray-900">
+                                          {detail.totalProduction}
+                                        </td>
+                                      </tr>
+                                    )
+                                  )}
+                                </tbody>
+                              </table>
+                            </div>
+                          ) : (
+                            <p className="text-sm text-gray-500">
+                              ไม่มีข้อมูลแปลงปลูก
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="mt-6 flex justify-end">
+                        <button
+                          onClick={() => setShowFarmDetails(false)}
+                          className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400"
+                        >
+                          ปิด
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </>
             )}
           </div>
