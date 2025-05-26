@@ -12,6 +12,31 @@ interface RubberFarm {
   farmerEmail: string;
 }
 
+interface RubberFarmDetails {
+  rubberFarmId: number;
+  villageName: string;
+  moo: number;
+  road: string;
+  alley: string;
+  subDistrict: string;
+  district: string;
+  province: string;
+  location: any;
+  plantingDetails: PlantingDetail[];
+}
+
+interface PlantingDetail {
+  plantingDetailId: number;
+  specie: string;
+  areaOfPlot: number;
+  numberOfRubber: number;
+  numberOfTapping: number;
+  ageOfRubber: number;
+  yearOfTapping: string;
+  monthOfTapping: string;
+  totalProduction: number;
+}
+
 interface InspectionType {
   inspectionTypeId: number;
   typeName: string;
@@ -35,6 +60,10 @@ export default function AuditorScheduleInspectionPage() {
   const [rubberFarms, setRubberFarms] = useState<RubberFarm[]>([]);
   const [inspectionTypes, setInspectionTypes] = useState<InspectionType[]>([]);
   const [auditors, setAuditors] = useState<Auditor[]>([]);
+  const [showFarmDetails, setShowFarmDetails] = useState(false);
+  const [selectedFarmDetails, setSelectedFarmDetails] =
+    useState<RubberFarmDetails | null>(null);
+  const [loadingFarmDetails, setLoadingFarmDetails] = useState(false);
 
   const [selectedFarm, setSelectedFarm] = useState<RubberFarm | null>(null);
   const [selectedInspectionType, setSelectedInspectionType] =
@@ -185,6 +214,31 @@ export default function AuditorScheduleInspectionPage() {
       ),
     },
   ];
+
+  const fetchFarmDetails = async (farmId: number) => {
+    setLoadingFarmDetails(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`/api/v1/rubber-farms/${farmId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSelectedFarmDetails(data);
+        setShowFarmDetails(true);
+      } else {
+        alert("ไม่สามารถดึงข้อมูลสวนยางได้");
+      }
+    } catch (error) {
+      console.error("Error fetching farm details:", error);
+      alert("เกิดข้อผิดพลาดในการดึงข้อมูล");
+    } finally {
+      setLoadingFarmDetails(false);
+    }
+  };
 
   useEffect(() => {
     // Fetch auditor data
@@ -596,12 +650,16 @@ export default function AuditorScheduleInspectionPage() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       อีเมล
                     </th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      การดำเนินการ
+                    </th>
                   </tr>
                 </thead>
+
                 <tbody className="bg-white divide-y divide-gray-200">
                   {loading ? (
                     <tr>
-                      <td colSpan={5} className="text-center py-4">
+                      <td colSpan={6} className="text-center py-4">
                         <div className="flex justify-center">
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
                         </div>
@@ -610,7 +668,7 @@ export default function AuditorScheduleInspectionPage() {
                   ) : currentFarms.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={5}
+                        colSpan={6}
                         className="text-center py-4 text-gray-500"
                       >
                         ไม่พบข้อมูลสวนยางพารา
@@ -644,6 +702,15 @@ export default function AuditorScheduleInspectionPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {farm.farmerEmail}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-center">
+                          <button
+                            onClick={() => fetchFarmDetails(farm.id)}
+                            disabled={loadingFarmDetails}
+                            className="text-blue-600 hover:text-blue-900 text-sm font-medium disabled:text-gray-400"
+                          >
+                            ดูข้อมูล
+                          </button>
                         </td>
                       </tr>
                     ))
@@ -1048,28 +1115,37 @@ export default function AuditorScheduleInspectionPage() {
           {/* Navigation Links */}
           <nav className="flex-1 py-4">
             <ul className="space-y-6">
-              {navItems.map((item, index) => (
-                <li key={index}>
-                  <Link
-                    href={item.href}
-                    className={`flex items-center ${
-                      sidebarCollapsed ? "justify-center px-3" : "px-4"
-                    } py-2 text-gray-700 hover:text-gray-900 ${
-                      item.href === "/auditor/applications"
-                        ? "bg-green-50 border-l-4 border-green-500 text-green-700"
-                        : ""
-                    }`}
-                    onClick={handleNavClick}
-                  >
-                    <div className="text-gray-500">{item.icon}</div>
-                    {!sidebarCollapsed && (
-                      <span className="ml-3 text-sm font-medium">
-                        {item.title}
-                      </span>
-                    )}
-                  </Link>
-                </li>
-              ))}
+              {navItems.map((item, index) => {
+                const isActive = item.href === "/auditor/applications";
+                return (
+                  <li key={index}>
+                    <Link
+                      href={item.href}
+                      className={`flex items-center ${
+                        sidebarCollapsed ? "justify-center px-3" : "px-4"
+                      } py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors ${
+                        isActive
+                          ? "bg-green-50 border-l-4 border-green-500 text-green-700"
+                          : ""
+                      }`}
+                      onClick={handleNavClick}
+                    >
+                      <div
+                        className={
+                          isActive ? "text-green-600" : "text-gray-500"
+                        }
+                      >
+                        {item.icon}
+                      </div>
+                      {!sidebarCollapsed && (
+                        <span className="ml-3 text-sm font-medium">
+                          {item.title}
+                        </span>
+                      )}
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </nav>
 
@@ -1218,10 +1294,8 @@ export default function AuditorScheduleInspectionPage() {
               กำหนดวันและเวลาสำหรับการตรวจประเมินสวนยางพาราตามมาตรฐานจีเอพี
             </p>
           </div>
-
           {/* Step Indicator */}
           <StepIndicator />
-
           {/* Content Card */}
           <div className="bg-white rounded-xl shadow-sm p-3 sm:p-6 w-full">
             {renderStepContent()}
@@ -1287,6 +1361,157 @@ export default function AuditorScheduleInspectionPage() {
               )}
             </div>
           </div>
+          {showFarmDetails && selectedFarmDetails && (
+            <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+              <div className="relative top-20 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-bold text-gray-900">
+                    ข้อมูลสวนยางพารา
+                  </h3>
+                  <button
+                    onClick={() => setShowFarmDetails(false)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <svg
+                      className="h-6 w-6"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+
+                <div className="mt-4 space-y-4 max-h-[70vh] overflow-y-auto">
+                  {/* ข้อมูลที่ตั้งสวน */}
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="font-semibold text-gray-800 mb-2">
+                      ที่ตั้งสวนยาง
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <span className="font-medium text-gray-600">
+                          หมู่บ้าน:
+                        </span>{" "}
+                        {selectedFarmDetails.villageName}
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-600">
+                          หมู่ที่:
+                        </span>{" "}
+                        {selectedFarmDetails.moo}
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-600">ถนน:</span>{" "}
+                        {selectedFarmDetails.road || "-"}
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-600">ซอย:</span>{" "}
+                        {selectedFarmDetails.alley || "-"}
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-600">ตำบล:</span>{" "}
+                        {selectedFarmDetails.subDistrict}
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-600">
+                          อำเภอ:
+                        </span>{" "}
+                        {selectedFarmDetails.district}
+                      </div>
+                      <div className="md:col-span-2">
+                        <span className="font-medium text-gray-600">
+                          จังหวัด:
+                        </span>{" "}
+                        {selectedFarmDetails.province}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ข้อมูลแปลงปลูก */}
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="font-semibold text-gray-800 mb-2">
+                      รายละเอียดแปลงปลูก
+                    </h4>
+                    {selectedFarmDetails.plantingDetails &&
+                    selectedFarmDetails.plantingDetails.length > 0 ? (
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                          <thead className="bg-gray-100">
+                            <tr>
+                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                พันธุ์ยาง
+                              </th>
+                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                พื้นที่ (ไร่)
+                              </th>
+                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                จำนวนต้น
+                              </th>
+                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                จำนวนต้นที่กรีด
+                              </th>
+                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                อายุ (ปี)
+                              </th>
+                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                ผลผลิต (กก.)
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            {selectedFarmDetails.plantingDetails.map(
+                              (detail, index) => (
+                                <tr key={index}>
+                                  <td className="px-3 py-2 text-sm text-gray-900">
+                                    {detail.specie}
+                                  </td>
+                                  <td className="px-3 py-2 text-sm text-gray-900">
+                                    {detail.areaOfPlot}
+                                  </td>
+                                  <td className="px-3 py-2 text-sm text-gray-900">
+                                    {detail.numberOfRubber}
+                                  </td>
+                                  <td className="px-3 py-2 text-sm text-gray-900">
+                                    {detail.numberOfTapping}
+                                  </td>
+                                  <td className="px-3 py-2 text-sm text-gray-900">
+                                    {detail.ageOfRubber}
+                                  </td>
+                                  <td className="px-3 py-2 text-sm text-gray-900">
+                                    {detail.totalProduction}
+                                  </td>
+                                </tr>
+                              )
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500">
+                        ไม่มีข้อมูลแปลงปลูก
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mt-6 flex justify-end">
+                  <button
+                    onClick={() => setShowFarmDetails(false)}
+                    className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400"
+                  >
+                    ปิด
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </main>
 
         {/* Footer */}
