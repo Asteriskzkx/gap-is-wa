@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  # Database Service
+  postgres:
+    image: postgres:15-alpine
+    container_name: gap-is-wa-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-gapuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gappassword}
+      POSTGRES_DB: ${POSTGRES_DB:-gapdb}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    networks:
+      - gap-is-wa-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gapuser} -d ${POSTGRES_DB:-gapdb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Main Application
+  gap-is-wa:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gap-is-wa-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+      - "5555:5555" 
+    environment:
+      - NODE_ENV=production
+      - NEXT_TELEMETRY_DISABLED=1
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-gapuser}:${POSTGRES_PASSWORD:-gappassword}@postgres:5432/${POSTGRES_DB:-gapdb}?schema=public
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - gap-is-wa-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Database Migration Service (runs once)
+  prisma-migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile.migrate
+    container_name: gap-is-wa-migrate
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-gapuser}:${POSTGRES_PASSWORD:-gappassword}@postgres:5432/${POSTGRES_DB:-gapdb}?schema=public
+    networks:
+      - gap-is-wa-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  # ถ้าต้องการใช้ Nginx เป็น reverse proxy (optional)
+  nginx:
+    image: nginx:alpine
+    container_name: gap-is-wa-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - gap-is-wa
+    networks:
+      - gap-is-wa-network
+
+volumes:
+  postgres_data:
+
+networks:
+  gap-is-wa-network:
+    driver: bridge

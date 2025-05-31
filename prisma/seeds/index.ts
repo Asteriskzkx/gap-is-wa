@@ -1,7 +1,9 @@
-import { prisma } from "../../src/utils/db";
+import { PrismaClient } from "@prisma/client";
 import { seedInspectionTypes } from "./inspection-types";
 import { seedInspectionItems } from "./inspection-items";
 import { seedRequirements } from "./requirements";
+
+const prisma = new PrismaClient();
 
 async function main() {
   console.log(`Start seeding...`);
