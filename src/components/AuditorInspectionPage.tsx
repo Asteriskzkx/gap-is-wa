@@ -95,10 +95,217 @@ export default function AuditorInspectionsPage() {
     useState<RubberFarmDetails | null>(null);
   const [loadingFarmDetails, setLoadingFarmDetails] = useState(false);
 
+  // State for sidebar
+  const [sidebarVisible, setSidebarVisible] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  // Auditor info
+  const [auditor, setAuditor] = useState({
+    namePrefix: "",
+    firstName: "",
+    lastName: "",
+    isLoading: true,
+  });
+
+  // Navigation menu items
+  const navItems = [
+    {
+      title: "หน้าหลัก",
+      href: "/auditor/dashboard",
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={1.5}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+          />
+        </svg>
+      ),
+    },
+    {
+      title: "ตรวจประเมินสวนยางพารา",
+      href: "/auditor/inspections",
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={1.5}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75a2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z"
+          />
+        </svg>
+      ),
+    },
+    {
+      title: "แจ้งกำหนดการวันที่ตรวจประเมิน",
+      href: "/auditor/applications",
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={1.5}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z"
+          />
+        </svg>
+      ),
+    },
+    {
+      title: "สรุปผลการตรวจประเมิน",
+      href: "/auditor/reports",
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={1.5}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
+          />
+        </svg>
+      ),
+    },
+    {
+      title: "บันทึกข้อมูลประจำสวนยาง",
+      href: "/auditor/garden-data",
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={1.5}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V7.875c0-.621-.504-1.125-1.125-1.125H12a9.06 9.06 0 00-1.5.124"
+          />
+        </svg>
+      ),
+    },
+    {
+      title: "บันทึกการให้คำปรึกษาและข้อบกพร่อง",
+      href: "/auditor/consultations",
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={1.5}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"
+          />
+        </svg>
+      ),
+    },
+  ];
+
   // ดึงรายการตรวจประเมินที่รอดำเนินการ
   useEffect(() => {
     fetchPendingInspections();
+
+    // Fetch auditor data
+    const fetchAuditorData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (token) {
+          const response = await fetch("/api/v1/auditors/current", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (response.ok) {
+            const auditorData = await response.json();
+            setAuditor({
+              namePrefix: auditorData.namePrefix || "",
+              firstName: auditorData.firstName || "",
+              lastName: auditorData.lastName || "",
+              isLoading: false,
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching auditor data:", error);
+        setAuditor({
+          namePrefix: "",
+          firstName: "ไม่ทราบชื่อ",
+          lastName: "",
+          isLoading: false,
+        });
+      }
+    };
+
+    fetchAuditorData();
+
+    // Check screen size
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (mobile) {
+        setSidebarVisible(false);
+        setSidebarCollapsed(true);
+      } else {
+        setSidebarVisible(true);
+      }
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
+
+  const toggleSidebarCollapse = () => {
+    setSidebarCollapsed(!sidebarCollapsed);
+  };
+
+  const toggleSidebarVisibility = () => {
+    setSidebarVisible(!sidebarVisible);
+    if (!sidebarVisible) {
+      setDropdownOpen(false);
+    }
+  };
+
+  const handleNavClick = () => {
+    if (isMobile) {
+      setSidebarVisible(false);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    router.push("/");
+  };
 
   const fetchPendingInspections = async () => {
     try {
@@ -286,6 +493,24 @@ export default function AuditorInspectionsPage() {
                   }
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  น้ำที่ใช้ในกระบวนการหลังการเก็บเกี่ยว
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
+                  placeholder="ระบุแหล่งน้ำที่ใช้ในกระบวนการหลังการเก็บเกี่ยว"
+                  value={item?.otherConditions?.postHarvestWaterSource || ""}
+                  onChange={(e) =>
+                    updateOtherConditions(
+                      itemIndex,
+                      "postHarvestWaterSource",
+                      e.target.value
+                    )
+                  }
+                />
+              </div>
             </div>
           </div>
         );
@@ -296,48 +521,229 @@ export default function AuditorInspectionsPage() {
             <h3 className="text-md font-semibold text-gray-800 mb-3">
               ข้อมูลเพิ่มเติม
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  ลักษณะภูมิประเทศ
-                </label>
-                <select
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
-                  value={item?.otherConditions?.topography || ""}
-                  onChange={(e) =>
-                    updateOtherConditions(
-                      itemIndex,
-                      "topography",
-                      e.target.value
-                    )
-                  }
-                >
-                  <option value="">เลือกลักษณะภูมิประเทศ</option>
-                  <option value="พื้นที่ราบ">พื้นที่ราบ</option>
-                  <option value="พื้นที่ลาดชัน">พื้นที่ลาดชัน</option>
-                  <option value="พื้นที่ที่ราบสูง">พื้นที่ที่ราบสูง</option>
-                </select>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                สภาพพื้นที่ปลูก
+              </label>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <div className="flex items-center">
+                  <input
+                    id="terrain-flat"
+                    type="radio"
+                    name="terrain-type"
+                    value="ที่ราบ"
+                    checked={item?.otherConditions?.topography === "ที่ราบ"}
+                    onChange={(e) =>
+                      updateOtherConditions(
+                        itemIndex,
+                        "topography",
+                        e.target.value
+                      )
+                    }
+                    className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
+                  />
+                  <label
+                    htmlFor="terrain-flat"
+                    className="ml-2 block text-sm text-gray-700"
+                  >
+                    2.1 ที่ราบ
+                  </label>
+                </div>
+                <div className="flex items-center">
+                  <input
+                    id="terrain-lowland"
+                    type="radio"
+                    name="terrain-type"
+                    value="ที่ราบลุ่ม"
+                    checked={item?.otherConditions?.topography === "ที่ราบลุ่ม"}
+                    onChange={(e) =>
+                      updateOtherConditions(
+                        itemIndex,
+                        "topography",
+                        e.target.value
+                      )
+                    }
+                    className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
+                  />
+                  <label
+                    htmlFor="terrain-lowland"
+                    className="ml-2 block text-sm text-gray-700"
+                  >
+                    2.2 ที่ราบลุ่ม
+                  </label>
+                </div>
+                <div className="flex items-center">
+                  <input
+                    id="terrain-upland"
+                    type="radio"
+                    name="terrain-type"
+                    value="ที่ดอน"
+                    checked={item?.otherConditions?.topography === "ที่ดอน"}
+                    onChange={(e) =>
+                      updateOtherConditions(
+                        itemIndex,
+                        "topography",
+                        e.target.value
+                      )
+                    }
+                    className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
+                  />
+                  <label
+                    htmlFor="terrain-upland"
+                    className="ml-2 block text-sm text-gray-700"
+                  >
+                    2.3 ที่ดอน
+                  </label>
+                </div>
+                <div className="flex items-center">
+                  <input
+                    id="terrain-ridges"
+                    type="radio"
+                    name="terrain-type"
+                    value="ยกร่อง"
+                    checked={item?.otherConditions?.topography === "ยกร่อง"}
+                    onChange={(e) =>
+                      updateOtherConditions(
+                        itemIndex,
+                        "topography",
+                        e.target.value
+                      )
+                    }
+                    className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
+                  />
+                  <label
+                    htmlFor="terrain-ridges"
+                    className="ml-2 block text-sm text-gray-700"
+                  >
+                    2.4 ยกร่อง
+                  </label>
+                </div>
+                <div className="flex items-center">
+                  <input
+                    id="terrain-ridges-water"
+                    type="radio"
+                    name="terrain-type"
+                    value="ยกร่องน้ำขึ้นถึง"
+                    checked={
+                      item?.otherConditions?.topography === "ยกร่องน้ำขึ้นถึง"
+                    }
+                    onChange={(e) =>
+                      updateOtherConditions(
+                        itemIndex,
+                        "topography",
+                        e.target.value
+                      )
+                    }
+                    className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
+                  />
+                  <label
+                    htmlFor="terrain-ridges-water"
+                    className="ml-2 block text-sm text-gray-700"
+                  >
+                    2.5 ยกร่องน้ำขึ้งถึง
+                  </label>
+                </div>
+                <div className="flex items-center">
+                  <input
+                    id="terrain-other"
+                    type="radio"
+                    name="terrain-type"
+                    value="อื่นๆ"
+                    checked={
+                      item?.otherConditions?.topography === "อื่นๆ" ||
+                      (item?.otherConditions?.topography &&
+                        ![
+                          "ที่ราบ",
+                          "ที่ราบลุ่ม",
+                          "ที่ดอน",
+                          "ยกร่อง",
+                          "ยกร่องน้ำขึ้นถึง",
+                        ].includes(item?.otherConditions?.topography))
+                    }
+                    onChange={(e) =>
+                      updateOtherConditions(
+                        itemIndex,
+                        "topography",
+                        e.target.value
+                      )
+                    }
+                    className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
+                  />
+                  <label
+                    htmlFor="terrain-other"
+                    className="ml-2 block text-sm text-gray-700"
+                  >
+                    2.6 อื่น ๆ ระบุ...
+                  </label>
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  ประวัติการใช้ที่ดิน
-                </label>
-                <textarea
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
-                  rows={2}
-                  placeholder="ระบุประวัติการใช้ที่ดินย้อนหลัง 2 ปี"
-                  value={item?.otherConditions?.landHistory || ""}
-                  onChange={(e) =>
-                    updateOtherConditions(
-                      itemIndex,
-                      "landHistory",
-                      e.target.value
-                    )
-                  }
-                />
-              </div>
+
+              {item?.otherConditions?.topography === "อื่นๆ" && (
+                <div className="mt-3">
+                  <input
+                    type="text"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
+                    placeholder="ระบุสภาพพื้นที่ปลูกอื่นๆ"
+                    value={item?.otherConditions?.topographyOther || ""}
+                    onChange={(e) =>
+                      updateOtherConditions(
+                        itemIndex,
+                        "topographyOther",
+                        e.target.value
+                      )
+                    }
+                  />
+                </div>
+              )}
             </div>
           </div>
+
+          //   <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+          //   <h3 className="text-md font-semibold text-gray-800 mb-3">
+          //     ข้อมูลเพิ่มเติม
+          //   </h3>
+          //   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          //     <div>
+          //       <label className="block text-sm font-medium text-gray-700 mb-1">
+          //         ลักษณะภูมิประเทศ
+          //       </label>
+          //       <select
+          //         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
+          //         value={item?.otherConditions?.topography || ""}
+          //         onChange={(e) =>
+          //           updateOtherConditions(
+          //             itemIndex,
+          //             "topography",
+          //             e.target.value
+          //           )
+          //         }
+          //       >
+          //         <option value="">เลือกลักษณะภูมิประเทศ</option>
+          //         <option value="พื้นที่ราบ">พื้นที่ราบ</option>
+          //         <option value="พื้นที่ลาดชัน">พื้นที่ลาดชัน</option>
+          //         <option value="พื้นที่ที่ราบสูง">พื้นที่ที่ราบสูง</option>
+          //       </select>
+          //     </div>
+          //     <div>
+          //       <label className="block text-sm font-medium text-gray-700 mb-1">
+          //         ประวัติการใช้ที่ดิน
+          //       </label>
+          //       <textarea
+          //         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
+          //         rows={2}
+          //         placeholder="ระบุประวัติการใช้ที่ดินย้อนหลัง 2 ปี"
+          //         value={item?.otherConditions?.landHistory || ""}
+          //         onChange={(e) =>
+          //           updateOtherConditions(
+          //             itemIndex,
+          //             "landHistory",
+          //             e.target.value
+          //           )
+          //         }
+          //       />
+          //     </div>
+          //   </div>
+          // </div>
         );
 
       case "วัตถุอันตรายทางการเกษตร":
@@ -346,42 +752,29 @@ export default function AuditorInspectionsPage() {
             <h3 className="text-md font-semibold text-gray-800 mb-3">
               ข้อมูลเพิ่มเติม
             </h3>
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  สถานที่เก็บวัตถุอันตราย
-                </label>
+            <div className="mb-4">
+              <div className="flex items-center">
                 <input
-                  type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
-                  placeholder="ระบุสถานที่เก็บวัตถุอันตราย"
-                  value={item?.otherConditions?.storageLocation || ""}
+                  id="no-hazardous-materials"
+                  type="checkbox"
+                  className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                  checked={
+                    item?.otherConditions?.noHazardousMaterials === "true"
+                  }
                   onChange={(e) =>
                     updateOtherConditions(
                       itemIndex,
-                      "storageLocation",
-                      e.target.value
+                      "noHazardousMaterials",
+                      e.target.checked ? "true" : "false"
                     )
                   }
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  รายการวัตถุอันตรายที่ใช้
+                <label
+                  htmlFor="no-hazardous-materials"
+                  className="ml-2 block text-sm text-gray-900"
+                >
+                  ไม่ได้ใช้วัตถุอันตรายทางการเกษตรในการผลิต
                 </label>
-                <textarea
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
-                  rows={3}
-                  placeholder="ระบุชื่อและปริมาณวัตถุอันตรายที่ใช้"
-                  value={item?.otherConditions?.chemicalsList || ""}
-                  onChange={(e) =>
-                    updateOtherConditions(
-                      itemIndex,
-                      "chemicalsList",
-                      e.target.value
-                    )
-                  }
-                />
               </div>
             </div>
           </div>
@@ -792,832 +1185,920 @@ export default function AuditorInspectionsPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#EBFFF3]">
-      {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-10 border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-3 flex justify-between items-center">
-          <div className="flex items-center">
-            <Link href="/auditor/dashboard">
-              <Image
-                src="/logo_header.png"
-                alt="Rubber Authority of Thailand Logo"
-                width={180}
-                height={180}
-                className="mr-2 w-[120px] sm:w-[140px] md:w-[180px]"
-              />
-            </Link>
-          </div>
-          <Link
-            href="/auditor/dashboard"
-            className="inline-flex items-center px-2 sm:px-4 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="sm:block -ml-1 mr-1 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+      {/* Mobile Overlay */}
+      {isMobile && sidebarVisible && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-20"
+          onClick={toggleSidebarVisibility}
+        ></div>
+      )}
+
+      {/* Sidebar */}
+      {sidebarVisible && (
+        <div
+          className={`bg-white shadow-md transition-all duration-300 h-screen fixed z-30 ${
+            sidebarCollapsed ? "w-14" : "w-64"
+          } ${isMobile ? "left-0" : ""} flex flex-col`}
+        >
+          {/* Toggle button */}
+          <div className="p-3 flex justify-end border-b border-gray-200">
+            <button
+              onClick={
+                isMobile ? toggleSidebarVisibility : toggleSidebarCollapse
+              }
+              className="p-1 rounded-md hover:bg-gray-100"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M10 19l-7-7m0 0l7-7m-7 7h18"
-              />
-            </svg>
-            <span className="hidden sm:inline">กลับสู่หน้าหลัก</span>
-            <span className="sm:hidden">กลับ</span>
-          </Link>
+              {isMobile ? (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6 text-gray-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              ) : (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6 text-gray-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
+                </svg>
+              )}
+            </button>
+          </div>
+
+          {/* Navigation Links */}
+          <nav className="flex-1 py-4">
+            <ul className="space-y-6">
+              {navItems.map((item, index) => {
+                const isActive = item.href === "/auditor/inspections";
+                return (
+                  <li key={index}>
+                    <Link
+                      href={item.href}
+                      className={`flex items-center ${
+                        sidebarCollapsed ? "justify-center px-3" : "px-4"
+                      } py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors ${
+                        isActive
+                          ? "bg-green-50 border-l-4 border-green-500 text-green-700"
+                          : ""
+                      }`}
+                      onClick={handleNavClick}
+                    >
+                      <div
+                        className={
+                          isActive ? "text-green-600" : "text-gray-500"
+                        }
+                      >
+                        {item.icon}
+                      </div>
+                      {!sidebarCollapsed && (
+                        <span className="ml-3 text-sm font-medium">
+                          {item.title}
+                        </span>
+                      )}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
+
+          {/* User section */}
+          {!sidebarCollapsed && (
+            <div className="p-4 border-t">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-medium">
+                    {auditor.firstName.charAt(0)}
+                  </div>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-700">
+                    {auditor.namePrefix}
+                    {auditor.firstName} {auditor.lastName}
+                  </p>
+                  <button
+                    onClick={handleLogout}
+                    className="text-xs text-red-500 hover:text-red-700"
+                  >
+                    ออกจากระบบ
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-      </header>
+      )}
 
       {/* Main Content */}
-      <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {!selectedInspection ? (
-          // แสดงรายการตรวจประเมินที่รอดำเนินการ
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-6">
-              รายการตรวจประเมินที่รอดำเนินการ
-            </h1>
+      <div
+        className={`flex-1 flex flex-col ${
+          sidebarVisible && !isMobile
+            ? sidebarCollapsed
+              ? "ml-14"
+              : "ml-64"
+            : "ml-0"
+        } transition-all duration-300`}
+      >
+        {/* Header */}
+        <header className="bg-white shadow-sm sticky top-0 z-10 border-b border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
+            <div className="flex items-center">
+              {isMobile && (
+                <button
+                  onClick={toggleSidebarVisibility}
+                  className="mr-2 p-1 rounded-md hover:bg-gray-100"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6 text-gray-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M4 6h16M4 12h16M4 18h16"
+                    />
+                  </svg>
+                </button>
+              )}
+              <Link href="/auditor/dashboard">
+                <Image
+                  src="/logo_header.png"
+                  alt="Rubber Authority of Thailand Logo"
+                  width={180}
+                  height={180}
+                  className="mr-2 w-[120px] sm:w-[140px] md:w-[180px]"
+                />
+              </Link>
+            </div>
 
-            {inspections.length === 0 ? (
-              <div className="bg-white rounded-lg shadow p-6 text-center">
-                <p className="text-gray-500">
-                  ไม่มีรายการตรวจประเมินที่รอดำเนินการ
-                </p>
+            <div className="flex items-center">
+              <div className="relative">
+                <button
+                  className="flex items-center space-x-3 focus:outline-none"
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                >
+                  <span className="hidden sm:block text-sm font-medium text-gray-700">
+                    {auditor.isLoading ? (
+                      <div className="animate-pulse h-5 w-24 bg-gray-200 rounded"></div>
+                    ) : (
+                      <>
+                        {auditor.namePrefix}
+                        {auditor.firstName} {auditor.lastName}
+                      </>
+                    )}
+                  </span>
+                  <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-medium">
+                    {!auditor.isLoading && auditor.firstName.charAt(0)}
+                  </div>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className={`h-5 w-5 text-gray-400 transition-transform ${
+                      dropdownOpen ? "rotate-180" : ""
+                    }`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+
+                {dropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 ring-1 ring-black ring-opacity-5">
+                    <Link
+                      href="/auditor/profile"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      ข้อมูลโปรไฟล์
+                    </Link>
+                    <Link
+                      href="/auditor/settings"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      ตั้งค่า
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                    >
+                      ออกจากระบบ
+                    </button>
+                  </div>
+                )}
               </div>
-            ) : (
-              <>
-                <div className="hidden md:block bg-white rounded-lg shadow overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                          เลขที่ตรวจประเมิน
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                          ประเภทการตรวจ
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                          เกษตรกร
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                          สถานที่
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                          วันที่นัดหมาย
-                        </th>
-                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                          การดำเนินการ
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {inspections.map((inspection) => (
-                        <tr key={inspection.inspectionId}>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {inspection.inspectionNo}
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+            </div>
+          </div>
+        </header>
+
+        {/* Main Content */}
+        <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {!selectedInspection ? (
+            // แสดงรายการตรวจประเมินที่รอดำเนินการ
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 mb-6">
+                รายการตรวจประเมินที่รอดำเนินการ
+              </h1>
+
+              {inspections.length === 0 ? (
+                <div className="bg-white rounded-lg shadow p-6 text-center">
+                  <p className="text-gray-500 mb-4">
+                    ไม่พบรายการตรวจประเมินที่รอดำเนินการ
+                  </p>
+                  <Link
+                    href="/auditor/dashboard"
+                    className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                  >
+                    กลับสู่หน้าหลัก
+                  </Link>
+                </div>
+              ) : (
+                <>
+                  <div className="hidden md:block w-full overflow-auto bg-white rounded-lg shadow">
+                    <div className="min-w-full overflow-hidden overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th
+                              scope="col"
+                              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
+                            >
+                              รหัสการตรวจ
+                            </th>
+                            <th
+                              scope="col"
+                              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
+                            >
+                              วันที่นัดหมาย
+                            </th>
+                            <th
+                              scope="col"
+                              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
+                            >
+                              ประเภทการตรวจ
+                            </th>
+                            <th
+                              scope="col"
+                              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
+                            >
+                              พื้นที่
+                            </th>
+                            <th
+                              scope="col"
+                              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
+                            >
+                              เกษตรกร
+                            </th>
+                            <th
+                              scope="col"
+                              className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
+                            >
+                              การดำเนินการ
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {inspections.map((inspection) => (
+                            <tr key={inspection.inspectionId}>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {inspection.inspectionNo}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {new Date(
+                                  inspection.inspectionDateAndTime
+                                ).toLocaleDateString("th-TH", {
+                                  year: "numeric",
+                                  month: "long",
+                                  day: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {inspection.inspectionType?.typeName || "-"}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {inspection.rubberFarm?.villageName || "-"},{" "}
+                                {inspection.rubberFarm?.district || "-"},{" "}
+                                {inspection.rubberFarm?.province || "-"}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {inspection.rubberFarm?.farmer
+                                  ? `${inspection.rubberFarm.farmer.namePrefix}${inspection.rubberFarm.farmer.firstName} ${inspection.rubberFarm.farmer.lastName}`
+                                  : "-"}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center">
+                                <div className="flex justify-center space-x-2">
+                                  <button
+                                    onClick={() => {
+                                      if (inspection.rubberFarmId) {
+                                        fetchFarmDetails(
+                                          inspection.rubberFarmId
+                                        );
+                                      }
+                                    }}
+                                    className="bg-blue-600 text-white px-3 py-1.5 rounded-md hover:bg-blue-700 text-sm"
+                                  >
+                                    ดูข้อมูล
+                                  </button>
+                                  <button
+                                    onClick={() => selectInspection(inspection)}
+                                    className="bg-green-600 text-white px-3 py-1.5 rounded-md hover:bg-green-700 text-sm"
+                                  >
+                                    เริ่มตรวจประเมิน
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <div className="md:hidden space-y-4">
+                    {inspections.map((inspection) => (
+                      <div
+                        key={inspection.inspectionId}
+                        className="bg-white rounded-lg shadow p-4"
+                      >
+                        <div className="mb-3">
+                          <h3 className="font-semibold text-gray-900">
+                            เลขที่: {inspection.inspectionNo}
+                          </h3>
+                          <p className="text-sm text-gray-600 mt-1">
                             {inspection.inspectionType?.typeName || "N/A"}
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                          </p>
+                        </div>
+
+                        <div className="space-y-2 text-sm">
+                          <div>
+                            <span className="font-medium text-gray-700">
+                              เกษตรกร:{" "}
+                            </span>
                             {inspection.rubberFarm?.farmer ? (
-                              <>
+                              <span>
                                 {inspection.rubberFarm.farmer.namePrefix}
                                 {inspection.rubberFarm.farmer.firstName}{" "}
                                 {inspection.rubberFarm.farmer.lastName}
-                              </>
+                              </span>
                             ) : (
                               "N/A"
                             )}
-                          </td>
-                          <td className="px-4 py-4 text-sm text-gray-900">
-                            <div
-                              className="max-w-xs truncate"
-                              title={
-                                inspection.rubberFarm
-                                  ? `${inspection.rubberFarm.villageName}, ${inspection.rubberFarm.district}, ${inspection.rubberFarm.province}`
-                                  : "N/A"
-                              }
-                            >
-                              {inspection.rubberFarm
-                                ? `${inspection.rubberFarm.villageName}, ${inspection.rubberFarm.district}, ${inspection.rubberFarm.province}`
-                                : "N/A"}
-                            </div>
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                          </div>
+
+                          <div>
+                            <span className="font-medium text-gray-700">
+                              สถานที่:{" "}
+                            </span>
+                            {inspection.rubberFarm
+                              ? `${inspection.rubberFarm.villageName}, ${inspection.rubberFarm.district}`
+                              : "N/A"}
+                          </div>
+
+                          <div>
+                            <span className="font-medium text-gray-700">
+                              วันที่:{" "}
+                            </span>
                             {new Date(
                               inspection.inspectionDateAndTime
-                            ).toLocaleString("th-TH", {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-center">
-                            <div className="flex justify-center space-x-2">
-                              <button
-                                onClick={() =>
-                                  fetchFarmDetails(inspection.rubberFarmId)
-                                }
-                                className="bg-blue-600 text-white px-3 py-1.5 rounded-md hover:bg-blue-700 text-sm"
-                                disabled={loadingFarmDetails}
-                              >
-                                ดูข้อมูล
-                              </button>
-                              <button
-                                onClick={() => selectInspection(inspection)}
-                                className="bg-green-600 text-white px-3 py-1.5 rounded-md hover:bg-green-700 text-sm"
-                              >
-                                เริ่มตรวจประเมิน
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                <div className="md:hidden space-y-4">
-                  {inspections.map((inspection) => (
-                    <div
-                      key={inspection.inspectionId}
-                      className="bg-white rounded-lg shadow p-4"
-                    >
-                      <div className="mb-3">
-                        <h3 className="font-semibold text-gray-900">
-                          เลขที่: {inspection.inspectionNo}
-                        </h3>
-                        <p className="text-sm text-gray-600 mt-1">
-                          {inspection.inspectionType?.typeName || "N/A"}
-                        </p>
-                      </div>
-
-                      <div className="space-y-2 text-sm">
-                        <div>
-                          <span className="font-medium text-gray-700">
-                            เกษตรกร:{" "}
-                          </span>
-                          {inspection.rubberFarm?.farmer ? (
-                            <span>
-                              {inspection.rubberFarm.farmer.namePrefix}
-                              {inspection.rubberFarm.farmer.firstName}{" "}
-                              {inspection.rubberFarm.farmer.lastName}
-                            </span>
-                          ) : (
-                            "N/A"
-                          )}
-                        </div>
-
-                        <div>
-                          <span className="font-medium text-gray-700">
-                            สถานที่:{" "}
-                          </span>
-                          {inspection.rubberFarm
-                            ? `${inspection.rubberFarm.villageName}, ${inspection.rubberFarm.district}`
-                            : "N/A"}
-                        </div>
-
-                        <div>
-                          <span className="font-medium text-gray-700">
-                            วันที่:{" "}
-                          </span>
-                          {new Date(
-                            inspection.inspectionDateAndTime
-                          ).toLocaleDateString("th-TH")}
-                        </div>
-                      </div>
-
-                      <div className="mt-4 flex gap-2">
-                        <button
-                          onClick={() =>
-                            fetchFarmDetails(inspection.rubberFarmId)
-                          }
-                          className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-                          disabled={loadingFarmDetails}
-                        >
-                          ดูข้อมูล
-                        </button>
-                        <button
-                          onClick={() => selectInspection(inspection)}
-                          className="flex-1 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
-                        >
-                          เริ่มตรวจ
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {showFarmDetails && selectedFarmDetails && (
-                  <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-                    <div className="relative top-20 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
-                      <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-lg font-bold text-gray-900">
-                          ข้อมูลสวนยางพารา
-                        </h3>
-                        <button
-                          onClick={() => setShowFarmDetails(false)}
-                          className="text-gray-400 hover:text-gray-600"
-                        >
-                          <svg
-                            className="h-6 w-6"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M6 18L18 6M6 6l12 12"
-                            />
-                          </svg>
-                        </button>
-                      </div>
-
-                      <div className="mt-4 space-y-4">
-                        {/* ข้อมูลที่ตั้งสวน */}
-                        <div className="bg-gray-50 p-4 rounded-lg">
-                          <h4 className="font-semibold text-gray-800 mb-2">
-                            ที่ตั้งสวนยาง
-                          </h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                            <div>
-                              <span className="font-medium text-gray-600">
-                                หมู่บ้าน:
-                              </span>{" "}
-                              {selectedFarmDetails.villageName}
-                            </div>
-                            <div>
-                              <span className="font-medium text-gray-600">
-                                หมู่ที่:
-                              </span>{" "}
-                              {selectedFarmDetails.moo}
-                            </div>
-                            <div>
-                              <span className="font-medium text-gray-600">
-                                ถนน:
-                              </span>{" "}
-                              {selectedFarmDetails.road || "-"}
-                            </div>
-                            <div>
-                              <span className="font-medium text-gray-600">
-                                ซอย:
-                              </span>{" "}
-                              {selectedFarmDetails.alley || "-"}
-                            </div>
-                            <div>
-                              <span className="font-medium text-gray-600">
-                                ตำบล:
-                              </span>{" "}
-                              {selectedFarmDetails.subDistrict}
-                            </div>
-                            <div>
-                              <span className="font-medium text-gray-600">
-                                อำเภอ:
-                              </span>{" "}
-                              {selectedFarmDetails.district}
-                            </div>
-                            <div>
-                              <span className="font-medium text-gray-600">
-                                จังหวัด:
-                              </span>{" "}
-                              {selectedFarmDetails.province}
-                            </div>
+                            ).toLocaleDateString("th-TH")}
                           </div>
                         </div>
 
-                        {/* ข้อมูลแปลงปลูก */}
-                        <div className="bg-gray-50 p-4 rounded-lg">
-                          <h4 className="font-semibold text-gray-800 mb-2">
-                            รายละเอียดแปลงปลูก
-                          </h4>
-                          {selectedFarmDetails.plantingDetails &&
-                          selectedFarmDetails.plantingDetails.length > 0 ? (
-                            <div className="overflow-x-auto">
-                              <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-100">
-                                  <tr>
-                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                                      พันธุ์ยาง
-                                    </th>
-                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                                      พื้นที่ (ไร่)
-                                    </th>
-                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                                      จำนวนต้น
-                                    </th>
-                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                                      อายุ (ปี)
-                                    </th>
-                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                                      ผลผลิต (กก.)
-                                    </th>
-                                  </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
-                                  {selectedFarmDetails.plantingDetails.map(
-                                    (detail, index) => (
-                                      <tr key={index}>
-                                        <td className="px-3 py-2 text-sm text-gray-900">
-                                          {detail.specie}
-                                        </td>
-                                        <td className="px-3 py-2 text-sm text-gray-900">
-                                          {detail.areaOfPlot}
-                                        </td>
-                                        <td className="px-3 py-2 text-sm text-gray-900">
-                                          {detail.numberOfRubber}
-                                        </td>
-                                        <td className="px-3 py-2 text-sm text-gray-900">
-                                          {detail.ageOfRubber}
-                                        </td>
-                                        <td className="px-3 py-2 text-sm text-gray-900">
-                                          {detail.totalProduction}
-                                        </td>
-                                      </tr>
-                                    )
-                                  )}
-                                </tbody>
-                              </table>
-                            </div>
-                          ) : (
-                            <p className="text-sm text-gray-500">
-                              ไม่มีข้อมูลแปลงปลูก
-                            </p>
-                          )}
+                        <div className="mt-4 flex gap-2">
+                          <button
+                            onClick={() =>
+                              fetchFarmDetails(inspection.rubberFarmId)
+                            }
+                            className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                            disabled={loadingFarmDetails}
+                          >
+                            ดูข้อมูล
+                          </button>
+                          <button
+                            onClick={() => selectInspection(inspection)}
+                            className="flex-1 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+                          >
+                            เริ่มตรวจ
+                          </button>
                         </div>
                       </div>
+                    ))}
+                  </div>
 
-                      <div className="mt-6 flex justify-end">
-                        <button
-                          onClick={() => setShowFarmDetails(false)}
-                          className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400"
-                        >
-                          ปิด
-                        </button>
+                  {showFarmDetails && selectedFarmDetails && (
+                    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+                      <div className="relative top-20 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
+                        <div className="flex justify-between items-center mb-4">
+                          <h3 className="text-lg font-bold text-gray-900">
+                            ข้อมูลสวนยางพารา
+                          </h3>
+                          <button
+                            onClick={() => setShowFarmDetails(false)}
+                            className="text-gray-400 hover:text-gray-600"
+                          >
+                            <svg
+                              className="h-6 w-6"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+
+                        <div className="mt-4 space-y-4 max-h-[70vh] overflow-y-auto">
+                          {/* ข้อมูลที่ตั้งสวน */}
+                          <div className="bg-gray-50 p-4 rounded-lg">
+                            <h4 className="font-semibold text-gray-800 mb-2">
+                              ที่ตั้งสวนยาง
+                            </h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                              <div>
+                                <span className="font-medium text-gray-600">
+                                  หมู่บ้าน:
+                                </span>{" "}
+                                {selectedFarmDetails.villageName}
+                              </div>
+                              <div>
+                                <span className="font-medium text-gray-600">
+                                  หมู่ที่:
+                                </span>{" "}
+                                {selectedFarmDetails.moo}
+                              </div>
+                              <div>
+                                <span className="font-medium text-gray-600">
+                                  ถนน:
+                                </span>{" "}
+                                {selectedFarmDetails.road || "-"}
+                              </div>
+                              <div>
+                                <span className="font-medium text-gray-600">
+                                  ซอย:
+                                </span>{" "}
+                                {selectedFarmDetails.alley || "-"}
+                              </div>
+                              <div>
+                                <span className="font-medium text-gray-600">
+                                  ตำบล:
+                                </span>{" "}
+                                {selectedFarmDetails.subDistrict}
+                              </div>
+                              <div>
+                                <span className="font-medium text-gray-600">
+                                  อำเภอ:
+                                </span>{" "}
+                                {selectedFarmDetails.district}
+                              </div>
+                              <div className="md:col-span-2">
+                                <span className="font-medium text-gray-600">
+                                  จังหวัด:
+                                </span>{" "}
+                                {selectedFarmDetails.province}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* ข้อมูลแปลงปลูก */}
+                          <div className="bg-gray-50 p-4 rounded-lg">
+                            <h4 className="font-semibold text-gray-800 mb-2">
+                              รายละเอียดแปลงปลูก
+                            </h4>
+                            {selectedFarmDetails.plantingDetails &&
+                            selectedFarmDetails.plantingDetails.length > 0 ? (
+                              <div className="overflow-x-auto">
+                                <table className="min-w-full divide-y divide-gray-200">
+                                  <thead className="bg-gray-100">
+                                    <tr>
+                                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                        พันธุ์ยาง
+                                      </th>
+                                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                        พื้นที่ (ไร่)
+                                      </th>
+                                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                        จำนวนต้น
+                                      </th>
+                                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                        จำนวนต้นที่กรีด
+                                      </th>
+                                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                        อายุ (ปี)
+                                      </th>
+                                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                        ผลผลิต (กก.)
+                                      </th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="bg-white divide-y divide-gray-200">
+                                    {selectedFarmDetails.plantingDetails.map(
+                                      (detail, index) => (
+                                        <tr key={index}>
+                                          <td className="px-3 py-2 text-sm text-gray-900">
+                                            {detail.specie}
+                                          </td>
+                                          <td className="px-3 py-2 text-sm text-gray-900">
+                                            {detail.areaOfPlot}
+                                          </td>
+                                          <td className="px-3 py-2 text-sm text-gray-900">
+                                            {detail.numberOfRubber}
+                                          </td>
+                                          <td className="px-3 py-2 text-sm text-gray-900">
+                                            {detail.numberOfTapping}
+                                          </td>
+                                          <td className="px-3 py-2 text-sm text-gray-900">
+                                            {detail.ageOfRubber}
+                                          </td>
+                                          <td className="px-3 py-2 text-sm text-gray-900">
+                                            {detail.totalProduction}
+                                          </td>
+                                        </tr>
+                                      )
+                                    )}
+                                  </tbody>
+                                </table>
+                              </div>
+                            ) : (
+                              <p className="text-sm text-gray-500">
+                                ไม่มีข้อมูลแปลงปลูก
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="mt-6 flex justify-end">
+                          <button
+                            onClick={() => setShowFarmDetails(false)}
+                            className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400"
+                          >
+                            ปิด
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        ) : (
-          // แสดงฟอร์มการตรวจประเมิน
-          <div>
-            <div className="mb-6">
-              <h1 className="text-2xl font-bold text-gray-900">
-                ตรวจประเมิน: {selectedInspection.inspectionType?.typeName}
-              </h1>
-              <p className="text-gray-600 mt-1">
-                เลขที่ตรวจประเมิน: {selectedInspection.inspectionNo}
-              </p>
-              <div className="mt-2 p-3 bg-blue-50 rounded-lg">
-                <p className="text-sm text-blue-800">
-                  <span className="font-medium">เกษตรกร:</span>{" "}
-                  {selectedInspection.rubberFarm?.farmer
-                    ? `${selectedInspection.rubberFarm.farmer.namePrefix}${selectedInspection.rubberFarm.farmer.firstName} ${selectedInspection.rubberFarm.farmer.lastName}`
-                    : "N/A"}{" "}
-                  | <span className="font-medium">สถานที่:</span>{" "}
-                  {selectedInspection.rubberFarm
-                    ? `${selectedInspection.rubberFarm.villageName}, ${selectedInspection.rubberFarm.district}, ${selectedInspection.rubberFarm.province}`
-                    : "N/A"}
-                </p>
-              </div>
+                  )}
+                </>
+              )}
             </div>
+          ) : (
+            // แสดงฟอร์มการตรวจประเมิน
+            <div>
+              <div className="mb-6">
+                <div className="flex items-center justify-between">
+                  <h1 className="text-2xl font-bold text-gray-900">
+                    ตรวจประเมินสวนยางพารา
+                  </h1>
+                  <button
+                    onClick={() => setSelectedInspection(null)}
+                    className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="-ml-1 mr-2 h-5 w-5 text-gray-500"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M11 17l-5-5m0 0l5-5m-5 5h12"
+                      />
+                    </svg>
+                    กลับไปหน้ารายการตรวจ
+                  </button>
+                </div>
+                <div className="mt-4 bg-white rounded-lg shadow overflow-hidden">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+                    <div>
+                      <h2 className="text-sm font-medium text-gray-500">
+                        รหัสการตรวจประเมิน
+                      </h2>
+                      <p className="mt-1 text-lg font-medium text-gray-900">
+                        {selectedInspection.inspectionNo}
+                      </p>
+                    </div>
+                    <div>
+                      <h2 className="text-sm font-medium text-gray-500">
+                        วันที่นัดหมาย
+                      </h2>
+                      <p className="mt-1 text-lg font-medium text-gray-900">
+                        {new Date(
+                          selectedInspection.inspectionDateAndTime
+                        ).toLocaleDateString("th-TH", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    </div>
+                    <div>
+                      <h2 className="text-sm font-medium text-gray-500">
+                        ประเภทการตรวจ
+                      </h2>
+                      <p className="mt-1 text-lg font-medium text-gray-900">
+                        {selectedInspection.inspectionType?.typeName || "-"}
+                      </p>
+                    </div>
+                    <div className="sm:col-span-2 lg:col-span-3">
+                      <h2 className="text-sm font-medium text-gray-500">
+                        พื้นที่สวนยาง
+                      </h2>
+                      <p className="mt-1 text-lg font-medium text-gray-900">
+                        {selectedInspection.rubberFarm?.villageName || "-"},{" "}
+                        {selectedInspection.rubberFarm?.district || "-"},{" "}
+                        {selectedInspection.rubberFarm?.province || "-"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-            {inspectionItems.length > 0 && (
-              <div className="bg-white rounded-lg shadow p-6">
-                <div className="mb-4">
-                  <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-lg font-semibold text-gray-900">
-                      รายการตรวจที่{" "}
-                      {inspectionItems[currentItemIndex]?.inspectionItemNo}:{" "}
-                      {
-                        inspectionItems[currentItemIndex]?.inspectionItemMaster
-                          ?.itemName
-                      }
-                    </h2>
-                    <span className="text-sm text-gray-500">
-                      รายการที่ {currentItemIndex + 1} จาก{" "}
+              {inspectionItems.length > 0 && (
+                <div className="bg-white rounded-lg shadow p-6">
+                  <div className="mb-6">
+                    <h2 className="text-xl font-semibold text-gray-900">
+                      รายการตรวจที่ {currentItemIndex + 1} จาก{" "}
                       {inspectionItems.length}
-                    </span>
+                    </h2>
+                    <div className="mt-2 w-full bg-gray-200 rounded-full h-2.5">
+                      <div
+                        className="bg-green-600 h-2.5 rounded-full"
+                        style={{
+                          width: `${
+                            ((currentItemIndex + 1) / inspectionItems.length) *
+                            100
+                          }%`,
+                        }}
+                      ></div>
+                    </div>
                   </div>
 
-                  {/* Progress Bar */}
-                  <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
-                    <div
-                      className="bg-green-600 h-2 rounded-full transition-all duration-300"
-                      style={{
-                        width: `${
-                          ((currentItemIndex + 1) / inspectionItems.length) *
-                          100
-                        }%`,
-                      }}
-                    ></div>
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      {/* {inspectionItems[currentItemIndex]?.inspectionItemMaster
+                        ?.itemNo || ""}{" "} */}
+                      {inspectionItems[currentItemIndex]?.inspectionItemMaster
+                        ?.itemName || ""}
+                    </h3>
                   </div>
 
-                  {/* ข้อมูลเพิ่มเติมตามประเภทรายการตรวจ */}
-                  {renderAdditionalFields(currentItemIndex)}
-
-                  {/* ตารางข้อกำหนด for Desktop*/}
-                  <div className="hidden md:block overflow-x-auto">
-                    <table className="min-w-full border-collapse border border-gray-300">
-                      <thead className="bg-gray-100">
-                        <tr>
-                          <th
-                            className="border border-gray-300 px-4 py-2 text-left text-sm font-medium text-gray-700"
-                            rowSpan={2}
+                  {/* Requirements section */}
+                  {inspectionItems[currentItemIndex] &&
+                  inspectionItems[currentItemIndex].requirements &&
+                  inspectionItems[currentItemIndex].requirements.length > 0 ? (
+                    <div className="mb-6 space-y-4">
+                      {inspectionItems[currentItemIndex].requirements?.map(
+                        (requirement, requirementIndex) => (
+                          <div
+                            key={requirement.requirementId}
+                            className="p-4 border rounded-md bg-gray-50"
                           >
-                            ข้อกำหนด
-                          </th>
-                          <th
-                            className="border border-gray-300 px-4 py-2 text-center text-sm font-medium text-gray-700"
-                            rowSpan={2}
-                          >
-                            ระดับข้อกำหนด
-                          </th>
-                          <th
-                            className="border border-gray-300 px-4 py-2 text-center text-sm font-medium text-gray-700"
-                            colSpan={3}
-                          >
-                            ผลการตรวจประเมิน
-                          </th>
-                          <th
-                            className="border border-gray-300 px-4 py-2 text-center text-sm font-medium text-gray-700"
-                            rowSpan={2}
-                          >
-                            วิธีการตรวจประเมิน
-                          </th>
-                          <th
-                            className="border border-gray-300 px-4 py-2 text-center text-sm font-medium text-gray-700"
-                            rowSpan={2}
-                          >
-                            หมายเหตุ
-                          </th>
-                        </tr>
-                        <tr>
-                          <th className="border border-gray-300 px-2 py-2 text-center text-sm font-medium text-gray-700">
-                            ใช่
-                          </th>
-                          <th className="border border-gray-300 px-2 py-2 text-center text-sm font-medium text-gray-700">
-                            ไม่ใช่
-                          </th>
-                          <th className="border border-gray-300 px-2 py-2 text-center text-sm font-medium text-gray-700">
-                            NA
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {inspectionItems[currentItemIndex]?.requirements?.map(
-                          (requirement, reqIndex) => (
-                            <tr key={requirement.requirementId}>
-                              <td className="border border-gray-300 px-4 py-2 text-sm">
-                                <div>
-                                  <span className="font-medium">
-                                    {
+                            <div className="mb-2">
+                              <div className="flex items-start">
+                                <div className="flex-shrink-0">
+                                  <span
+                                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                                       requirement.requirementMaster
-                                        ?.requirementLevelNo
-                                    }
-                                  </span>
-                                  <span className="ml-2">
-                                    {
-                                      requirement.requirementMaster
-                                        ?.requirementName
-                                    }
+                                        ?.requirementLevel === "ข้อกำหนดหลัก"
+                                        ? "bg-red-100 text-red-800"
+                                        : "bg-blue-100 text-blue-800"
+                                    }`}
+                                  >
+                                    {requirement.requirementMaster
+                                      ?.requirementLevel || ""}
+                                    {requirement.requirementMaster
+                                      ?.requirementLevelNo
+                                      ? ` ${requirement.requirementMaster.requirementLevelNo}`
+                                      : ""}
                                   </span>
                                 </div>
-                              </td>
-                              <td className="border border-gray-300 px-4 py-2 text-sm text-center">
-                                <span
-                                  className={`px-2 py-1 rounded-full text-xs ${
-                                    requirement.requirementMaster
-                                      ?.requirementLevel === "ข้อกำหนดหลัก"
-                                      ? "bg-red-100 text-red-800"
-                                      : requirement.requirementMaster
-                                          ?.requirementLevel === "ข้อกำหนดรอง"
-                                      ? "bg-yellow-100 text-yellow-800"
-                                      : "bg-blue-100 text-blue-800"
-                                  }`}
-                                >
-                                  {
-                                    requirement.requirementMaster
-                                      ?.requirementLevel
-                                  }
-                                </span>
-                              </td>
-                              <td className="border border-gray-300 px-2 py-2 text-center">
-                                <input
-                                  type="radio"
-                                  name={`result-${requirement.requirementId}`}
-                                  value="ใช่"
-                                  checked={
-                                    requirement.evaluationResult === "ใช่"
-                                  }
-                                  onChange={() =>
-                                    updateRequirementEvaluation(
-                                      currentItemIndex,
-                                      reqIndex,
-                                      "evaluationResult",
-                                      "ใช่"
-                                    )
-                                  }
-                                  className="h-4 w-4 text-green-600 focus:ring-green-500"
-                                />
-                              </td>
-                              <td className="border border-gray-300 px-2 py-2 text-center">
-                                <input
-                                  type="radio"
-                                  name={`result-${requirement.requirementId}`}
-                                  value="ไม่ใช่"
-                                  checked={
-                                    requirement.evaluationResult === "ไม่ใช่"
-                                  }
-                                  onChange={() =>
-                                    updateRequirementEvaluation(
-                                      currentItemIndex,
-                                      reqIndex,
-                                      "evaluationResult",
-                                      "ไม่ใช่"
-                                    )
-                                  }
-                                  className="h-4 w-4 text-green-600 focus:ring-green-500"
-                                />
-                              </td>
-                              <td className="border border-gray-300 px-2 py-2 text-center">
-                                <input
-                                  type="radio"
-                                  name={`result-${requirement.requirementId}`}
-                                  value="NA"
-                                  checked={
-                                    requirement.evaluationResult === "NA"
-                                  }
-                                  onChange={() =>
-                                    updateRequirementEvaluation(
-                                      currentItemIndex,
-                                      reqIndex,
-                                      "evaluationResult",
-                                      "NA"
-                                    )
-                                  }
-                                  className="h-4 w-4 text-green-600 focus:ring-green-500"
-                                />
-                              </td>
-                              <td className="border border-gray-300 px-4 py-2">
+                                <h4 className="ml-2 text-md font-medium text-gray-900">
+                                  {requirement.requirementNo}.{" "}
+                                  {requirement.requirementMaster
+                                    ?.requirementName || ""}
+                                </h4>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                              {/* ผลการตรวจประเมิน */}
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  ผลการตรวจประเมิน
+                                </label>
                                 <select
-                                  className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-green-500 focus:border-green-500 text-sm"
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
+                                  value={requirement.evaluationResult || ""}
+                                  onChange={(e) =>
+                                    updateRequirementEvaluation(
+                                      currentItemIndex,
+                                      requirementIndex,
+                                      "evaluationResult",
+                                      e.target.value
+                                    )
+                                  }
+                                >
+                                  <option value="NOT_EVALUATED">
+                                    -- เลือกผลการตรวจ --
+                                  </option>
+                                  <option value="ใช่">ใช่ (ผ่าน)</option>
+                                  <option value="ไม่ใช่">
+                                    ไม่ใช่ (ไม่ผ่าน)
+                                  </option>
+                                  <option value="NA">ไม่เกี่ยวข้อง (NA)</option>
+                                </select>
+                              </div>
+
+                              {/* วิธีการตรวจประเมิน */}
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  วิธีการตรวจประเมิน
+                                </label>
+                                <select
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
                                   value={requirement.evaluationMethod || ""}
                                   onChange={(e) =>
                                     updateRequirementEvaluation(
                                       currentItemIndex,
-                                      reqIndex,
+                                      requirementIndex,
                                       "evaluationMethod",
                                       e.target.value
                                     )
                                   }
                                 >
-                                  <option value="">เลือก</option>
+                                  <option value="PENDING">
+                                    -- เลือกวิธีการตรวจ --
+                                  </option>
                                   <option value="พินิจ">พินิจ</option>
                                   <option value="สัมภาษณ์">สัมภาษณ์</option>
-                                  <option value="วัด">วัด</option>
-                                  <option value="ทดสอบ">ทดสอบ</option>
                                 </select>
-                              </td>
-                              <td className="border border-gray-300 px-4 py-2">
-                                <input
-                                  type="text"
-                                  className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-green-500 focus:border-green-500 text-sm"
-                                  placeholder="หมายเหตุ"
+                              </div>
+
+                              {/* บันทึกเพิ่มเติม */}
+                              <div className="md:col-span-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  บันทึกเพิ่มเติม (ถ้ามี)
+                                </label>
+                                <textarea
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
+                                  rows={3}
                                   value={requirement.note || ""}
                                   onChange={(e) =>
                                     updateRequirementEvaluation(
                                       currentItemIndex,
-                                      reqIndex,
+                                      requirementIndex,
                                       "note",
                                       e.target.value
                                     )
                                   }
-                                />
-                              </td>
-                            </tr>
-                          )
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* Mobile Cards for Requirements */}
-                  <div className="md:hidden space-y-4">
-                    {inspectionItems[currentItemIndex]?.requirements?.map(
-                      (requirement, reqIndex) => (
-                        <div
-                          key={requirement.requirementId}
-                          className="bg-white border rounded-lg p-4"
-                        >
-                          <div className="mb-3">
-                            <span className="text-sm font-semibold text-gray-700">
-                              {
-                                requirement.requirementMaster
-                                  ?.requirementLevelNo
-                              }
-                            </span>
-                            <p className="text-sm text-gray-800 mt-1">
-                              {requirement.requirementMaster?.requirementName}
-                            </p>
-                            <span
-                              className={`inline-block mt-2 px-2 py-1 rounded-full text-xs ${
-                                requirement.requirementMaster
-                                  ?.requirementLevel === "ข้อกำหนดหลัก"
-                                  ? "bg-red-100 text-red-800"
-                                  : requirement.requirementMaster
-                                      ?.requirementLevel === "ข้อกำหนดรอง"
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : "bg-blue-100 text-blue-800"
-                              }`}
-                            >
-                              {requirement.requirementMaster?.requirementLevel}
-                            </span>
-                          </div>
-
-                          <div className="space-y-3">
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">
-                                ผลการตรวจประเมิน
-                              </label>
-                              <div className="flex space-x-4">
-                                <label className="flex items-center">
-                                  <input
-                                    type="radio"
-                                    name={`mobile-result-${requirement.requirementId}`}
-                                    value="ใช่"
-                                    checked={
-                                      requirement.evaluationResult === "ใช่"
-                                    }
-                                    onChange={() =>
-                                      updateRequirementEvaluation(
-                                        currentItemIndex,
-                                        reqIndex,
-                                        "evaluationResult",
-                                        "ใช่"
-                                      )
-                                    }
-                                    className="mr-2 h-4 w-4 text-green-600"
-                                  />
-                                  <span className="text-sm">ใช่</span>
-                                </label>
-                                <label className="flex items-center">
-                                  <input
-                                    type="radio"
-                                    name={`mobile-result-${requirement.requirementId}`}
-                                    value="ไม่ใช่"
-                                    checked={
-                                      requirement.evaluationResult === "ไม่ใช่"
-                                    }
-                                    onChange={() =>
-                                      updateRequirementEvaluation(
-                                        currentItemIndex,
-                                        reqIndex,
-                                        "evaluationResult",
-                                        "ไม่ใช่"
-                                      )
-                                    }
-                                    className="mr-2 h-4 w-4 text-green-600"
-                                  />
-                                  <span className="text-sm">ไม่ใช่</span>
-                                </label>
-                                <label className="flex items-center">
-                                  <input
-                                    type="radio"
-                                    name={`mobile-result-${requirement.requirementId}`}
-                                    value="NA"
-                                    checked={
-                                      requirement.evaluationResult === "NA"
-                                    }
-                                    onChange={() =>
-                                      updateRequirementEvaluation(
-                                        currentItemIndex,
-                                        reqIndex,
-                                        "evaluationResult",
-                                        "NA"
-                                      )
-                                    }
-                                    className="mr-2 h-4 w-4 text-green-600"
-                                  />
-                                  <span className="text-sm">NA</span>
-                                </label>
+                                  placeholder="บันทึกข้อมูลเพิ่มเติมเกี่ยวกับการตรวจประเมินข้อนี้"
+                                ></textarea>
                               </div>
                             </div>
-
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                วิธีการตรวจประเมิน
-                              </label>
-                              <select
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 text-sm"
-                                value={requirement.evaluationMethod || ""}
-                                onChange={(e) =>
-                                  updateRequirementEvaluation(
-                                    currentItemIndex,
-                                    reqIndex,
-                                    "evaluationMethod",
-                                    e.target.value
-                                  )
-                                }
-                              >
-                                <option value="">เลือก</option>
-                                <option value="พินิจ">พินิจ</option>
-                                <option value="สัมภาษณ์">สัมภาษณ์</option>
-                                <option value="วัด">วัด</option>
-                                <option value="ทดสอบ">ทดสอบ</option>
-                              </select>
-                            </div>
-
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                หมายเหตุ
-                              </label>
-                              <input
-                                type="text"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 text-sm"
-                                placeholder="หมายเหตุ"
-                                value={requirement.note || ""}
-                                onChange={(e) =>
-                                  updateRequirementEvaluation(
-                                    currentItemIndex,
-                                    reqIndex,
-                                    "note",
-                                    e.target.value
-                                  )
-                                }
-                              />
-                            </div>
                           </div>
-                        </div>
-                      )
-                    )}
-                  </div>
-
-                  {/* ผลการตรวจรายการ */}
-                  <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                    <p className="text-sm text-gray-700">
-                      ผลการตรวจรายการนี้:
-                      <span
-                        className={`ml-2 font-semibold ${
-                          determineItemResult(
-                            inspectionItems[currentItemIndex]
-                          ) === "ผ่าน"
-                            ? "text-green-600"
-                            : "text-red-600"
-                        }`}
-                      >
-                        {determineItemResult(inspectionItems[currentItemIndex])}
-                      </span>
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      หมายเหตุ: หากข้อกำหนดหลักใดไม่ผ่าน
-                      รายการนี้จะไม่ผ่านการตรวจประเมิน
-                    </p>
-                  </div>
-
-                  {/* ปุ่มดำเนินการ for desktop and mobile*/}
-                  <div className="mt-6 flex flex-col sm:flex-row justify-between gap-3">
-                    <div>
-                      {currentItemIndex > 0 && (
-                        <button
-                          onClick={() =>
-                            setCurrentItemIndex(currentItemIndex - 1)
-                          }
-                          className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500"
-                        >
-                          รายการก่อนหน้า
-                        </button>
+                        )
                       )}
                     </div>
-                    <div className="flex flex-col sm:flex-row gap-3">
+                  ) : (
+                    <p className="text-gray-500">
+                      ไม่พบข้อกำหนดสำหรับรายการตรวจนี้
+                    </p>
+                  )}
+
+                  {/* Additional fields section */}
+                  {renderAdditionalFields(currentItemIndex)}
+
+                  {/* Navigation buttons */}
+                  <div className="flex justify-between items-center mt-8">
+                    <button
+                      onClick={() => {
+                        if (currentItemIndex > 0) {
+                          setCurrentItemIndex(currentItemIndex - 1);
+                        }
+                      }}
+                      disabled={currentItemIndex === 0}
+                      className={`px-4 py-2 rounded-md font-medium ${
+                        currentItemIndex === 0
+                          ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                          : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      <span className="flex items-center">
+                        <svg
+                          className="w-5 h-5 mr-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                          />
+                        </svg>
+                        ย้อนกลับ
+                      </span>
+                    </button>
+                    <div className="flex space-x-2">
                       <button
                         onClick={saveCurrentItem}
                         disabled={saving}
-                        className="w-full sm:w-auto px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
+                        className="px-4 py-2 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
                       >
-                        {saving ? "กำลังบันทึก..." : "บันทึกผลการตรวจ"}
+                        {saving ? (
+                          <span className="flex items-center">
+                            <svg
+                              className="animate-spin -ml-1 mr-2 h-5 w-5 text-white"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              ></circle>
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              ></path>
+                            </svg>
+                            กำลังบันทึก...
+                          </span>
+                        ) : (
+                          "บันทึก"
+                        )}
                       </button>
                       {currentItemIndex < inspectionItems.length - 1 ? (
                         <button
-                          onClick={() =>
-                            setCurrentItemIndex(currentItemIndex + 1)
-                          }
-                          className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          onClick={() => {
+                            if (validateCurrentItem()) {
+                              saveCurrentItem();
+                            }
+                          }}
+                          disabled={saving}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
                         >
-                          รายการถัดไป
+                          ถัดไป
+                          <svg
+                            className="w-5 h-5 ml-2 inline-block"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M14 5l7 7m0 0l-7 7m7-7H3"
+                            />
+                          </svg>
                         </button>
                       ) : (
                         <button
                           onClick={completeInspection}
-                          className="w-full sm:w-auto px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          className="px-4 py-2 bg-purple-600 text-white rounded-md font-medium hover:bg-purple-700"
                         >
                           จบการตรวจประเมิน
                         </button>
@@ -1625,53 +2106,54 @@ export default function AuditorInspectionsPage() {
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
-        )}
-      </main>
+              )}
+            </div>
+          )}
+        </main>
 
-      {/* Footer */}
-      <footer className="bg-white py-6 border-t mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center">
-              <Image
-                src="/logo.png"
-                alt="Rubber Authority of Thailand Logo"
-                width={40}
-                height={40}
-                className="mr-2"
-              />
-              <p className="text-sm text-gray-500">
-                © {new Date().getFullYear()} การยางแห่งประเทศไทย. สงวนลิขสิทธิ์.
-              </p>
-            </div>
-            <div className="mt-4 md:mt-0">
-              <div className="flex space-x-6">
-                <a
-                  href="#"
-                  className="text-sm text-gray-500 hover:text-gray-900"
-                >
-                  นโยบายความเป็นส่วนตัว
-                </a>
-                <a
-                  href="#"
-                  className="text-sm text-gray-500 hover:text-gray-900"
-                >
-                  เงื่อนไขการใช้งาน
-                </a>
-                <a
-                  href="#"
-                  className="text-sm text-gray-500 hover:text-gray-900"
-                >
-                  ติดต่อเรา
-                </a>
+        {/* Footer */}
+        <footer className="bg-white py-6 border-t mt-auto">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col md:flex-row justify-between items-center">
+              <div className="flex items-center">
+                <Image
+                  src="/logo.png"
+                  alt="Rubber Authority of Thailand Logo"
+                  width={40}
+                  height={40}
+                  className="mr-2"
+                />
+                <p className="text-sm text-gray-500">
+                  © {new Date().getFullYear()} การยางแห่งประเทศไทย.
+                  สงวนลิขสิทธิ์.
+                </p>
+              </div>
+              <div className="mt-4 md:mt-0">
+                <div className="flex space-x-6">
+                  <a
+                    href="#"
+                    className="text-sm text-gray-500 hover:text-gray-900"
+                  >
+                    นโยบายความเป็นส่วนตัว
+                  </a>
+                  <a
+                    href="#"
+                    className="text-sm text-gray-500 hover:text-gray-900"
+                  >
+                    เงื่อนไขการใช้งาน
+                  </a>
+                  <a
+                    href="#"
+                    className="text-sm text-gray-500 hover:text-gray-900"
+                  >
+                    ติดต่อเรา
+                  </a>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </footer>
+        </footer>
+      </div>
     </div>
   );
 }
