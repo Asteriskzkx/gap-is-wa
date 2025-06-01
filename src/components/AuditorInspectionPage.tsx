@@ -101,6 +101,11 @@ export default function AuditorInspectionsPage() {
   const [isMobile, setIsMobile] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
+  // Add state for search and pagination
+  const [inspectionSearchTerm, setInspectionSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+
   // Auditor info
   const [auditor, setAuditor] = useState({
     namePrefix: "",
@@ -332,6 +337,46 @@ export default function AuditorInspectionsPage() {
     }
   };
 
+  // ฟังก์ชันสำหรับแสดง dialog ให้เลือกตำแหน่งเริ่มตรวจประเมิน
+  const showStartPositionDialog = (incompleteIndex: number) => {
+    return new Promise<number>((resolve) => {
+      // สร้าง dialog element
+      const dialogOverlay = document.createElement("div");
+      dialogOverlay.className =
+        "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50";
+
+      const dialogContent = document.createElement("div");
+      dialogContent.className =
+        "bg-white rounded-lg p-6 max-w-md w-full shadow-xl";
+      dialogContent.innerHTML = `
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">เลือกตำแหน่งเริ่มตรวจประเมิน</h3>
+      <p class="text-sm text-gray-600 mb-6">พบรายการตรวจที่ยังไม่สมบูรณ์ คุณต้องการเริ่มตรวจจากจุดใด?</p>
+      <div class="flex justify-end space-x-4">
+        <button id="start-first" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">เริ่มจากรายการแรก</button>
+        <button id="start-incomplete" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">เริ่มจากรายการที่ ${
+          incompleteIndex + 1
+        }</button>
+      </div>
+    `;
+
+      dialogOverlay.appendChild(dialogContent);
+      document.body.appendChild(dialogOverlay);
+
+      // เพิ่ม event listeners
+      document.getElementById("start-first")?.addEventListener("click", () => {
+        document.body.removeChild(dialogOverlay);
+        resolve(0);
+      });
+
+      document
+        .getElementById("start-incomplete")
+        ?.addEventListener("click", () => {
+          document.body.removeChild(dialogOverlay);
+          resolve(incompleteIndex);
+        });
+    });
+  };
+
   // ดึงรายการตรวจของ inspection ที่เลือก
   const fetchInspectionItems = async (inspectionId: number) => {
     try {
@@ -349,18 +394,75 @@ export default function AuditorInspectionsPage() {
         const data = await response.json();
         console.log("Fetched inspection items:", data);
 
-        // ตรวจสอบว่าแต่ละ item มี requirements หรือไม่
-        data.forEach((item: any, index: number) => {
-          console.log(
-            `Item ${index + 1} requirements:`,
-            item.requirements?.length || 0
-          );
-        });
+        // เรียงลำดับรายการตรวจตาม inspectionItemNo
+        const sortedData = [...data].sort(
+          (a, b) => a.inspectionItemNo - b.inspectionItemNo
+        );
+        setInspectionItems(sortedData);
 
-        setInspectionItems(data);
+        // หากมีรายการที่บันทึกไว้ในคุกกี้ ให้ใช้รายการนั้น
+        const savedPosition = localStorage.getItem(
+          `inspectionPosition-${inspectionId}`
+        );
+        if (savedPosition) {
+          const position = parseInt(savedPosition, 10);
+          // ตรวจสอบว่าตำแหน่งที่บันทึกไว้อยู่ในช่วงถูกต้องหรือไม่
+          if (position >= 0 && position < sortedData.length) {
+            // แสดงข้อความแจ้งเตือนว่ากำลังดำเนินการต่อจากครั้งที่แล้ว
+            alert(`กำลังดำเนินการต่อจากรายการตรวจที่ ${position + 1}`);
+            setCurrentItemIndex(position);
+            return;
+          }
+        }
+
+        // กรณีไม่มีตำแหน่งที่บันทึกไว้ หรือตำแหน่งไม่ถูกต้อง
+        // ค้นหารายการแรกที่ยังไม่สมบูรณ์
+        let incompleteIndex = 0;
+        for (let i = 0; i < sortedData.length; i++) {
+          const item = sortedData[i];
+
+          // ตรวจสอบว่ารายการนี้สมบูรณ์หรือไม่
+          const isComplete =
+            item.inspectionItemResult === "ผ่าน" ||
+            item.inspectionItemResult === "ไม่ผ่าน";
+
+          // ตรวจสอบว่า requirements ทั้งหมดสมบูรณ์หรือไม่
+          const allRequirementsComplete = item.requirements
+            ? item.requirements.every(
+                (req: Requirement) =>
+                  req.evaluationResult &&
+                  req.evaluationResult !== "NOT_EVALUATED" &&
+                  req.evaluationMethod &&
+                  req.evaluationMethod !== "PENDING"
+              )
+            : true;
+
+          // ถ้าพบรายการที่ไม่สมบูรณ์
+          if (!isComplete || !allRequirementsComplete) {
+            incompleteIndex = i;
+
+            // ถ้าเป็นรายการแรกที่ไม่สมบูรณ์ ให้เริ่มที่รายการนั้นเลย
+            setCurrentItemIndex(incompleteIndex);
+            return;
+          }
+        }
+
+        // ถ้าทุกรายการสมบูรณ์หมดแล้ว ให้เริ่มที่รายการแรก
+        setCurrentItemIndex(0);
       }
     } catch (error) {
       console.error("Error fetching inspection items:", error);
+      setCurrentItemIndex(0);
+    }
+  };
+
+  // บันทึกตำแหน่งปัจจุบันเมื่อเปลี่ยนรายการหรือบันทึกข้อมูล
+  const saveCurrentPosition = () => {
+    if (selectedInspection) {
+      localStorage.setItem(
+        `inspectionPosition-${selectedInspection.inspectionId}`,
+        currentItemIndex.toString()
+      );
     }
   };
 
@@ -388,11 +490,50 @@ export default function AuditorInspectionsPage() {
     }
   };
 
+  // Filter inspections based on search term
+  const filteredInspections = inspections.filter((inspection) => {
+    const inspectionNo =
+      inspection.inspectionNo?.toString().toLowerCase() || "";
+    const farmerName = inspection.rubberFarm?.farmer
+      ? `${inspection.rubberFarm.farmer.namePrefix}${inspection.rubberFarm.farmer.firstName} ${inspection.rubberFarm.farmer.lastName}`.toLowerCase()
+      : "";
+    const location = [
+      inspection.rubberFarm?.villageName || "",
+      inspection.rubberFarm?.district || "",
+      inspection.rubberFarm?.province || "",
+    ]
+      .join(" ")
+      .toLowerCase();
+    const date = new Date(inspection.inspectionDateAndTime)
+      .toLocaleDateString("th-TH")
+      .toLowerCase();
+    const typeName = inspection.inspectionType?.typeName?.toLowerCase() || "";
+
+    const searchLower = inspectionSearchTerm.toLowerCase();
+
+    return (
+      inspectionNo.includes(searchLower) ||
+      farmerName.includes(searchLower) ||
+      location.includes(searchLower) ||
+      date.includes(searchLower) ||
+      typeName.includes(searchLower)
+    );
+  });
+
+  // Pagination logic
+  const indexOfLastInspection = currentPage * itemsPerPage;
+  const indexOfFirstInspection = indexOfLastInspection - itemsPerPage;
+  const currentInspections = filteredInspections.slice(
+    indexOfFirstInspection,
+    indexOfLastInspection
+  );
+  const totalPages = Math.ceil(filteredInspections.length / itemsPerPage);
+
   // เลือก inspection เพื่อเริ่มตรวจ
   const selectInspection = async (inspection: Inspection) => {
     setSelectedInspection(inspection);
     await fetchInspectionItems(inspection.inspectionId);
-    setCurrentItemIndex(0);
+    // ไม่กำหนด setCurrentItemIndex(0) อีกต่อไป เพราะจะให้ fetchInspectionItems กำหนดแทน
   };
 
   // ตรวจสอบความสมบูรณ์ของข้อมูล
@@ -1106,6 +1247,8 @@ export default function AuditorInspectionsPage() {
 
       alert("บันทึกผลการตรวจรายการนี้เรียบร้อยแล้ว");
 
+      saveCurrentPosition();
+
       // ไปรายการถัดไป
       if (currentItemIndex < inspectionItems.length - 1) {
         setCurrentItemIndex(currentItemIndex + 1);
@@ -1439,6 +1582,20 @@ export default function AuditorInspectionsPage() {
                 </div>
               ) : (
                 <>
+                  {/* Search Bar */}
+                  <div className="mb-4">
+                    <input
+                      type="text"
+                      placeholder="ค้นหาการตรวจประเมิน (รหัสการตรวจ, พื้นที่, เกษตรกร, วันที่, ประเภทการตรวจ)..."
+                      value={inspectionSearchTerm}
+                      onChange={(e) => {
+                        setInspectionSearchTerm(e.target.value);
+                        setCurrentPage(1); // Reset to first page on new search
+                      }}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    />
+                  </div>
+
                   <div className="hidden md:block w-full overflow-auto bg-white rounded-lg shadow">
                     <div className="min-w-full overflow-hidden overflow-x-auto">
                       <table className="min-w-full divide-y divide-gray-200">
@@ -1483,134 +1640,191 @@ export default function AuditorInspectionsPage() {
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                          {inspections.map((inspection) => (
-                            <tr key={inspection.inspectionId}>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {inspection.inspectionNo}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {new Date(
-                                  inspection.inspectionDateAndTime
-                                ).toLocaleDateString("th-TH", {
-                                  year: "numeric",
-                                  month: "long",
-                                  day: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {inspection.inspectionType?.typeName || "-"}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {inspection.rubberFarm?.villageName || "-"},{" "}
-                                {inspection.rubberFarm?.district || "-"},{" "}
-                                {inspection.rubberFarm?.province || "-"}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {inspection.rubberFarm?.farmer
-                                  ? `${inspection.rubberFarm.farmer.namePrefix}${inspection.rubberFarm.farmer.firstName} ${inspection.rubberFarm.farmer.lastName}`
-                                  : "-"}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-center">
-                                <div className="flex justify-center space-x-2">
-                                  <button
-                                    onClick={() => {
-                                      if (inspection.rubberFarmId) {
-                                        fetchFarmDetails(
-                                          inspection.rubberFarmId
-                                        );
-                                      }
-                                    }}
-                                    className="bg-blue-600 text-white px-3 py-1.5 rounded-md hover:bg-blue-700 text-sm"
-                                  >
-                                    ดูข้อมูล
-                                  </button>
-                                  <button
-                                    onClick={() => selectInspection(inspection)}
-                                    className="bg-green-600 text-white px-3 py-1.5 rounded-md hover:bg-green-700 text-sm"
-                                  >
-                                    เริ่มตรวจประเมิน
-                                  </button>
+                          {loading ? (
+                            <tr>
+                              <td colSpan={6} className="text-center py-4">
+                                <div className="flex justify-center">
+                                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
                                 </div>
                               </td>
                             </tr>
-                          ))}
+                          ) : currentInspections.length === 0 ? (
+                            <tr>
+                              <td
+                                colSpan={6}
+                                className="text-center py-4 text-gray-500"
+                              >
+                                ไม่พบข้อมูลที่ตรงกับการค้นหา
+                              </td>
+                            </tr>
+                          ) : (
+                            currentInspections.map((inspection) => (
+                              <tr key={inspection.inspectionId}>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                  {inspection.inspectionNo}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {new Date(
+                                    inspection.inspectionDateAndTime
+                                  ).toLocaleDateString("th-TH", {
+                                    year: "numeric",
+                                    month: "long",
+                                    day: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {inspection.inspectionType?.typeName || "-"}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {inspection.rubberFarm?.villageName || "-"},{" "}
+                                  {inspection.rubberFarm?.district || "-"},{" "}
+                                  {inspection.rubberFarm?.province || "-"}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {inspection.rubberFarm?.farmer
+                                    ? `${inspection.rubberFarm.farmer.namePrefix}${inspection.rubberFarm.farmer.firstName} ${inspection.rubberFarm.farmer.lastName}`
+                                    : "-"}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-center">
+                                  <div className="flex justify-center space-x-2">
+                                    <button
+                                      onClick={() => {
+                                        if (inspection.rubberFarmId) {
+                                          fetchFarmDetails(
+                                            inspection.rubberFarmId
+                                          );
+                                        }
+                                      }}
+                                      className="bg-blue-600 text-white px-3 py-1.5 rounded-md hover:bg-blue-700 text-sm"
+                                    >
+                                      ดูข้อมูล
+                                    </button>
+                                    <button
+                                      onClick={() =>
+                                        selectInspection(inspection)
+                                      }
+                                      className="bg-green-600 text-white px-3 py-1.5 rounded-md hover:bg-green-700 text-sm"
+                                    >
+                                      เริ่มตรวจประเมิน
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
+                          )}
                         </tbody>
                       </table>
                     </div>
                   </div>
 
                   <div className="md:hidden space-y-4">
-                    {inspections.map((inspection) => (
-                      <div
-                        key={inspection.inspectionId}
-                        className="bg-white rounded-lg shadow p-4"
-                      >
-                        <div className="mb-3">
-                          <h3 className="font-semibold text-gray-900">
-                            เลขที่: {inspection.inspectionNo}
-                          </h3>
-                          <p className="text-sm text-gray-600 mt-1">
-                            {inspection.inspectionType?.typeName || "N/A"}
-                          </p>
-                        </div>
-
-                        <div className="space-y-2 text-sm">
-                          <div>
-                            <span className="font-medium text-gray-700">
-                              เกษตรกร:{" "}
-                            </span>
-                            {inspection.rubberFarm?.farmer ? (
-                              <span>
-                                {inspection.rubberFarm.farmer.namePrefix}
-                                {inspection.rubberFarm.farmer.firstName}{" "}
-                                {inspection.rubberFarm.farmer.lastName}
-                              </span>
-                            ) : (
-                              "N/A"
-                            )}
-                          </div>
-
-                          <div>
-                            <span className="font-medium text-gray-700">
-                              สถานที่:{" "}
-                            </span>
-                            {inspection.rubberFarm
-                              ? `${inspection.rubberFarm.villageName}, ${inspection.rubberFarm.district}`
-                              : "N/A"}
-                          </div>
-
-                          <div>
-                            <span className="font-medium text-gray-700">
-                              วันที่:{" "}
-                            </span>
-                            {new Date(
-                              inspection.inspectionDateAndTime
-                            ).toLocaleDateString("th-TH")}
-                          </div>
-                        </div>
-
-                        <div className="mt-4 flex gap-2">
-                          <button
-                            onClick={() =>
-                              fetchFarmDetails(inspection.rubberFarmId)
-                            }
-                            className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-                            disabled={loadingFarmDetails}
-                          >
-                            ดูข้อมูล
-                          </button>
-                          <button
-                            onClick={() => selectInspection(inspection)}
-                            className="flex-1 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
-                          >
-                            เริ่มตรวจ
-                          </button>
-                        </div>
+                    {currentInspections.length === 0 ? (
+                      <div className="bg-white rounded-lg p-4 text-center text-gray-500">
+                        ไม่พบข้อมูลที่ตรงกับการค้นหา
                       </div>
-                    ))}
+                    ) : (
+                      currentInspections.map((inspection) => (
+                        <div
+                          key={inspection.inspectionId}
+                          className="bg-white rounded-lg shadow p-4"
+                        >
+                          <div className="mb-3">
+                            <h3 className="font-semibold text-gray-900">
+                              เลขที่: {inspection.inspectionNo}
+                            </h3>
+                            <p className="text-sm text-gray-600 mt-1">
+                              {inspection.inspectionType?.typeName || "N/A"}
+                            </p>
+                          </div>
+
+                          <div className="space-y-2 text-sm">
+                            <div>
+                              <span className="font-medium text-gray-700">
+                                เกษตรกร:{" "}
+                              </span>
+                              {inspection.rubberFarm?.farmer ? (
+                                <span>
+                                  {inspection.rubberFarm.farmer.namePrefix}
+                                  {inspection.rubberFarm.farmer.firstName}{" "}
+                                  {inspection.rubberFarm.farmer.lastName}
+                                </span>
+                              ) : (
+                                "N/A"
+                              )}
+                            </div>
+
+                            <div>
+                              <span className="font-medium text-gray-700">
+                                สถานที่:{" "}
+                              </span>
+                              {inspection.rubberFarm
+                                ? `${inspection.rubberFarm.villageName}, ${inspection.rubberFarm.district}`
+                                : "N/A"}
+                            </div>
+
+                            <div>
+                              <span className="font-medium text-gray-700">
+                                วันที่:{" "}
+                              </span>
+                              {new Date(
+                                inspection.inspectionDateAndTime
+                              ).toLocaleDateString("th-TH")}
+                            </div>
+                          </div>
+
+                          <div className="mt-4 flex gap-2">
+                            <button
+                              onClick={() =>
+                                fetchFarmDetails(inspection.rubberFarmId)
+                              }
+                              className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                              disabled={loadingFarmDetails}
+                            >
+                              ดูข้อมูล
+                            </button>
+                            <button
+                              onClick={() => selectInspection(inspection)}
+                              className="flex-1 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+                            >
+                              เริ่มตรวจ
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="mt-4 flex justify-between items-center">
+                      <p className="text-sm text-gray-700">
+                        แสดง {indexOfFirstInspection + 1} ถึง{" "}
+                        {Math.min(
+                          indexOfLastInspection,
+                          filteredInspections.length
+                        )}{" "}
+                        จาก {filteredInspections.length} รายการ
+                      </p>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => setCurrentPage(currentPage - 1)}
+                          disabled={currentPage === 1}
+                          className="px-3 py-1 border rounded-md disabled:opacity-50"
+                        >
+                          ก่อนหน้า
+                        </button>
+                        <button
+                          onClick={() => setCurrentPage(currentPage + 1)}
+                          disabled={currentPage === totalPages}
+                          className="px-3 py-1 border rounded-md disabled:opacity-50"
+                        >
+                          ถัดไป
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   {showFarmDetails && selectedFarmDetails && (
                     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
@@ -1854,18 +2068,79 @@ export default function AuditorInspectionsPage() {
                   <div className="mb-6">
                     <h2 className="text-xl font-semibold text-gray-900">
                       รายการตรวจที่ {currentItemIndex + 1} จาก{" "}
-                      {inspectionItems.length}
+                      {inspectionItems.length} :{" "}
+                      {inspectionItems[currentItemIndex]?.inspectionItemMaster
+                        ?.itemName || ""}
                     </h2>
-                    <div className="mt-2 w-full bg-gray-200 rounded-full h-2.5">
-                      <div
-                        className="bg-green-600 h-2.5 rounded-full"
-                        style={{
-                          width: `${
-                            ((currentItemIndex + 1) / inspectionItems.length) *
-                            100
-                          }%`,
-                        }}
-                      ></div>
+                    {/* เพิ่มปุ่มสำหรับรีเซ็ตตำแหน่ง */}
+                    <button
+                      onClick={() => {
+                        if (
+                          selectedInspection &&
+                          confirm("ต้องการเริ่มต้นจากรายการแรกใหม่หรือไม่?")
+                        ) {
+                          localStorage.removeItem(
+                            `inspectionPosition-${selectedInspection.inspectionId}`
+                          );
+                          setCurrentItemIndex(0);
+                          alert("เริ่มต้นจากรายการแรกเรียบร้อยแล้ว");
+                        }
+                      }}
+                      className="text-sm px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-gray-700"
+                    >
+                      เริ่มใหม่
+                    </button>
+                    <div className="mt-3 relative">
+                      <div className="w-full bg-gray-200 rounded-full h-2.5">
+                        <div
+                          className="bg-green-600 h-2.5 rounded-full"
+                          style={{
+                            width: `${
+                              ((currentItemIndex + 1) /
+                                inspectionItems.length) *
+                              100
+                            }%`,
+                          }}
+                        ></div>
+                      </div>
+
+                      {/* แสดงสถานะรายการตรวจ */}
+                      <div className="flex mt-2 overflow-x-auto py-1">
+                        {inspectionItems.map((item, index) => (
+                          <div
+                            key={item.inspectionItemId}
+                            className={`flex-shrink-0 px-2 py-1 mx-1 rounded-md text-xs font-medium cursor-pointer
+                ${
+                  index === currentItemIndex
+                    ? "bg-blue-100 text-blue-800 border border-blue-300"
+                    : item.inspectionItemResult === "ผ่าน"
+                    ? "bg-green-100 text-green-800"
+                    : item.inspectionItemResult === "ไม่ผ่าน"
+                    ? "bg-red-100 text-red-800"
+                    : "bg-gray-100 text-gray-800"
+                }`}
+                            onClick={() => {
+                              // ถามผู้ใช้ก่อนเปลี่ยนหน้า ถ้ากำลังแก้ไขรายการปัจจุบันอยู่
+                              if (index !== currentItemIndex) {
+                                if (
+                                  window.confirm(
+                                    "ต้องการเปลี่ยนไปรายการตรวจอื่นหรือไม่? ข้อมูลที่ยังไม่ได้บันทึกจะหายไป"
+                                  )
+                                ) {
+                                  setCurrentItemIndex(index);
+                                }
+                              }
+                            }}
+                          >
+                            {index + 1}{" "}
+                            {item.inspectionItemResult === "ผ่าน"
+                              ? "✓"
+                              : item.inspectionItemResult === "ไม่ผ่าน"
+                              ? "✗"
+                              : ""}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
