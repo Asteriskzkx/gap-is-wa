@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { toast } from "react-hot-toast";
 
 interface Inspection {
   inspectionId: number;
@@ -1285,14 +1286,6 @@ export default function AuditorInspectionsPage() {
     try {
       const token = localStorage.getItem("token");
 
-      // กำหนดผลการตรวจโดยรวม
-      const overallResult = inspectionItems.every(
-        (item) => determineItemResult(item) === "ผ่าน"
-      )
-        ? "ผ่าน"
-        : "ไม่ผ่าน";
-
-      // อัปเดตสถานะและผลการตรวจ
       const response = await fetch(
         `/api/v1/inspections/${selectedInspection.inspectionId}`,
         {
@@ -1303,18 +1296,26 @@ export default function AuditorInspectionsPage() {
           },
           body: JSON.stringify({
             inspectionStatus: "ตรวจประเมินแล้ว",
-            inspectionResult: overallResult,
+            inspectionResult: "รอผลการตรวจประเมิน",
           }),
         }
       );
 
       if (response.ok) {
-        alert(`การตรวจประเมินเสร็จสิ้น ผลการตรวจ: ${overallResult}`);
-        router.push("/auditor/dashboard");
+        toast.success(
+          "การตรวจประเมินเสร็จสิ้น กรุณาไปที่หน้าสรุปผลเพื่อพิจารณาผลการประเมิน",
+          { duration: 5000 }
+        );
+
+        router.push(
+          `/auditor/inspection-summary/${selectedInspection.inspectionId}`
+        );
+      } else {
+        toast.error("ไม่สามารถอัปเดตสถานะการตรวจประเมินได้");
       }
     } catch (error) {
       console.error("Error completing inspection:", error);
-      alert("เกิดข้อผิดพลาดในการบันทึกผลการตรวจ");
+      toast.error("เกิดข้อผิดพลาดในการจบการตรวจประเมิน");
     }
   };
 
