@@ -922,209 +922,209 @@ export default function AuditorInspectionsPage() {
           </div>
         );
 
-      case "การจัดการคุณภาพในกระบวนการผลิตก่อนการเปิดกรีด":
-      case "การจัดการคุณภาพในกระบวนการผลิตหลังการเปิดกรีด":
-        return (
-          <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-            <h3 className="text-md font-semibold text-gray-800 mb-3">
-              ข้อมูลเพิ่มเติม
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  พันธุ์ยางที่ปลูก
-                </label>
-                <input
-                  type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
-                  placeholder="ระบุพันธุ์ยาง"
-                  value={item?.otherConditions?.rubberVariety || ""}
-                  onChange={(e) =>
-                    updateOtherConditions(
-                      itemIndex,
-                      "rubberVariety",
-                      e.target.value
-                    )
-                  }
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  การจัดการปุ๋ย
-                </label>
-                <textarea
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
-                  rows={2}
-                  placeholder="ระบุชนิดและปริมาณปุ๋ยที่ใช้"
-                  value={item?.otherConditions?.fertilizerManagement || ""}
-                  onChange={(e) =>
-                    updateOtherConditions(
-                      itemIndex,
-                      "fertilizerManagement",
-                      e.target.value
-                    )
-                  }
-                />
-              </div>
-            </div>
-          </div>
-        );
+      // case "การจัดการคุณภาพในกระบวนการผลิตก่อนการเปิดกรีด":
+      // case "การจัดการคุณภาพในกระบวนการผลิตหลังการเปิดกรีด":
+      //   return (
+      //     <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+      //       <h3 className="text-md font-semibold text-gray-800 mb-3">
+      //         ข้อมูลเพิ่มเติม
+      //       </h3>
+      //       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      //         <div>
+      //           <label className="block text-sm font-medium text-gray-700 mb-1">
+      //             พันธุ์ยางที่ปลูก
+      //           </label>
+      //           <input
+      //             type="text"
+      //             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
+      //             placeholder="ระบุพันธุ์ยาง"
+      //             value={item?.otherConditions?.rubberVariety || ""}
+      //             onChange={(e) =>
+      //               updateOtherConditions(
+      //                 itemIndex,
+      //                 "rubberVariety",
+      //                 e.target.value
+      //               )
+      //             }
+      //           />
+      //         </div>
+      //         <div>
+      //           <label className="block text-sm font-medium text-gray-700 mb-1">
+      //             การจัดการปุ๋ย
+      //           </label>
+      //           <textarea
+      //             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
+      //             rows={2}
+      //             placeholder="ระบุชนิดและปริมาณปุ๋ยที่ใช้"
+      //             value={item?.otherConditions?.fertilizerManagement || ""}
+      //             onChange={(e) =>
+      //               updateOtherConditions(
+      //                 itemIndex,
+      //                 "fertilizerManagement",
+      //                 e.target.value
+      //               )
+      //             }
+      //           />
+      //         </div>
+      //       </div>
+      //     </div>
+      //   );
 
-      case "การเก็บเกี่ยวและการปฏิบัติหลังการเก็บเกี่ยว สำหรับผลิตน้ำยางสด":
-      case "การผลิตวัตถุดิบคุณภาพดีและการขนส่งสำหรับผลิตน้ำยางสด":
-        return (
-          <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-            <h3 className="text-md font-semibold text-gray-800 mb-3">
-              ข้อมูลเพิ่มเติม - การผลิตน้ำยางสด
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  เวลาเริ่มกรีด
-                </label>
-                <input
-                  type="time"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
-                  value={item?.otherConditions?.tappingStartTime || ""}
-                  onChange={(e) =>
-                    updateOtherConditions(
-                      itemIndex,
-                      "tappingStartTime",
-                      e.target.value
-                    )
-                  }
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  เวลาเก็บน้ำยาง
-                </label>
-                <input
-                  type="time"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
-                  value={item?.otherConditions?.collectionTime || ""}
-                  onChange={(e) =>
-                    updateOtherConditions(
-                      itemIndex,
-                      "collectionTime",
-                      e.target.value
-                    )
-                  }
-                />
-              </div>
-            </div>
-          </div>
-        );
+      // case "การเก็บเกี่ยวและการปฏิบัติหลังการเก็บเกี่ยว สำหรับผลิตน้ำยางสด":
+      // case "การผลิตวัตถุดิบคุณภาพดีและการขนส่งสำหรับผลิตน้ำยางสด":
+      //   return (
+      //     <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+      //       <h3 className="text-md font-semibold text-gray-800 mb-3">
+      //         ข้อมูลเพิ่มเติม - การผลิตน้ำยางสด
+      //       </h3>
+      //       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      //         <div>
+      //           <label className="block text-sm font-medium text-gray-700 mb-1">
+      //             เวลาเริ่มกรีด
+      //           </label>
+      //           <input
+      //             type="time"
+      //             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
+      //             value={item?.otherConditions?.tappingStartTime || ""}
+      //             onChange={(e) =>
+      //               updateOtherConditions(
+      //                 itemIndex,
+      //                 "tappingStartTime",
+      //                 e.target.value
+      //               )
+      //             }
+      //           />
+      //         </div>
+      //         <div>
+      //           <label className="block text-sm font-medium text-gray-700 mb-1">
+      //             เวลาเก็บน้ำยาง
+      //           </label>
+      //           <input
+      //             type="time"
+      //             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
+      //             value={item?.otherConditions?.collectionTime || ""}
+      //             onChange={(e) =>
+      //               updateOtherConditions(
+      //                 itemIndex,
+      //                 "collectionTime",
+      //                 e.target.value
+      //               )
+      //             }
+      //           />
+      //         </div>
+      //       </div>
+      //     </div>
+      //   );
 
-      case "การเก็บเกี่ยวและการปฏิบัติหลังการเก็บเกี่ยว สำหรับผลิตยางก้อนถ้วย":
-      case "การผลิตวัตถุดิบคุณภาพดีและการขนส่งสำหรับผลิตยางก้อนถ้วย":
-        return (
-          <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-            <h3 className="text-md font-semibold text-gray-800 mb-3">
-              ข้อมูลเพิ่มเติม - การผลิตยางก้อนถ้วย
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  ความเข้มข้นกรดฟอร์มิค (%)
-                </label>
-                <select
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
-                  value={item?.otherConditions?.acidConcentration || ""}
-                  onChange={(e) =>
-                    updateOtherConditions(
-                      itemIndex,
-                      "acidConcentration",
-                      e.target.value
-                    )
-                  }
-                >
-                  <option value="">เลือกความเข้มข้น</option>
-                  <option value="3">3%</option>
-                  <option value="4">4%</option>
-                  <option value="5">5%</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  จำนวนมีดกรีด
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="6"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
-                  placeholder="ไม่เกิน 6 มีด"
-                  value={item?.otherConditions?.numberOfTaps || ""}
-                  onChange={(e) =>
-                    updateOtherConditions(
-                      itemIndex,
-                      "numberOfTaps",
-                      e.target.value
-                    )
-                  }
-                />
-              </div>
-            </div>
-          </div>
-        );
+      // case "การเก็บเกี่ยวและการปฏิบัติหลังการเก็บเกี่ยว สำหรับผลิตยางก้อนถ้วย":
+      // case "การผลิตวัตถุดิบคุณภาพดีและการขนส่งสำหรับผลิตยางก้อนถ้วย":
+      //   return (
+      //     <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+      //       <h3 className="text-md font-semibold text-gray-800 mb-3">
+      //         ข้อมูลเพิ่มเติม - การผลิตยางก้อนถ้วย
+      //       </h3>
+      //       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      //         <div>
+      //           <label className="block text-sm font-medium text-gray-700 mb-1">
+      //             ความเข้มข้นกรดฟอร์มิค (%)
+      //           </label>
+      //           <select
+      //             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
+      //             value={item?.otherConditions?.acidConcentration || ""}
+      //             onChange={(e) =>
+      //               updateOtherConditions(
+      //                 itemIndex,
+      //                 "acidConcentration",
+      //                 e.target.value
+      //               )
+      //             }
+      //           >
+      //             <option value="">เลือกความเข้มข้น</option>
+      //             <option value="3">3%</option>
+      //             <option value="4">4%</option>
+      //             <option value="5">5%</option>
+      //           </select>
+      //         </div>
+      //         <div>
+      //           <label className="block text-sm font-medium text-gray-700 mb-1">
+      //             จำนวนมีดกรีด
+      //           </label>
+      //           <input
+      //             type="number"
+      //             min="1"
+      //             max="6"
+      //             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
+      //             placeholder="ไม่เกิน 6 มีด"
+      //             value={item?.otherConditions?.numberOfTaps || ""}
+      //             onChange={(e) =>
+      //               updateOtherConditions(
+      //                 itemIndex,
+      //                 "numberOfTaps",
+      //                 e.target.value
+      //               )
+      //             }
+      //           />
+      //         </div>
+      //       </div>
+      //     </div>
+      //   );
 
-      case "สุขลักษณะส่วนบุคคล":
-        return (
-          <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-            <h3 className="text-md font-semibold text-gray-800 mb-3">
-              ข้อมูลเพิ่มเติม
-            </h3>
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  อุปกรณ์ป้องกันส่วนบุคคลที่มี
-                </label>
-                <textarea
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
-                  rows={2}
-                  placeholder="ระบุอุปกรณ์ป้องกันที่มี เช่น หน้ากาก ถุงมือ รองเท้า"
-                  value={item?.otherConditions?.ppe || ""}
-                  onChange={(e) =>
-                    updateOtherConditions(itemIndex, "ppe", e.target.value)
-                  }
-                />
-              </div>
-            </div>
-          </div>
-        );
+      // case "สุขลักษณะส่วนบุคคล":
+      //   return (
+      //     <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+      //       <h3 className="text-md font-semibold text-gray-800 mb-3">
+      //         ข้อมูลเพิ่มเติม
+      //       </h3>
+      //       <div className="space-y-3">
+      //         <div>
+      //           <label className="block text-sm font-medium text-gray-700 mb-1">
+      //             อุปกรณ์ป้องกันส่วนบุคคลที่มี
+      //           </label>
+      //           <textarea
+      //             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
+      //             rows={2}
+      //             placeholder="ระบุอุปกรณ์ป้องกันที่มี เช่น หน้ากาก ถุงมือ รองเท้า"
+      //             value={item?.otherConditions?.ppe || ""}
+      //             onChange={(e) =>
+      //               updateOtherConditions(itemIndex, "ppe", e.target.value)
+      //             }
+      //           />
+      //         </div>
+      //       </div>
+      //     </div>
+      //   );
 
-      case "การบันทึกและการจัดเก็บข้อมูล":
-        return (
-          <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-            <h3 className="text-md font-semibold text-gray-800 mb-3">
-              ข้อมูลเพิ่มเติม
-            </h3>
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  ระบบการบันทึกข้อมูลที่ใช้
-                </label>
-                <select
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
-                  value={item?.otherConditions?.recordSystem || ""}
-                  onChange={(e) =>
-                    updateOtherConditions(
-                      itemIndex,
-                      "recordSystem",
-                      e.target.value
-                    )
-                  }
-                >
-                  <option value="">เลือกระบบการบันทึก</option>
-                  <option value="สมุดบันทึก">สมุดบันทึก</option>
-                  <option value="คอมพิวเตอร์">คอมพิวเตอร์</option>
-                  <option value="ระบบออนไลน์">ระบบออนไลน์</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        );
+      // case "การบันทึกและการจัดเก็บข้อมูล":
+      //   return (
+      //     <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+      //       <h3 className="text-md font-semibold text-gray-800 mb-3">
+      //         ข้อมูลเพิ่มเติม
+      //       </h3>
+      //       <div className="space-y-3">
+      //         <div>
+      //           <label className="block text-sm font-medium text-gray-700 mb-1">
+      //             ระบบการบันทึกข้อมูลที่ใช้
+      //           </label>
+      //           <select
+      //             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
+      //             value={item?.otherConditions?.recordSystem || ""}
+      //             onChange={(e) =>
+      //               updateOtherConditions(
+      //                 itemIndex,
+      //                 "recordSystem",
+      //                 e.target.value
+      //               )
+      //             }
+      //           >
+      //             <option value="">เลือกระบบการบันทึก</option>
+      //             <option value="สมุดบันทึก">สมุดบันทึก</option>
+      //             <option value="คอมพิวเตอร์">คอมพิวเตอร์</option>
+      //             <option value="ระบบออนไลน์">ระบบออนไลน์</option>
+      //           </select>
+      //         </div>
+      //       </div>
+      //     </div>
+      //   );
 
       default:
         return null;
@@ -1279,9 +1279,52 @@ export default function AuditorInspectionsPage() {
     return hasFailedMain ? "ไม่ผ่าน" : "ผ่าน";
   };
 
+  // ฟังก์ชันสำหรับตรวจสอบว่าตรวจประเมินครบทุกรายการหรือยัง
+  const checkAllItemsCompleted = () => {
+    // ตรวจสอบว่ามีรายการตรวจหรือไม่
+    if (!inspectionItems || inspectionItems.length === 0) {
+      return false;
+    }
+
+    // ตรวจสอบแต่ละรายการว่าได้ประเมินแล้วหรือไม่
+    for (const item of inspectionItems) {
+      // ตรวจสอบว่ารายการนี้มีผลการประเมินหรือไม่
+      if (!item.inspectionItemResult || item.inspectionItemResult === "") {
+        return false;
+      }
+
+      // ตรวจสอบว่า requirements ทั้งหมดได้รับการประเมินหรือไม่
+      if (item.requirements && item.requirements.length > 0) {
+        for (const req of item.requirements) {
+          if (
+            !req.evaluationResult ||
+            req.evaluationResult === "NOT_EVALUATED" ||
+            !req.evaluationMethod ||
+            req.evaluationMethod === "PENDING"
+          ) {
+            return false;
+          }
+        }
+      }
+    }
+
+    return true;
+  };
+
   // จบการตรวจประเมิน
   const completeInspection = async () => {
     if (!selectedInspection) return;
+
+    // ตรวจสอบความครบถ้วนของการตรวจประเมิน
+    if (!checkAllItemsCompleted()) {
+      toast.error(
+        "ไม่สามารถจบการตรวจประเมินได้ เนื่องจากยังมีรายการที่ยังไม่ได้ตรวจประเมิน",
+        {
+          duration: 5000,
+        }
+      );
+      return;
+    }
 
     try {
       const token = localStorage.getItem("token");
@@ -2374,9 +2417,21 @@ export default function AuditorInspectionsPage() {
                       ) : (
                         <button
                           onClick={completeInspection}
-                          className="px-4 py-2 bg-purple-600 text-white rounded-md font-medium hover:bg-purple-700"
+                          disabled={!checkAllItemsCompleted()}
+                          className={`px-4 py-2 ${
+                            checkAllItemsCompleted()
+                              ? "bg-purple-600 hover:bg-purple-700"
+                              : "bg-gray-400 cursor-not-allowed"
+                          } text-white rounded-md font-medium`}
+                          title={
+                            checkAllItemsCompleted()
+                              ? ""
+                              : "ต้องตรวจประเมินให้ครบทุกรายการก่อน"
+                          }
                         >
-                          จบการตรวจประเมิน
+                          {checkAllItemsCompleted()
+                            ? "จบการตรวจประเมิน"
+                            : "รอการประเมินให้ครบถ้วน"}
                         </button>
                       )}
                     </div>

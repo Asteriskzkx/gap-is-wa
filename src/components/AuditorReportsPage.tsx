@@ -606,15 +606,6 @@ export default function AuditorReportsPage() {
                     กำลังโหลดข้อมูล...
                   </p>
                 </div>
-              ) : filteredInspections.length === 0 ? (
-                <div className="text-center py-12">
-                  <FaExclamationCircle className="mx-auto h-12 w-12 text-gray-400" />
-                  <p className="mt-2 text-sm text-gray-500">
-                    {currentTab === "pending"
-                      ? "ไม่พบรายการตรวจประเมินที่รอสรุปผล"
-                      : "ไม่พบรายการตรวจประเมินที่เสร็จสิ้น"}
-                  </p>
-                </div>
               ) : (
                 <>
                   {/* มุมมองแบบตาราง - แสดงบนจอขนาดใหญ่ */}
@@ -662,40 +653,55 @@ export default function AuditorReportsPage() {
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                          {filteredInspections.map((inspection) => (
-                            <tr
-                              key={inspection.inspectionId}
-                              className="hover:bg-gray-50 cursor-pointer"
-                            >
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {inspection.inspectionNo}
+                          {filteredInspections.length === 0 ? (
+                            <tr>
+                              <td
+                                colSpan={6}
+                                className="px-6 py-12 text-center"
+                              >
+                                <FaExclamationCircle className="mx-auto h-12 w-12 text-gray-400" />
+                                <p className="mt-2 text-sm text-gray-500">
+                                  {currentTab === "pending"
+                                    ? "ไม่พบรายการตรวจประเมินที่รอสรุปผล"
+                                    : "ไม่พบรายการตรวจประเมินที่เสร็จสิ้น"}
+                                </p>
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {inspection.rubberFarm?.farmer
-                                  ? `${inspection.rubberFarm.farmer.namePrefix}${inspection.rubberFarm.farmer.firstName} ${inspection.rubberFarm.farmer.lastName}`
-                                  : "ไม่มีข้อมูล"}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {[
-                                  inspection.rubberFarm?.villageName,
-                                  inspection.rubberFarm?.district,
-                                  inspection.rubberFarm?.province,
-                                ]
-                                  .filter(Boolean)
-                                  .join(" ")}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {new Date(
-                                  inspection.inspectionDateAndTime
-                                ).toLocaleDateString("th-TH", {
-                                  year: "numeric",
-                                  month: "short",
-                                  day: "numeric",
-                                })}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <span
-                                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                            </tr>
+                          ) : (
+                            filteredInspections.map((inspection) => (
+                              <tr
+                                key={inspection.inspectionId}
+                                className="hover:bg-gray-50 cursor-pointer"
+                              >
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                  {inspection.inspectionNo}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                  {inspection.rubberFarm?.farmer
+                                    ? `${inspection.rubberFarm.farmer.namePrefix}${inspection.rubberFarm.farmer.firstName} ${inspection.rubberFarm.farmer.lastName}`
+                                    : "ไม่มีข้อมูล"}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {[
+                                    inspection.rubberFarm?.villageName,
+                                    inspection.rubberFarm?.district,
+                                    inspection.rubberFarm?.province,
+                                  ]
+                                    .filter(Boolean)
+                                    .join(" ")}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {new Date(
+                                    inspection.inspectionDateAndTime
+                                  ).toLocaleDateString("th-TH", {
+                                    year: "numeric",
+                                    month: "short",
+                                    day: "numeric",
+                                  })}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <span
+                                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
                     ${
                       inspection.inspectionResult === "รอผลการตรวจประเมิน"
                         ? "bg-yellow-100 text-yellow-800"
@@ -703,32 +709,33 @@ export default function AuditorReportsPage() {
                         ? "bg-green-100 text-green-800"
                         : "bg-red-100 text-red-800"
                     }`}
-                                >
-                                  {inspection.inspectionResult ===
-                                  "รอผลการตรวจประเมิน"
-                                    ? "รอสรุปผล"
-                                    : inspection.inspectionResult === "ผ่าน"
-                                    ? "ผ่าน"
-                                    : "ไม่ผ่าน"}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <button
-                                  onClick={() =>
-                                    router.push(
-                                      `/auditor/inspection-summary/${inspection.inspectionId}`
-                                    )
-                                  }
-                                  className="text-indigo-600 hover:text-indigo-900"
-                                >
-                                  {inspection.inspectionResult ===
-                                  "รอผลการตรวจประเมิน"
-                                    ? "สรุปผล"
-                                    : "ดูรายละเอียด"}
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
+                                  >
+                                    {inspection.inspectionResult ===
+                                    "รอผลการตรวจประเมิน"
+                                      ? "รอสรุปผล"
+                                      : inspection.inspectionResult === "ผ่าน"
+                                      ? "ผ่าน"
+                                      : "ไม่ผ่าน"}
+                                  </span>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                  <button
+                                    onClick={() =>
+                                      router.push(
+                                        `/auditor/inspection-summary/${inspection.inspectionId}`
+                                      )
+                                    }
+                                    className="text-indigo-600 hover:text-indigo-900"
+                                  >
+                                    {inspection.inspectionResult ===
+                                    "รอผลการตรวจประเมิน"
+                                      ? "สรุปผล"
+                                      : "ดูรายละเอียด"}
+                                  </button>
+                                </td>
+                              </tr>
+                            ))
+                          )}
                         </tbody>
                       </table>
                     </div>
@@ -736,22 +743,33 @@ export default function AuditorReportsPage() {
 
                   {/* มุมมองแบบการ์ด - แสดงบนอุปกรณ์มือถือ */}
                   <div className="md:hidden space-y-4">
-                    {filteredInspections.map((inspection) => (
-                      <div
-                        key={inspection.inspectionId}
-                        className="bg-white rounded-lg shadow-sm p-4 border border-gray-100"
-                        onClick={() =>
-                          router.push(
-                            `/auditor/inspection-summary/${inspection.inspectionId}`
-                          )
-                        }
-                      >
-                        <div className="flex justify-between items-start">
-                          <div className="text-sm font-medium text-gray-900">
-                            เลขที่: {inspection.inspectionNo}
-                          </div>
-                          <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                    {filteredInspections.length === 0 ? (
+                      <div className="text-center py-12">
+                        <FaExclamationCircle className="mx-auto h-12 w-12 text-gray-400" />
+                        <p className="mt-2 text-sm text-gray-500">
+                          {currentTab === "pending"
+                            ? "ไม่พบรายการตรวจประเมินที่รอสรุปผล"
+                            : "ไม่พบรายการตรวจประเมินที่เสร็จสิ้น"}
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        {filteredInspections.map((inspection) => (
+                          <div
+                            key={inspection.inspectionId}
+                            className="bg-white rounded-lg shadow-sm p-4 border border-gray-100"
+                            onClick={() =>
+                              router.push(
+                                `/auditor/inspection-summary/${inspection.inspectionId}`
+                              )
+                            }
+                          >
+                            <div className="flex justify-between items-start">
+                              <div className="text-sm font-medium text-gray-900">
+                                เลขที่: {inspection.inspectionNo}
+                              </div>
+                              <span
+                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
               ${
                 inspection.inspectionResult === "รอผลการตรวจประเมิน"
                   ? "bg-yellow-100 text-yellow-800"
@@ -759,67 +777,69 @@ export default function AuditorReportsPage() {
                   ? "bg-green-100 text-green-800"
                   : "bg-red-100 text-red-800"
               }`}
-                          >
-                            {inspection.inspectionResult ===
-                            "รอผลการตรวจประเมิน"
-                              ? "รอสรุปผล"
-                              : inspection.inspectionResult === "ผ่าน"
-                              ? "ผ่าน"
-                              : "ไม่ผ่าน"}
-                          </span>
+                              >
+                                {inspection.inspectionResult ===
+                                "รอผลการตรวจประเมิน"
+                                  ? "รอสรุปผล"
+                                  : inspection.inspectionResult === "ผ่าน"
+                                  ? "ผ่าน"
+                                  : "ไม่ผ่าน"}
+                              </span>
+                            </div>
+
+                            <div className="mt-3">
+                              <p className="text-sm font-medium">
+                                เกษตรกร:{" "}
+                                <span className="font-normal text-gray-900">
+                                  {inspection.rubberFarm?.farmer
+                                    ? `${inspection.rubberFarm.farmer.namePrefix}${inspection.rubberFarm.farmer.firstName} ${inspection.rubberFarm.farmer.lastName}`
+                                    : "ไม่มีข้อมูล"}
+                                </span>
+                              </p>
+
+                              <p className="text-sm font-medium mt-1">
+                                สถานที่:{" "}
+                                <span className="font-normal text-gray-600">
+                                  {[
+                                    inspection.rubberFarm?.villageName,
+                                    inspection.rubberFarm?.district,
+                                    inspection.rubberFarm?.province,
+                                  ]
+                                    .filter(Boolean)
+                                    .join(" ")}
+                                </span>
+                              </p>
+
+                              <p className="text-sm font-medium mt-1">
+                                วันที่ตรวจ:{" "}
+                                <span className="font-normal text-gray-600">
+                                  {new Date(
+                                    inspection.inspectionDateAndTime
+                                  ).toLocaleDateString("th-TH", {
+                                    year: "numeric",
+                                    month: "short",
+                                    day: "numeric",
+                                  })}
+                                </span>
+                              </p>
+                            </div>
+
+                            <div className="mt-4 flex justify-end">
+                              <button className="text-indigo-600 hover:text-indigo-900 text-sm font-medium">
+                                {inspection.inspectionResult ===
+                                "รอผลการตรวจประเมิน"
+                                  ? "สรุปผล →"
+                                  : "ดูรายละเอียด →"}
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+
+                        <div className="text-center text-xs text-gray-500 italic mt-2">
+                          กดที่รายการเพื่อดูรายละเอียด
                         </div>
-
-                        <div className="mt-3">
-                          <p className="text-sm font-medium">
-                            เกษตรกร:{" "}
-                            <span className="font-normal text-gray-900">
-                              {inspection.rubberFarm?.farmer
-                                ? `${inspection.rubberFarm.farmer.namePrefix}${inspection.rubberFarm.farmer.firstName} ${inspection.rubberFarm.farmer.lastName}`
-                                : "ไม่มีข้อมูล"}
-                            </span>
-                          </p>
-
-                          <p className="text-sm font-medium mt-1">
-                            สถานที่:{" "}
-                            <span className="font-normal text-gray-600">
-                              {[
-                                inspection.rubberFarm?.villageName,
-                                inspection.rubberFarm?.district,
-                                inspection.rubberFarm?.province,
-                              ]
-                                .filter(Boolean)
-                                .join(" ")}
-                            </span>
-                          </p>
-
-                          <p className="text-sm font-medium mt-1">
-                            วันที่ตรวจ:{" "}
-                            <span className="font-normal text-gray-600">
-                              {new Date(
-                                inspection.inspectionDateAndTime
-                              ).toLocaleDateString("th-TH", {
-                                year: "numeric",
-                                month: "short",
-                                day: "numeric",
-                              })}
-                            </span>
-                          </p>
-                        </div>
-
-                        <div className="mt-4 flex justify-end">
-                          <button className="text-indigo-600 hover:text-indigo-900 text-sm font-medium">
-                            {inspection.inspectionResult ===
-                            "รอผลการตรวจประเมิน"
-                              ? "สรุปผล →"
-                              : "ดูรายละเอียด →"}
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-
-                    <div className="text-center text-xs text-gray-500 italic mt-2">
-                      กดที่รายการเพื่อดูรายละเอียด
-                    </div>
+                      </>
+                    )}
                   </div>
                 </>
               )}
