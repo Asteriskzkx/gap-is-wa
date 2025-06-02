@@ -7,6 +7,18 @@ import { FaCheck, FaTimes, FaExclamationTriangle } from "react-icons/fa";
 import Image from "next/image";
 import Link from "next/link";
 
+interface Requirement {
+  requirementId: number;
+  requirementNo: number;
+  evaluationResult: string;
+  evaluationMethod: string;
+  note: string;
+  requirementMaster?: {
+    requirementName: string;
+    requirementLevel: string;
+    requirementLevelNo: string;
+  };
+}
 interface InspectionSummary {
   inspectionId: number;
   inspectionNo: number;
@@ -40,6 +52,7 @@ interface InspectionItemSummary {
     itemNo: number;
     itemName: string;
   };
+  requirements?: Requirement[];
   requirementsSummary?: {
     total: number;
     passed: number;
@@ -383,6 +396,54 @@ export default function AuditorInspectionSummaryPage() {
     return () => window.removeEventListener("resize", checkMobile);
   }, [params.id]);
 
+  useEffect(() => {
+    if (!inspection?.items) return;
+
+    // คำนวณจำนวนข้อกำหนดหลักและผลการประเมิน
+    const mainRequirements = inspection.items.flatMap(
+      (item) =>
+        item.requirements?.filter(
+          (req) => req.requirementMaster?.requirementLevel === "ข้อกำหนดหลัก"
+        ) || []
+    );
+
+    const mainRequirementsTotal = mainRequirements.length;
+    const mainRequirementsPassed = mainRequirements.filter(
+      (req) => req.evaluationResult === "ใช่"
+    ).length;
+    const mainRequirementsFailed =
+      mainRequirementsTotal - mainRequirementsPassed;
+
+    // คำนวณจำนวนข้อกำหนดรองและผลการประเมิน
+    const secondaryRequirements = inspection.items.flatMap(
+      (item) =>
+        item.requirements?.filter(
+          (req) => req.requirementMaster?.requirementLevel === "ข้อกำหนดรอง"
+        ) || []
+    );
+
+    const secondaryRequirementsTotal = secondaryRequirements.length;
+    const secondaryRequirementsPassed = secondaryRequirements.filter(
+      (req) => req.evaluationResult === "ใช่"
+    ).length;
+
+    // คำนวณเปอร์เซ็นต์ข้อกำหนดรอง
+    const secondaryCompliancePercentage =
+      secondaryRequirementsTotal > 0
+        ? Math.round(
+            (secondaryRequirementsPassed / secondaryRequirementsTotal) * 100
+          )
+        : 0;
+
+    // กำหนดเกณฑ์การผ่าน
+    const isMainRequirementsPassed = mainRequirementsFailed === 0;
+    const isSecondaryRequirementsPassed = secondaryCompliancePercentage >= 60;
+    const isPassed = isMainRequirementsPassed && isSecondaryRequirementsPassed;
+
+    // Auto-set the result state based on calculation
+    setSelectedResult(isPassed ? "ผ่าน" : "ไม่ผ่าน");
+  }, [inspection?.items]);
+
   const submitFinalResult = async () => {
     if (!inspection) return;
 
@@ -393,7 +454,7 @@ export default function AuditorInspectionSummaryPage() {
       const response = await fetch(
         `/api/v1/inspections/${inspection.inspectionId}`,
         {
-          method: "PATCH",
+          method: "PUT",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
@@ -760,7 +821,6 @@ export default function AuditorInspectionSummaryPage() {
                   </div>
                 </div>
               </div>
-
               {/* ส่วนตารางผลการตรวจประเมินรายหัวข้อ */}
               <div className="border-b pb-4 mb-4">
                 <h2 className="text-xl font-semibold mb-4">
@@ -897,55 +957,140 @@ export default function AuditorInspectionSummaryPage() {
                     ))}
                 </div>
               </div>
-
               <div className="border-b pb-4 mb-4">
-                <h2 className="text-xl font-semibold mb-4">สรุปผลการประเมิน</h2>
+                <h2 className="text-xl font-semibold mb-4 text-center">
+                  สรุปผลการตรวจประเมิน
+                </h2>
 
-                <div className="bg-gray-50 p-4 rounded-md mb-6">
-                  <div className="flex flex-wrap items-center gap-2 mb-3">
-                    <span className="font-semibold">
-                      สถานะการประเมินโดยรวม:
-                    </span>
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium ${
-                        calculateOverallStatus() === "ผ่าน"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {calculateOverallStatus() === "ผ่าน" ? (
-                        <FaCheck className="mr-1" />
-                      ) : (
-                        <FaTimes className="mr-1" />
-                      )}
-                      {calculateOverallStatus()}
-                    </span>
-                  </div>
+                <div className="max-w-3xl mx-auto bg-white p-6 rounded-lg border border-gray-200 shadow-sm mb-6">
+                  <h3 className="text-base font-semibold mb-4 text-center">
+                    ผลการ{inspection.inspectionType?.typeName || "ไม่มีข้อมูล"}
+                  </h3>
 
-                  <div className="text-sm text-gray-700 space-y-2">
-                    <p>
-                      • จำนวนรายการที่ตรวจทั้งหมด:{" "}
-                      {inspection.items?.length || 0} รายการ
-                    </p>
-                    <p>
-                      • รายการที่ผ่านการประเมิน:{" "}
-                      {inspection.items?.filter(
-                        (i) => i.inspectionItemResult === "ผ่าน"
-                      ).length || 0}{" "}
-                      รายการ
-                    </p>
-                    <p>
-                      • รายการที่ไม่ผ่านการประเมิน:{" "}
-                      {inspection.items?.filter(
-                        (i) => i.inspectionItemResult === "ไม่ผ่าน"
-                      ).length || 0}{" "}
-                      รายการ
-                    </p>
-                  </div>
+                  {(() => {
+                    // คำนวณจำนวนข้อกำหนดหลักและผลการประเมิน
+                    const mainRequirements =
+                      inspection.items?.flatMap(
+                        (item) =>
+                          item.requirements?.filter(
+                            (req) =>
+                              req.requirementMaster?.requirementLevel ===
+                              "ข้อกำหนดหลัก"
+                          ) || []
+                      ) || [];
+
+                    const mainRequirementsTotal = mainRequirements.length;
+                    const mainRequirementsPassed = mainRequirements.filter(
+                      (req) => req.evaluationResult === "ใช่"
+                    ).length;
+                    const mainRequirementsFailed =
+                      mainRequirementsTotal - mainRequirementsPassed;
+
+                    // คำนวณจำนวนข้อกำหนดรองและผลการประเมิน
+                    const secondaryRequirements =
+                      inspection.items?.flatMap(
+                        (item) =>
+                          item.requirements?.filter(
+                            (req) =>
+                              req.requirementMaster?.requirementLevel ===
+                              "ข้อกำหนดรอง"
+                          ) || []
+                      ) || [];
+
+                    const secondaryRequirementsTotal =
+                      secondaryRequirements.length;
+                    const secondaryRequirementsPassed =
+                      secondaryRequirements.filter(
+                        (req) => req.evaluationResult === "ใช่"
+                      ).length;
+                    const secondaryRequirementsFailed =
+                      secondaryRequirementsTotal - secondaryRequirementsPassed;
+
+                    // คำนวณเปอร์เซ็นต์ข้อกำหนดรอง
+                    const secondaryCompliancePercentage =
+                      secondaryRequirementsTotal > 0
+                        ? Math.round(
+                            (secondaryRequirementsPassed /
+                              secondaryRequirementsTotal) *
+                              100
+                          )
+                        : 0;
+
+                    // กำหนดเกณฑ์การผ่าน
+                    const isMainRequirementsPassed =
+                      mainRequirementsFailed === 0;
+                    const isSecondaryRequirementsPassed =
+                      secondaryCompliancePercentage >= 60;
+                    const isPassed =
+                      isMainRequirementsPassed && isSecondaryRequirementsPassed;
+
+                    return (
+                      <div className="space-y-4 text-sm">
+                        <div className="mb-2">
+                          <p className="mb-3">
+                            ข้อกำหนดหลัก {mainRequirementsTotal} ข้อ (100%)
+                          </p>
+                          <p className="mb-3">
+                            ข้อกำหนดรอง {secondaryRequirementsTotal} ข้อ ผ่าน{" "}
+                            {secondaryRequirementsPassed} ข้อ ไม่ผ่าน{" "}
+                            {secondaryRequirementsFailed} ข้อ (ต้องผ่านอย่างน้อย
+                            7 ข้อ)
+                          </p>
+                          <p className="mb-3">
+                            เกณฑ์ต้องผ่านข้อกำหนดรองไม่น้อยกว่า 60%
+                          </p>
+                        </div>
+
+                        <div className="border-t border-b py-4">
+                          <p className="font-semibold">
+                            สูตร: สอดคล้องกับข้อกำหนดรอง =
+                          </p>
+                          <div className="flex flex-col items-center my-2">
+                            <div className="border-b border-black text-center px-2">
+                              จำนวนข้อกำหนดรองที่ผ่าน X 100
+                            </div>
+                            <div className="text-center px-2">
+                              จำนวนข้อกำหนดรองทั้งหมด
+                            </div>
+                          </div>
+                          <p className="font-semibold mt-2">
+                            = {secondaryRequirementsPassed} x 100 /{" "}
+                            {secondaryRequirementsTotal} ={" "}
+                            {secondaryCompliancePercentage}%
+                          </p>
+                        </div>
+
+                        <div className="flex justify-center space-x-12 mt-6">
+                          <label className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              className="form-checkbox h-5 w-5"
+                              checked={isPassed}
+                              disabled
+                            />
+                            <span>ผ่านการตรวจประเมิน</span>
+                          </label>
+
+                          <label className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              className="form-checkbox h-5 w-5"
+                              checked={!isPassed}
+                              disabled
+                            />
+                            <span>ไม่ผ่านการตรวจประเมิน</span>
+                          </label>
+                        </div>
+                        <p className="mt-2 text-sm text-gray-500 text-center">
+                          ผลการประเมินถูกกำหนดอัตโนมัติตามเกณฑ์การผ่านข้อกำหนดหลักและข้อกำหนดรอง
+                        </p>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 <div className="space-y-6">
-                  <div className="bg-white rounded-lg p-4 border border-gray-200">
+                  {/* <div className="bg-white rounded-lg p-4 border border-gray-200">
                     <label className="block text-sm font-medium text-gray-700 mb-3">
                       ผลการประเมินขั้นสุดท้าย
                     </label>
@@ -973,7 +1118,7 @@ export default function AuditorInspectionSummaryPage() {
                         <span className="ml-2">ไม่ผ่านการประเมิน</span>
                       </label>
                     </div>
-                  </div>
+                  </div> */}
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -989,7 +1134,6 @@ export default function AuditorInspectionSummaryPage() {
                   </div>
                 </div>
               </div>
-
               <div className="flex flex-col sm:flex-row justify-end gap-3 sm:space-x-4 mt-6">
                 <button
                   type="button"
