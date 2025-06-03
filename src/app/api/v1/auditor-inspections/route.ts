@@ -1,21 +1,38 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auditorInspectionController } from "@/utils/dependencyInjections";
 
-// Route handlers for /api/v1/auditor-inspections
 export async function GET(req: NextRequest) {
-  const url = new URL(req.url);
+  try {
+    const searchParams = new URL(req.url).searchParams;
+    const auditorId = searchParams.get("auditorId");
+    const inspectionId = searchParams.get("inspectionId");
 
-  // ถ้ามี filter parameters
-  if (url.searchParams.has("auditorId")) {
-    return auditorInspectionController.getAuditorInspectionsByAuditorId(req);
-  } else if (url.searchParams.has("inspectionId")) {
-    return auditorInspectionController.getAuditorInspectionsByInspectionId(req);
+    if (auditorId) {
+      return auditorInspectionController.getAuditorInspectionsByAuditorId(req);
+    } else if (inspectionId) {
+      return auditorInspectionController.getAuditorInspectionsByInspectionId(
+        req
+      );
+    } else {
+      return auditorInspectionController.getAll(req);
+    }
+  } catch (error) {
+    console.error("Error in auditor-inspections route:", error);
+    return NextResponse.json(
+      { message: "Internal server error" },
+      { status: 500 }
+    );
   }
-
-  // ถ้าไม่มี filter ให้ดึงทั้งหมด
-  return auditorInspectionController.getAll(req);
 }
 
 export async function POST(req: NextRequest) {
-  return auditorInspectionController.createAuditorInspection(req);
+  try {
+    return auditorInspectionController.createAuditorInspection(req);
+  } catch (error) {
+    console.error("Error in auditor-inspections route:", error);
+    return NextResponse.json(
+      { message: "Internal server error" },
+      { status: 500 }
+    );
+  }
 }
