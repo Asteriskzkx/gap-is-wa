@@ -315,24 +315,71 @@ export default function AuditorInspectionsPage() {
 
   const fetchPendingInspections = async () => {
     try {
+      setLoading(true);
       const token = localStorage.getItem("token");
-      const response = await fetch("/api/v1/inspections", {
+
+      // 1. ดึงข้อมูล Auditor ที่กำลัง login
+      const auditorResponse = await fetch("/api/v1/auditors/current", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        // กรองเฉพาะที่มีสถานะ "รอการตรวจประเมิน"
-        const pendingInspections = data.filter(
-          (inspection: Inspection) =>
-            inspection.inspectionStatus === "รอการตรวจประเมิน"
-        );
-        setInspections(pendingInspections);
+      if (!auditorResponse.ok) {
+        throw new Error("ไม่สามารถดึงข้อมูล Auditor ได้");
       }
+
+      const auditorData = await auditorResponse.json();
+      const auditorId = auditorData.auditorId;
+
+      // 2. ดึงรายการตรวจประเมินทั้งหมด
+      const inspectionsResponse = await fetch("/api/v1/inspections", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!inspectionsResponse.ok) {
+        throw new Error("ไม่สามารถดึงรายการตรวจประเมินได้");
+      }
+
+      const allInspections = await inspectionsResponse.json();
+
+      // 3. ดึงรายการ AuditorInspection ที่เกี่ยวข้องกับ Auditor คนนี้
+      const auditorInspectionsResponse = await fetch(
+        `/api/v1/auditor-inspections?auditorId=${auditorId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!auditorInspectionsResponse.ok) {
+        throw new Error("ไม่สามารถดึงรายการตรวจประเมินที่มอบหมายได้");
+      }
+
+      const auditorInspections = await auditorInspectionsResponse.json();
+
+      // ดึงเฉพาะ inspectionId ที่มอบหมายให้เป็นผู้ตรวจประเมินในทีม
+      const teamInspectionIds = auditorInspections.map(
+        (ai: any) => ai.inspectionId
+      );
+
+      // 4. กรองรายการตรวจประเมินที่เกี่ยวข้องกับ Auditor คนนี้
+      // ทั้งกรณีเป็นหัวหน้าผู้ตรวจ (auditorChiefId) และเป็นผู้ตรวจในทีม (AuditorInspection)
+      const assignedInspections = allInspections.filter(
+        (inspection: Inspection) =>
+          (inspection.auditorChiefId === auditorId || // เป็นหัวหน้าผู้ตรวจ
+            teamInspectionIds.includes(inspection.inspectionId)) && // เป็นผู้ตรวจในทีม
+          inspection.inspectionStatus === "รอการตรวจประเมิน"
+      );
+
+      setInspections(assignedInspections);
     } catch (error) {
-      console.error("Error fetching inspections:", error);
+      console.error("Error fetching assigned inspections:", error);
+      toast.error("ไม่สามารถดึงข้อมูลรายการตรวจประเมินที่มอบหมายได้");
+      setInspections([]);
     } finally {
       setLoading(false);
     }
