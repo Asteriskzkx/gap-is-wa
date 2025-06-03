@@ -363,7 +363,7 @@ export default function AuditorInspectionsPage() {
 
       // ดึงเฉพาะ inspectionId ที่มอบหมายให้เป็นผู้ตรวจประเมินในทีม
       const teamInspectionIds = auditorInspections.map(
-        (ai: any) => ai.inspectionId
+        (ai: { inspectionId: number }) => ai.inspectionId
       );
 
       // 4. กรองรายการตรวจประเมินที่เกี่ยวข้องกับ Auditor คนนี้
@@ -442,10 +442,52 @@ export default function AuditorInspectionsPage() {
         const data = await response.json();
         console.log("Fetched inspection items:", data);
 
-        // เรียงลำดับรายการตรวจตาม inspectionItemNo
-        const sortedData = [...data].sort(
-          (a, b) => a.inspectionItemNo - b.inspectionItemNo
-        );
+        // แก้ไขการเรียงลำดับใหม่
+        const sortedData = [...data].sort((a, b) => {
+          // ดึงเลขหัวข้อ (เช่น "1.1", "1.2") จากชื่อหรือ itemNo
+          const aItemNo = String(a.inspectionItemMaster?.itemNo || "");
+          const bItemNo = String(b.inspectionItemMaster?.itemNo || "");
+
+          // ถ้ามีรูปแบบ x.y (เช่น 1.1, 1.2, 2.1)
+          const aMatch = aItemNo.match(/^(\d+)\.(\d+)$/);
+          const bMatch = bItemNo.match(/^(\d+)\.(\d+)$/);
+
+          if (aMatch && bMatch) {
+            // เรียงตามตัวเลขหลักแรกก่อน (เช่น "1" ในเลข "1.1")
+            const aMajor = parseInt(aMatch[1]);
+            const bMajor = parseInt(bMatch[1]);
+            if (aMajor !== bMajor) return aMajor - bMajor;
+
+            // จากนั้นเรียงตามตัวเลขหลักที่สอง (เช่น "1" ในเลข "1.1")
+            const aMinor = parseInt(aMatch[2]);
+            const bMinor = parseInt(bMatch[2]);
+            return aMinor - bMinor;
+          }
+
+          // หากรูปแบบไม่ตรงกับ x.y ให้ใช้การเรียงแบบเดิม
+          return a.inspectionItemNo - b.inspectionItemNo;
+        });
+
+        // เรียงรายการ requirements ภายในแต่ละ item ด้วย
+        sortedData.forEach((item) => {
+          if (item.requirements && item.requirements.length > 0) {
+            item.requirements.sort((a: Requirement, b: Requirement) => {
+              // เรียงตาม requirementNo ถ้าเป็นตัวเลข
+              const aNum = parseInt(String(a.requirementNo));
+              const bNum = parseInt(String(b.requirementNo));
+
+              if (!isNaN(aNum) && !isNaN(bNum)) {
+                return aNum - bNum;
+              }
+
+              // ถ้าไม่ใช่ตัวเลขให้เรียงตามข้อความ
+              return String(a.requirementNo).localeCompare(
+                String(b.requirementNo)
+              );
+            });
+          }
+        });
+
         setInspectionItems(sortedData);
 
         // หากมีรายการที่บันทึกไว้ในคุกกี้ ให้ใช้รายการนั้น
@@ -1179,9 +1221,13 @@ export default function AuditorInspectionsPage() {
   };
 
   // บันทึกผลการตรวจรายการปัจจุบัน
-  const saveCurrentItem = async () => {
-    if (!validateCurrentItem()) return;
-    if (!selectedInspection || !inspectionItems[currentItemIndex]) return;
+  // Add an options parameter to control alert and navigation behavior
+  const saveCurrentItem = async (options?: {
+    showAlert?: boolean;
+    skipNavigation?: boolean;
+  }) => {
+    if (!validateCurrentItem()) return false;
+    if (!selectedInspection || !inspectionItems[currentItemIndex]) return false;
 
     setSaving(true);
     try {
@@ -1215,6 +1261,12 @@ export default function AuditorInspectionsPage() {
         const errorData = await itemResponse.json();
         throw new Error(errorData.message || "Failed to save inspection item");
       }
+
+      const updatedItems = [...inspectionItems];
+      updatedItems[currentItemIndex] = {
+        ...updatedItems[currentItemIndex],
+        inspectionItemResult: determineItemResult(currentItem),
+      };
 
       // อัปเดต requirements แบบ Promise.all เพื่อให้แน่ใจว่าทุกตัวถูกบันทึก
       if (currentItem.requirements && currentItem.requirements.length > 0) {
@@ -1293,17 +1345,28 @@ export default function AuditorInspectionsPage() {
         }
       }
 
-      alert("บันทึกผลการตรวจรายการนี้เรียบร้อยแล้ว");
+      setInspectionItems(updatedItems);
 
       saveCurrentPosition();
 
-      // ไปรายการถัดไป
-      if (currentItemIndex < inspectionItems.length - 1) {
+      // แสดงข้อความแจ้งเตือนเฉพาะเมื่อเรียกใช้โดยไม่ใช่จากฟังก์ชัน completeInspection
+      if (!options || options.showAlert !== false) {
+        alert("บันทึกผลการตรวจรายการนี้เรียบร้อยแล้ว");
+      }
+
+      // ไปรายการถัดไป (เฉพาะกรณีที่ไม่ได้เรียกจาก completeInspection)
+      if (
+        (!options || !options.skipNavigation) &&
+        currentItemIndex < inspectionItems.length - 1
+      ) {
         setCurrentItemIndex(currentItemIndex + 1);
       }
+
+      return true;
     } catch (error) {
       console.error("Error saving inspection item:", error);
       alert("เกิดข้อผิดพลาดในการบันทึก: " + (error as Error).message);
+      return false;
     } finally {
       setSaving(false);
     }
@@ -1366,16 +1429,27 @@ export default function AuditorInspectionsPage() {
     if (!checkAllItemsCompleted()) {
       toast.error(
         "ไม่สามารถจบการตรวจประเมินได้ เนื่องจากยังมีรายการที่ยังไม่ได้ตรวจประเมิน",
-        {
-          duration: 5000,
-        }
+        { duration: 5000 }
       );
       return;
     }
 
     try {
+      // บันทึกข้อมูลของรายการสุดท้ายก่อน โดยไม่แสดง alert และไม่ให้เปลี่ยนรายการ
+      const saveSuccess = await saveCurrentItem({
+        showAlert: false,
+        skipNavigation: true,
+      });
+
+      // ถ้าบันทึกไม่สำเร็จ ให้หยุดการทำงาน
+      if (!saveSuccess) {
+        toast.error("ไม่สามารถบันทึกข้อมูลรายการสุดท้ายได้");
+        return;
+      }
+
       const token = localStorage.getItem("token");
 
+      // ทำการอัพเดตสถานะการตรวจประเมิน
       const response = await fetch(
         `/api/v1/inspections/${selectedInspection.inspectionId}`,
         {
@@ -2404,7 +2478,7 @@ export default function AuditorInspectionsPage() {
                     </button>
                     <div className="flex space-x-2">
                       <button
-                        onClick={saveCurrentItem}
+                        onClick={() => saveCurrentItem()}
                         disabled={saving}
                         className="px-4 py-2 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
                       >
