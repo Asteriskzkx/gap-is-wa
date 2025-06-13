@@ -148,3 +148,4 @@ MIT License
 ---
 
 พัฒนาโดย [วุฒิกานต์ ชัยสาร](https://github.com/Asteriskzkx)
+        [อัครนันท์ โฆษิตโชติอนันต์](https://github.com/Nud-Akkaranant)
