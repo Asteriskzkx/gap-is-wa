@@ -46,9 +46,9 @@ POSTGRES_PORT=5433
 
 # เลือกใช้ DATABASE_URL ตามสภาพแวดล้อม
 # สำหรับพัฒนาบน localhost
-DATABASE_URL="postgresql://gapuser:gappassword@localhost:5433/gapdb?schema=public"
+DATABASE_URL="postgresql://gapuser:gappassword@localhost:5432/gapdb?schema=public"
 # หรือสำหรับ Docker Compose
-# DATABASE_URL="postgresql://gapuser:gappassword@postgres:5432/gapdb?schema=public"
+# DATABASE_URL="postgresql://gapuser:gappassword@postgres:5433/gapdb?schema=public"
 ```
 
 ### 4. เริ่มใช้งานด้วย Docker Compose
@@ -140,7 +140,7 @@ gap-is-wa/
 - [Next.js Documentation](https://nextjs.org/docs)
 - [Prisma Documentation](https://www.prisma.io/docs)
 - [Docker Documentation](https://docs.docker.com/)
-- [มาตรฐาน GAP สำหรับยางพารา](https://www.acfs.go.th/)
+- [มาตรฐานการปฏิบัติทางการเกษตรที่ดี (Good Agricultural Practices: GAP)](https://www.acfs.go.th/)
 
 ## 📝 License
 MIT License
