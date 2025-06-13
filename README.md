@@ -147,5 +147,5 @@ MIT License
 
 ---
 
-พัฒนาโดย [วุฒิกานต์ ชัยสาร](https://github.com/Asteriskzkx)
+พัฒนาโดย [วุฒิกานต์ ชัยสาร](https://github.com/Asteriskzkx) และ 
         [อัครนันท์ โฆษิตโชติอนันต์](https://github.com/Nud-Akkaranant)
