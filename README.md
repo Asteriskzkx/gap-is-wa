@@ -81,7 +81,7 @@ npx prisma studio
 ### การรัน Next.js เชื่อมต่อกับ Docker Database
 ```bash
 # ปรับ DATABASE_URL ใน .env เป็น
-# DATABASE_URL="postgresql://gapuser:gappassword@postgres:5432/gapdb?schema=public""
+# DATABASE_URL="postgresql://gapuser:gappassword@postgres:5433/gapdb?schema=public""
 
 npm run dev
 ```
