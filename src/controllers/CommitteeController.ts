@@ -113,6 +113,12 @@ export class CommitteeController extends BaseController<CommitteeModel> {
                     { status: 404 }
                 );
             }
+            if(committee.role !== 'COMMITTEE') {
+                return NextResponse.json(
+                    { message: 'Access denied' },
+                    { status: 403 }
+                );
+            }
 
             return NextResponse.json(committee.toJSON(), { status: 200 });
         } catch (error) {

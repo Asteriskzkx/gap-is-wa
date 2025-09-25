@@ -104,6 +104,12 @@ export class AdminController extends BaseController<AdminModel> {
                     { status: 404 }
                 );
             }
+            if(admin.role !== 'ADMIN') {
+                return NextResponse.json(
+                    { message: 'Access denied' },
+                    { status: 403 }
+                );
+            }
 
             return NextResponse.json(admin.toJSON(), { status: 200 });
         } catch (error) {
