@@ -305,17 +305,15 @@ export default function LoginPage() {
           </form>
 
           <div className="mt-8 text-center">
-            {selectedRole === "FARMER" && (
-              <p className="text-sm text-gray-600">
-                ยังไม่มีบัญชีผู้ใช้?{" "}
-                <Link
-                  href="/register"
-                  className="font-medium text-green-600 hover:text-green-500"
-                >
-                  สมัครสมาชิกใหม่
-                </Link>
-              </p>
-            )}
+            <p className={`text-sm text-gray-600 ${selectedRole === "FARMER" ? "visible" : "invisible"}`}>
+              ยังไม่มีบัญชีผู้ใช้?{" "}
+              <Link
+                href="/register"
+                className="font-medium text-green-600 hover:text-green-500"
+              >
+                สมัครสมาชิกใหม่
+              </Link>
+            </p>
             <p className="text-xs text-gray-500 mt-4">
               &copy; {new Date().getFullYear()} การยางแห่งประเทศไทย.
               สงวนลิขสิทธิ์.
