@@ -417,7 +417,7 @@ export default function FarmerApplicationsPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#EBFFF3]">
+    <div className="flex flex-col min-h-screen bg-secondary">
       {/* Mobile Overlay - only visible when sidebar is shown on mobile */}
       {isMobile && sidebarVisible && (
         <div

@@ -1054,7 +1054,7 @@ export default function AuditorScheduleInspectionPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#EBFFF3] w-full overflow-x-hidden">
+    <div className="flex flex-col min-h-screen bg-secondary w-full overflow-x-hidden">
       {/* Mobile Overlay */}
       {isMobile && sidebarVisible && (
         <div

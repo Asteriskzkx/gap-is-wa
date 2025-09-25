@@ -81,9 +81,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-b from-[#EBFFF3] to-white">
+    <div className="flex min-h-screen bg-gradient-to-b from-secondary to-white">
       {/* Left side - image (hidden on mobile) */}
-      <div className="hidden lg:flex lg:w-1/2 items-center justify-center bg-[#EBFFF3] relative">
+      <div className="hidden lg:flex lg:w-1/2 items-center justify-center bg-secondary relative">
         <div className="p-12 w-full">
           <Image
             src="/rubber-tapping.jpg"
