@@ -1,3 +1,4 @@
+export { default as TestIcon } from "./TestIcon";
 export { default as HomeIcon } from "./HomeIcon";
 export { default as PlusIcon } from "./PlusIcon";
 export { default as EditIcon } from "./EditIcon";
@@ -8,3 +9,6 @@ export { default as LandFrameIcon } from "./LandFrameIcon";
 export { default as FileIcon } from "./FileIcon";
 export { default as TextClipboardIcon } from "./TextClipboardIcon";
 export { default as MenuIcon } from "./MenuIcon";
+export { default as ChevronRightIcon } from "./ChevronRightIcon";
+export { default as DangerIcon } from "./DangerIcon";
+export { default as XIcon } from "./XIcon";

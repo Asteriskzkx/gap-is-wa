@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Footer from "@/components/layout/Footer";
-import { MenuIcon ,EditIcon, HomeIcon, PlusIcon, TextClipboardIcon, TrashIcon } from "@/components/icons";
+import { MenuIcon ,EditIcon, HomeIcon, PlusIcon, TextClipboardIcon, TrashIcon, ChevronRightIcon, DangerIcon, XIcon } from "@/components/icons";
 
 interface RubberFarm {
   rubberFarmId: number;
@@ -376,20 +376,7 @@ export default function FarmerDashboardPage() {
               }
             >
               {isMobile ? (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-gray-500"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
+                <XIcon className="h-6 w-6 text-gray-500" />
               ) : (
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -607,20 +594,7 @@ export default function FarmerDashboardPage() {
                       </p>
                       <div className="mt-4 flex items-center text-green-600 font-medium text-sm">
                         <span>เข้าสู่เมนู</span>
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-4 w-4 ml-1"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 5l7 7-7 7"
-                          />
-                        </svg>
+                        <ChevronRightIcon className="h-4 w-4 ml-1" />
                       </div>
                     </div>
                   </Link>
@@ -639,20 +613,7 @@ export default function FarmerDashboardPage() {
                 className="text-sm font-medium text-green-600 hover:text-green-700 flex items-center"
               >
                 ดูทั้งหมด
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4 ml-1"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
+                <ChevronRightIcon className="h-4 w-4 ml-1" />
               </Link>
             </div>
 
@@ -662,20 +623,7 @@ export default function FarmerDashboardPage() {
               </div>
             ) : applications.length === 0 ? (
               <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-4 flex items-start">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-yellow-500 mr-3 mt-0.5 flex-shrink-0"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                  />
-                </svg>
+                <DangerIcon className="h-6 w-6 text-yellow-500 mr-3 mt-0.5 flex-shrink-0"/>
                 <div>
                   <h3 className="text-base font-medium text-yellow-800">
                     ยังไม่มีการยื่นขอรับรอง
