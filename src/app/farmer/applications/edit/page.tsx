@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import RubberFarmEditForm from "@/components/RubberFarmEditForm";
-import Footer from "@/components/Footer";
+import Footer from "@/components/layout/Footer";
 
 export default function EditRubberFarmApplication() {
   const router = useRouter();

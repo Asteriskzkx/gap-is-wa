@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import RubberFarmRegistrationForm from "@/components/RubberFarmRegistrationForm";
-import Footer from "@/components/Footer";
+import Footer from "@/components/layout/Footer";
 
 export default function RubberFarmApplication() {
   const router = useRouter();
