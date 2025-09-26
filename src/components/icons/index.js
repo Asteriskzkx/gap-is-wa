@@ -12,3 +12,4 @@ export { default as MenuIcon } from "./MenuIcon";
 export { default as ChevronRightIcon } from "./ChevronRightIcon";
 export { default as DangerIcon } from "./DangerIcon";
 export { default as XIcon } from "./XIcon";
+export { default as ChevronBottom } from "./ChevronButtomIcon";

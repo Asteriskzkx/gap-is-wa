@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { ChevronBottom, MenuIcon } from "../icons";
 
 interface UserInfo {
   isLoading: boolean;
@@ -52,20 +53,7 @@ const Header: React.FC<HeaderProps> = ({
                   className="mr-2 p-1 rounded-md hover:bg-gray-100"
                   aria-label="Toggle sidebar"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-6 w-6 text-gray-500"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M4 6h16M4 12h16M4 18h16"
-                    />
-                  </svg>
+                  <MenuIcon className="h-6 w-6 text-gray-500" />
                 </button>
               )}
               <Image
@@ -97,22 +85,9 @@ const Header: React.FC<HeaderProps> = ({
                   <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-medium">
                     {!user.isLoading && user.firstName.charAt(0)}
                   </div>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className={`h-5 w-5 text-gray-400 transition-transform ${
+                  <ChevronBottom className={`h-5 w-5 text-gray-400 transition-transform ${
                       dropdownOpen ? "rotate-180" : ""
-                    }`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
+                    }`} />
                 </button>
 
                 {/* Dropdown menu */}
