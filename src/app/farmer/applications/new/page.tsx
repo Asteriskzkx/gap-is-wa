@@ -9,7 +9,7 @@ export default function RubberFarmApplication() {
 
 
   return (
-    <FarmerLayout selectedPath="/farmer/applications/new">
+    <FarmerLayout>
       <RubberFarmRegistrationForm />
     </FarmerLayout>
   );

@@ -1,19 +1,18 @@
 "use client";
 
-import React, { useState, useEffect, ReactNode } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Footer from "@/components/layout/Footer";
-import { MenuIcon, EditIcon, HomeIcon, PlusIcon, TextClipboardIcon, TrashIcon, XIcon } from "@/components/icons";
 
-interface FarmerLayoutProps {
-  children: ReactNode;
+interface CommitteeLayoutProps {
+  children: React.ReactNode;
 }
 
-export default function FarmerLayout({ children }: FarmerLayoutProps) {
+export default function CommitteeLayout({ children }: CommitteeLayoutProps) {
   const router = useRouter();
-  const [farmer, setFarmer] = useState({
+  const [committee, setCommittee] = useState({
     namePrefix: "",
     firstName: "",
     lastName: "",
@@ -30,65 +29,142 @@ export default function FarmerLayout({ children }: FarmerLayoutProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   // Get current path for navigation highlighting
   const [selectedPath, setSelectedPath] = useState<string>("");
-
+  
   // Navigation menu items
   const navItems = [
     {
       title: "หน้าหลัก",
-      href: "/farmer/dashboard",
-      icon: <HomeIcon className="h-6 w-6" />,
+      href: "/committee/dashboard",
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={1.5}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+          />
+        </svg>
+      ),
     },
     {
-      title: "ยื่นขอใบรับรองแหล่งผลิต",
-      href: "/farmer/applications/new",
-      icon: <PlusIcon className="h-6 w-6" />,
+      title: "พิจารณาผลการตรวจประเมิน",
+      href: "/committee/assessments",
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={1.5}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+          />
+        </svg>
+      ),
     },
     {
-      title: "ติดตามสถานะการรับรอง",
-      href: "/farmer/applications",
-      icon: <TextClipboardIcon className="h-6 w-6" />,
+      title: "ออกใบรับรองแหล่งผลิตจีเอพี",
+      href: "/committee/certifications/issue",
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={1.5}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+          />
+        </svg>
+      ),
     },
     {
-      title: "ขอแก้ไขข้อมูลใบรับรองแหล่งผลิต",
-      href: "/farmer/applications/edit",
-      icon: <EditIcon className="h-6 w-6" />,
+      title: "ยกเลิกใบรับรองแหล่งผลิตจีเอพี",
+      href: "/committee/certifications/revoke",
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={1.5}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
+          />
+        </svg>
+      ),
     },
     {
-      title: "ขอยกเลิกใบรับรองแหล่งผลิต",
-      href: "/farmer/applications/cancel",
-      icon: <TrashIcon className="h-6 w-6" />,
+      title: "รายงานสรุปการรับรอง",
+      href: "/committee/reports",
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={1.5}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
+        </svg>
+      ),
     },
   ];
 
+
+
   useEffect(() => {
+    // Fetch committee data from the API
      if (typeof window !== "undefined") {
       setSelectedPath(window.location.pathname);
     }
-    // Fetch farmer data from the farmers API
-    const fetchFarmerData = async () => {
+    const fetchCommitteeData = async () => {
       try {
         // Check if there's a token in localStorage
         const token = localStorage.getItem("token");
 
         if (token) {
-          // Make an API call to get farmer data
-          const response = await fetch("/api/v1/farmers/current", {
+          // Make an API call to get committee data
+          const response = await fetch("/api/v1/committees/current", {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           });
 
           if (response.ok) {
-            const farmerData = await response.json();
-            setFarmer({
-              namePrefix: farmerData.namePrefix || "",
-              firstName: farmerData.firstName || "",
-              lastName: farmerData.lastName || "",
+            const committeeData = await response.json();
+            setCommittee({
+              namePrefix: committeeData.namePrefix || "",
+              firstName: committeeData.firstName || "",
+              lastName: committeeData.lastName || "",
               isLoading: false,
             });
           } else {
-            console.error("Failed to fetch farmer data");
-            setFarmer({
+            console.error("Failed to fetch committee data");
+            setCommittee({
               namePrefix: "นาย",
               firstName: "ไม่ทราบชื่อ",
               lastName: "",
@@ -97,7 +173,7 @@ export default function FarmerLayout({ children }: FarmerLayoutProps) {
           }
         } else {
           console.error("No token found");
-          setFarmer({
+          setCommittee({
             namePrefix: "นาย",
             firstName: "ไม่ทราบชื่อ",
             lastName: "",
@@ -105,8 +181,8 @@ export default function FarmerLayout({ children }: FarmerLayoutProps) {
           });
         }
       } catch (error) {
-        console.error("Error fetching farmer data:", error);
-        setFarmer({
+        console.error("Error fetching committee data:", error);
+        setCommittee({
           namePrefix: "นาย",
           firstName: "ไม่ทราบชื่อ",
           lastName: "",
@@ -115,7 +191,7 @@ export default function FarmerLayout({ children }: FarmerLayoutProps) {
       }
     };
 
-    fetchFarmerData();
+    fetchCommitteeData();
 
     // Check if the screen is mobile size
     const checkMobile = () => {
@@ -172,6 +248,8 @@ export default function FarmerLayout({ children }: FarmerLayoutProps) {
     router.push("/");
   };
 
+
+
   return (
     <div className="flex flex-col min-h-screen bg-secondary">
       {/* Mobile Overlay - only visible when sidebar is shown on mobile */}
@@ -205,7 +283,20 @@ export default function FarmerLayout({ children }: FarmerLayoutProps) {
               }
             >
               {isMobile ? (
-                <XIcon className="h-6 w-6 text-gray-500" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6 text-gray-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
               ) : (
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -266,14 +357,14 @@ export default function FarmerLayout({ children }: FarmerLayoutProps) {
             <div className="p-4 border-t">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-medium">
-                    {farmer.firstName.charAt(0)}
+                  <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-medium">
+                    {committee.firstName.charAt(0)}
                   </div>
                 </div>
                 <div className="ml-3">
                   <p className="text-sm font-medium text-gray-700">
-                    {farmer.namePrefix}
-                    {farmer.firstName} {farmer.lastName}
+                    {committee.namePrefix}
+                    {committee.firstName} {committee.lastName}
                   </p>
                   <button
                     onClick={handleLogout}
@@ -288,7 +379,7 @@ export default function FarmerLayout({ children }: FarmerLayoutProps) {
         </div>
       )}
 
-      {/* Main Content - ใช้ flex และ flex-col เพื่อให้ footer อยู่ด้านล่างเสมอ */}
+      {/* Main Content */}
       <div
         className={`flex-1 flex flex-col ${
           sidebarVisible && !isMobile
@@ -309,7 +400,20 @@ export default function FarmerLayout({ children }: FarmerLayoutProps) {
                   className="mr-2 p-1 rounded-md hover:bg-gray-100"
                   aria-label="Toggle sidebar"
                 >
-                  <MenuIcon className="h-6 w-6 text-gray-500" />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6 text-gray-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M4 6h16M4 12h16M4 18h16"
+                    />
+                  </svg>
                 </button>
               )}
               <Image
@@ -329,17 +433,17 @@ export default function FarmerLayout({ children }: FarmerLayoutProps) {
                 >
                   {/* ชื่อผู้ใช้ */}
                   <span className="hidden sm:block text-sm font-medium text-gray-700">
-                    {farmer.isLoading ? (
+                    {committee.isLoading ? (
                       <div className="animate-pulse h-5 w-24 bg-gray-200 rounded"></div>
                     ) : (
                       <>
-                        {farmer.namePrefix}
-                        {farmer.firstName} {farmer.lastName}
+                        {committee.namePrefix}
+                        {committee.firstName} {committee.lastName}
                       </>
                     )}
                   </span>
-                  <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-medium">
-                    {!farmer.isLoading && farmer.firstName.charAt(0)}
+                  <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-medium">
+                    {!committee.isLoading && committee.firstName.charAt(0)}
                   </div>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -363,13 +467,13 @@ export default function FarmerLayout({ children }: FarmerLayoutProps) {
                 {dropdownOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 ring-1 ring-black ring-opacity-5">
                     <Link
-                      href="/farmer/profile"
+                      href="/committee/profile"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     >
                       ข้อมูลโปรไฟล์
                     </Link>
                     <Link
-                      href="/farmer/settings"
+                      href="/committee/settings"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     >
                       ตั้งค่า
@@ -387,14 +491,14 @@ export default function FarmerLayout({ children }: FarmerLayoutProps) {
           </div>
         </header>
 
-        {/* Main Content Area - ใช้ flex-grow เพื่อขยายพื้นที่ให้เต็ม */}
+        {/* Main Content Area */}
         <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {children}
         </main>
 
-        {/* Footer - เพิ่ม mt-auto เพื่อให้อยู่ด้านล่างสุดเสมอ */}
+        {/* Footer */}
         <Footer />
       </div>
     </div>
   );
-}
+}   

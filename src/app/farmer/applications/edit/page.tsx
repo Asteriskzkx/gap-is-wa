@@ -6,7 +6,7 @@ import FarmerLayout from "@/components/layout/FarmerLayout";
 
 export default function EditRubberFarmApplication() {
   return (
-    <FarmerLayout selectedPath="/farmer/applications/edit">
+    <FarmerLayout>
       <RubberFarmEditForm />
     </FarmerLayout>
   );

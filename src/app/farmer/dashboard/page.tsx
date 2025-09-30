@@ -242,7 +242,7 @@ export default function FarmerDashboardPage() {
   };
 
   return (
-    <FarmerLayout selectedPath="/farmer/dashboard">
+    <FarmerLayout>
       {/* Page Title */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">หน้าหลัก</h1>
