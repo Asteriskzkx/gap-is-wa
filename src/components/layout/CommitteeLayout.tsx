@@ -208,8 +208,8 @@ export default function CommitteeLayout({ children }: CommitteeLayoutProps) {
 
   // Handle logout
   const handleLogout = async () => {
-    // ใช้ NextAuth signOut แทน localStorage
-    await signOut({ callbackUrl: "/" });
+    // ใช้ NextAuth signOut แทน localStorage (ทำลาย session และ redirect ไปหน้า login)
+    await signOut({ callbackUrl: "/", redirect: true });
   };
 
   return (

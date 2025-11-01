@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { signIn } from "next-auth/react";
+import { signIn, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -33,8 +33,25 @@ export default function LoginPage() {
       }
 
       if (result?.ok) {
-        // Redirect based on role (NextAuth จะ redirect อัตโนมัติตาม middleware)
-        switch (selectedRole) {
+        // ดึง session มาตรวจสอบ role
+        const response = await fetch("/api/auth/session");
+        const session = await response.json();
+
+        if (!session || !session.user) {
+          throw new Error("ไม่สามารถดึงข้อมูล session ได้");
+        }
+
+        // ตรวจสอบว่า role ที่เลือกตรงกับ role ที่แท้จริงหรือไม่
+        if (session.user.role !== selectedRole) {
+          // ถ้าไม่ตรง ให้ออกจากระบบและแจ้งเตือน
+          await signOut({ redirect: false }); // eslint-disable-line
+          throw new Error(
+            `คุณไม่มีสิทธิ์เข้าใช้งานในฐานะ${getRoleLabel(selectedRole)}`
+          );
+        }
+
+        // Redirect based on actual role from session
+        switch (session.user.role) {
           case "FARMER":
             router.push("/farmer/dashboard");
             break;
@@ -56,6 +73,21 @@ export default function LoginPage() {
       setError(err.message ?? "เกิดข้อผิดพลาดในการเข้าสู่ระบบ");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case "FARMER":
+        return "เกษตรกร";
+      case "AUDITOR":
+        return "ผู้ตรวจประเมิน";
+      case "COMMITTEE":
+        return "คณะกรรมการ";
+      case "ADMIN":
+        return "ผู้ดูแลระบบ";
+      default:
+        return role;
     }
   };
 

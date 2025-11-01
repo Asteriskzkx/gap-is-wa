@@ -1,24 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auditorService } from "@/utils/dependencyInjections";
+import { checkAuthorization } from "@/lib/session";
 
 export async function GET(req: NextRequest) {
   try {
     // ตรวจสอบสิทธิ์ว่าเป็น Auditor จริงหรือไม่
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    const authResult = await checkAuthorization(req, ["AUDITOR"]);
+    if (!authResult.authorized) {
       return NextResponse.json(
-        { message: "Authorization required" },
-        { status: 401 }
-      );
-    }
-
-    const token = authHeader.split(" ")[1];
-    const decodedToken = auditorService.verifyToken(token);
-
-    if (!decodedToken || decodedToken.role !== "AUDITOR") {
-      return NextResponse.json(
-        { message: "Access denied. Only auditors can access this resource." },
-        { status: 403 }
+        { message: authResult.error || "Unauthorized" },
+        { status: authResult.session ? 403 : 401 }
       );
     }
 

@@ -155,7 +155,7 @@ export default function FarmerLayout({ children }: FarmerLayoutProps) {
 
   // Handle logout
   const handleLogout = async () => {
-    // ใช้ NextAuth signOut แทน localStorage
+    // ใช้ NextAuth signOut แทน localStorage (ทำลาย session และ redirect ไปหน้า login)
     await signOut({ callbackUrl: "/", redirect: true });
   };
 

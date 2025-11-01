@@ -59,21 +59,28 @@ export const authOptions: NextAuthOptions = {
   ],
 
   callbacks: {
-    // JWT Callback - เก็บข้อมูลใน token
-    async jwt({ token, user }) {
+    // JWT Callback - เก็บข้อมูลใน token และต่ออายุ session
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id;
         token.role = user.role;
         token.roleData = user.roleData;
       }
+
+      // ต่ออายุ token เมื่อมีการใช้งาน
+      if (trigger === "update") {
+        // อัพเดท iat (issued at) เพื่อต่ออายุ session
+        token.iat = Math.floor(Date.now() / 1000);
+      }
+
       return token;
     },
 
     // Session Callback - ส่งข้อมูลไปที่ client
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id as string;
-        session.user.role = token.role as string;
+        session.user.id = token.id;
+        session.user.role = token.role;
         session.user.roleData = token.roleData;
       }
       return session;
@@ -87,7 +94,8 @@ export const authOptions: NextAuthOptions = {
 
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 60 * 60, // 1 ชั่วโมง (3600 วินาที)
+    updateAge: 15 * 60, // ต่ออายุทุก 15 นาที เมื่อมีการใช้งาน (900 วินาที)
   },
 
   secret: process.env.NEXTAUTH_SECRET,
