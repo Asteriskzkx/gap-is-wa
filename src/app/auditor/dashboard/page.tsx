@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 
 // Icons
 import HomeIcon from "@/components/icons/HomeIcon";
@@ -41,6 +42,7 @@ interface InspectionSummary {
 }
 
 export default function AuditorDashboardPage() {
+  const { data: session, status } = useSession();
   const [auditor, setAuditor] = useState({
     namePrefix: "",
     firstName: "",
@@ -98,260 +100,189 @@ export default function AuditorDashboardPage() {
     },
   ];
 
-  useEffect(() => {
-    // Fetch auditor data from the API
-    const fetchAuditorData = async () => {
-      try {
-        // Check if there's a token in localStorage
-        const token = localStorage.getItem("token");
+  const fetchInspectionData = async (auditorId: number) => {
+    if (!auditorId) return;
 
-        if (token) {
-          // Make an API call to get auditor data
-          const response = await fetch("/api/v1/auditors/current", {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
+    try {
+      setLoading(true);
 
-          if (response.ok) {
-            const auditorData = await response.json();
-            setAuditor({
-              namePrefix: auditorData.namePrefix || "",
-              firstName: auditorData.firstName || "",
-              lastName: auditorData.lastName || "",
-              isLoading: false,
-              id: auditorData.auditorId || 0,
-            });
+      // 1. ดึงรายการตรวจประเมินทั้งหมด
+      const inspectionsResponse = await fetch("/api/v1/inspections");
 
-            fetchInspectionData(auditorData.auditorId);
-
-            fetchAvailableFarms(auditorData.auditorId);
-          } else {
-            console.error("Failed to fetch auditor data");
-            setAuditor({
-              namePrefix: "นาย",
-              firstName: "ไม่ทราบชื่อ",
-              lastName: "",
-              isLoading: false,
-              id: 0,
-            });
-          }
-        } else {
-          console.error("No token found");
-          setAuditor({
-            namePrefix: "นาย",
-            firstName: "ไม่ทราบชื่อ",
-            lastName: "",
-            isLoading: false,
-            id: 0,
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching auditor data:", error);
-        setAuditor({
-          namePrefix: "นาย",
-          firstName: "ไม่ทราบชื่อ",
-          lastName: "",
-          isLoading: false,
-          id: 0,
-        });
+      if (!inspectionsResponse.ok) {
+        throw new Error("ไม่สามารถดึงรายการตรวจประเมินได้");
       }
-    };
 
-    const fetchInspectionData = async (auditorId: number) => {
-      if (!auditorId) return;
+      const allInspections = await inspectionsResponse.json();
 
-      try {
-        setLoading(true);
-        const token = localStorage.getItem("token");
+      // 2. ดึงรายการ AuditorInspection ที่เกี่ยวข้องกับ Auditor คนนี้
+      const auditorInspectionsResponse = await fetch(
+        `/api/v1/auditor-inspections?auditorId=${auditorId}`
+      );
 
-        // 1. ดึงรายการตรวจประเมินทั้งหมด
-        const inspectionsResponse = await fetch("/api/v1/inspections", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!inspectionsResponse.ok) {
-          throw new Error("ไม่สามารถดึงรายการตรวจประเมินได้");
-        }
-
-        const allInspections = await inspectionsResponse.json();
-
-        // 2. ดึงรายการ AuditorInspection ที่เกี่ยวข้องกับ Auditor คนนี้
-        const auditorInspectionsResponse = await fetch(
-          `/api/v1/auditor-inspections?auditorId=${auditorId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (!auditorInspectionsResponse.ok) {
-          throw new Error("ไม่สามารถดึงรายการตรวจประเมินที่มอบหมายได้");
-        }
-
-        const auditorInspections = await auditorInspectionsResponse.json();
-
-        // ดึงเฉพาะ inspectionId ที่มอบหมายให้เป็นผู้ตรวจประเมินในทีม
-        const teamInspectionIds = auditorInspections.map(
-          (ai: { inspectionId: number }) => ai.inspectionId
-        );
-
-        // 3. กรองรายการตรวจประเมินที่เกี่ยวข้องกับ Auditor คนนี้
-        // ทั้งกรณีเป็นหัวหน้าผู้ตรวจ (auditorChiefId) และเป็นผู้ตรวจในทีม (AuditorInspection)
-        const relevantInspections = allInspections.filter(
-          (inspection: Inspection) =>
-            inspection.auditorChiefId === auditorId || // เป็นหัวหน้าผู้ตรวจ
-            teamInspectionIds.includes(inspection.inspectionId) // เป็นผู้ตรวจในทีม
-        );
-
-        // เรียกใช้ฟังก์ชันดึงข้อมูลเพิ่มเติมและประมวลผล
-        await processInspectionData(relevantInspections);
-      } catch (error) {
-        console.error("Error fetching inspection data:", error);
-      } finally {
-        setLoading(false);
+      if (!auditorInspectionsResponse.ok) {
+        throw new Error("ไม่สามารถดึงรายการตรวจประเมินที่มอบหมายได้");
       }
-    };
 
-    const processInspectionData = async (inspections: Inspection[]) => {
-      // 1. ดึงข้อมูลเพิ่มเติมและทำให้ข้อมูลสมบูรณ์
-      const enhancedInspections = await Promise.all(
-        inspections.map(async (inspection) => {
-          if (inspection.rubberFarmId && !inspection.rubberFarm) {
-            try {
-              const token = localStorage.getItem("token");
-              const farmResponse = await fetch(
-                `/api/v1/rubber-farms/${inspection.rubberFarmId}`,
-                {
-                  headers: {
-                    Authorization: `Bearer ${token}`,
-                  },
+      const auditorInspections = await auditorInspectionsResponse.json();
+
+      // ดึงเฉพาะ inspectionId ที่มอบหมายให้เป็นผู้ตรวจประเมินในทีม
+      const teamInspectionIds = auditorInspections.map(
+        (ai: { inspectionId: number }) => ai.inspectionId
+      );
+
+      // 3. กรองรายการตรวจประเมินที่เกี่ยวข้องกับ Auditor คนนี้
+      // ทั้งกรณีเป็นหัวหน้าผู้ตรวจ (auditorChiefId) และเป็นผู้ตรวจในทีม (AuditorInspection)
+      const relevantInspections = allInspections.filter(
+        (inspection: Inspection) =>
+          inspection.auditorChiefId === auditorId || // เป็นหัวหน้าผู้ตรวจ
+          teamInspectionIds.includes(inspection.inspectionId) // เป็นผู้ตรวจในทีม
+      );
+
+      // เรียกใช้ฟังก์ชันดึงข้อมูลเพิ่มเติมและประมวลผล
+      await processInspectionData(relevantInspections);
+    } catch (error) {
+      console.error("Error fetching inspection data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const processInspectionData = async (inspections: Inspection[]) => {
+    // 1. ดึงข้อมูลเพิ่มเติมและทำให้ข้อมูลสมบูรณ์
+    const enhancedInspections = await Promise.all(
+      inspections.map(async (inspection) => {
+        if (inspection.rubberFarmId && !inspection.rubberFarm) {
+          try {
+            const farmResponse = await fetch(
+              `/api/v1/rubber-farms/${inspection.rubberFarmId}`
+            );
+
+            if (farmResponse.ok) {
+              const farmData = await farmResponse.json();
+
+              // ถ้ามี farmerId แต่ไม่มีข้อมูล farmer ให้ดึงข้อมูล farmer
+              if (farmData.farmerId && !farmData.farmer) {
+                const farmerResponse = await fetch(
+                  `/api/v1/farmers/${farmData.farmerId}`
+                );
+
+                if (farmerResponse.ok) {
+                  farmData.farmer = await farmerResponse.json();
                 }
-              );
-
-              if (farmResponse.ok) {
-                const farmData = await farmResponse.json();
-
-                // ถ้ามี farmerId แต่ไม่มีข้อมูล farmer ให้ดึงข้อมูล farmer
-                if (farmData.farmerId && !farmData.farmer) {
-                  const farmerResponse = await fetch(
-                    `/api/v1/farmers/${farmData.farmerId}`,
-                    {
-                      headers: {
-                        Authorization: `Bearer ${token}`,
-                      },
-                    }
-                  );
-
-                  if (farmerResponse.ok) {
-                    farmData.farmer = await farmerResponse.json();
-                  }
-                }
-
-                inspection.rubberFarm = farmData;
               }
-            } catch (error) {
-              console.error("Error fetching farm data:", error);
+
+              inspection.rubberFarm = farmData;
             }
-          }
-          return inspection;
-        })
-      );
-
-      setInspections(enhancedInspections);
-
-      // 2. สร้างสรุปสถานะงาน
-      const summary = {
-        pendingSchedule: 0, // รอการนัดหมาย
-        pendingInspection: 0, // รอการตรวจประเมิน
-        pendingResult: 0, // รอสรุปผล
-        completed: 0, // ประเมินเสร็จสิ้น
-        passed: 0, // ผ่าน
-        failed: 0, // ไม่ผ่าน
-      };
-
-      enhancedInspections.forEach((inspection) => {
-        if (inspection.inspectionStatus === "รอการนัดหมาย") {
-          summary.pendingSchedule++;
-        } else if (inspection.inspectionStatus === "รอการตรวจประเมิน") {
-          summary.pendingInspection++;
-        } else if (
-          inspection.inspectionStatus === "ตรวจประเมินแล้ว" &&
-          inspection.inspectionResult === "รอผลการตรวจประเมิน"
-        ) {
-          summary.pendingResult++;
-        } else if (
-          inspection.inspectionStatus === "ตรวจประเมินแล้ว" &&
-          ["ผ่าน", "ไม่ผ่าน"].includes(inspection.inspectionResult)
-        ) {
-          summary.completed++;
-          if (inspection.inspectionResult === "ผ่าน") {
-            summary.passed++;
-          } else if (inspection.inspectionResult === "ไม่ผ่าน") {
-            summary.failed++;
+          } catch (error) {
+            console.error("Error fetching farm data:", error);
           }
         }
-      });
+        return inspection;
+      })
+    );
 
-      setInspectionSummary((prev) => ({
-        ...summary,
-        pendingSchedule: summary.pendingSchedule + availableFarms,
-      }));
+    setInspections(enhancedInspections);
 
-      // 3. จัดเรียงการตรวจประเมินล่าสุด (เรียงตามวันที่จากมากไปน้อย)
-      const sorted = [...enhancedInspections].sort(
-        (a, b) =>
-          new Date(b.inspectionDateAndTime).getTime() -
-          new Date(a.inspectionDateAndTime).getTime()
-      );
-
-      // เลือก 3 รายการล่าสุดที่มีสถานะ "ตรวจประเมินแล้ว"
-      const recent = sorted
-        .filter((insp) => insp.inspectionStatus === "ตรวจประเมินแล้ว")
-        .slice(0, 3);
-
-      setRecentInspections(recent);
+    // 2. สร้างสรุปสถานะงาน
+    const summary = {
+      pendingSchedule: 0, // รอการนัดหมาย
+      pendingInspection: 0, // รอการตรวจประเมิน
+      pendingResult: 0, // รอสรุปผล
+      completed: 0, // ประเมินเสร็จสิ้น
+      passed: 0, // ผ่าน
+      failed: 0, // ไม่ผ่าน
     };
 
-    const fetchAvailableFarms = async (auditorId: number) => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await fetch("/api/v1/auditors/available-farms", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+    enhancedInspections.forEach((inspection) => {
+      if (inspection.inspectionStatus === "รอการนัดหมาย") {
+        summary.pendingSchedule++;
+      } else if (inspection.inspectionStatus === "รอการตรวจประเมิน") {
+        summary.pendingInspection++;
+      } else if (
+        inspection.inspectionStatus === "ตรวจประเมินแล้ว" &&
+        inspection.inspectionResult === "รอผลการตรวจประเมิน"
+      ) {
+        summary.pendingResult++;
+      } else if (
+        inspection.inspectionStatus === "ตรวจประเมินแล้ว" &&
+        ["ผ่าน", "ไม่ผ่าน"].includes(inspection.inspectionResult)
+      ) {
+        summary.completed++;
+        if (inspection.inspectionResult === "ผ่าน") {
+          summary.passed++;
+        } else if (inspection.inspectionResult === "ไม่ผ่าน") {
+          summary.failed++;
+        }
+      }
+    });
+
+    setInspectionSummary((prev) => ({
+      ...summary,
+      pendingSchedule: summary.pendingSchedule + availableFarms,
+    }));
+
+    // 3. จัดเรียงการตรวจประเมินล่าสุด (เรียงตามวันที่จากมากไปน้อย)
+    const sorted = [...enhancedInspections].sort(
+      (a, b) =>
+        new Date(b.inspectionDateAndTime).getTime() -
+        new Date(a.inspectionDateAndTime).getTime()
+    );
+
+    // เลือก 3 รายการล่าสุดที่มีสถานะ "ตรวจประเมินแล้ว"
+    const recent = sorted
+      .filter((insp) => insp.inspectionStatus === "ตรวจประเมินแล้ว")
+      .slice(0, 3);
+
+    setRecentInspections(recent);
+  };
+
+  const fetchAvailableFarms = async (auditorId: number) => {
+    try {
+      const response = await fetch("/api/v1/auditors/available-farms");
+
+      if (response.ok) {
+        const result = await response.json();
+        // จัดการกับ response ที่อาจมีรูปแบบแตกต่างกัน
+        const availableFarmsData = Array.isArray(result.data)
+          ? result.data
+          : Array.isArray(result)
+          ? result
+          : [];
+
+        setAvailableFarms(availableFarmsData.length);
+
+        // อัปเดตค่า summary โดยเพิ่มจำนวนสวนยางที่รอนัดหมาย
+        setInspectionSummary((prev) => ({
+          ...prev,
+          pendingSchedule: prev.pendingSchedule + availableFarmsData.length,
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching available farms:", error);
+    }
+  };
+
+  useEffect(() => {
+    // ดึงข้อมูลจาก NextAuth session
+    if (status === "authenticated" && session?.user) {
+      const auditorId = session.user.roleData?.auditorId;
+      if (auditorId) {
+        setAuditor({
+          namePrefix: session.user.roleData?.namePrefix || "",
+          firstName: session.user.roleData?.firstName || "",
+          lastName: session.user.roleData?.lastName || "",
+          isLoading: false,
+          id: auditorId,
         });
 
-        if (response.ok) {
-          const result = await response.json();
-          // จัดการกับ response ที่อาจมีรูปแบบแตกต่างกัน
-          const availableFarmsData = Array.isArray(result.data)
-            ? result.data
-            : Array.isArray(result)
-            ? result
-            : [];
-
-          setAvailableFarms(availableFarmsData.length);
-
-          // อัปเดตค่า summary โดยเพิ่มจำนวนสวนยางที่รอนัดหมาย
-          setInspectionSummary((prev) => ({
-            ...prev,
-            pendingSchedule: prev.pendingSchedule + availableFarmsData.length,
-          }));
-        }
-      } catch (error) {
-        console.error("Error fetching available farms:", error);
+        fetchInspectionData(auditorId);
+        fetchAvailableFarms(auditorId);
       }
-    };
-
-    fetchAuditorData();
-
-    // no-op layout state removed
-    return () => {};
-  }, []);
+    } else if (status === "loading") {
+      setAuditor((prev) => ({ ...prev, isLoading: true }));
+    }
+  }, [status, session]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const LoadingIndicator = () => (
     <div className="animate-pulse space-y-4">
@@ -610,7 +541,9 @@ export default function AuditorDashboardPage() {
                   <h3 className="text-base font-medium text-green-800">
                     {inspectionSummary.completed} รายการ
                   </h3>
-                  <p className="text-sm text-green-700 mt-1">ประเมินเสร็จสิ้น</p>
+                  <p className="text-sm text-green-700 mt-1">
+                    ประเมินเสร็จสิ้น
+                  </p>
                 </div>
               </div>
               <div className="mt-2 pt-2 border-t border-green-200">
@@ -686,16 +619,14 @@ export default function AuditorDashboardPage() {
                       </div>
                       <span
                         className={`px-2 py-1 text-xs leading-5 font-semibold rounded-full ${
-                          inspection.inspectionResult ===
-                          "รอผลการตรวจประเมิน"
+                          inspection.inspectionResult === "รอผลการตรวจประเมิน"
                             ? "bg-yellow-100 text-yellow-800"
                             : inspection.inspectionResult === "ผ่าน"
                             ? "bg-green-100 text-green-800"
                             : "bg-red-100 text-red-800"
                         }`}
                       >
-                        {inspection.inspectionResult ===
-                        "รอผลการตรวจประเมิน"
+                        {inspection.inspectionResult === "รอผลการตรวจประเมิน"
                           ? "รอสรุปผล"
                           : inspection.inspectionResult}
                       </span>
@@ -713,8 +644,7 @@ export default function AuditorDashboardPage() {
                         href={`/auditor/inspection-summary/${inspection.inspectionId}`}
                         className="text-sm text-indigo-600 hover:text-indigo-900 flex items-center"
                       >
-                        {inspection.inspectionResult ===
-                        "รอผลการตรวจประเมิน"
+                        {inspection.inspectionResult === "รอผลการตรวจประเมิน"
                           ? "สรุปผล"
                           : "ดูรายละเอียด"}
                         <svg

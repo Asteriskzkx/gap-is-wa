@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { BaseController } from "./BaseController";
 import { AuditorModel } from "../models/AuditorModel";
 import { AuditorService } from "../services/AuditorService";
-import { requireValidId, isValidId } from "../utils/ParamUtils";
+import { requireValidId } from "../utils/ParamUtils";
+import { checkAuthorization } from "@/lib/session";
 export class AuditorController extends BaseController<AuditorModel> {
   private auditorService: AuditorService;
 
@@ -84,44 +85,27 @@ export class AuditorController extends BaseController<AuditorModel> {
 
   async getCurrentAuditor(req: NextRequest): Promise<NextResponse> {
     try {
-      // Extract the authorization token from the request header
-      const authHeader = req.headers.get("Authorization");
-      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      // ใช้ NextAuth session แทน JWT token
+      const { authorized, session, error } = await checkAuthorization(req, [
+        "AUDITOR",
+      ]);
+
+      if (!authorized || !session) {
         return NextResponse.json(
-          { message: "Authorization token is required" },
+          { message: error || "Unauthorized" },
           { status: 401 }
         );
       }
 
-      // Get the token part after 'Bearer '
-      const token = authHeader.split(" ")[1];
-      if (!token) {
-        return NextResponse.json(
-          { message: "Invalid authorization token" },
-          { status: 401 }
-        );
-      }
+      // ดึงข้อมูล auditor จาก session
+      const auditorData = session.user.roleData;
 
-      // ใช้ getAuditorByToken เพื่อดึงข้อมูลผู้ตรวจสอบจาก token
-      const auditor = await this.auditorService.getAuditorByToken(token);
-      
-      if (!auditor) {
+      if (!auditorData) {
         return NextResponse.json(
-          { message: "Invalid token or auditor not found" },
-          { status: 401 }
+          { message: "ไม่พบข้อมูลผู้ตรวจประเมินในระบบ" },
+          { status: 404 }
         );
       }
-      if (auditor.role !== "AUDITOR") {
-        return NextResponse.json(
-          { message: "Access denied" },
-          { status: 403 }
-        );
-      }
-
-      // Return the auditor data without sensitive information
-      const auditorData = auditor.toJSON();
-      delete auditorData.password; // Ensure password is not included
-      delete auditorData.hashedPassword; // Ensure hashed password is not included
 
       return NextResponse.json(auditorData, { status: 200 });
     } catch (error) {
@@ -198,22 +182,15 @@ export class AuditorController extends BaseController<AuditorModel> {
    */
   async getAvailableFarms(req: NextRequest): Promise<NextResponse> {
     try {
-      // ตรวจสอบ authorization
-      const authHeader = req.headers.get("Authorization");
-      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      // ตรวจสอบ authorization ด้วย NextAuth
+      const { authorized, session, error } = await checkAuthorization(req, [
+        "AUDITOR",
+      ]);
+
+      if (!authorized || !session) {
         return NextResponse.json(
-          { message: "Authorization token is required" },
+          { message: error || "Authorization required" },
           { status: 401 }
-        );
-      }
-
-      const token = authHeader.split(" ")[1];
-      const decodedToken = this.auditorService.verifyToken(token);
-
-      if (!decodedToken || decodedToken.role !== "AUDITOR") {
-        return NextResponse.json(
-          { message: "Invalid token or insufficient permissions" },
-          { status: 403 }
         );
       }
 
@@ -242,22 +219,15 @@ export class AuditorController extends BaseController<AuditorModel> {
     { params }: { params: { farmId: string } }
   ): Promise<NextResponse> {
     try {
-      // ตรวจสอบ authorization
-      const authHeader = req.headers.get("Authorization");
-      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      // ตรวจสอบ authorization ด้วย NextAuth
+      const { authorized, session, error } = await checkAuthorization(req, [
+        "AUDITOR",
+      ]);
+
+      if (!authorized || !session) {
         return NextResponse.json(
-          { message: "Authorization token is required" },
+          { message: error || "Authorization required" },
           { status: 401 }
-        );
-      }
-
-      const token = authHeader.split(" ")[1];
-      const decodedToken = this.auditorService.verifyToken(token);
-
-      if (!decodedToken || decodedToken.role !== "AUDITOR") {
-        return NextResponse.json(
-          { message: "Invalid token or insufficient permissions" },
-          { status: 403 }
         );
       }
 

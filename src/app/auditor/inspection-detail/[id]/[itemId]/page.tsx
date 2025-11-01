@@ -2,6 +2,7 @@
 
 import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { toast } from "react-hot-toast";
 import { FaCheck, FaTimes, FaArrowLeft } from "react-icons/fa";
 import AuditorLayout from "@/components/layout/AuditorLayout";
@@ -60,6 +61,7 @@ interface Requirement {
 export default function AuditorInspectionDetailPage() {
   const router = useRouter();
   const params = useParams();
+  const { data: session, status } = useSession();
   const [inspectionId, setInspectionId] = useState<string | null>(null);
   const [itemId, setItemId] = useState<string | null>(null);
   const [inspection, setInspection] = useState<Inspection | null>(null);
@@ -69,27 +71,28 @@ export default function AuditorInspectionDetailPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/");
+      return;
+    }
+
+    if (status !== "authenticated") return;
+
     if (params && params.id && params.itemId) {
       setInspectionId(params.id as string);
       setItemId(params.itemId as string);
 
       fetchInspectionData(params.id as string, params.itemId as string);
     }
-  }, [params]);
+  }, [params, status, router]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchInspectionData = async (inspectionId: string, itemId: string) => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
 
       // Fetch inspection data
       const inspectionResponse = await fetch(
-        `/api/v1/inspections/${inspectionId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        `/api/v1/inspections/${inspectionId}`
       );
 
       if (!inspectionResponse.ok) {
@@ -101,17 +104,15 @@ export default function AuditorInspectionDetailPage() {
       // Ensure inspectionType exists
       if (
         inspectionData.inspectionTypeId &&
-        (!inspectionData.inspectionType || !inspectionData.inspectionType.typeName)
+        (!inspectionData.inspectionType ||
+          !inspectionData.inspectionType.typeName)
       ) {
-        const typesResponse = await fetch(`/api/v1/inspections/types`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const typesResponse = await fetch(`/api/v1/inspections/types`);
         if (typesResponse.ok) {
           const typesData = await typesResponse.json();
           const matchingType = typesData.find(
-            (type: any) => type.inspectionTypeId === inspectionData.inspectionTypeId
+            (type: any) =>
+              type.inspectionTypeId === inspectionData.inspectionTypeId
           );
           if (matchingType) {
             inspectionData.inspectionType = { typeName: matchingType.typeName };
@@ -124,47 +125,36 @@ export default function AuditorInspectionDetailPage() {
       // Fetch farm details
       if (inspectionData.rubberFarmId) {
         const farmResponse = await fetch(
-          `/api/v1/rubber-farms/${inspectionData.rubberFarmId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+          `/api/v1/rubber-farms/${inspectionData.rubberFarmId}`
         );
         if (farmResponse.ok) {
           const farmData = await farmResponse.json();
           if (farmData && !farmData.farmer && farmData.farmerId) {
             const farmerResponse = await fetch(
-              `/api/v1/farmers/${farmData.farmerId}`,
-              {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-              }
+              `/api/v1/farmers/${farmData.farmerId}`
             );
             if (farmerResponse.ok) {
               const farmerData = await farmerResponse.json();
               farmData.farmer = farmerData;
             }
           }
-          setInspection((prev) => (prev ? { ...prev, rubberFarm: farmData } : prev));
+          setInspection((prev) =>
+            prev ? { ...prev, rubberFarm: farmData } : prev
+          );
         }
       }
 
       // Fetch items and select current item
       const itemsResponse = await fetch(
-        `/api/v1/inspection-items?inspectionId=${inspectionId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        `/api/v1/inspection-items?inspectionId=${inspectionId}`
       );
       if (!itemsResponse.ok) {
         throw new Error("ไม่สามารถดึงข้อมูลรายการตรวจประเมินได้");
       }
       const itemsData = await itemsResponse.json();
-      const selectedItem = itemsData.find((item: any) => item.inspectionItemId.toString() === itemId);
+      const selectedItem = itemsData.find(
+        (item: any) => item.inspectionItemId.toString() === itemId
+      );
       if (!selectedItem) {
         throw new Error("ไม่พบรายการตรวจที่ต้องการ");
       }
@@ -186,7 +176,9 @@ export default function AuditorInspectionDetailPage() {
       case "น้ำ":
         return (
           <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-            <h3 className="text-md font-semibold text-gray-800 mb-3">ข้อมูลเพิ่มเติม</h3>
+            <h3 className="text-md font-semibold text-gray-800 mb-3">
+              ข้อมูลเพิ่มเติม
+            </h3>
             <div className="space-y-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -210,9 +202,13 @@ export default function AuditorInspectionDetailPage() {
       case "พื้นที่ปลูก":
         return (
           <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-            <h3 className="text-md font-semibold text-gray-800 mb-3">ข้อมูลเพิ่มเติม</h3>
+            <h3 className="text-md font-semibold text-gray-800 mb-3">
+              ข้อมูลเพิ่มเติม
+            </h3>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">สภาพพื้นที่ปลูก</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                สภาพพื้นที่ปลูก
+              </label>
               <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-700">
                 {otherConditions.topography === "อื่นๆ"
                   ? `อื่นๆ: ${otherConditions.topographyOther || ""}`
@@ -224,7 +220,9 @@ export default function AuditorInspectionDetailPage() {
       case "วัตถุอันตรายทางการเกษตร":
         return (
           <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-            <h3 className="text-md font-semibold text-gray-800 mb-3">ข้อมูลเพิ่มเติม</h3>
+            <h3 className="text-md font-semibold text-gray-800 mb-3">
+              ข้อมูลเพิ่มเติม
+            </h3>
             <div className="mb-4">
               <div className="flex items-center">
                 <input
@@ -234,7 +232,10 @@ export default function AuditorInspectionDetailPage() {
                   checked={otherConditions.noHazardousMaterials === "true"}
                   disabled
                 />
-                <label htmlFor="no-hazardous-materials" className="ml-2 block text-sm text-gray-900">
+                <label
+                  htmlFor="no-hazardous-materials"
+                  className="ml-2 block text-sm text-gray-900"
+                >
                   ไม่ได้ใช้วัตถุอันตรายทางการเกษตรในการผลิต
                 </label>
               </div>
@@ -260,7 +261,9 @@ export default function AuditorInspectionDetailPage() {
     <AuditorLayout>
       <div className="mb-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">รายละเอียดการตรวจประเมิน</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            รายละเอียดการตรวจประเมิน
+          </h1>
           <button
             onClick={() => router.back()}
             className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
@@ -274,13 +277,21 @@ export default function AuditorInspectionDetailPage() {
           <div className="mt-4 bg-white rounded-lg shadow overflow-hidden">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
               <div>
-                <h2 className="text-sm font-medium text-gray-500">รหัสการตรวจประเมิน</h2>
-                <p className="mt-1 text-lg font-medium text-gray-900">{inspection.inspectionNo}</p>
+                <h2 className="text-sm font-medium text-gray-500">
+                  รหัสการตรวจประเมิน
+                </h2>
+                <p className="mt-1 text-lg font-medium text-gray-900">
+                  {inspection.inspectionNo}
+                </p>
               </div>
               <div>
-                <h2 className="text-sm font-medium text-gray-500">วันที่นัดหมาย</h2>
+                <h2 className="text-sm font-medium text-gray-500">
+                  วันที่นัดหมาย
+                </h2>
                 <p className="mt-1 text-lg font-medium text-gray-900">
-                  {new Date(inspection.inspectionDateAndTime).toLocaleDateString("th-TH", {
+                  {new Date(
+                    inspection.inspectionDateAndTime
+                  ).toLocaleDateString("th-TH", {
                     year: "numeric",
                     month: "long",
                     day: "numeric",
@@ -290,15 +301,21 @@ export default function AuditorInspectionDetailPage() {
                 </p>
               </div>
               <div>
-                <h2 className="text-sm font-medium text-gray-500">ประเภทการตรวจ</h2>
+                <h2 className="text-sm font-medium text-gray-500">
+                  ประเภทการตรวจ
+                </h2>
                 <p className="mt-1 text-lg font-medium text-gray-900">
                   {inspection.inspectionType?.typeName || "-"}
                 </p>
               </div>
               <div className="sm:col-span-2 lg:col-span-3">
-                <h2 className="text-sm font-medium text-gray-500">พื้นที่สวนยาง</h2>
+                <h2 className="text-sm font-medium text-gray-500">
+                  พื้นที่สวนยาง
+                </h2>
                 <p className="mt-1 text-lg font-medium text-gray-900">
-                  {inspection.rubberFarm?.villageName || "-"}, {inspection.rubberFarm?.district || "-"}, {inspection.rubberFarm?.province || "-"}
+                  {inspection.rubberFarm?.villageName || "-"},{" "}
+                  {inspection.rubberFarm?.district || "-"},{" "}
+                  {inspection.rubberFarm?.province || "-"}
                 </p>
               </div>
             </div>
@@ -310,7 +327,8 @@ export default function AuditorInspectionDetailPage() {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="mb-6">
             <h2 className="text-xl font-semibold text-gray-900">
-              รายการที่ {inspectionItem.inspectionItemNo} : {inspectionItem.inspectionItemMaster?.itemName || ""}
+              รายการที่ {inspectionItem.inspectionItemNo} :{" "}
+              {inspectionItem.inspectionItemMaster?.itemName || ""}
             </h2>
 
             <div className="mt-4">
@@ -333,39 +351,50 @@ export default function AuditorInspectionDetailPage() {
             </div>
           </div>
 
-          {inspectionItem.requirements && inspectionItem.requirements.length > 0 ? (
+          {inspectionItem.requirements &&
+          inspectionItem.requirements.length > 0 ? (
             <div className="mb-6 space-y-4">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">ข้อกำหนด</h3>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                ข้อกำหนด
+              </h3>
 
               {inspectionItem.requirements
                 .sort((a, b) => a.requirementNo - b.requirementNo)
                 .map((requirement) => (
-                  <div key={requirement.requirementId} className="p-4 border rounded-md bg-gray-50">
+                  <div
+                    key={requirement.requirementId}
+                    className="p-4 border rounded-md bg-gray-50"
+                  >
                     <div className="mb-2">
                       <div className="flex items-start">
                         <div className="flex-shrink-0">
                           <span
                             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              requirement.requirementMaster?.requirementLevel === "ข้อกำหนดหลัก"
+                              requirement.requirementMaster
+                                ?.requirementLevel === "ข้อกำหนดหลัก"
                                 ? "bg-red-100 text-red-800"
                                 : "bg-blue-100 text-blue-800"
                             }`}
                           >
-                            {requirement.requirementMaster?.requirementLevel || ""}
+                            {requirement.requirementMaster?.requirementLevel ||
+                              ""}
                             {requirement.requirementMaster?.requirementLevelNo
                               ? ` ${requirement.requirementMaster.requirementLevelNo}`
                               : ""}
                           </span>
                         </div>
                         <h4 className="ml-2 text-md font-medium text-gray-900">
-                          {requirement.requirementNo}. {requirement.requirementMaster?.requirementName || ""}
+                          {requirement.requirementNo}.{" "}
+                          {requirement.requirementMaster?.requirementName || ""}
                         </h4>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">ผลการตรวจประเมิน</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          ผลการตรวจประเมิน
+                        </label>
                         <div
                           className={`w-full px-3 py-2 border rounded-md ${
                             requirement.evaluationResult === "ใช่"
@@ -382,7 +411,9 @@ export default function AuditorInspectionDetailPage() {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">วิธีการตรวจประเมิน</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          วิธีการตรวจประเมิน
+                        </label>
                         <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-700">
                           {requirement.evaluationMethod || "ไม่มีข้อมูล"}
                         </div>
@@ -390,7 +421,9 @@ export default function AuditorInspectionDetailPage() {
 
                       {requirement.note && (
                         <div className="md:col-span-2">
-                          <label className="block text-sm font-medium text-gray-700 mb-1">บันทึกเพิ่มเติม</label>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            บันทึกเพิ่มเติม
+                          </label>
                           <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-700 min-h-[80px]">
                             {requirement.note || "-"}
                           </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -20,58 +21,36 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // Determine the endpoint based on the selected role
-      let endpoint = "";
-      switch (selectedRole) {
-        case "FARMER":
-          endpoint = "/api/v1/farmers/login";
-          break;
-        case "AUDITOR":
-          endpoint = "/api/v1/auditors/login";
-          break;
-        case "COMMITTEE":
-          endpoint = "/api/v1/committees/login";
-          break;
-        case "ADMIN":
-          endpoint = "/api/v1/admins/login";
-          break;
-        default:
-          endpoint = "/api/v1/users/login";
-      }
-
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
+      // ใช้ NextAuth แทน API เดิม
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message ?? "การเข้าสู่ระบบล้มเหลว");
+      if (result?.error) {
+        throw new Error(result.error);
       }
 
-      // Store the token
-      localStorage.setItem("token", data.token);
-
-      // Redirect based on role
-      switch (selectedRole) {
-        case "FARMER":
-          router.push("/farmer/dashboard");
-          break;
-        case "AUDITOR":
-          router.push("/auditor/dashboard");
-          break;
-        case "COMMITTEE":
-          router.push("/committee/dashboard");
-          break;
-        case "ADMIN":
-          router.push("/admin/dashboard");
-          break;
-        default:
-          router.push("/dashboard");
+      if (result?.ok) {
+        // Redirect based on role (NextAuth จะ redirect อัตโนมัติตาม middleware)
+        switch (selectedRole) {
+          case "FARMER":
+            router.push("/farmer/dashboard");
+            break;
+          case "AUDITOR":
+            router.push("/auditor/dashboard");
+            break;
+          case "COMMITTEE":
+            router.push("/committee/dashboard");
+            break;
+          case "ADMIN":
+            router.push("/admin/dashboard");
+            break;
+          default:
+            router.push("/dashboard");
+        }
+        router.refresh();
       }
     } catch (err: any) {
       setError(err.message ?? "เกิดข้อผิดพลาดในการเข้าสู่ระบบ");
@@ -262,12 +241,13 @@ export default function LoginPage() {
               </div>
 
               <div className="text-sm">
-                <a
-                  href="#"
+                <button
+                  type="button"
                   className="font-medium text-green-600 hover:text-green-500"
+                  onClick={() => alert("ฟีเจอร์นี้กำลังพัฒนา")}
                 >
                   ลืมรหัสผ่าน?
-                </a>
+                </button>
               </div>
             </div>
 
@@ -305,7 +285,11 @@ export default function LoginPage() {
           </form>
 
           <div className="mt-8 text-center">
-            <p className={`text-sm text-gray-600 ${selectedRole === "FARMER" ? "visible" : "invisible"}`}>
+            <p
+              className={`text-sm text-gray-600 ${
+                selectedRole === "FARMER" ? "visible" : "invisible"
+              }`}
+            >
               ยังไม่มีบัญชีผู้ใช้?{" "}
               <Link
                 href="/register"

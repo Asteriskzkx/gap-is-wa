@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { sarabun } from "./fonts";
 import "./globals.css";
+import { Providers } from "./providers";
 
 export const metadata: Metadata = {
   title:
@@ -36,7 +37,11 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
       </head>
       <body className={`${sarabun.className} min-h-screen bg-gray-50`}>
-        <div className="min-h-screen w-full overflow-x-hidden">{children}</div>
+        <Providers>
+          <div className="min-h-screen w-full overflow-x-hidden">
+            {children}
+          </div>
+        </Providers>
       </body>
     </html>
   );

@@ -3,6 +3,7 @@ import { BaseController } from "./BaseController";
 import { InspectionModel } from "../models/InspectionModel";
 import { InspectionService } from "../services/InspectionService";
 import { requireValidId } from "../utils/ParamUtils";
+import { checkAuthorization, getSessionFromRequest } from "@/lib/session";
 
 export class InspectionController extends BaseController<InspectionModel> {
   private inspectionService: InspectionService;
@@ -22,21 +23,24 @@ export class InspectionController extends BaseController<InspectionModel> {
         additionalAuditorIds,
       } = data;
 
-      // ดึง token จาก header
-      const authHeader = req.headers.get("Authorization");
-      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      // ตรวจสอบ authorization ด้วย NextAuth
+      const { authorized, session, error } = await checkAuthorization(req, [
+        "AUDITOR",
+      ]);
+
+      if (!authorized || !session) {
         return NextResponse.json(
-          { message: "Authorization required" },
+          { message: error || "Authorization required" },
           { status: 401 }
         );
       }
-      const token = authHeader.split(" ")[1];
-      const decodedToken = this.inspectionService.verifyToken(token);
 
-      if (!decodedToken || !decodedToken.auditorId) {
+      // ดึง auditorId จาก session
+      const auditorId = session.user.roleData?.auditorId;
+      if (!auditorId) {
         return NextResponse.json(
-          { message: "Invalid token or not an auditor" },
-          { status: 403 }
+          { message: "Auditor data not found in session" },
+          { status: 400 }
         );
       }
 
@@ -48,8 +52,8 @@ export class InspectionController extends BaseController<InspectionModel> {
         );
       }
 
-      // ใช้ auditorId จาก token เป็น auditorChiefId โดยอัตโนมัติ
-      const auditorChiefId = decodedToken.auditorId;
+      // ใช้ auditorId จาก session เป็น auditorChiefId โดยอัตโนมัติ
+      const auditorChiefId = auditorId;
 
       // สร้างการตรวจประเมินพร้อมรายการตรวจและข้อกำหนดตามประเภทที่เลือก
       const inspection = await this.inspectionService.scheduleInspection(
