@@ -515,14 +515,14 @@ export default function AuditorInspectionSummaryPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-[#EBFFF3]">
+      <div className="flex justify-center items-center min-h-screen bg-secondary">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-900"></div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#EBFFF3]">
+    <div className="flex flex-col min-h-screen bg-secondary">
       {/* Mobile Overlay */}
       {isMobile && sidebarVisible && (
         <div

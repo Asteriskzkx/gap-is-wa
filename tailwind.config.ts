@@ -30,6 +30,9 @@ const config: Config = {
       screens: {
         xs: "475px",
       },
+      colors: {
+        secondary: "#EBFFF3"
+      }
     },
   },
   plugins: [],

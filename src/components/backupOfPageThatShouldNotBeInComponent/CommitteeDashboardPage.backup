@@ -237,7 +237,7 @@ export default function CommitteeDashboardPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#EBFFF3]">
+    <div className="flex flex-col min-h-screen bg-secondary">
       {" "}
       {/* เปลี่ยนสีพื้นหลังเป็นโทนน้ำเงินอ่อน */}
       {/* Mobile Overlay - only visible when sidebar is shown on mobile */}

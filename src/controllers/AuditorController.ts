@@ -3,7 +3,6 @@ import { BaseController } from "./BaseController";
 import { AuditorModel } from "../models/AuditorModel";
 import { AuditorService } from "../services/AuditorService";
 import { requireValidId, isValidId } from "../utils/ParamUtils";
-
 export class AuditorController extends BaseController<AuditorModel> {
   private auditorService: AuditorService;
 
@@ -105,10 +104,17 @@ export class AuditorController extends BaseController<AuditorModel> {
 
       // ใช้ getAuditorByToken เพื่อดึงข้อมูลผู้ตรวจสอบจาก token
       const auditor = await this.auditorService.getAuditorByToken(token);
+      
       if (!auditor) {
         return NextResponse.json(
           { message: "Invalid token or auditor not found" },
           { status: 401 }
+        );
+      }
+      if (auditor.role !== "AUDITOR") {
+        return NextResponse.json(
+          { message: "Access denied" },
+          { status: 403 }
         );
       }
 
