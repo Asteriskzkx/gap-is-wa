@@ -37,12 +37,12 @@ export class FarmerController extends BaseController<FarmerModel> {
         );
       }
 
-      const { farmer, token } = result;
+      const { farmer } = result;
 
       // Remove sensitive data before returning
       const farmerJson = farmer.toJSON();
 
-      return NextResponse.json({ farmer: farmerJson, token }, { status: 200 });
+      return NextResponse.json({ farmer: farmerJson }, { status: 200 });
     } catch (error) {
       return this.handleControllerError(error);
     }

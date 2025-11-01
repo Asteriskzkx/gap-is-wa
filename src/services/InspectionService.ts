@@ -4,7 +4,6 @@ import { RequirementModel } from "@/models/RequirementModel";
 import { InspectionTypeMasterRepository } from "@/repositories/InspectionTypeMasterRepository";
 import { RequirementRepository } from "@/repositories/RequirementRepository";
 import { RubberFarmRepository } from "@/repositories/RubberFarmRepository";
-import jwt from "jsonwebtoken";
 import { InspectionModel } from "../models/InspectionModel";
 import { AdviceAndDefectRepository } from "../repositories/AdviceAndDefectRepository";
 import { AuditorInspectionRepository } from "../repositories/AuditorInspectionRepository";
@@ -379,18 +378,6 @@ export class InspectionService extends BaseService<InspectionModel> {
     } catch (error) {
       this.handleServiceError(error);
       return false;
-    }
-  }
-
-  verifyToken(token: string): any {
-    // ใช้ JWT secret เดียวกับที่ใช้ในบริการอื่น ๆ
-    try {
-      const jwtSecret =
-        process.env.JWT_SECRET || "default-secret-key-change-in-production";
-      return jwt.verify(token, jwtSecret);
-    } catch (error) {
-      this.handleServiceError(error);
-      return null;
     }
   }
 }

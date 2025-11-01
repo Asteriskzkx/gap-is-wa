@@ -1,5 +1,4 @@
 import { InspectionRepository } from "@/repositories/InspectionRepository";
-import jwt from "jsonwebtoken";
 import { AuditorModel } from "../models/AuditorModel";
 import { AuditorRepository } from "../repositories/AuditorRepository";
 import { InspectionTypeMasterRepository } from "../repositories/InspectionTypeMasterRepository"; // เพิ่มการนำเข้า
@@ -12,7 +11,6 @@ export class AuditorService extends BaseService<AuditorModel> {
   private auditorRepository: AuditorRepository;
   private userService: UserService;
   private farmerService: FarmerService;
-  private jwtSecret: string;
   private rubberFarmRepository: RubberFarmRepository;
   private inspectionTypeMasterRepository: InspectionTypeMasterRepository;
   private inspectionRepository: InspectionRepository;
@@ -32,14 +30,12 @@ export class AuditorService extends BaseService<AuditorModel> {
     this.rubberFarmRepository = rubberFarmRepository;
     this.inspectionTypeMasterRepository = inspectionTypeMasterRepository;
     this.inspectionRepository = inspectionRepository;
-    this.jwtSecret =
-      process.env.JWT_SECRET || "default-secret-key-change-in-production";
   }
 
   async login(
     email: string,
     password: string
-  ): Promise<{ auditor: AuditorModel; token: string } | null> {
+  ): Promise<{ auditor: AuditorModel } | null> {
     try {
       // First authenticate using UserService
       const userResult = await this.userService.login(email, password);
@@ -48,7 +44,7 @@ export class AuditorService extends BaseService<AuditorModel> {
       }
 
       // Check if the user is an auditor
-      const { user, token } = userResult;
+      const { user } = userResult;
       if (user.role !== "AUDITOR") {
         return null;
       }
@@ -59,10 +55,7 @@ export class AuditorService extends BaseService<AuditorModel> {
         return null;
       }
 
-      // Generate auditor-specific token with more info
-      const auditorToken = this.generateToken(auditor);
-
-      return { auditor, token: auditorToken };
+      return { auditor };
     } catch (error) {
       this.handleServiceError(error);
       return null;
@@ -161,46 +154,6 @@ export class AuditorService extends BaseService<AuditorModel> {
     } catch (error) {
       this.handleServiceError(error);
       return [];
-    }
-  }
-
-  private generateToken(auditor: AuditorModel): string {
-    return jwt.sign(
-      {
-        userId: auditor.id,
-        auditorId: auditor.auditorId,
-        email: auditor.email,
-        role: auditor.role,
-        name: auditor.name,
-        fullName: `${auditor.namePrefix}${auditor.firstName} ${auditor.lastName}`,
-      },
-      this.jwtSecret,
-      { expiresIn: "24h" }
-    );
-  }
-
-  verifyToken(token: string): any {
-    try {
-      return jwt.verify(token, this.jwtSecret);
-    } catch (error) {
-      return null;
-    }
-  }
-
-  async getAuditorByToken(token: string): Promise<AuditorModel | null> {
-    try {
-      // ตรวจสอบความถูกต้องของ token
-      const decoded = this.verifyToken(token);
-      if (!decoded || !decoded.userId) {
-        return null;
-      }
-
-      // หากเป็น token ที่ถูกต้อง ดึงข้อมูล auditor จาก userId
-      const auditor = await this.getAuditorByUserId(decoded.userId);
-      return auditor;
-    } catch (error) {
-      this.handleServiceError(error);
-      return null;
     }
   }
 

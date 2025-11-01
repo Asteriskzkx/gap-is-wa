@@ -65,12 +65,12 @@ export class UserController extends BaseController<UserModel> {
         );
       }
 
-      const { user, token } = result;
+      const { user } = result;
 
       // Remove sensitive data before returning
       const userJson = user.toJSON();
 
-      return NextResponse.json({ user: userJson, token }, { status: 200 });
+      return NextResponse.json({ user: userJson }, { status: 200 });
     } catch (error) {
       return this.handleControllerError(error);
     }

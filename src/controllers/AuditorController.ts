@@ -36,15 +36,12 @@ export class AuditorController extends BaseController<AuditorModel> {
         );
       }
 
-      const { auditor, token } = result;
+      const { auditor } = result;
 
       // Remove sensitive data before returning
       const auditorJson = auditor.toJSON();
 
-      return NextResponse.json(
-        { auditor: auditorJson, token },
-        { status: 200 }
-      );
+      return NextResponse.json({ auditor: auditorJson }, { status: 200 });
     } catch (error) {
       return this.handleControllerError(error);
     }

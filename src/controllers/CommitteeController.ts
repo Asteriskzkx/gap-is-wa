@@ -34,15 +34,12 @@ export class CommitteeController extends BaseController<CommitteeModel> {
         );
       }
 
-      const { committee, token } = result;
+      const { committee } = result;
 
       // Remove sensitive data before returning
       const committeeJson = committee.toJSON();
 
-      return NextResponse.json(
-        { committee: committeeJson, token },
-        { status: 200 }
-      );
+      return NextResponse.json({ committee: committeeJson }, { status: 200 });
     } catch (error) {
       return this.handleControllerError(error);
     }
