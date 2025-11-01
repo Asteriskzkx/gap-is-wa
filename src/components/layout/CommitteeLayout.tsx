@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
 import Footer from "@/components/layout/Footer";
 
 interface CommitteeLayoutProps {
@@ -12,6 +13,8 @@ interface CommitteeLayoutProps {
 
 export default function CommitteeLayout({ children }: CommitteeLayoutProps) {
   const router = useRouter();
+  const { data: session, status } = useSession();
+
   const [committee, setCommittee] = useState({
     namePrefix: "",
     firstName: "",
@@ -29,7 +32,7 @@ export default function CommitteeLayout({ children }: CommitteeLayoutProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   // Get current path for navigation highlighting
   const [selectedPath, setSelectedPath] = useState<string>("");
-  
+
   // Navigation menu items
   const navItems = [
     {
@@ -134,64 +137,27 @@ export default function CommitteeLayout({ children }: CommitteeLayoutProps) {
     },
   ];
 
-
-
   useEffect(() => {
-    // Fetch committee data from the API
-     if (typeof window !== "undefined") {
+    // Set selected path
+    if (typeof window !== "undefined") {
       setSelectedPath(window.location.pathname);
     }
-    const fetchCommitteeData = async () => {
-      try {
-        // Check if there's a token in localStorage
-        const token = localStorage.getItem("token");
 
-        if (token) {
-          // Make an API call to get committee data
-          const response = await fetch("/api/v1/committees/current", {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-
-          if (response.ok) {
-            const committeeData = await response.json();
-            setCommittee({
-              namePrefix: committeeData.namePrefix || "",
-              firstName: committeeData.firstName || "",
-              lastName: committeeData.lastName || "",
-              isLoading: false,
-            });
-          } else {
-            console.error("Failed to fetch committee data");
-            setCommittee({
-              namePrefix: "นาย",
-              firstName: "ไม่ทราบชื่อ",
-              lastName: "",
-              isLoading: false,
-            });
-          }
-        } else {
-          console.error("No token found");
-          setCommittee({
-            namePrefix: "นาย",
-            firstName: "ไม่ทราบชื่อ",
-            lastName: "",
-            isLoading: false,
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching committee data:", error);
-        setCommittee({
-          namePrefix: "นาย",
-          firstName: "ไม่ทราบชื่อ",
-          lastName: "",
-          isLoading: false,
-        });
-      }
-    };
-
-    fetchCommitteeData();
+    // ใช้ข้อมูลจาก NextAuth session แทน localStorage
+    if (status === "authenticated" && session?.user) {
+      const roleData = session.user.roleData;
+      setCommittee({
+        namePrefix: roleData?.namePrefix || "",
+        firstName: roleData?.firstName || "",
+        lastName: roleData?.lastName || "",
+        isLoading: false,
+      });
+    } else if (status === "loading") {
+      setCommittee((prev) => ({ ...prev, isLoading: true }));
+    } else if (status === "unauthenticated") {
+      // ถ้ายังไม่ login ให้ redirect ไปหน้า login
+      router.push("/");
+    }
 
     // Check if the screen is mobile size
     const checkMobile = () => {
@@ -216,7 +182,7 @@ export default function CommitteeLayout({ children }: CommitteeLayoutProps) {
 
     // Cleanup
     return () => window.removeEventListener("resize", checkMobile);
-  }, []);
+  }, [status, session, router]);
 
   // Toggle sidebar collapsed state (for desktop)
   const toggleSidebarCollapse = () => {
@@ -241,14 +207,10 @@ export default function CommitteeLayout({ children }: CommitteeLayoutProps) {
   };
 
   // Handle logout
-  const handleLogout = () => {
-    // Clear token from localStorage
-    localStorage.removeItem("token");
-    // Redirect to login page
-    router.push("/");
+  const handleLogout = async () => {
+    // ใช้ NextAuth signOut แทน localStorage (ทำลาย session และ redirect ไปหน้า login)
+    await signOut({ callbackUrl: "/", redirect: true });
   };
-
-
 
   return (
     <div className="flex flex-col min-h-screen bg-secondary">
@@ -321,7 +283,7 @@ export default function CommitteeLayout({ children }: CommitteeLayoutProps) {
             <ul className="space-y-6">
               {navItems.map((item, index) => (
                 <li key={index}>
-                   <Link
+                  <Link
                     href={item.href}
                     className={`flex items-center ${
                       sidebarCollapsed ? "justify-center px-3" : "px-4"
@@ -501,4 +463,4 @@ export default function CommitteeLayout({ children }: CommitteeLayoutProps) {
       </div>
     </div>
   );
-}   
+}

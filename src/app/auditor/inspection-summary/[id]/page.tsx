@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { toast } from "react-hot-toast";
 import { FaCheck, FaTimes } from "react-icons/fa";
 import AuditorLayout from "@/components/layout/AuditorLayout";
@@ -63,6 +64,7 @@ interface InspectionItemSummary {
 export default function AuditorInspectionSummaryPage() {
   const router = useRouter();
   const params = useParams();
+  const { data: session, status } = useSession();
   const [inspection, setInspection] = useState<InspectionSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [savingResult, setSavingResult] = useState(false);
@@ -70,20 +72,22 @@ export default function AuditorInspectionSummaryPage() {
   const [comments, setComments] = useState<string>("");
 
   useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/");
+      return;
+    }
+
+    if (status !== "authenticated") return;
+
     const inspectionId = params.id;
     if (!inspectionId) return;
 
     const fetchInspectionSummary = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem("token");
 
         // Fetch inspection data - use the same approach as in AuditorInspectionPage
-        const response = await fetch(`/api/v1/inspections/${inspectionId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await fetch(`/api/v1/inspections/${inspectionId}`);
 
         if (!response.ok) {
           throw new Error("Failed to fetch inspection data");
@@ -94,18 +98,16 @@ export default function AuditorInspectionSummaryPage() {
         // Fetch inspection type if missing
         if (
           inspectionData.inspectionTypeId &&
-          (!inspectionData.inspectionType || !inspectionData.inspectionType.typeName)
+          (!inspectionData.inspectionType ||
+            !inspectionData.inspectionType.typeName)
         ) {
-          const typesResponse = await fetch(`/api/v1/inspections/types`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
+          const typesResponse = await fetch(`/api/v1/inspections/types`);
 
           if (typesResponse.ok) {
             const typesData = await typesResponse.json();
             const matchingType = typesData.find(
-              (type: any) => type.inspectionTypeId === inspectionData.inspectionTypeId
+              (type: any) =>
+                type.inspectionTypeId === inspectionData.inspectionTypeId
             );
 
             if (matchingType) {
@@ -120,12 +122,7 @@ export default function AuditorInspectionSummaryPage() {
 
         // Fetch inspection items
         const itemsResponse = await fetch(
-          `/api/v1/inspection-items?inspectionId=${inspectionId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+          `/api/v1/inspection-items?inspectionId=${inspectionId}`
         );
 
         if (itemsResponse.ok) {
@@ -140,7 +137,8 @@ export default function AuditorInspectionSummaryPage() {
           });
 
           const shouldPass = !itemsData?.some(
-            (item: InspectionItemSummary) => item.inspectionItemResult === "ไม่ผ่าน"
+            (item: InspectionItemSummary) =>
+              item.inspectionItemResult === "ไม่ผ่าน"
           );
           setSelectedResult(shouldPass ? "PASS" : "FAIL");
         }
@@ -148,12 +146,7 @@ export default function AuditorInspectionSummaryPage() {
         // Fetch rubber farm details if available
         if (inspectionData.rubberFarmId) {
           const farmResponse = await fetch(
-            `/api/v1/rubber-farms/${inspectionData.rubberFarmId}`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
+            `/api/v1/rubber-farms/${inspectionData.rubberFarmId}`
           );
 
           if (farmResponse.ok) {
@@ -162,12 +155,7 @@ export default function AuditorInspectionSummaryPage() {
             // Fetch farmer details if not included
             if (farmData && !farmData.farmer && farmData.farmerId) {
               const farmerResponse = await fetch(
-                `/api/v1/farmers/${farmData.farmerId}`,
-                {
-                  headers: {
-                    Authorization: `Bearer ${token}`,
-                  },
-                }
+                `/api/v1/farmers/${farmData.farmerId}`
               );
 
               if (farmerResponse.ok) {
@@ -194,7 +182,7 @@ export default function AuditorInspectionSummaryPage() {
     };
 
     fetchInspectionSummary();
-  }, [params.id]);
+  }, [params.id, status, router]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!inspection?.items) return;
@@ -210,7 +198,8 @@ export default function AuditorInspectionSummaryPage() {
     const mainRequirementsPassed = mainRequirements.filter(
       (req) => req.evaluationResult === "ใช่"
     ).length;
-    const mainRequirementsFailed = mainRequirementsTotal - mainRequirementsPassed;
+    const mainRequirementsFailed =
+      mainRequirementsTotal - mainRequirementsPassed;
 
     const secondaryRequirements = inspection.items.flatMap(
       (item) =>
@@ -226,7 +215,9 @@ export default function AuditorInspectionSummaryPage() {
 
     const secondaryCompliancePercentage =
       secondaryRequirementsTotal > 0
-        ? Math.round((secondaryRequirementsPassed / secondaryRequirementsTotal) * 100)
+        ? Math.round(
+            (secondaryRequirementsPassed / secondaryRequirementsTotal) * 100
+          )
         : 0;
 
     const isMainRequirementsPassed = mainRequirementsFailed === 0;
@@ -241,19 +232,20 @@ export default function AuditorInspectionSummaryPage() {
 
     try {
       setSavingResult(true);
-      const token = localStorage.getItem("token");
 
-      const response = await fetch(`/api/v1/inspections/${inspection.inspectionId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          inspectionResult: selectedResult,
-          summaryComments: comments,
-        }),
-      });
+      const response = await fetch(
+        `/api/v1/inspections/${inspection.inspectionId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            inspectionResult: selectedResult,
+            summaryComments: comments,
+          }),
+        }
+      );
 
       if (response.ok) {
         toast.success("บันทึกผลการประเมินเรียบร้อยแล้ว");
@@ -282,7 +274,9 @@ export default function AuditorInspectionSummaryPage() {
   return (
     <AuditorLayout>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">สรุปผลการตรวจประเมิน</h1>
+        <h1 className="text-2xl font-bold text-gray-900">
+          สรุปผลการตรวจประเมิน
+        </h1>
         <p className="mt-1 text-sm text-gray-500">
           กรุณาตรวจสอบข้อมูลและสรุปผลการประเมินสวนยางพารา
         </p>
@@ -300,16 +294,15 @@ export default function AuditorInspectionSummaryPage() {
               <div className="bg-gray-50 p-3 rounded-lg">
                 <p className="text-sm text-gray-500">วันที่ตรวจประเมิน</p>
                 <p className="font-medium">
-                  {new Date(inspection.inspectionDateAndTime).toLocaleDateString(
-                    "th-TH",
-                    {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    }
-                  )}
+                  {new Date(
+                    inspection.inspectionDateAndTime
+                  ).toLocaleDateString("th-TH", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                 </p>
               </div>
               <div className="bg-gray-50 p-3 rounded-lg">
@@ -342,23 +335,37 @@ export default function AuditorInspectionSummaryPage() {
           </div>
 
           <div className="border-b pb-4 mb-4">
-            <h2 className="text-xl font-semibold mb-4">ผลการตรวจประเมินรายหัวข้อ</h2>
+            <h2 className="text-xl font-semibold mb-4">
+              ผลการตรวจประเมินรายหัวข้อ
+            </h2>
 
             {/* Desktop table */}
             <div className="hidden md:block overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th
+                      scope="col"
+                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
                       ลำดับ
                     </th>
-                    <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th
+                      scope="col"
+                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
                       รายการตรวจประเมิน
                     </th>
-                    <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th
+                      scope="col"
+                      className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
                       ผลการประเมิน
                     </th>
-                    <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th
+                      scope="col"
+                      className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
                       รายละเอียด
                     </th>
                   </tr>
@@ -368,12 +375,16 @@ export default function AuditorInspectionSummaryPage() {
                     ?.slice()
                     .sort((a, b) => a.inspectionItemNo - b.inspectionItemNo)
                     .map((item) => (
-                      <tr key={item.inspectionItemId} className="hover:bg-gray-50">
+                      <tr
+                        key={item.inspectionItemId}
+                        className="hover:bg-gray-50"
+                      >
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                           {item.inspectionItemNo}
                         </td>
                         <td className="px-4 py-3 text-sm text-gray-900">
-                          {item.inspectionItemMaster?.itemName || `รายการที่ ${item.inspectionItemNo}`}
+                          {item.inspectionItemMaster?.itemName ||
+                            `รายการที่ ${item.inspectionItemNo}`}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-center">
                           <span
@@ -415,9 +426,14 @@ export default function AuditorInspectionSummaryPage() {
                 ?.slice()
                 .sort((a, b) => a.inspectionItemNo - b.inspectionItemNo)
                 .map((item) => (
-                  <div key={item.inspectionItemId} className="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
+                  <div
+                    key={item.inspectionItemId}
+                    className="bg-white rounded-lg border border-gray-200 shadow-sm p-4"
+                  >
                     <div className="flex justify-between items-start mb-2">
-                      <div className="font-medium">ลำดับที่ {item.inspectionItemNo}</div>
+                      <div className="font-medium">
+                        ลำดับที่ {item.inspectionItemNo}
+                      </div>
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           item.inspectionItemResult === "ผ่าน"
@@ -435,7 +451,8 @@ export default function AuditorInspectionSummaryPage() {
                     </div>
 
                     <div className="text-sm text-gray-900 mb-3">
-                      {item.inspectionItemMaster?.itemName || `รายการที่ ${item.inspectionItemNo}`}
+                      {item.inspectionItemMaster?.itemName ||
+                        `รายการที่ ${item.inspectionItemNo}`}
                     </div>
 
                     <button
@@ -454,7 +471,9 @@ export default function AuditorInspectionSummaryPage() {
           </div>
 
           <div className="border-b pb-4 mb-4">
-            <h2 className="text-xl font-semibold mb-4 text-center">สรุปผลการตรวจประเมิน</h2>
+            <h2 className="text-xl font-semibold mb-4 text-center">
+              สรุปผลการตรวจประเมิน
+            </h2>
 
             <div className="max-w-3xl mx-auto bg-white p-6 rounded-lg border border-gray-200 shadow-sm mb-6">
               <h3 className="text-base font-semibold mb-4 text-center">
@@ -466,7 +485,9 @@ export default function AuditorInspectionSummaryPage() {
                   inspection.items?.flatMap(
                     (item) =>
                       item.requirements?.filter(
-                        (req) => req.requirementMaster?.requirementLevel === "ข้อกำหนดหลัก"
+                        (req) =>
+                          req.requirementMaster?.requirementLevel ===
+                          "ข้อกำหนดหลัก"
                       ) || []
                   ) || [];
 
@@ -474,63 +495,96 @@ export default function AuditorInspectionSummaryPage() {
                 const mainRequirementsPassed = mainRequirements.filter(
                   (req) => req.evaluationResult === "ใช่"
                 ).length;
-                const mainRequirementsFailed = mainRequirementsTotal - mainRequirementsPassed;
+                const mainRequirementsFailed =
+                  mainRequirementsTotal - mainRequirementsPassed;
 
                 const secondaryRequirements =
                   inspection.items?.flatMap(
                     (item) =>
                       item.requirements?.filter(
-                        (req) => req.requirementMaster?.requirementLevel === "ข้อกำหนดรอง"
+                        (req) =>
+                          req.requirementMaster?.requirementLevel ===
+                          "ข้อกำหนดรอง"
                       ) || []
                   ) || [];
 
                 const secondaryRequirementsTotal = secondaryRequirements.length;
-                const secondaryRequirementsPassed = secondaryRequirements.filter(
-                  (req) => req.evaluationResult === "ใช่"
-                ).length;
+                const secondaryRequirementsPassed =
+                  secondaryRequirements.filter(
+                    (req) => req.evaluationResult === "ใช่"
+                  ).length;
                 const secondaryRequirementsFailed =
                   secondaryRequirementsTotal - secondaryRequirementsPassed;
 
                 const secondaryCompliancePercentage =
                   secondaryRequirementsTotal > 0
-                    ? Math.round((secondaryRequirementsPassed / secondaryRequirementsTotal) * 100)
+                    ? Math.round(
+                        (secondaryRequirementsPassed /
+                          secondaryRequirementsTotal) *
+                          100
+                      )
                     : 0;
 
                 const isMainRequirementsPassed = mainRequirementsFailed === 0;
-                const isSecondaryRequirementsPassed = secondaryCompliancePercentage >= 60;
-                const isPassed = isMainRequirementsPassed && isSecondaryRequirementsPassed;
+                const isSecondaryRequirementsPassed =
+                  secondaryCompliancePercentage >= 60;
+                const isPassed =
+                  isMainRequirementsPassed && isSecondaryRequirementsPassed;
 
                 return (
                   <div className="space-y-4 text-sm">
                     <div className="mb-2">
-                      <p className="mb-3">ข้อกำหนดหลัก {mainRequirementsTotal} ข้อ (100%)</p>
                       <p className="mb-3">
-                        ข้อกำหนดรอง {secondaryRequirementsTotal} ข้อ ผ่าน {secondaryRequirementsPassed} ข้อ ไม่ผ่าน {secondaryRequirementsFailed} ข้อ (ต้องผ่านอย่างน้อย 7 ข้อ)
+                        ข้อกำหนดหลัก {mainRequirementsTotal} ข้อ (100%)
                       </p>
-                      <p className="mb-3">เกณฑ์ต้องผ่านข้อกำหนดรองไม่น้อยกว่า 60%</p>
+                      <p className="mb-3">
+                        ข้อกำหนดรอง {secondaryRequirementsTotal} ข้อ ผ่าน{" "}
+                        {secondaryRequirementsPassed} ข้อ ไม่ผ่าน{" "}
+                        {secondaryRequirementsFailed} ข้อ (ต้องผ่านอย่างน้อย 7
+                        ข้อ)
+                      </p>
+                      <p className="mb-3">
+                        เกณฑ์ต้องผ่านข้อกำหนดรองไม่น้อยกว่า 60%
+                      </p>
                     </div>
 
                     <div className="border-t border-b py-4">
-                      <p className="font-semibold">สูตร: สอดคล้องกับข้อกำหนดรอง =</p>
+                      <p className="font-semibold">
+                        สูตร: สอดคล้องกับข้อกำหนดรอง =
+                      </p>
                       <div className="flex flex-col items-center my-2">
                         <div className="border-b border-black text-center px-2">
                           จำนวนข้อกำหนดรองที่ผ่าน X 100
                         </div>
-                        <div className="text-center px-2">จำนวนข้อกำหนดรองทั้งหมด</div>
+                        <div className="text-center px-2">
+                          จำนวนข้อกำหนดรองทั้งหมด
+                        </div>
                       </div>
                       <p className="font-semibold mt-2">
-                        = {secondaryRequirementsPassed} x 100 / {secondaryRequirementsTotal} = {secondaryCompliancePercentage}%
+                        = {secondaryRequirementsPassed} x 100 /{" "}
+                        {secondaryRequirementsTotal} ={" "}
+                        {secondaryCompliancePercentage}%
                       </p>
                     </div>
 
                     <div className="flex justify-center space-x-12 mt-6">
                       <label className="flex items-center space-x-2">
-                        <input type="checkbox" className="form-checkbox h-5 w-5" checked={isPassed} disabled />
+                        <input
+                          type="checkbox"
+                          className="form-checkbox h-5 w-5"
+                          checked={isPassed}
+                          disabled
+                        />
                         <span>ผ่านการตรวจประเมิน</span>
                       </label>
 
                       <label className="flex items-center space-x-2">
-                        <input type="checkbox" className="form-checkbox h-5 w-5" checked={!isPassed} disabled />
+                        <input
+                          type="checkbox"
+                          className="form-checkbox h-5 w-5"
+                          checked={!isPassed}
+                          disabled
+                        />
                         <span>ไม่ผ่านการตรวจประเมิน</span>
                       </label>
                     </div>
@@ -544,7 +598,9 @@ export default function AuditorInspectionSummaryPage() {
 
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">ความเห็นเพิ่มเติม</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  ความเห็นเพิ่มเติม
+                </label>
                 <textarea
                   className="form-textarea mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-3 px-4 focus:outline-none focus:ring-green-500 focus:border-green-500"
                   rows={4}

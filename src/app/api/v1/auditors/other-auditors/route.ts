@@ -1,35 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auditorService } from "@/utils/dependencyInjections";
+import { checkAuthorization } from "@/lib/session";
 
 export async function GET(req: NextRequest) {
   try {
     // ตรวจสอบสิทธิ์ว่าเป็น Auditor จริงหรือไม่
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    const authResult = await checkAuthorization(req, ["AUDITOR"]);
+    if (!authResult.authorized || !authResult.session) {
       return NextResponse.json(
-        { message: "Authorization required" },
-        { status: 401 }
+        { message: authResult.error || "Unauthorized" },
+        { status: authResult.session ? 403 : 401 }
       );
     }
 
-    const token = authHeader.split(" ")[1];
-    const decodedToken = auditorService.verifyToken(token);
-
-    if (
-      !decodedToken ||
-      decodedToken.role !== "AUDITOR" ||
-      !decodedToken.auditorId
-    ) {
+    const auditorId = authResult.session.user.roleData?.auditorId;
+    if (!auditorId) {
       return NextResponse.json(
-        { message: "Access denied. Only auditors can access this resource." },
+        { message: "Auditor ID not found in session" },
         { status: 403 }
       );
     }
 
     // ดึงรายชื่อ auditor อื่นๆ
-    const auditors = await auditorService.getAuditorListExcept(
-      decodedToken.auditorId
-    );
+    const auditors = await auditorService.getAuditorListExcept(auditorId);
 
     return NextResponse.json(auditors, { status: 200 });
   } catch (error: any) {

@@ -4,8 +4,17 @@ import React, { useState, useEffect, ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
 import Footer from "@/components/layout/Footer";
-import { MenuIcon, EditIcon, HomeIcon, PlusIcon, TextClipboardIcon, TrashIcon, XIcon } from "@/components/icons";
+import {
+  MenuIcon,
+  EditIcon,
+  HomeIcon,
+  PlusIcon,
+  TextClipboardIcon,
+  TrashIcon,
+  XIcon,
+} from "@/components/icons";
 
 interface FarmerLayoutProps {
   children: ReactNode;
@@ -13,6 +22,7 @@ interface FarmerLayoutProps {
 
 export default function FarmerLayout({ children }: FarmerLayoutProps) {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [farmer, setFarmer] = useState({
     namePrefix: "",
     firstName: "",
@@ -61,61 +71,40 @@ export default function FarmerLayout({ children }: FarmerLayoutProps) {
   ];
 
   useEffect(() => {
-     if (typeof window !== "undefined") {
+    if (typeof window !== "undefined") {
       setSelectedPath(window.location.pathname);
     }
-    // Fetch farmer data from the farmers API
-    const fetchFarmerData = async () => {
-      try {
-        // Check if there's a token in localStorage
-        const token = localStorage.getItem("token");
 
-        if (token) {
-          // Make an API call to get farmer data
-          const response = await fetch("/api/v1/farmers/current", {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-
-          if (response.ok) {
-            const farmerData = await response.json();
-            setFarmer({
-              namePrefix: farmerData.namePrefix || "",
-              firstName: farmerData.firstName || "",
-              lastName: farmerData.lastName || "",
-              isLoading: false,
-            });
-          } else {
-            console.error("Failed to fetch farmer data");
-            setFarmer({
-              namePrefix: "นาย",
-              firstName: "ไม่ทราบชื่อ",
-              lastName: "",
-              isLoading: false,
-            });
-          }
-        } else {
-          console.error("No token found");
-          setFarmer({
-            namePrefix: "นาย",
-            firstName: "ไม่ทราบชื่อ",
-            lastName: "",
-            isLoading: false,
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching farmer data:", error);
+    // ใช้ข้อมูลจาก NextAuth session แทน localStorage
+    if (status === "authenticated" && session?.user) {
+      const roleData = session.user.roleData;
+      if (roleData) {
         setFarmer({
-          namePrefix: "นาย",
-          firstName: "ไม่ทราบชื่อ",
+          namePrefix: roleData.namePrefix || "",
+          firstName: roleData.firstName || "",
+          lastName: roleData.lastName || "",
+          isLoading: false,
+        });
+      } else {
+        setFarmer({
+          namePrefix: "",
+          firstName: session.user.name || "ไม่ทราบชื่อ",
           lastName: "",
           isLoading: false,
         });
       }
-    };
-
-    fetchFarmerData();
+    } else if (status === "unauthenticated") {
+      // ถ้ายังไม่ login ให้ redirect ไปหน้า login
+      router.push("/");
+    } else {
+      // กำลังโหลด session
+      setFarmer({
+        namePrefix: "",
+        firstName: "กำลังโหลด...",
+        lastName: "",
+        isLoading: true,
+      });
+    }
 
     // Check if the screen is mobile size
     const checkMobile = () => {
@@ -140,7 +129,7 @@ export default function FarmerLayout({ children }: FarmerLayoutProps) {
 
     // Cleanup
     return () => window.removeEventListener("resize", checkMobile);
-  }, []);
+  }, [session, status, router]);
 
   // Toggle sidebar collapsed state (for desktop)
   const toggleSidebarCollapse = () => {
@@ -165,11 +154,9 @@ export default function FarmerLayout({ children }: FarmerLayoutProps) {
   };
 
   // Handle logout
-  const handleLogout = () => {
-    // Clear token from localStorage
-    localStorage.removeItem("token");
-    // Redirect to login page
-    router.push("/");
+  const handleLogout = async () => {
+    // ใช้ NextAuth signOut แทน localStorage (ทำลาย session และ redirect ไปหน้า login)
+    await signOut({ callbackUrl: "/", redirect: true });
   };
 
   return (
@@ -230,7 +217,7 @@ export default function FarmerLayout({ children }: FarmerLayoutProps) {
             <ul className="space-y-6">
               {navItems.map((item, index) => (
                 <li key={index}>
-                   <Link
+                  <Link
                     href={item.href}
                     className={`flex items-center ${
                       sidebarCollapsed ? "justify-center px-3" : "px-4"

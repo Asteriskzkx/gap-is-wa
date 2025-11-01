@@ -2,17 +2,13 @@ import { BaseService } from "./BaseService";
 import { UserModel } from "../models/UserModel";
 import { UserRepository } from "../repositories/UserRepository";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 
 export class UserService extends BaseService<UserModel> {
   private userRepository: UserRepository;
-  private jwtSecret: string;
 
   constructor(userRepository: UserRepository) {
     super(userRepository);
     this.userRepository = userRepository;
-    this.jwtSecret =
-      process.env.JWT_SECRET || "default-secret-key-change-in-production";
   }
 
   async findByEmail(email: string): Promise<UserModel | null> {
@@ -55,7 +51,7 @@ export class UserService extends BaseService<UserModel> {
   async login(
     email: string,
     password: string
-  ): Promise<{ user: UserModel; token: string } | null> {
+  ): Promise<{ user: UserModel } | null> {
     try {
       const user = await this.findByEmail(email);
       if (!user) {
@@ -67,8 +63,7 @@ export class UserService extends BaseService<UserModel> {
         return null;
       }
 
-      const token = this.generateToken(user);
-      return { user, token };
+      return { user };
     } catch (error) {
       this.handleServiceError(error);
       return null;
@@ -101,26 +96,6 @@ export class UserService extends BaseService<UserModel> {
     } catch (error) {
       this.handleServiceError(error);
       return false;
-    }
-  }
-
-  private generateToken(user: UserModel): string {
-    return jwt.sign(
-      {
-        userId: user.id,
-        email: user.email,
-        role: user.role,
-      },
-      this.jwtSecret,
-      { expiresIn: "24h" }
-    );
-  }
-
-  verifyToken(token: string): any {
-    try {
-      return jwt.verify(token, this.jwtSecret);
-    } catch (error) {
-      return null;
     }
   }
 }

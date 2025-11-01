@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import FarmerLayout from "@/components/layout/FarmerLayout";
 
 interface RubberFarm {
@@ -30,6 +31,7 @@ interface ApplicationItem {
 
 export default function FarmerApplicationsPage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [applications, setApplications] = useState<ApplicationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -37,25 +39,25 @@ export default function FarmerApplicationsPage() {
   useEffect(() => {
     const fetchApplicationsData = async () => {
       try {
-        const token = localStorage.getItem("token");
-        if (!token) {
+        // ตรวจสอบว่า session พร้อมใช้งาน
+        if (status === "loading") {
+          return;
+        }
+
+        if (status === "unauthenticated" || !session) {
           router.push("/");
           return;
         }
 
-        const farmerResponse = await fetch("/api/v1/farmers/current", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (!farmerResponse.ok) {
+        // ดึง farmerId จาก session
+        const farmerId = session.user.roleData?.farmerId;
+        if (!farmerId) {
+          setError("ไม่พบข้อมูลเกษตรกร");
           setLoading(false);
           return;
         }
 
-        const farmerData = await farmerResponse.json();
-        const farmsResponse = await fetch("/api/v1/rubber-farms", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const farmsResponse = await fetch("/api/v1/rubber-farms");
 
         if (!farmsResponse.ok) {
           setError("ไม่สามารถดึงข้อมูลได้ กรุณาลองใหม่อีกครั้ง");
@@ -65,7 +67,7 @@ export default function FarmerApplicationsPage() {
 
         const allFarms = await farmsResponse.json();
         const farms = allFarms.filter(
-          (farm: any) => farm.farmerId === farmerData.farmerId
+          (farm: any) => farm.farmerId === farmerId
         );
 
         const allApplicationItems: ApplicationItem[] = [];
@@ -73,8 +75,7 @@ export default function FarmerApplicationsPage() {
         for (const farm of farms) {
           try {
             const inspectionsResponse = await fetch(
-              `/api/v1/inspections?rubberFarmId=${farm.rubberFarmId}`,
-              { headers: { Authorization: `Bearer ${token}` } }
+              `/api/v1/inspections?rubberFarmId=${farm.rubberFarmId}`
             );
 
             if (inspectionsResponse.ok) {
@@ -108,7 +109,7 @@ export default function FarmerApplicationsPage() {
     };
 
     fetchApplicationsData();
-  }, [router]);
+  }, [router, session, status]);
 
   const formatThaiDate = (dateString?: string) => {
     if (!dateString) return "-";
@@ -151,7 +152,10 @@ export default function FarmerApplicationsPage() {
       }
     }
 
-    return { text: status || "ไม่ทราบสถานะ", color: "bg-gray-100 text-gray-800" };
+    return {
+      text: status || "ไม่ทราบสถานะ",
+      color: "bg-gray-100 text-gray-800",
+    };
   };
 
   return (
@@ -244,7 +248,8 @@ export default function FarmerApplicationsPage() {
                         className="hover:bg-gray-50"
                       >
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          RF{rubberFarm.rubberFarmId.toString().padStart(5, "0")}
+                          RF
+                          {rubberFarm.rubberFarmId.toString().padStart(5, "0")}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {rubberFarm.villageName}, หมู่ {rubberFarm.moo},{" "}
@@ -306,7 +311,9 @@ export default function FarmerApplicationsPage() {
                         </span>
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-xs text-gray-500">วันที่ยื่นคำขอ</span>
+                        <span className="text-xs text-gray-500">
+                          วันที่ยื่นคำขอ
+                        </span>
                         <span className="text-sm text-gray-700">
                           {formatThaiDate(rubberFarm.createdAt)}
                         </span>

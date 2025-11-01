@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { signIn, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -20,63 +21,73 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // Determine the endpoint based on the selected role
-      let endpoint = "";
-      switch (selectedRole) {
-        case "FARMER":
-          endpoint = "/api/v1/farmers/login";
-          break;
-        case "AUDITOR":
-          endpoint = "/api/v1/auditors/login";
-          break;
-        case "COMMITTEE":
-          endpoint = "/api/v1/committees/login";
-          break;
-        case "ADMIN":
-          endpoint = "/api/v1/admins/login";
-          break;
-        default:
-          endpoint = "/api/v1/users/login";
-      }
-
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
+      // ใช้ NextAuth แทน API เดิม
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message ?? "การเข้าสู่ระบบล้มเหลว");
+      if (result?.error) {
+        throw new Error(result.error);
       }
 
-      // Store the token
-      localStorage.setItem("token", data.token);
+      if (result?.ok) {
+        // ดึง session มาตรวจสอบ role
+        const response = await fetch("/api/auth/session");
+        const session = await response.json();
 
-      // Redirect based on role
-      switch (selectedRole) {
-        case "FARMER":
-          router.push("/farmer/dashboard");
-          break;
-        case "AUDITOR":
-          router.push("/auditor/dashboard");
-          break;
-        case "COMMITTEE":
-          router.push("/committee/dashboard");
-          break;
-        case "ADMIN":
-          router.push("/admin/dashboard");
-          break;
-        default:
-          router.push("/dashboard");
+        if (!session || !session.user) {
+          throw new Error("ไม่สามารถดึงข้อมูล session ได้");
+        }
+
+        // ตรวจสอบว่า role ที่เลือกตรงกับ role ที่แท้จริงหรือไม่
+        if (session.user.role !== selectedRole) {
+          // ถ้าไม่ตรง ให้ออกจากระบบและแจ้งเตือน
+          await signOut({ redirect: false }); // eslint-disable-line
+          throw new Error(
+            `คุณไม่มีสิทธิ์เข้าใช้งานในฐานะ${getRoleLabel(selectedRole)}`
+          );
+        }
+
+        // Redirect based on actual role from session
+        switch (session.user.role) {
+          case "FARMER":
+            router.push("/farmer/dashboard");
+            break;
+          case "AUDITOR":
+            router.push("/auditor/dashboard");
+            break;
+          case "COMMITTEE":
+            router.push("/committee/dashboard");
+            break;
+          case "ADMIN":
+            router.push("/admin/dashboard");
+            break;
+          default:
+            router.push("/dashboard");
+        }
+        router.refresh();
       }
     } catch (err: any) {
       setError(err.message ?? "เกิดข้อผิดพลาดในการเข้าสู่ระบบ");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case "FARMER":
+        return "เกษตรกร";
+      case "AUDITOR":
+        return "ผู้ตรวจประเมิน";
+      case "COMMITTEE":
+        return "คณะกรรมการ";
+      case "ADMIN":
+        return "ผู้ดูแลระบบ";
+      default:
+        return role;
     }
   };
 
@@ -262,12 +273,13 @@ export default function LoginPage() {
               </div>
 
               <div className="text-sm">
-                <a
-                  href="#"
+                <button
+                  type="button"
                   className="font-medium text-green-600 hover:text-green-500"
+                  onClick={() => alert("ฟีเจอร์นี้กำลังพัฒนา")}
                 >
                   ลืมรหัสผ่าน?
-                </a>
+                </button>
               </div>
             </div>
 
@@ -305,7 +317,11 @@ export default function LoginPage() {
           </form>
 
           <div className="mt-8 text-center">
-            <p className={`text-sm text-gray-600 ${selectedRole === "FARMER" ? "visible" : "invisible"}`}>
+            <p
+              className={`text-sm text-gray-600 ${
+                selectedRole === "FARMER" ? "visible" : "invisible"
+              }`}
+            >
               ยังไม่มีบัญชีผู้ใช้?{" "}
               <Link
                 href="/register"

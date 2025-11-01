@@ -2,8 +2,16 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import FarmerLayout from "@/components/layout/FarmerLayout";
-import { ChevronRightIcon, DangerIcon, EditIcon, PlusIcon, TextClipboardIcon, TrashIcon } from "@/components/icons";
+import {
+  ChevronRightIcon,
+  DangerIcon,
+  EditIcon,
+  PlusIcon,
+  TextClipboardIcon,
+  TrashIcon,
+} from "@/components/icons";
 
 interface RubberFarm {
   rubberFarmId: number;
@@ -29,6 +37,7 @@ interface ApplicationItem {
 }
 
 export default function FarmerDashboardPage() {
+  const { data: session, status } = useSession();
   const [applications, setApplications] = useState<ApplicationItem[]>([]);
   const [applicationsLoading, setApplicationsLoading] = useState(true);
 
@@ -57,27 +66,24 @@ export default function FarmerDashboardPage() {
   ];
 
   useEffect(() => {
-    // Fetch applications data
+    // ใช้ข้อมูลจาก NextAuth session
     const fetchApplicationsData = async () => {
       try {
-        // Check if there's a token in localStorage
-        const token = localStorage.getItem("token");
+        if (status === "loading") {
+          return; // รอให้ session โหลดเสร็จก่อน
+        }
 
-        if (token) {
-          // First get farmer data to get farmerId
-          const farmerResponse = await fetch("/api/v1/farmers/current", {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
+        if (status === "unauthenticated" || !session?.user) {
+          setApplicationsLoading(false);
+          return;
+        }
 
-          if (farmerResponse.ok) {
-            const farmerData = await farmerResponse.json();
-            await fetchApplications(token, farmerData);
-          } else {
-            setApplicationsLoading(false);
-          }
+        // ดึง farmerId จาก session
+        const roleData = session.user.roleData;
+        if (roleData && roleData.farmerId) {
+          await fetchApplications(roleData.farmerId);
         } else {
+          console.error("No farmer data found in session");
           setApplicationsLoading(false);
         }
       } catch (error) {
@@ -86,21 +92,19 @@ export default function FarmerDashboardPage() {
       }
     };
 
-    const fetchApplications = async (token: string, farmerData: any) => {
+    const fetchApplications = async (farmerId: number) => {
       try {
-        const allFarmsResponse = await fetch("/api/v1/rubber-farms", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        // เปลี่ยนจากการส่ง Authorization header เป็นการใช้ NextAuth session
+        // NextAuth จะจัดการ authentication ให้อัตโนมัติผ่าน cookie
+        const allFarmsResponse = await fetch("/api/v1/rubber-farms");
 
         if (allFarmsResponse.ok) {
           const allFarms = await allFarmsResponse.json();
           // Filter farms that belong to the current farmer
           const farms = allFarms.filter(
-            (farm: any) => farm.farmerId === farmerData.farmerId
+            (farm: any) => farm.farmerId === farmerId
           );
-          await processRubberFarms(farms, token);
+          await processRubberFarms(farms);
         } else {
           setApplicationsLoading(false);
         }
@@ -110,8 +114,8 @@ export default function FarmerDashboardPage() {
       }
     };
 
-    const processRubberFarms = async (farms: RubberFarm[], token: string) => {
-      if (!farms || !token) {
+    const processRubberFarms = async (farms: RubberFarm[]) => {
+      if (!farms) {
         setApplicationsLoading(false);
         return;
       }
@@ -121,12 +125,7 @@ export default function FarmerDashboardPage() {
       for (const farm of farms) {
         try {
           const inspectionsResponse = await fetch(
-            `/api/v1/inspections?rubberFarmId=${farm.rubberFarmId}`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
+            `/api/v1/inspections?rubberFarmId=${farm.rubberFarmId}`
           );
 
           if (inspectionsResponse.ok) {
@@ -177,7 +176,7 @@ export default function FarmerDashboardPage() {
     };
 
     fetchApplicationsData();
-  }, []);
+  }, [session, status]);
 
   const formatThaiDate = (dateString?: string) => {
     if (!dateString) return "-";
@@ -316,7 +315,7 @@ export default function FarmerDashboardPage() {
           </div>
         ) : applications.length === 0 ? (
           <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-4 flex items-start">
-            <DangerIcon className="h-6 w-6 text-yellow-500 mr-3 mt-0.5 flex-shrink-0"/>
+            <DangerIcon className="h-6 w-6 text-yellow-500 mr-3 mt-0.5 flex-shrink-0" />
             <div>
               <h3 className="text-base font-medium text-yellow-800">
                 ยังไม่มีการยื่นขอรับรอง
@@ -393,9 +392,7 @@ export default function FarmerDashboardPage() {
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                             {inspection && inspection.inspectionDateAndTime
-                              ? formatThaiDate(
-                                  inspection.inspectionDateAndTime
-                                )
+                              ? formatThaiDate(inspection.inspectionDateAndTime)
                               : "-"}
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap">

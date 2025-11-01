@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
 import Footer from "@/components/layout/Footer";
 
 // Icons
@@ -20,6 +21,8 @@ interface AuditorLayoutProps {
 
 export default function AuditorLayout({ children }: AuditorLayoutProps) {
   const router = useRouter();
+  const { data: session, status } = useSession();
+
   const [auditor, setAuditor] = useState({
     namePrefix: "",
     firstName: "",
@@ -74,66 +77,26 @@ export default function AuditorLayout({ children }: AuditorLayoutProps) {
   ];
 
   useEffect(() => {
-
-    if(typeof window !== "undefined"){
-        setSelectedPath(window.location.pathname);
+    if (typeof window !== "undefined") {
+      setSelectedPath(window.location.pathname);
     }
-    // Fetch auditor data from the API
-    const fetchAuditorData = async () => {
-      try {
-        // Check if there's a token in localStorage
-        const token = localStorage.getItem("token");
 
-        if (token) {
-          // Make an API call to get auditor data
-          const response = await fetch("/api/v1/auditors/current", {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-
-          if (response.ok) {
-            const auditorData = await response.json();
-            setAuditor({
-              namePrefix: auditorData.namePrefix || "",
-              firstName: auditorData.firstName || "",
-              lastName: auditorData.lastName || "",
-              isLoading: false,
-              id: auditorData.auditorId || 0,
-            });
-          } else {
-            console.error("Failed to fetch auditor data");
-            setAuditor({
-              namePrefix: "นาย",
-              firstName: "ไม่ทราบชื่อ",
-              lastName: "",
-              isLoading: false,
-              id: 0,
-            });
-          }
-        } else {
-          console.error("No token found");
-          setAuditor({
-            namePrefix: "นาย",
-            firstName: "ไม่ทราบชื่อ",
-            lastName: "",
-            isLoading: false,
-            id: 0,
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching auditor data:", error);
-        setAuditor({
-          namePrefix: "นาย",
-          firstName: "ไม่ทราบชื่อ",
-          lastName: "",
-          isLoading: false,
-          id: 0,
-        });
-      }
-    };
-
-    fetchAuditorData();
+    // ใช้ข้อมูลจาก NextAuth session แทน localStorage
+    if (status === "authenticated" && session?.user) {
+      const roleData = session.user.roleData;
+      setAuditor({
+        namePrefix: roleData?.namePrefix || "",
+        firstName: roleData?.firstName || "",
+        lastName: roleData?.lastName || "",
+        isLoading: false,
+        id: roleData?.auditorId || 0,
+      });
+    } else if (status === "loading") {
+      setAuditor((prev) => ({ ...prev, isLoading: true }));
+    } else if (status === "unauthenticated") {
+      // ถ้ายังไม่ login ให้ redirect ไปหน้า login
+      router.push("/");
+    }
 
     // Check if the screen is mobile size
     const checkMobile = () => {
@@ -158,7 +121,7 @@ export default function AuditorLayout({ children }: AuditorLayoutProps) {
 
     // Cleanup
     return () => window.removeEventListener("resize", checkMobile);
-  }, []);
+  }, [status, session, router]);
 
   // Toggle sidebar collapsed state (for desktop)
   const toggleSidebarCollapse = () => {
@@ -183,11 +146,9 @@ export default function AuditorLayout({ children }: AuditorLayoutProps) {
   };
 
   // Handle logout
-  const handleLogout = () => {
-    // Clear token from localStorage
-    localStorage.removeItem("token");
-    // Redirect to login page
-    router.push("/");
+  const handleLogout = async () => {
+    // ใช้ NextAuth signOut แทน localStorage (ทำลาย session และ redirect ไปหน้า login)
+    await signOut({ callbackUrl: "/", redirect: true });
   };
 
   return (
