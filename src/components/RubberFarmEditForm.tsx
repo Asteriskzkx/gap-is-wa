@@ -92,6 +92,7 @@ export default function RubberFarmEditForm() {
     provinceId: 0,
     amphureId: 0,
     tambonId: 0,
+    version: undefined, // เพิ่ม version field
     location: {
       type: "Point",
       coordinates: [0, 0],
@@ -224,6 +225,12 @@ export default function RubberFarmEditForm() {
       if (response.ok) {
         const data = await response.json();
 
+        console.log("🔍 Fetched Farm Data:", {
+          rubberFarmId: data.rubberFarmId,
+          version: data.version,
+          plantingDetailsCount: data.plantingDetails?.length || 0,
+        });
+
         // ตรวจสอบว่า provinces data โหลดเสร็จแล้ว
         if (provinces.length === 0) {
           console.warn("Provinces data not loaded yet");
@@ -316,6 +323,15 @@ export default function RubberFarmEditForm() {
               version: detail.version, // เก็บ version จาก API
             })
           );
+
+          console.log(
+            "🔍 PlantingDetails Set:",
+            correctedDetails.map((d: PlantingDetail) => ({
+              id: d.plantingDetailId,
+              version: d.version,
+            }))
+          );
+
           setPlantingDetails(correctedDetails);
         }
       } else {
@@ -646,6 +662,12 @@ export default function RubberFarmEditForm() {
         farmUpdatePayload.version = rubberFarm.version;
       }
 
+      console.log("🔍 RubberFarm Update - Current State:", {
+        rubberFarmId: rubberFarm.rubberFarmId,
+        version: rubberFarm.version,
+        payload: farmUpdatePayload,
+      });
+
       // อัพเดทข้อมูลฟาร์ม
       const token = localStorage.getItem("token");
       const farmResponse = await fetch(
@@ -727,8 +749,11 @@ export default function RubberFarmEditForm() {
             }
 
             console.log(
-              `Updating detail ${detail.plantingDetailId}:`,
-              detailUpdatePayload
+              `🔍 PlantingDetail Update - ID: ${detail.plantingDetailId}`,
+              {
+                currentVersion: detail.version,
+                payload: detailUpdatePayload,
+              }
             );
 
             const detailResponse = await fetch(
