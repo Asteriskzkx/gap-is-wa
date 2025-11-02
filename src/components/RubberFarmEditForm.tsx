@@ -301,7 +301,7 @@ export default function RubberFarmEditForm() {
           }, 10); // delay เล็กน้อย
         }, 10);
 
-        // Set planting details
+        // Set planting details with version
         if (data.plantingDetails && data.plantingDetails.length > 0) {
           const correctedDetails = data.plantingDetails.map(
             (detail: PlantingDetail) => ({
@@ -313,6 +313,7 @@ export default function RubberFarmEditForm() {
               numberOfTapping: Number(detail.numberOfTapping) || 0,
               ageOfRubber: Number(detail.ageOfRubber) || 0,
               totalProduction: Number(detail.totalProduction) || 0,
+              version: detail.version, // เก็บ version จาก API
             })
           );
           setPlantingDetails(correctedDetails);
