@@ -29,7 +29,8 @@ export class CommitteeMapper implements BaseMapper<any, CommitteeModel> {
       prismaEntity.committee.firstName,
       prismaEntity.committee.lastName,
       prismaEntity.committee.createdAt,
-      prismaEntity.committee.updatedAt
+      prismaEntity.committee.updatedAt,
+      prismaEntity.committee.version
     );
   }
 

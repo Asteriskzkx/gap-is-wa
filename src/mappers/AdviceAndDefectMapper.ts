@@ -13,7 +13,8 @@ export class AdviceAndDefectMapper
       prismaEntity.adviceList,
       prismaEntity.defectList,
       prismaEntity.createdAt,
-      prismaEntity.updatedAt
+      prismaEntity.updatedAt,
+      prismaEntity.version
     );
   }
 

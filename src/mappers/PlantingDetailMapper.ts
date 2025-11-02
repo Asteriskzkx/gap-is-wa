@@ -18,7 +18,8 @@ export class PlantingDetailMapper
       prismaEntity.monthOfTapping,
       prismaEntity.totalProduction,
       prismaEntity.createdAt,
-      prismaEntity.updatedAt
+      prismaEntity.updatedAt,
+      prismaEntity.version
     );
   }
 

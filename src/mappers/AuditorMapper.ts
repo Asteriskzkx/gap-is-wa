@@ -26,7 +26,8 @@ export class AuditorMapper implements BaseMapper<any, AuditorModel> {
       prismaEntity.auditor.firstName,
       prismaEntity.auditor.lastName,
       prismaEntity.auditor.createdAt,
-      prismaEntity.auditor.updatedAt
+      prismaEntity.auditor.updatedAt,
+      prismaEntity.auditor.version
     );
   }
 

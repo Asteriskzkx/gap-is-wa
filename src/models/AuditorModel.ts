@@ -6,6 +6,7 @@ export class AuditorModel extends UserModel {
   namePrefix: string;
   firstName: string;
   lastName: string;
+  version?: number;
 
   constructor(
     userId: number,
@@ -17,7 +18,8 @@ export class AuditorModel extends UserModel {
     firstName: string,
     lastName: string,
     createdAt: Date = new Date(),
-    updatedAt: Date = new Date()
+    updatedAt: Date = new Date(),
+    version?: number
   ) {
     super(
       userId,
@@ -32,6 +34,7 @@ export class AuditorModel extends UserModel {
     this.namePrefix = namePrefix;
     this.firstName = firstName;
     this.lastName = lastName;
+    this.version = version;
   }
 
   static async createAuditor(
@@ -72,6 +75,7 @@ export class AuditorModel extends UserModel {
       namePrefix: this.namePrefix,
       firstName: this.firstName,
       lastName: this.lastName,
+      version: this.version,
     };
   }
 }
