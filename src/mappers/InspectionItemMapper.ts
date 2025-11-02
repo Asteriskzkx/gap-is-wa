@@ -21,7 +21,8 @@ export class InspectionItemMapper
       prismaEntity.inspectionItemResult,
       prismaEntity.otherConditions,
       prismaEntity.createdAt,
-      prismaEntity.updatedAt
+      prismaEntity.updatedAt,
+      prismaEntity.version // เพิ่ม version
     );
 
     if (prismaEntity.inspectionItemMaster) {

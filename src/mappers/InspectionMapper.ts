@@ -38,7 +38,8 @@ export class InspectionMapper
       prismaEntity.auditorChiefId,
       prismaEntity.rubberFarmId,
       prismaEntity.createdAt,
-      prismaEntity.updatedAt
+      prismaEntity.updatedAt,
+      prismaEntity.version // เพิ่ม version
     );
 
     if (prismaEntity.inspectionType) {

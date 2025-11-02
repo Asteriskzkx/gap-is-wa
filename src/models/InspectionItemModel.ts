@@ -7,6 +7,7 @@ export class InspectionItemModel extends BaseModel {
   inspectionItemNo: number;
   inspectionItemResult: string;
   otherConditions: any; // JSON data
+  version?: number; // Optimistic locking
 
   // Relations
   inspectionItemMaster?: any;
@@ -20,7 +21,8 @@ export class InspectionItemModel extends BaseModel {
     inspectionItemResult: string,
     otherConditions: any,
     createdAt: Date = new Date(),
-    updatedAt: Date = new Date()
+    updatedAt: Date = new Date(),
+    version?: number
   ) {
     super(inspectionItemId, createdAt, updatedAt);
     this.inspectionItemId = inspectionItemId;
@@ -29,6 +31,7 @@ export class InspectionItemModel extends BaseModel {
     this.inspectionItemNo = inspectionItemNo;
     this.inspectionItemResult = inspectionItemResult;
     this.otherConditions = otherConditions;
+    this.version = version;
   }
 
   static create(
@@ -68,6 +71,7 @@ export class InspectionItemModel extends BaseModel {
       otherConditions: this.otherConditions,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
+      version: this.version, // เพิ่ม version
       inspectionItemMaster: this.inspectionItemMaster,
       requirements: this.requirements?.map((req) => req.toJSON()) || [],
     };

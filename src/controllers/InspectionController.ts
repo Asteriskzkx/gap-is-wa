@@ -4,6 +4,7 @@ import { InspectionModel } from "../models/InspectionModel";
 import { InspectionService } from "../services/InspectionService";
 import { requireValidId } from "../utils/ParamUtils";
 import { checkAuthorization, getSessionFromRequest } from "@/lib/session";
+import { OptimisticLockError } from "../errors/OptimisticLockError";
 
 export class InspectionController extends BaseController<InspectionModel> {
   private inspectionService: InspectionService;
@@ -197,7 +198,7 @@ export class InspectionController extends BaseController<InspectionModel> {
       }
 
       const data = await req.json();
-      const { status } = data;
+      const { status, version } = data;
 
       if (!status) {
         return NextResponse.json(
@@ -209,7 +210,8 @@ export class InspectionController extends BaseController<InspectionModel> {
       const updatedInspection =
         await this.inspectionService.updateInspectionStatus(
           inspectionId,
-          status
+          status,
+          version // Pass version for optimistic locking (optional, backward compatible)
         );
 
       if (!updatedInspection) {
@@ -221,6 +223,10 @@ export class InspectionController extends BaseController<InspectionModel> {
 
       return NextResponse.json(updatedInspection.toJSON(), { status: 200 });
     } catch (error: any) {
+      // Handle optimistic lock error specifically
+      if (error instanceof OptimisticLockError) {
+        return NextResponse.json(error.toJSON(), { status: 409 }); // 409 Conflict
+      }
       return this.handleControllerError(error);
     }
   }
@@ -238,7 +244,7 @@ export class InspectionController extends BaseController<InspectionModel> {
       }
 
       const data = await req.json();
-      const { result } = data;
+      const { result, version } = data;
 
       if (!result) {
         return NextResponse.json(
@@ -250,7 +256,8 @@ export class InspectionController extends BaseController<InspectionModel> {
       const updatedInspection =
         await this.inspectionService.updateInspectionResult(
           inspectionId,
-          result
+          result,
+          version // Pass version for optimistic locking (optional, backward compatible)
         );
 
       if (!updatedInspection) {
@@ -262,6 +269,10 @@ export class InspectionController extends BaseController<InspectionModel> {
 
       return NextResponse.json(updatedInspection.toJSON(), { status: 200 });
     } catch (error: any) {
+      // Handle optimistic lock error specifically
+      if (error instanceof OptimisticLockError) {
+        return NextResponse.json(error.toJSON(), { status: 409 }); // 409 Conflict
+      }
       return this.handleControllerError(error);
     }
   }

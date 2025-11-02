@@ -1,6 +1,7 @@
 import { BaseService } from "./BaseService";
 import { AdviceAndDefectModel } from "../models/AdviceAndDefectModel";
 import { AdviceAndDefectRepository } from "../repositories/AdviceAndDefectRepository";
+import { OptimisticLockError } from "../errors/OptimisticLockError";
 
 export class AdviceAndDefectService extends BaseService<AdviceAndDefectModel> {
   private adviceAndDefectRepository: AdviceAndDefectRepository;
@@ -57,13 +58,24 @@ export class AdviceAndDefectService extends BaseService<AdviceAndDefectModel> {
 
   async updateAdviceAndDefect(
     adviceAndDefectId: number,
-    data: Partial<AdviceAndDefectModel>
+    data: Partial<AdviceAndDefectModel>,
+    currentVersion?: number
   ): Promise<AdviceAndDefectModel | null> {
     try {
-      return await this.update(adviceAndDefectId, data);
+      if (currentVersion !== undefined) {
+        // Use optimistic locking
+        return await this.adviceAndDefectRepository.updateWithLock(
+          adviceAndDefectId,
+          data,
+          currentVersion
+        );
+      } else {
+        // Fallback to regular update
+        return await this.update(adviceAndDefectId, data);
+      }
     } catch (error) {
       this.handleServiceError(error);
-      return null;
+      throw error;
     }
   }
 

@@ -16,6 +16,7 @@ interface Inspection {
   inspectionResult: string;
   auditorChiefId: number;
   rubberFarmId: number;
+  version?: number; // เพิ่ม version field
   inspectionType?: {
     typeName: string;
   };
@@ -38,6 +39,7 @@ interface InspectionItem {
   inspectionItemNo: number;
   inspectionItemResult: string;
   otherConditions: any;
+  version?: number; // เพิ่ม version field
   inspectionItemMaster?: {
     itemNo: number;
     itemName: string;
@@ -51,6 +53,7 @@ interface Requirement {
   evaluationResult: string;
   evaluationMethod: string;
   note: string;
+  version?: number; // เพิ่ม version field
   requirementMaster?: {
     requirementName: string;
     requirementLevel: string;
@@ -1000,7 +1003,7 @@ export default function AuditorInspectionsPage() {
         currentItem.requirements?.length || 0
       );
 
-      // อัปเดต inspection item
+      // อัปเดต inspection item with version
       const itemResponse = await fetch(
         `/api/v1/inspection-items/${currentItem.inspectionItemId}`,
         {
@@ -1011,19 +1014,36 @@ export default function AuditorInspectionsPage() {
           body: JSON.stringify({
             inspectionItemResult: determineItemResult(currentItem),
             otherConditions: currentItem.otherConditions || {},
+            version: currentItem.version, // ส่ง version
           }),
         }
       );
 
       if (!itemResponse.ok) {
+        // Handle 409 Conflict
+        if (itemResponse.status === 409) {
+          const errorData = await itemResponse.json();
+          toast.error(
+            errorData.userMessage ||
+              "ข้อมูลถูกแก้ไขโดยผู้ใช้อื่นแล้ว กรุณาโหลดข้อมูลใหม่และลองอีกครั้ง",
+            { duration: 5000 }
+          );
+          // Refresh inspection items
+          await fetchInspectionItems(selectedInspection!.inspectionId);
+          return false;
+        }
+
         const errorData = await itemResponse.json();
         throw new Error(errorData.message || "Failed to save inspection item");
       }
 
+      // อัพเดต version จาก response
+      const updatedItemData = await itemResponse.json();
       const updatedItems = [...inspectionItems];
       updatedItems[currentItemIndex] = {
         ...updatedItems[currentItemIndex],
         inspectionItemResult: determineItemResult(currentItem),
+        version: updatedItemData.version, // อัพเดต version
       };
 
       // อัปเดต requirements แบบ Promise.all เพื่อให้แน่ใจว่าทุกตัวถูกบันทึก
@@ -1061,11 +1081,25 @@ export default function AuditorInspectionsPage() {
                     evaluationResult: requirement.evaluationResult,
                     evaluationMethod: requirement.evaluationMethod || "PENDING",
                     note: requirement.note || "",
+                    version: requirement.version, // ส่ง version
                   }),
                 }
               );
 
               if (!reqResponse.ok) {
+                // Handle 409 Conflict
+                if (reqResponse.status === 409) {
+                  const errorData = await reqResponse.json();
+                  toast.error(
+                    errorData.userMessage ||
+                      "ข้อมูลถูกแก้ไขโดยผู้ใช้อื่นแล้ว กรุณาโหลดข้อมูลใหม่และลองอีกครั้ง",
+                    { duration: 5000 }
+                  );
+                  // Refresh inspection items
+                  await fetchInspectionItems(selectedInspection!.inspectionId);
+                  throw new Error("Optimistic lock conflict");
+                }
+
                 const errorData = await reqResponse.json();
                 console.error(
                   `Failed to save requirement ${requirement.requirementId}:`,
@@ -1081,6 +1115,8 @@ export default function AuditorInspectionsPage() {
                 `Successfully saved requirement ${requirement.requirementId}:`,
                 savedData
               );
+              // อัพเดต version ใน local state
+              requirement.version = savedData.version;
               return savedData;
             } catch (error) {
               console.error(
@@ -1204,7 +1240,7 @@ export default function AuditorInspectionsPage() {
         return;
       }
 
-      // ทำการอัพเดตสถานะการตรวจประเมิน
+      // ทำการอัพเดตสถานะการตรวจประเมิน with version
       const response = await fetch(
         `/api/v1/inspections/${selectedInspection.inspectionId}`,
         {
@@ -1215,6 +1251,7 @@ export default function AuditorInspectionsPage() {
           body: JSON.stringify({
             inspectionStatus: "ตรวจประเมินแล้ว",
             inspectionResult: "รอผลการตรวจประเมิน",
+            version: selectedInspection.version, // ส่ง version
           }),
         }
       );
@@ -1228,6 +1265,16 @@ export default function AuditorInspectionsPage() {
         router.push(
           `/auditor/inspection-summary/${selectedInspection.inspectionId}`
         );
+      } else if (response.status === 409) {
+        // Handle optimistic lock conflict
+        const errorData = await response.json();
+        toast.error(
+          errorData.userMessage ||
+            "ข้อมูลถูกแก้ไขโดยผู้ใช้อื่นแล้ว กรุณาโหลดข้อมูลใหม่และลองอีกครั้ง",
+          { duration: 5000 }
+        );
+        // Refresh inspections
+        await fetchPendingInspections();
       } else {
         toast.error("ไม่สามารถอัปเดตสถานะการตรวจประเมินได้");
       }

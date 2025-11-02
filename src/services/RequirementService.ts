@@ -1,6 +1,7 @@
 import { BaseService } from "./BaseService";
 import { RequirementModel } from "../models/RequirementModel";
 import { RequirementRepository } from "../repositories/RequirementRepository";
+import { OptimisticLockError } from "../errors/OptimisticLockError";
 
 export class RequirementService extends BaseService<RequirementModel> {
   private requirementRepository: RequirementRepository;
@@ -52,17 +53,32 @@ export class RequirementService extends BaseService<RequirementModel> {
     requirementId: number,
     evaluationResult: string,
     evaluationMethod: string,
-    note: string
+    note: string,
+    currentVersion?: number
   ): Promise<RequirementModel | null> {
     try {
-      return await this.update(requirementId, {
-        evaluationResult,
-        evaluationMethod,
-        note,
-      });
+      if (currentVersion !== undefined) {
+        // Use optimistic locking
+        return await this.requirementRepository.updateWithLock(
+          requirementId,
+          {
+            evaluationResult,
+            evaluationMethod,
+            note,
+          },
+          currentVersion
+        );
+      } else {
+        // Fallback to regular update
+        return await this.update(requirementId, {
+          evaluationResult,
+          evaluationMethod,
+          note,
+        });
+      }
     } catch (error) {
       this.handleServiceError(error);
-      return null;
+      throw error;
     }
   }
 

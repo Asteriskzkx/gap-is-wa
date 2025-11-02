@@ -3,6 +3,7 @@ import { RubberFarmModel } from "../models/RubberFarmModel";
 import { PlantingDetailModel } from "../models/PlantingDetailModel";
 import { RubberFarmRepository } from "../repositories/RubberFarmRepository";
 import { PlantingDetailRepository } from "../repositories/PlantingDetailRepository";
+import { OptimisticLockError } from "../errors/OptimisticLockError";
 
 // ประกาศ interface สำหรับข้อมูลที่ใช้ในการอัปเดต PlantingDetail
 interface PlantingDetailUpdateData {
@@ -132,13 +133,24 @@ export class RubberFarmService extends BaseService<RubberFarmModel> {
 
   async updateRubberFarm(
     rubberFarmId: number,
-    farmData: Partial<RubberFarmModel>
+    farmData: Partial<RubberFarmModel>,
+    currentVersion?: number
   ): Promise<RubberFarmModel | null> {
     try {
-      return await this.update(rubberFarmId, farmData);
+      if (currentVersion !== undefined) {
+        // Use optimistic locking
+        return await this.rubberFarmRepository.updateWithLock(
+          rubberFarmId,
+          farmData,
+          currentVersion
+        );
+      } else {
+        // Fallback to regular update
+        return await this.update(rubberFarmId, farmData);
+      }
     } catch (error) {
       this.handleServiceError(error);
-      return null;
+      throw error;
     }
   }
 

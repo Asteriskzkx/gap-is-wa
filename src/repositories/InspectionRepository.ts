@@ -218,6 +218,22 @@ export class InspectionRepository extends BaseRepository<InspectionModel> {
     }
   }
 
+  /**
+   * Update inspection with optimistic locking
+   */
+  async updateWithLock(
+    id: number,
+    data: Partial<InspectionModel>,
+    currentVersion: number
+  ): Promise<InspectionModel> {
+    return this.updateWithOptimisticLock(
+      id,
+      data,
+      currentVersion,
+      "inspection"
+    );
+  }
+
   async delete(id: number): Promise<boolean> {
     try {
       await this.prisma.inspection.delete({
