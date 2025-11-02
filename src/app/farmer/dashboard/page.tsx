@@ -94,16 +94,13 @@ export default function FarmerDashboardPage() {
 
     const fetchApplications = async (farmerId: number) => {
       try {
-        // เปลี่ยนจากการส่ง Authorization header เป็นการใช้ NextAuth session
-        // NextAuth จะจัดการ authentication ให้อัตโนมัติผ่าน cookie
-        const allFarmsResponse = await fetch("/api/v1/rubber-farms");
+        // ดึงรายการสวนยางที่เป็นของเกษตรกรคนนี้โดยตรง (filter ที่ server)
+        const allFarmsResponse = await fetch(
+          `/api/v1/rubber-farms?farmerId=${farmerId}`
+        );
 
         if (allFarmsResponse.ok) {
-          const allFarms = await allFarmsResponse.json();
-          // Filter farms that belong to the current farmer
-          const farms = allFarms.filter(
-            (farm: any) => farm.farmerId === farmerId
-          );
+          const farms = await allFarmsResponse.json();
           await processRubberFarms(farms);
         } else {
           setApplicationsLoading(false);

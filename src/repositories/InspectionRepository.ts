@@ -66,10 +66,26 @@ export class InspectionRepository extends BaseRepository<InspectionModel> {
       const inspections = await this.prisma.inspection.findMany({
         where: { rubberFarmId },
         include: {
-          auditorInspections: true,
+          inspectionType: true,
+          rubberFarm: {
+            include: {
+              farmer: true,
+            },
+          },
+          auditorChief: true,
+          auditorInspections: {
+            include: {
+              auditor: true,
+            },
+          },
           inspectionItems: {
             include: {
-              requirements: true,
+              inspectionItemMaster: true,
+              requirements: {
+                include: {
+                  requirementMaster: true,
+                },
+              },
             },
           },
           dataRecord: true,
@@ -94,10 +110,26 @@ export class InspectionRepository extends BaseRepository<InspectionModel> {
           ],
         },
         include: {
-          auditorInspections: true,
+          inspectionType: true,
+          rubberFarm: {
+            include: {
+              farmer: true,
+            },
+          },
+          auditorChief: true,
+          auditorInspections: {
+            include: {
+              auditor: true,
+            },
+          },
           inspectionItems: {
             include: {
-              requirements: true,
+              inspectionItemMaster: true,
+              requirements: {
+                include: {
+                  requirementMaster: true,
+                },
+              },
             },
           },
           dataRecord: true,
