@@ -101,6 +101,22 @@ export class AdviceAndDefectRepository extends BaseRepository<AdviceAndDefectMod
     }
   }
 
+  /**
+   * Update advice and defect with optimistic locking
+   */
+  async updateWithLock(
+    id: number,
+    data: Partial<AdviceAndDefectModel>,
+    currentVersion: number
+  ): Promise<AdviceAndDefectModel> {
+    return this.updateWithOptimisticLock(
+      id,
+      data,
+      currentVersion,
+      "adviceAndDefect"
+    );
+  }
+
   private mapToModel(
     prismaAdviceAndDefect: PrismaAdviceAndDefect
   ): AdviceAndDefectModel {

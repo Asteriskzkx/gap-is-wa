@@ -6,6 +6,7 @@ export class AdviceAndDefectModel extends BaseModel {
   date: Date;
   adviceList: any; // JSON data
   defectList: any; // JSON data
+  version?: number; // Optimistic locking
 
   constructor(
     adviceAndDefectId: number,
@@ -14,7 +15,8 @@ export class AdviceAndDefectModel extends BaseModel {
     adviceList: any,
     defectList: any,
     createdAt: Date = new Date(),
-    updatedAt: Date = new Date()
+    updatedAt: Date = new Date(),
+    version?: number
   ) {
     super(adviceAndDefectId, createdAt, updatedAt);
     this.adviceAndDefectId = adviceAndDefectId;
@@ -22,6 +24,7 @@ export class AdviceAndDefectModel extends BaseModel {
     this.date = date;
     this.adviceList = adviceList;
     this.defectList = defectList;
+    this.version = version;
   }
 
   static create(
@@ -57,6 +60,7 @@ export class AdviceAndDefectModel extends BaseModel {
       defectList: this.defectList,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
+      version: this.version,
     };
   }
 }

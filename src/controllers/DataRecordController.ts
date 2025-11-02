@@ -3,6 +3,7 @@ import { BaseController } from "./BaseController";
 import { DataRecordModel } from "../models/DataRecordModel";
 import { DataRecordService } from "../services/DataRecordService";
 import { requireValidId } from "../utils/ParamUtils";
+import { OptimisticLockError } from "../errors/OptimisticLockError";
 
 export class DataRecordController extends BaseController<DataRecordModel> {
   private dataRecordService: DataRecordService;
@@ -104,9 +105,12 @@ export class DataRecordController extends BaseController<DataRecordModel> {
       }
 
       const data = await req.json();
+      const { version, ...updateData } = data;
+
       const updatedDataRecord = await this.dataRecordService.updateDataRecord(
         dataRecordId,
-        data
+        updateData,
+        version
       );
 
       if (!updatedDataRecord) {
@@ -118,6 +122,10 @@ export class DataRecordController extends BaseController<DataRecordModel> {
 
       return NextResponse.json(updatedDataRecord.toJSON(), { status: 200 });
     } catch (error: any) {
+      // Handle optimistic lock error
+      if (error instanceof OptimisticLockError) {
+        return NextResponse.json(error.toJSON(), { status: 409 });
+      }
       return this.handleControllerError(error);
     }
   }

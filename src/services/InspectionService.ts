@@ -12,6 +12,7 @@ import { InspectionItemRepository } from "../repositories/InspectionItemReposito
 import { InspectionRepository } from "../repositories/InspectionRepository";
 import { AuditorService } from "./AuditorService";
 import { BaseService } from "./BaseService";
+import { OptimisticLockError } from "../errors/OptimisticLockError";
 export class InspectionService extends BaseService<InspectionModel> {
   private inspectionRepository: InspectionRepository;
   private auditorInspectionRepository: AuditorInspectionRepository;
@@ -278,11 +279,25 @@ export class InspectionService extends BaseService<InspectionModel> {
 
   async updateInspectionStatus(
     inspectionId: number,
-    status: string
+    status: string,
+    currentVersion?: number
   ): Promise<InspectionModel | null> {
     try {
+      // Use optimistic locking if version is provided
+      if (currentVersion !== undefined && currentVersion !== null) {
+        return await this.inspectionRepository.updateWithLock(
+          inspectionId,
+          { inspectionStatus: status },
+          currentVersion
+        );
+      }
+
+      // Fallback to regular update if no version provided (backward compatibility)
       return await this.update(inspectionId, { inspectionStatus: status });
     } catch (error) {
+      if (error instanceof OptimisticLockError) {
+        throw error; // Re-throw to be handled by controller
+      }
       this.handleServiceError(error);
       return null;
     }
@@ -290,11 +305,25 @@ export class InspectionService extends BaseService<InspectionModel> {
 
   async updateInspectionResult(
     inspectionId: number,
-    result: string
+    result: string,
+    currentVersion?: number
   ): Promise<InspectionModel | null> {
     try {
+      // Use optimistic locking if version is provided
+      if (currentVersion !== undefined && currentVersion !== null) {
+        return await this.inspectionRepository.updateWithLock(
+          inspectionId,
+          { inspectionResult: result },
+          currentVersion
+        );
+      }
+
+      // Fallback to regular update if no version provided (backward compatibility)
       return await this.update(inspectionId, { inspectionResult: result });
     } catch (error) {
+      if (error instanceof OptimisticLockError) {
+        throw error; // Re-throw to be handled by controller
+      }
       this.handleServiceError(error);
       return null;
     }

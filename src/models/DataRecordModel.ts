@@ -11,6 +11,7 @@ export class DataRecordModel extends BaseModel {
   relatedPlants: any; // JSON data
   moreInfo: string;
   map: any; // JSON data for GeoJSON
+  version?: number; // Optimistic locking
 
   constructor(
     dataRecordId: number,
@@ -24,7 +25,8 @@ export class DataRecordModel extends BaseModel {
     moreInfo: string,
     map: any,
     createdAt: Date = new Date(),
-    updatedAt: Date = new Date()
+    updatedAt: Date = new Date(),
+    version?: number
   ) {
     super(dataRecordId, createdAt, updatedAt);
     this.dataRecordId = dataRecordId;
@@ -37,6 +39,7 @@ export class DataRecordModel extends BaseModel {
     this.relatedPlants = relatedPlants;
     this.moreInfo = moreInfo;
     this.map = map;
+    this.version = version;
   }
 
   static create(
@@ -92,6 +95,7 @@ export class DataRecordModel extends BaseModel {
       map: this.map,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
+      version: this.version,
     };
   }
 }

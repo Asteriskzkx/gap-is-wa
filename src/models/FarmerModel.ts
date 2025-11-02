@@ -20,6 +20,7 @@ export class FarmerModel extends UserModel {
   zipCode: string;
   phoneNumber: string;
   mobilePhoneNumber: string;
+  version?: number; // Optimistic locking
 
   constructor(
     userId: number, // เปลี่ยนจาก string เป็น number
@@ -45,7 +46,8 @@ export class FarmerModel extends UserModel {
     phoneNumber: string,
     mobilePhoneNumber: string,
     createdAt: Date = new Date(),
-    updatedAt: Date = new Date()
+    updatedAt: Date = new Date(),
+    version?: number
   ) {
     super(
       userId,
@@ -74,6 +76,7 @@ export class FarmerModel extends UserModel {
     this.zipCode = zipCode;
     this.phoneNumber = phoneNumber;
     this.mobilePhoneNumber = mobilePhoneNumber;
+    this.version = version;
   }
 
   static async createFarmer(
@@ -164,6 +167,7 @@ export class FarmerModel extends UserModel {
       zipCode: this.zipCode,
       phoneNumber: this.phoneNumber,
       mobilePhoneNumber: this.mobilePhoneNumber,
+      version: this.version,
     };
   }
 }

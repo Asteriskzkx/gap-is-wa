@@ -102,6 +102,22 @@ export class RequirementRepository extends BaseRepository<RequirementModel> {
     }
   }
 
+  /**
+   * Update requirement with optimistic locking
+   */
+  async updateWithLock(
+    id: number,
+    data: Partial<RequirementModel>,
+    currentVersion: number
+  ): Promise<RequirementModel> {
+    return this.updateWithOptimisticLock(
+      id,
+      data,
+      currentVersion,
+      "requirement"
+    );
+  }
+
   private mapToModel(prismaRequirement: PrismaRequirement): RequirementModel {
     return this.mapper.toDomain(prismaRequirement);
   }

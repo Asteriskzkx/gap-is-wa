@@ -57,7 +57,10 @@ export default function FarmerApplicationsPage() {
           return;
         }
 
-        const farmsResponse = await fetch("/api/v1/rubber-farms");
+        // ดึงรายการสวนยางที่เป็นของเกษตรกรคนนี้โดยตรง (filter ที่ server)
+        const farmsResponse = await fetch(
+          `/api/v1/rubber-farms?farmerId=${farmerId}`
+        );
 
         if (!farmsResponse.ok) {
           setError("ไม่สามารถดึงข้อมูลได้ กรุณาลองใหม่อีกครั้ง");
@@ -65,10 +68,7 @@ export default function FarmerApplicationsPage() {
           return;
         }
 
-        const allFarms = await farmsResponse.json();
-        const farms = allFarms.filter(
-          (farm: any) => farm.farmerId === farmerId
-        );
+        const farms = await farmsResponse.json();
 
         const allApplicationItems: ApplicationItem[] = [];
 

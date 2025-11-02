@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import DynamicMapSelector from "./maps/DynamicMap";
 import ReactDatePicker from "react-datepicker";
+// @ts-ignore: side-effect CSS import; styles are handled by the bundler and no typings are available
 import "react-datepicker/dist/react-datepicker.css";
 import { parseISO } from "date-fns";
 import thaiProvinceData from "@/data/thai-provinces.json";
+import { toast } from "react-hot-toast";
 
 // Interfaces for the component
 interface Tambon {
@@ -41,6 +43,7 @@ interface PlantingDetail {
   yearOfTapping: string;
   monthOfTapping: string;
   totalProduction: number;
+  version?: number;
 }
 
 interface RubberFarm {
@@ -56,6 +59,7 @@ interface RubberFarm {
   provinceId: number;
   amphureId: number;
   tambonId: number;
+  version?: number; // เพิ่ม version field
   location: {
     type: string;
     coordinates: [number, number];
@@ -625,7 +629,7 @@ export default function RubberFarmEditForm() {
       console.log("New details:", newDetails);
 
       // สร้าง payload สำหรับอัพเดทฟาร์ม
-      const farmUpdatePayload = {
+      const farmUpdatePayload: any = {
         villageName: rubberFarm.villageName,
         moo: Number(rubberFarm.moo) || 0,
         road: rubberFarm.road || "",
@@ -635,6 +639,11 @@ export default function RubberFarmEditForm() {
         province: rubberFarm.province,
         location: rubberFarm.location,
       };
+
+      // เพิ่ม version ถ้ามี
+      if (rubberFarm.version !== undefined) {
+        farmUpdatePayload.version = rubberFarm.version;
+      }
 
       // อัพเดทข้อมูลฟาร์ม
       const token = localStorage.getItem("token");
@@ -650,10 +659,33 @@ export default function RubberFarmEditForm() {
         }
       );
 
+      if (farmResponse.status === 409) {
+        // Handle Optimistic Lock Conflict
+        const errorData = await farmResponse.json();
+        toast.error(
+          errorData.userMessage ||
+            "ข้อมูลถูกแก้ไขโดยผู้ใช้อื่นแล้ว กรุณาโหลดข้อมูลใหม่และลองอีกครั้ง",
+          { duration: 5000 }
+        );
+        // Refresh farm data
+        if (selectedFarmId) {
+          await fetchFarmDetails(selectedFarmId);
+        }
+        setIsLoading(false);
+        return;
+      }
+
       if (!farmResponse.ok) {
         const errorData = await farmResponse.json();
         throw new Error(errorData.message || "ไม่สามารถอัปเดตข้อมูลสวนยางได้");
       }
+
+      // อัพเดต version จาก response
+      const updatedFarmData = await farmResponse.json();
+      setRubberFarm((prev) => ({
+        ...prev,
+        version: updatedFarmData.version,
+      }));
 
       for (const id of deletedPlantingDetailIds) {
         try {
@@ -677,7 +709,7 @@ export default function RubberFarmEditForm() {
         try {
           if (detail.plantingDetailId) {
             // เตรียมข้อมูลสำหรับอัพเดท
-            const detailUpdatePayload = {
+            const detailUpdatePayload: any = {
               specie: detail.specie,
               areaOfPlot: Number(detail.areaOfPlot),
               numberOfRubber: Number(detail.numberOfRubber),
@@ -687,6 +719,11 @@ export default function RubberFarmEditForm() {
               monthOfTapping: detail.monthOfTapping,
               totalProduction: Number(detail.totalProduction) || 0,
             };
+
+            // เพิ่ม version ถ้ามี
+            if (detail.version !== undefined) {
+              detailUpdatePayload.version = detail.version;
+            }
 
             console.log(
               `Updating detail ${detail.plantingDetailId}:`,
@@ -705,9 +742,36 @@ export default function RubberFarmEditForm() {
               }
             );
 
+            if (detailResponse.status === 409) {
+              // Handle Optimistic Lock Conflict
+              const errorData = await detailResponse.json();
+              toast.error(
+                errorData.userMessage ||
+                  "ข้อมูลรายละเอียดการปลูกถูกแก้ไขโดยผู้ใช้อื่นแล้ว กรุณาโหลดข้อมูลใหม่และลองอีกครั้ง",
+                { duration: 5000 }
+              );
+              // Refresh farm data
+              if (selectedFarmId) {
+                await fetchFarmDetails(selectedFarmId);
+              }
+              setIsLoading(false);
+              return;
+            }
+
             if (!detailResponse.ok) {
               const errorData = await detailResponse.json();
               console.error("Error updating planting detail:", errorData);
+            } else {
+              // อัพเดต version จาก response
+              const updatedDetailData = await detailResponse.json();
+              const detailIndex = plantingDetails.findIndex(
+                (d) => d.plantingDetailId === detail.plantingDetailId
+              );
+              if (detailIndex !== -1) {
+                const updatedDetails = [...plantingDetails];
+                updatedDetails[detailIndex].version = updatedDetailData.version;
+                setPlantingDetails(updatedDetails);
+              }
             }
           }
         } catch (detailError) {
@@ -755,6 +819,7 @@ export default function RubberFarmEditForm() {
       }
 
       setSuccess(true);
+      toast.success("บันทึกข้อมูลสำเร็จ", { duration: 3000 });
 
       // รอสักครู่แล้วเปลี่ยนหน้า
       setTimeout(() => {
@@ -763,6 +828,7 @@ export default function RubberFarmEditForm() {
     } catch (error: any) {
       console.error("Error updating farm data:", error);
       setError(error.message || "เกิดข้อผิดพลาดในการอัปเดตข้อมูล");
+      toast.error(error.message || "เกิดข้อผิดพลาดในการอัปเดตข้อมูล");
     } finally {
       setIsLoading(false);
     }

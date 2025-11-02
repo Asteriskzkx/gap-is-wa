@@ -1,6 +1,7 @@
 import { BaseService } from "./BaseService";
 import { DataRecordModel } from "../models/DataRecordModel";
 import { DataRecordRepository } from "../repositories/DataRecordRepository";
+import { OptimisticLockError } from "../errors/OptimisticLockError";
 
 export class DataRecordService extends BaseService<DataRecordModel> {
   private dataRecordRepository: DataRecordRepository;
@@ -62,13 +63,24 @@ export class DataRecordService extends BaseService<DataRecordModel> {
 
   async updateDataRecord(
     dataRecordId: number,
-    data: Partial<DataRecordModel>
+    data: Partial<DataRecordModel>,
+    currentVersion?: number
   ): Promise<DataRecordModel | null> {
     try {
-      return await this.update(dataRecordId, data);
+      if (currentVersion !== undefined) {
+        // Use optimistic locking
+        return await this.dataRecordRepository.updateWithLock(
+          dataRecordId,
+          data,
+          currentVersion
+        );
+      } else {
+        // Fallback to regular update
+        return await this.update(dataRecordId, data);
+      }
     } catch (error) {
       this.handleServiceError(error);
-      return null;
+      throw error;
     }
   }
 

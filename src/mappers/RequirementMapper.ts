@@ -15,7 +15,8 @@ export class RequirementMapper
       prismaEntity.evaluationMethod,
       prismaEntity.note,
       prismaEntity.createdAt,
-      prismaEntity.updatedAt
+      prismaEntity.updatedAt,
+      prismaEntity.version // เพิ่ม version
     );
 
     if (prismaEntity.requirementMaster) {

@@ -13,6 +13,7 @@ export class InspectionModel extends BaseModel {
   inspectionResult: string;
   auditorChiefId: number;
   rubberFarmId: number;
+  version?: number; // Optimistic locking
 
   // Relations
   inspectionType?: any;
@@ -33,7 +34,8 @@ export class InspectionModel extends BaseModel {
     auditorChiefId: number,
     rubberFarmId: number,
     createdAt: Date = new Date(),
-    updatedAt: Date = new Date()
+    updatedAt: Date = new Date(),
+    version?: number
   ) {
     super(inspectionId, createdAt, updatedAt);
     this.inspectionId = inspectionId;
@@ -44,6 +46,7 @@ export class InspectionModel extends BaseModel {
     this.inspectionResult = inspectionResult;
     this.auditorChiefId = auditorChiefId;
     this.rubberFarmId = rubberFarmId;
+    this.version = version;
   }
 
   static create(
@@ -90,6 +93,7 @@ export class InspectionModel extends BaseModel {
       rubberFarmId: this.rubberFarmId,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
+      version: this.version, // เพิ่ม version
       inspectionType: this.inspectionType,
       rubberFarm: this.rubberFarm,
       auditorChief: this.auditorChief,

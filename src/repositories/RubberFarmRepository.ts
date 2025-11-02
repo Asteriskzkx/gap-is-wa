@@ -167,6 +167,22 @@ export class RubberFarmRepository extends BaseRepository<RubberFarmModel> {
     }
   }
 
+  /**
+   * Update rubber farm with optimistic locking
+   */
+  async updateWithLock(
+    id: number,
+    data: Partial<RubberFarmModel>,
+    currentVersion: number
+  ): Promise<RubberFarmModel> {
+    return this.updateWithOptimisticLock(
+      id,
+      data,
+      currentVersion,
+      "rubberFarm"
+    );
+  }
+
   private mapToModel(
     prismaRubberFarm: PrismaRubberFarm & { plantingDetails?: any[] }
   ): RubberFarmModel {

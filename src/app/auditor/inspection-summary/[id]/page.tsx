@@ -28,6 +28,7 @@ interface InspectionSummary {
   inspectionTypeId: number;
   auditorChiefId: number;
   rubberFarmId: number;
+  version?: number; // เพิ่ม version field
   inspectionType?: {
     typeName: string;
   };
@@ -243,15 +244,33 @@ export default function AuditorInspectionSummaryPage() {
           body: JSON.stringify({
             inspectionResult: selectedResult,
             summaryComments: comments,
+            version: inspection.version, // ส่ง version
           }),
         }
       );
 
       if (response.ok) {
+        const updatedInspection = await response.json();
+        // อัพเดต version ใหม่
+        setInspection({ ...inspection, version: updatedInspection.version });
         toast.success("บันทึกผลการประเมินเรียบร้อยแล้ว");
         router.push("/auditor/reports");
+      } else if (response.status === 409) {
+        // Handle optimistic lock conflict
+        const errorData = await response.json();
+        toast.error(
+          errorData.userMessage ||
+            "ข้อมูลถูกแก้ไขโดยผู้ใช้อื่นแล้ว กรุณาโหลดข้อมูลใหม่และลองอีกครั้ง",
+          { duration: 5000 }
+        );
+        // Refresh inspection data
+        window.location.reload();
       } else {
-        toast.error("ไม่สามารถบันทึกผลการประเมินได้");
+        const errorData = await response.json();
+        toast.error(
+          errorData.message ||
+            "ไม่สามารถบันทึกผลการประเมินได้ กรุณาลองใหม่อีกครั้ง"
+        );
       }
     } catch (error) {
       console.error("Error submitting final result:", error);
