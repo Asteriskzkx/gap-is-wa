@@ -2,10 +2,12 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import thaiProvinceData from "@/data/thai-provinces.json";
 import DynamicMapSelector from "./maps/DynamicMap";
 import ReactDatePicker, { registerLocale } from "react-datepicker";
+// @ts-ignore: side-effect CSS import; styles are handled by the bundler and no typings are available
 import "react-datepicker/dist/react-datepicker.css";
 import { format, parseISO } from "date-fns";
 import { th } from "date-fns/locale/th"; // นำเข้า locale ภาษาไทย
@@ -69,6 +71,7 @@ interface RubberFarm {
 
 export default function RubberFarmRegistrationForm() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -167,47 +170,24 @@ export default function RubberFarmRegistrationForm() {
     }
   };
 
-  // ดึงข้อมูล farmer ID จาก localStorage เมื่อ component โหลด
+  // ดึงข้อมูล farmer ID จาก NextAuth session
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      // เรียกใช้ API โดยตรง ไม่พยายามถอดรหัส token เอง
-      fetchFarmerData(token);
-    } else {
-      router.push("/"); // ถ้าไม่มี token ให้กลับไปหน้า login
+    if (status === "loading") return; // รอจนกว่า session จะโหลดเสร็จ
+
+    if (status === "unauthenticated") {
+      router.push("/"); // ถ้าไม่ได้ login ให้กลับไปหน้า login
+      return;
     }
-  }, []);
 
-  // ดึงข้อมูล farmer
-  const fetchFarmerData = async (token: string) => {
-    try {
-      const response = await fetch("/api/v1/farmers/current", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log("Farmer data:", data);
-
-        // ตรวจสอบโครงสร้างของข้อมูลที่ได้รับ
-        if (data && data.farmerId) {
-          setFarmerId(data.farmerId);
-        } else {
-          // เพิ่มตัวเลือกให้ผู้ใช้กรอก farmerId เอง
-          alert("ไม่พบข้อมูล farmerId ในระบบ กรุณากรอกเอง");
-          // หรือให้ผู้ใช้ติดต่อผู้ดูแลระบบ
-          setError("ไม่พบข้อมูล farmerId กรุณาติดต่อผู้ดูแลระบบ");
-        }
+    if (status === "authenticated" && session?.user?.roleData) {
+      const roleData = session.user.roleData;
+      if (roleData.farmerId) {
+        setFarmerId(roleData.farmerId);
       } else {
-        throw new Error("ไม่สามารถดึงข้อมูลเกษตรกรได้");
+        alert("ไม่พบข้อมูล farmerId ในระบบ กรุณาติดต่อผู้ดูแลระบบ");
       }
-    } catch (error) {
-      console.error("Error fetching farmer data:", error);
-      setError("ไม่สามารถดึงข้อมูลเกษตรกรได้ กรุณาเข้าสู่ระบบใหม่");
     }
-  };
+  }, [status, session, router]);
 
   // โหลดข้อมูลจังหวัด อำเภอ ตำบล
   useEffect(() => {
@@ -422,15 +402,14 @@ export default function RubberFarmRegistrationForm() {
         plantingDetailsData: validPlantingDetails,
       };
 
-      // เรียก API เพื่อส่งข้อมูล
-      const token = localStorage.getItem("token");
+      // เรียก API เพื่อส่งข้อมูล (ใช้ NextAuth session แทน localStorage token)
       const response = await fetch("/api/v1/rubber-farms", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
+        credentials: "include", // ส่ง cookie session ไปด้วย
       });
 
       if (!response.ok) {

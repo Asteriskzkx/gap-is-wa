@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import DynamicMapSelector from "./maps/DynamicMap";
 import ReactDatePicker from "react-datepicker";
@@ -69,6 +70,7 @@ interface RubberFarm {
 
 export default function RubberFarmEditForm() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -92,6 +94,7 @@ export default function RubberFarmEditForm() {
     provinceId: 0,
     amphureId: 0,
     tambonId: 0,
+    version: undefined, // เพิ่ม version field
     location: {
       type: "Point",
       coordinates: [0, 0],
@@ -108,13 +111,18 @@ export default function RubberFarmEditForm() {
   const [tambons, setTambons] = useState<Tambon[]>([]);
   const [isLoadingProvinces, setIsLoadingProvinces] = useState(true);
 
-  // Fetch farmerId from local storage and get farms data
+  // Check authentication and fetch farmer data
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      fetchFarmerData(token);
-    } else {
-      router.push("/");
+    if (status === "loading") return; // Wait for session to load
+
+    if (status === "unauthenticated") {
+      router.push("/"); // Redirect to login
+      return;
+    }
+
+    if (status === "authenticated" && session?.user?.roleData?.farmerId) {
+      setFarmerId(session.user.roleData.farmerId);
+      fetchFarmerFarms(session.user.roleData.farmerId);
     }
 
     // Load province data
@@ -147,43 +155,15 @@ export default function RubberFarmEditForm() {
     };
 
     loadProvinceData();
-  }, []);
-
-  // Fetch farmer data and farms
-  const fetchFarmerData = async (token: string) => {
-    try {
-      const response = await fetch("/api/v1/farmers/current", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data && data.farmerId) {
-          setFarmerId(data.farmerId);
-          fetchFarmerFarms(token, data.farmerId);
-        } else {
-          setError("ไม่พบข้อมูล farmerId ในระบบ");
-        }
-      } else {
-        throw new Error("ไม่สามารถดึงข้อมูลเกษตรกรได้");
-      }
-    } catch (error) {
-      console.error("Error fetching farmer data:", error);
-      setError("ไม่สามารถดึงข้อมูลเกษตรกรได้ กรุณาเข้าสู่ระบบใหม่");
-    }
-  };
+  }, [status, session, router]);
 
   // Fetch farms belonging to the farmer
-  const fetchFarmerFarms = async (token: string, farmerId: number) => {
+  const fetchFarmerFarms = async (farmerId: number) => {
     try {
       const response = await fetch(
         `/api/v1/rubber-farms?farmerId=${farmerId}`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          credentials: "include",
         }
       );
 
@@ -214,15 +194,18 @@ export default function RubberFarmEditForm() {
       setIsLoading(true);
       setIsLoadingFarmData(true);
 
-      const token = localStorage.getItem("token");
       const response = await fetch(`/api/v1/rubber-farms/${farmId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       });
 
       if (response.ok) {
         const data = await response.json();
+
+        console.log("🔍 Fetched Farm Data:", {
+          rubberFarmId: data.rubberFarmId,
+          version: data.version,
+          plantingDetailsCount: data.plantingDetails?.length || 0,
+        });
 
         // ตรวจสอบว่า provinces data โหลดเสร็จแล้ว
         if (provinces.length === 0) {
@@ -301,7 +284,7 @@ export default function RubberFarmEditForm() {
           }, 10); // delay เล็กน้อย
         }, 10);
 
-        // Set planting details
+        // Set planting details with version
         if (data.plantingDetails && data.plantingDetails.length > 0) {
           const correctedDetails = data.plantingDetails.map(
             (detail: PlantingDetail) => ({
@@ -313,8 +296,18 @@ export default function RubberFarmEditForm() {
               numberOfTapping: Number(detail.numberOfTapping) || 0,
               ageOfRubber: Number(detail.ageOfRubber) || 0,
               totalProduction: Number(detail.totalProduction) || 0,
+              version: detail.version, // เก็บ version จาก API
             })
           );
+
+          console.log(
+            "🔍 PlantingDetails Set:",
+            correctedDetails.map((d: PlantingDetail) => ({
+              id: d.plantingDetailId,
+              version: d.version,
+            }))
+          );
+
           setPlantingDetails(correctedDetails);
         }
       } else {
@@ -645,16 +638,21 @@ export default function RubberFarmEditForm() {
         farmUpdatePayload.version = rubberFarm.version;
       }
 
+      console.log("🔍 RubberFarm Update - Current State:", {
+        rubberFarmId: rubberFarm.rubberFarmId,
+        version: rubberFarm.version,
+        payload: farmUpdatePayload,
+      });
+
       // อัพเดทข้อมูลฟาร์ม
-      const token = localStorage.getItem("token");
       const farmResponse = await fetch(
         `/api/v1/rubber-farms/${selectedFarmId}`,
         {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
+          credentials: "include",
           body: JSON.stringify(farmUpdatePayload),
         }
       );
@@ -691,9 +689,7 @@ export default function RubberFarmEditForm() {
         try {
           const res = await fetch(`/api/v1/planting-details/${id}`, {
             method: "DELETE",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            credentials: "include",
           });
           if (!res.ok) {
             const errorData = await res.json();
@@ -726,8 +722,11 @@ export default function RubberFarmEditForm() {
             }
 
             console.log(
-              `Updating detail ${detail.plantingDetailId}:`,
-              detailUpdatePayload
+              `🔍 PlantingDetail Update - ID: ${detail.plantingDetailId}`,
+              {
+                currentVersion: detail.version,
+                payload: detailUpdatePayload,
+              }
             );
 
             const detailResponse = await fetch(
@@ -736,8 +735,8 @@ export default function RubberFarmEditForm() {
                 method: "PUT",
                 headers: {
                   "Content-Type": "application/json",
-                  Authorization: `Bearer ${token}`,
                 },
+                credentials: "include",
                 body: JSON.stringify(detailUpdatePayload),
               }
             );
@@ -801,8 +800,8 @@ export default function RubberFarmEditForm() {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
             },
+            credentials: "include",
             body: JSON.stringify(newDetailPayload),
           });
 
