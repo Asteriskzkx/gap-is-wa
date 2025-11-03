@@ -7,7 +7,7 @@ import FarmerLayout from "@/components/layout/FarmerLayout";
 export default function RubberFarmApplication() {
   return (
     <FarmerLayout>
-      <div className="max-w-3xl mx-auto">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
         <RubberFarmRegistrationForm />
       </div>
     </FarmerLayout>
