@@ -5,9 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import DynamicMapSelector from "./maps/DynamicMap";
-import ReactDatePicker from "react-datepicker";
-// @ts-ignore: side-effect CSS import; styles are handled by the bundler and no typings are available
-import "react-datepicker/dist/react-datepicker.css";
+import { Calendar } from "primereact/calendar";
 import { parseISO } from "date-fns";
 import thaiProvinceData from "@/data/thai-provinces.json";
 import { toast } from "react-hot-toast";
@@ -507,17 +505,30 @@ export default function RubberFarmEditForm() {
     } else if (field === "specie") {
       updatedDetails[index][field] = String(value);
     } else if (field === "yearOfTapping" || field === "monthOfTapping") {
-      // ทำให้แน่ใจว่าค่าวันที่เป็น ISO string
+      // ทำให้แน่ใจว่าค่าวันที่เป็น ISO string โดยใช้เวลาท้องถิ่น
       try {
         const date = value instanceof Date ? value : new Date(value as string);
-        if (!isNaN(date.getTime())) {
+        if (!Number.isNaN(date.getTime())) {
+          // ตั้งค่าเป็นวันแรกของเดือน/ปี และเวลาเที่ยงคืนตามเวลาท้องถิ่น
+          if (field === "yearOfTapping") {
+            // เก็บเฉพาะปี - ตั้งเป็นวันที่ 1 มกราคม
+            date.setMonth(0, 1);
+          } else {
+            // เก็บเดือนและปี - ตั้งเป็นวันที่ 1 ของเดือนนั้น
+            date.setDate(1);
+          }
+          date.setHours(0, 0, 0, 0);
           updatedDetails[index][field] = date.toISOString();
         } else {
-          updatedDetails[index][field] = new Date().toISOString();
+          const defaultDate = new Date();
+          defaultDate.setHours(0, 0, 0, 0);
+          updatedDetails[index][field] = defaultDate.toISOString();
         }
-      } catch (error) {
+      } catch {
         // ถ้ามีข้อผิดพลาดให้ใช้วันที่ปัจจุบัน
-        updatedDetails[index][field] = new Date().toISOString();
+        const defaultDate = new Date();
+        defaultDate.setHours(0, 0, 0, 0);
+        updatedDetails[index][field] = defaultDate.toISOString();
       }
     }
 
@@ -1445,21 +1456,24 @@ export default function RubberFarmEditForm() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       ปีที่เริ่มกรีด
                     </label>
-                    <ReactDatePicker
-                      selected={
+                    <Calendar
+                      value={
                         detail.yearOfTapping
                           ? parseISO(detail.yearOfTapping)
                           : null
                       }
-                      onChange={(date) =>
+                      onChange={(e) =>
                         updatePlantingDetail(
                           index,
                           "yearOfTapping",
-                          date ? date.toISOString() : ""
+                          e.value ? (e.value as Date) : ""
                         )
                       }
-                      dateFormat="dd/MM/yyyy"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      view="year"
+                      dateFormat="yy"
+                      placeholder="เลือกปี"
+                      className="w-full"
+                      showIcon
                     />
                   </div>
 
@@ -1467,21 +1481,24 @@ export default function RubberFarmEditForm() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       เดือนที่เริ่มกรีด
                     </label>
-                    <ReactDatePicker
-                      selected={
+                    <Calendar
+                      value={
                         detail.monthOfTapping
                           ? parseISO(detail.monthOfTapping)
                           : null
                       }
-                      onChange={(date) =>
+                      onChange={(e) =>
                         updatePlantingDetail(
                           index,
                           "monthOfTapping",
-                          date ? date.toISOString() : ""
+                          e.value ? (e.value as Date) : ""
                         )
                       }
-                      dateFormat="dd/MM/yyyy"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      view="month"
+                      dateFormat="MM/yy"
+                      placeholder="เลือกเดือน"
+                      className="w-full"
+                      showIcon
                     />
                   </div>
 

@@ -1,7 +1,14 @@
 import type { Metadata, Viewport } from "next";
 import { sarabun } from "./fonts";
-import "./globals.css";
 import { Providers } from "./providers";
+
+// PrimeReact CSS - ต้อง import ก่อน globals.css
+import "primereact/resources/themes/lara-light-blue/theme.css";
+import "primereact/resources/primereact.min.css";
+import "primeicons/primeicons.css";
+
+// Custom CSS - import หลังสุดเพื่อ override PrimeReact
+import "./globals.css";
 
 export const metadata: Metadata = {
   title:

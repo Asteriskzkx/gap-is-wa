@@ -6,15 +6,8 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import thaiProvinceData from "@/data/thai-provinces.json";
 import DynamicMapSelector from "./maps/DynamicMap";
-import ReactDatePicker, { registerLocale } from "react-datepicker";
-// @ts-ignore: side-effect CSS import; styles are handled by the bundler and no typings are available
-import "react-datepicker/dist/react-datepicker.css";
-import { format, parseISO } from "date-fns";
-import { th } from "date-fns/locale/th"; // นำเข้า locale ภาษาไทย
-import { addYears } from "date-fns/addYears"; // สำหรับการปรับปีเป็น พ.ศ.
-
-// ลงทะเบียน locale ภาษาไทย
-registerLocale("th", th);
+import { Calendar } from "primereact/calendar";
+import { parseISO } from "date-fns";
 
 // ประเภทข้อมูลสำหรับโครงสร้าง API จังหวัด อำเภอ ตำบล (ตามที่มีใน FarmerRegisterPage)
 interface Tambon {
@@ -309,7 +302,7 @@ export default function RubberFarmRegistrationForm() {
   const updatePlantingDetail = (
     index: number,
     field: keyof PlantingDetail,
-    value: string | number
+    value: string | number | Date
   ) => {
     const updatedDetails = [...plantingDetails];
 
@@ -325,10 +318,19 @@ export default function RubberFarmRegistrationForm() {
     } else if (field === "specie") {
       updatedDetails[index][field] = String(value);
     } else if (field === "yearOfTapping" || field === "monthOfTapping") {
-      // เมื่อได้รับค่าจาก input type="date" ให้แปลงเป็น ISO string เต็มรูปแบบ
-      const date = new Date(value as string);
-      if (!isNaN(date.getTime())) {
+      // เมื่อได้รับค่าจาก Calendar ให้แปลงเป็น ISO string โดยใช้เวลาท้องถิ่น
+      const date = value instanceof Date ? value : new Date(value as string);
+      if (!Number.isNaN(date.getTime())) {
         // ตรวจสอบว่าเป็นวันที่ที่ถูกต้อง
+        // ตั้งค่าเป็นวันแรกของเดือน/ปี และเวลาเที่ยงคืนตามเวลาท้องถิ่น
+        if (field === "yearOfTapping") {
+          // เก็บเฉพาะปี - ตั้งเป็นวันที่ 1 มกราคม
+          date.setMonth(0, 1);
+        } else {
+          // เก็บเดือนและปี - ตั้งเป็นวันที่ 1 ของเดือนนั้น
+          date.setDate(1);
+        }
+        date.setHours(0, 0, 0, 0);
         updatedDetails[index][field] = date.toISOString();
       }
     }
@@ -969,25 +971,24 @@ export default function RubberFarmRegistrationForm() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       ปีที่เริ่มกรีด <span className="text-red-500">*</span>
                     </label>
-                    <ReactDatePicker
-                      selected={
+                    <Calendar
+                      value={
                         detail.yearOfTapping
                           ? parseISO(detail.yearOfTapping)
                           : null
                       }
-                      onChange={(date: Date | null) =>
+                      onChange={(e) =>
                         updatePlantingDetail(
                           index,
                           "yearOfTapping",
-                          date ? date.toISOString() : ""
+                          e.value ? (e.value as Date) : ""
                         )
                       }
-                      locale="th"
-                      dateFormat="พ.ศ. yyyy"
-                      showYearPicker
-                      yearItemNumber={6}
-                      renderYearContent={(year) => year + 543} // แสดงปีเป็น พ.ศ. โดยไม่เปลี่ยนค่าจริงของ Date
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      view="year"
+                      dateFormat="yy"
+                      placeholder="เลือกปี"
+                      className="w-full"
+                      showIcon
                     />
                   </div>
 
@@ -1005,11 +1006,7 @@ export default function RubberFarmRegistrationForm() {
                         const month = parseInt(e.target.value);
                         const date = new Date();
                         date.setMonth(month);
-                        updatePlantingDetail(
-                          index,
-                          "monthOfTapping",
-                          date.toISOString()
-                        );
+                        updatePlantingDetail(index, "monthOfTapping", date);
                       }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     >
