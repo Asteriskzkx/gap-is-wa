@@ -1,7 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import { DataTable, DataTablePageEvent } from "primereact/datatable";
+import {
+  DataTable,
+  DataTablePageEvent,
+  DataTableSortEvent,
+} from "primereact/datatable";
 import { Column } from "primereact/column";
 import { PaginatorTemplate } from "primereact/paginator";
 
@@ -32,6 +36,14 @@ interface PrimaryDataTableProps {
   readonly selection?: any;
   readonly onSelectionChange?: (e: any) => void;
   readonly dataKey?: string;
+  readonly sortMode?: "single" | "multiple";
+  readonly sortField?: string;
+  readonly sortOrder?: 1 | -1 | 0 | null;
+  readonly multiSortMeta?: Array<{
+    field: string;
+    order: 1 | -1 | 0 | null;
+  }>;
+  readonly onSort?: (event: DataTableSortEvent) => void;
 }
 
 const CurrentPageReport = (options: any) => {
@@ -44,20 +56,22 @@ const CurrentPageReport = (options: any) => {
 
 /**
  * PrimaryDataTable - ตารางข้อมูลหลักที่ใช้ในระบบ GAP
- * รองรับ pagination และ lazy loading
+ * รองรับ pagination, lazy loading, sorting และ multi-sorting
  *
  * @example
  * <PrimaryDataTable
  *   value={data}
  *   columns={[
- *     { field: 'id', header: 'รหัส' },
- *     { field: 'name', header: 'ชื่อ', body: (rowData) => <span>{rowData.name}</span> }
+ *     { field: 'id', header: 'รหัส', sortable: true },
+ *     { field: 'name', header: 'ชื่อ', body: (rowData) => <span>{rowData.name}</span>, sortable: true }
  *   ]}
  *   paginator
  *   rows={10}
  *   totalRecords={100}
  *   lazy
  *   onPage={handlePageChange}
+ *   sortMode="multiple"
+ *   onSort={handleSort}
  * />
  */
 export default function PrimaryDataTable({
@@ -77,6 +91,11 @@ export default function PrimaryDataTable({
   selection,
   onSelectionChange,
   dataKey = "id",
+  sortMode = "single",
+  sortField,
+  sortOrder,
+  multiSortMeta,
+  onSort,
 }: PrimaryDataTableProps) {
   const [first, setFirst] = useState(0);
 
@@ -117,6 +136,12 @@ export default function PrimaryDataTable({
         selection={selection}
         onSelectionChange={onSelectionChange}
         dataKey={dataKey}
+        sortMode={sortMode}
+        sortField={sortField}
+        sortOrder={sortOrder}
+        multiSortMeta={multiSortMeta}
+        onSort={onSort}
+        removableSort
         className="w-full"
         pt={{
           table: { className: "w-full" },

@@ -191,26 +191,40 @@ export class AuditorController extends BaseController<AuditorModel> {
         );
       }
 
-      // ดึงค่า pagination จาก query parameters
+      // ดึงค่า pagination และ search/sort parameters จาก query
       const { searchParams } = new URL(req.url);
       const limit = Number.parseInt(searchParams.get("limit") || "10");
       const offset = Number.parseInt(searchParams.get("offset") || "0");
 
-      // ดึงรายการ farms ที่พร้อมใช้งานทั้งหมด
-      const availableFarms =
-        await this.auditorService.getAvailableRubberFarms();
+      // Search parameters
+      const province = searchParams.get("province") || undefined;
+      const district = searchParams.get("district") || undefined;
+      const subDistrict = searchParams.get("subDistrict") || undefined;
 
-      // คำนวณ pagination
-      const total = availableFarms.length;
-      const paginatedFarms = availableFarms.slice(offset, offset + limit);
+      // Sort parameters
+      const sortField = searchParams.get("sortField") || undefined;
+      const sortOrder = searchParams.get("sortOrder") || undefined;
+      const multiSortMeta = searchParams.get("multiSortMeta") || undefined;
+
+      // ดึงรายการ farms ที่พร้อมใช้งานพร้อมกรองและเรียงลำดับ
+      const result = await this.auditorService.getAvailableRubberFarms({
+        province,
+        district,
+        subDistrict,
+        sortField,
+        sortOrder: sortOrder as "asc" | "desc" | undefined,
+        multiSortMeta: multiSortMeta ? JSON.parse(multiSortMeta) : undefined,
+        limit,
+        offset,
+      });
 
       return NextResponse.json(
         {
-          results: paginatedFarms,
+          results: result.data,
           paginator: {
             limit,
             offset,
-            total,
+            total: result.total,
           },
         },
         { status: 200 }
