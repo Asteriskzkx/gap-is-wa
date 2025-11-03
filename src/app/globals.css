@@ -806,3 +806,163 @@ input.p-inputtext:disabled {
   border-right-color: #dc2626 !important;
   border-left-color: transparent !important;
 }
+
+/* PrimaryDataTable Styles */
+.primary-datatable-wrapper .p-datatable {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.primary-datatable-wrapper .p-datatable-header {
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 1rem;
+}
+
+.primary-datatable-wrapper .p-datatable-thead > tr > th {
+  background: #f9fafb;
+  color: #6b7280;
+  font-weight: 500;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.primary-datatable-wrapper .p-datatable-tbody > tr {
+  border-bottom: 1px solid #e5e7eb;
+  transition: background-color 0.2s;
+}
+
+.primary-datatable-wrapper .p-datatable-tbody > tr:hover {
+  background-color: #f9fafb;
+}
+
+.primary-datatable-wrapper .p-datatable-tbody > tr.p-highlight {
+  background-color: #f0fdf4;
+}
+
+.primary-datatable-wrapper .p-paginator {
+  background: #ffffff;
+  border-top: 1px solid #e5e7eb;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.primary-datatable-wrapper .p-paginator .p-paginator-pages {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.primary-datatable-wrapper .p-paginator .p-paginator-page,
+.primary-datatable-wrapper .p-paginator .p-paginator-first,
+.primary-datatable-wrapper .p-paginator .p-paginator-prev,
+.primary-datatable-wrapper .p-paginator .p-paginator-next,
+.primary-datatable-wrapper .p-paginator .p-paginator-last {
+  min-width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.375rem;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #374151;
+  transition: all 0.2s;
+}
+
+.primary-datatable-wrapper .p-paginator .p-paginator-page:not(:disabled):hover,
+.primary-datatable-wrapper .p-paginator .p-paginator-first:not(:disabled):hover,
+.primary-datatable-wrapper .p-paginator .p-paginator-prev:not(:disabled):hover,
+.primary-datatable-wrapper .p-paginator .p-paginator-next:not(:disabled):hover,
+.primary-datatable-wrapper .p-paginator .p-paginator-last:not(:disabled):hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.primary-datatable-wrapper .p-paginator .p-paginator-page.p-highlight {
+  background: #10b981;
+  border-color: #10b981;
+  color: #ffffff;
+}
+
+.primary-datatable-wrapper .p-paginator .p-paginator-page:disabled,
+.primary-datatable-wrapper .p-paginator .p-paginator-first:disabled,
+.primary-datatable-wrapper .p-paginator .p-paginator-prev:disabled,
+.primary-datatable-wrapper .p-paginator .p-paginator-next:disabled,
+.primary-datatable-wrapper .p-paginator .p-paginator-last:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.primary-datatable-wrapper .p-datatable-emptymessage > td {
+  text-align: center;
+  padding: 2rem;
+}
+
+.primary-datatable-wrapper .p-datatable-loading-icon {
+  color: #10b981;
+}
+
+.primary-datatable-wrapper .p-paginator .p-dropdown {
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  height: 2.5rem;
+}
+
+.primary-datatable-wrapper .p-paginator .p-paginator-current {
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+@media (max-width: 768px) {
+  .primary-datatable-wrapper .p-paginator {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0.5rem;
+  }
+
+  .primary-datatable-wrapper .p-paginator > * {
+    justify-content: center;
+  }
+
+  .primary-datatable-wrapper .p-paginator .p-paginator-pages {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .primary-datatable-wrapper .p-paginator .p-paginator-page,
+  .primary-datatable-wrapper .p-paginator .p-paginator-first,
+  .primary-datatable-wrapper .p-paginator .p-paginator-prev,
+  .primary-datatable-wrapper .p-paginator .p-paginator-next,
+  .primary-datatable-wrapper .p-paginator .p-paginator-last {
+    min-width: 2rem;
+    height: 2rem;
+    font-size: 0.875rem;
+  }
+
+  .primary-datatable-wrapper .p-paginator .p-paginator-current {
+    font-size: 0.75rem;
+    text-align: center;
+    width: 100%;
+  }
+
+  .primary-datatable-wrapper .p-datatable-thead > tr > th {
+    padding: 0.5rem;
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+
+  .primary-datatable-wrapper .p-datatable-tbody > tr > td {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  /* ซ่อน column อีเมลบนหน้าจอเล็ก */
+  .primary-datatable-wrapper .p-datatable-thead > tr > th:nth-child(5),
+  .primary-datatable-wrapper .p-datatable-tbody > tr > td:nth-child(5) {
+    display: none;
+  }
+}
