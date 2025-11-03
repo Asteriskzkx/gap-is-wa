@@ -118,3 +118,691 @@ button {
   width: 100% !important;
   min-width: 0 !important;
 }
+
+/* PrimeReact Custom Theme - Green (GAP Style) */
+/* Success Button - Green (ปุ่มหลัก) */
+.p-button.p-button-success {
+  background: #16a34a !important;
+  border-color: #16a34a !important;
+  color: #ffffff !important;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.p-button.p-button-success:enabled:hover {
+  background: #15803d !important;
+  border-color: #15803d !important;
+}
+
+.p-button.p-button-success:enabled:focus {
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #16a34a, 0 1px 2px 0 black !important;
+}
+
+.p-button.p-button-success:enabled:active {
+  background: #166534 !important;
+  border-color: #166534 !important;
+}
+
+/* Loading state */
+.p-button.p-button-success .p-button-loading-icon {
+  color: #ffffff !important;
+}
+
+/* Disabled state */
+.p-button.p-button-success:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  background: #16a34a !important;
+  border-color: #16a34a !important;
+}
+
+/* Secondary Button - Gray outline */
+.p-button.p-button-secondary.p-button-outlined {
+  background: transparent !important;
+  color: #374151 !important;
+  border: 1px solid #d1d5db !important;
+}
+
+.p-button.p-button-secondary.p-button-outlined:enabled:hover {
+  background: #f9fafb !important;
+  border-color: #9ca3af !important;
+  color: #111827 !important;
+}
+
+/* Danger Button - Red */
+.p-button.p-button-danger {
+  background: #dc2626 !important;
+  border-color: #dc2626 !important;
+  color: #ffffff !important;
+}
+
+.p-button.p-button-danger:enabled:hover {
+  background: #b91c1c !important;
+  border-color: #b91c1c !important;
+}
+
+/* Button sizes */
+.p-button.p-button-lg {
+  padding: 0.5rem 1rem !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+}
+
+/* Full width button */
+.p-button.w-full {
+  width: 100% !important;
+  justify-content: center !important;
+}
+
+/* Text Button */
+.p-button.p-button-text {
+  background: transparent !important;
+  border: none !important;
+  color: #16a34a !important;
+}
+
+.p-button.p-button-text:enabled:hover {
+  background: rgba(22, 163, 74, 0.04) !important;
+  color: #15803d !important;
+}
+
+/* Fix PrimeReact Button default styles */
+.p-button {
+  font-family: inherit !important;
+}
+
+.p-button-label {
+  font-weight: 500;
+}
+
+/* PrimeReact Calendar Styling */
+.p-calendar {
+  width: 100%;
+}
+
+.p-calendar .p-inputtext {
+  width: 100% !important;
+  padding: 0.5rem 0.75rem !important;
+  font-size: 1rem !important;
+  line-height: 1.5rem !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 0.375rem !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+  font-family: inherit !important;
+  color: #1a202c !important;
+}
+
+.p-calendar .p-inputtext:enabled:hover {
+  border-color: #9ca3af !important;
+}
+
+.p-calendar .p-inputtext:enabled:focus {
+  outline: none !important;
+  border-color: #16a34a !important;
+  box-shadow: 0 0 0 1px #16a34a !important;
+}
+
+.p-calendar .p-inputtext::placeholder {
+  color: #9ca3af !important;
+}
+
+.p-calendar.p-calendar-w-btn .p-inputtext {
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+
+.p-calendar .p-datepicker-trigger {
+  background: #f9fafb !important;
+  color: #374151 !important;
+  border: 1px solid #d1d5db !important;
+  border-left: none !important;
+  border-top-right-radius: 0.375rem !important;
+  border-bottom-right-radius: 0.375rem !important;
+  padding: 0.5rem 0.75rem !important;
+}
+
+.p-calendar .p-datepicker-trigger:hover {
+  background: #f3f4f6 !important;
+  color: #111827 !important;
+}
+
+.p-calendar .p-datepicker-trigger:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 1px #16a34a !important;
+}
+
+/* Primary Calendar - Match all inputs with same padding/font-size (no fixed height) */
+.primary-calendar.p-calendar,
+.primary-calendar.p-calendar .p-inputwrapper,
+.primary-calendar.p-calendar.p-component,
+.primary-calendar.p-calendar.p-inputwrapper {
+  display: inline-flex !important;
+}
+
+.primary-calendar .p-inputtext {
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.875rem !important;
+  line-height: 1.5rem !important;
+  box-sizing: border-box !important;
+}
+
+.primary-calendar .p-datepicker-trigger {
+  padding: 0.5rem 0.75rem !important;
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* ==================== PrimeReact Password Styling ==================== */
+.primary-password.p-password {
+  width: 100% !important;
+  display: block !important;
+}
+
+.primary-password .p-password-input {
+  width: 100% !important;
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.875rem !important;
+  line-height: 1.5rem !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 0.375rem !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+  transition: all 0.15s ease !important;
+  box-sizing: border-box !important;
+  padding-right: 2.5rem !important;
+}
+
+.primary-password .p-password-input:hover:not(:disabled) {
+  border-color: #9ca3af !important;
+}
+
+.primary-password .p-password-input:focus {
+  outline: none !important;
+  border-color: #16a34a !important;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1) !important;
+}
+
+.primary-password .p-password-input::placeholder {
+  color: #9ca3af !important;
+}
+
+.primary-password .p-input-icon-right {
+  width: 100% !important;
+}
+
+.primary-password .p-password-toggle-mask {
+  position: absolute !important;
+  right: 0.75rem !important;
+  color: #6b7280 !important;
+  cursor: pointer !important;
+}
+
+.primary-password .p-password-toggle-mask:hover {
+  color: #111827 !important;
+}
+
+/* ==================== PrimeReact InputMask Styling ==================== */
+.p-inputmask {
+  width: 100% !important;
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.875rem !important;
+  line-height: 1.5rem !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 0.375rem !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+  transition: all 0.15s ease !important;
+  box-sizing: border-box !important;
+}
+
+.p-inputmask:hover:not(:disabled) {
+  border-color: #9ca3af !important;
+}
+
+.p-inputmask:focus {
+  outline: none !important;
+  border-color: #16a34a !important;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1) !important;
+}
+
+.p-inputmask::placeholder {
+  color: #9ca3af !important;
+}
+
+.p-inputmask:disabled {
+  background-color: #f3f4f6 !important;
+  color: #9ca3af !important;
+  cursor: not-allowed !important;
+}
+
+/* Calendar Dropdown Panel */
+.p-datepicker {
+  border: 1px solid #e5e7eb !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+  font-family: inherit !important;
+}
+
+.p-datepicker .p-datepicker-header {
+  background: #f9fafb !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  padding: 0.75rem !important;
+}
+
+.p-datepicker .p-datepicker-header .p-datepicker-title {
+  color: #111827 !important;
+  font-weight: 600 !important;
+}
+
+.p-datepicker table td {
+  padding: 0.25rem !important;
+}
+
+.p-datepicker table td > span {
+  width: 2.5rem !important;
+  height: 2.5rem !important;
+  border-radius: 0.375rem !important;
+  transition: all 0.15s ease !important;
+}
+
+.p-datepicker table td > span:not(.p-highlight):hover {
+  background: #f3f4f6 !important;
+  color: #111827 !important;
+}
+
+.p-datepicker table td > span.p-highlight {
+  background: #16a34a !important;
+  color: #ffffff !important;
+  border-color: #16a34a !important;
+}
+
+.p-datepicker .p-monthpicker .p-monthpicker-month,
+.p-datepicker .p-yearpicker .p-yearpicker-year {
+  padding: 0.5rem !important;
+  border-radius: 0.375rem !important;
+  transition: all 0.15s ease !important;
+}
+
+.p-datepicker .p-monthpicker .p-monthpicker-month:hover,
+.p-datepicker .p-yearpicker .p-yearpicker-year:hover {
+  background: #f3f4f6 !important;
+  color: #111827 !important;
+}
+
+.p-datepicker .p-monthpicker .p-monthpicker-month.p-highlight,
+.p-datepicker .p-yearpicker .p-yearpicker-year.p-highlight {
+  background: #16a34a !important;
+  color: #ffffff !important;
+}
+
+.p-datepicker .p-datepicker-buttonbar {
+  border-top: 1px solid #e5e7eb !important;
+  padding: 0.75rem !important;
+}
+
+.p-datepicker .p-datepicker-buttonbar .p-button {
+  font-size: 0.875rem !important;
+  padding: 0.5rem 1rem !important;
+}
+
+/* ==================== PrimeReact AutoComplete Styling ==================== */
+/* AutoComplete Container */
+.p-autocomplete {
+  display: flex !important;
+  width: 100% !important;
+}
+
+.p-autocomplete .p-autocomplete-input {
+  width: 100% !important;
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.875rem !important;
+  line-height: 1.5rem !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 0.375rem !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+  transition: all 0.15s ease !important;
+  box-sizing: border-box !important;
+}
+
+.p-autocomplete .p-autocomplete-input:hover {
+  border-color: #9ca3af !important;
+}
+
+.p-autocomplete .p-autocomplete-input:focus {
+  outline: none !important;
+  border-color: #16a34a !important;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1) !important;
+}
+
+.p-autocomplete .p-autocomplete-input::placeholder {
+  color: #9ca3af !important;
+}
+
+/* AutoComplete Dropdown Button */
+.p-autocomplete .p-autocomplete-dropdown {
+  background: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+  border-left: none !important;
+  border-radius: 0 0.375rem 0.375rem 0 !important;
+  color: #6b7280 !important;
+  width: 2.5rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.15s ease !important;
+}
+
+.p-autocomplete .p-autocomplete-dropdown:hover {
+  background: #f9fafb !important;
+  color: #111827 !important;
+}
+
+.p-autocomplete .p-autocomplete-dropdown:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1) !important;
+}
+
+/* AutoComplete Panel (Dropdown List) */
+.p-autocomplete-panel {
+  background: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 0.375rem !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+  margin-top: 0.25rem !important;
+  max-height: 300px !important;
+  overflow-y: auto !important;
+}
+
+.p-autocomplete-panel .p-autocomplete-items {
+  padding: 0.25rem !important;
+}
+
+.p-autocomplete-panel .p-autocomplete-item {
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.875rem !important;
+  color: #374151 !important;
+  border-radius: 0.25rem !important;
+  margin: 0.125rem 0 !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.p-autocomplete-panel .p-autocomplete-item:hover {
+  background: #f3f4f6 !important;
+  color: #111827 !important;
+}
+
+.p-autocomplete-panel .p-autocomplete-item.p-highlight {
+  background: #16a34a !important;
+  color: #ffffff !important;
+}
+
+.p-autocomplete-panel .p-autocomplete-empty-message {
+  padding: 0.75rem !important;
+  font-size: 0.875rem !important;
+  color: #9ca3af !important;
+  text-align: center !important;
+}
+
+/* Disabled State */
+.p-autocomplete.p-disabled .p-autocomplete-input {
+  background-color: #f3f4f6 !important;
+  color: #9ca3af !important;
+  cursor: not-allowed !important;
+}
+
+.p-autocomplete.p-disabled .p-autocomplete-dropdown {
+  background-color: #f3f4f6 !important;
+  cursor: not-allowed !important;
+}
+
+/* ==================== PrimeReact Dropdown Styling ==================== */
+/* Dropdown Container */
+.p-dropdown {
+  display: inline-flex !important;
+  width: 100% !important;
+  background: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 0.375rem !important;
+  transition: all 0.15s ease !important;
+  align-items: center !important;
+  box-sizing: border-box !important;
+}
+
+.p-dropdown:not(.p-disabled):hover {
+  border-color: #9ca3af !important;
+}
+
+.p-dropdown:not(.p-disabled).p-focus {
+  outline: none !important;
+  border-color: #16a34a !important;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1) !important;
+}
+
+/* Dropdown Label (Selected Value) */
+.p-dropdown .p-dropdown-label {
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.875rem !important;
+  line-height: 1.5rem !important;
+  color: #374151 !important;
+  background: transparent !important;
+  flex: 1 !important;
+}
+
+.p-dropdown .p-dropdown-label.p-placeholder {
+  color: #9ca3af !important;
+}
+
+/* Dropdown Trigger Button */
+.p-dropdown .p-dropdown-trigger {
+  width: 2.5rem !important;
+  color: #6b7280 !important;
+  background: transparent !important;
+  border-radius: 0 0.375rem 0.375rem 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.p-dropdown:not(.p-disabled):hover .p-dropdown-trigger {
+  color: #111827 !important;
+}
+
+/* Dropdown Panel */
+.p-dropdown-panel {
+  background: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 0.375rem !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+  margin-top: 0.25rem !important;
+}
+
+.p-dropdown-panel .p-dropdown-items-wrapper {
+  max-height: 300px !important;
+}
+
+.p-dropdown-panel .p-dropdown-items {
+  padding: 0.25rem !important;
+}
+
+.p-dropdown-panel .p-dropdown-item {
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.875rem !important;
+  color: #374151 !important;
+  border-radius: 0.25rem !important;
+  margin: 0.125rem 0 !important;
+  transition: all 0.15s ease !important;
+}
+
+.p-dropdown-panel .p-dropdown-item:not(.p-highlight):not(.p-disabled):hover {
+  background: #f3f4f6 !important;
+  color: #111827 !important;
+}
+
+.p-dropdown-panel .p-dropdown-item.p-highlight {
+  background: #16a34a !important;
+  color: #ffffff !important;
+}
+
+.p-dropdown-panel .p-dropdown-empty-message {
+  padding: 0.75rem !important;
+  font-size: 0.875rem !important;
+  color: #9ca3af !important;
+  text-align: center !important;
+}
+
+/* Dropdown Clear Icon */
+.p-dropdown .p-dropdown-clear-icon {
+  color: #6b7280 !important;
+  right: 2.5rem !important;
+}
+
+.p-dropdown .p-dropdown-clear-icon:hover {
+  color: #111827 !important;
+}
+
+/* Disabled State */
+.p-dropdown.p-disabled {
+  background-color: #f3f4f6 !important;
+  opacity: 1 !important;
+}
+
+.p-dropdown.p-disabled .p-dropdown-label {
+  color: #9ca3af !important;
+}
+
+.p-dropdown.p-disabled .p-dropdown-trigger {
+  color: #9ca3af !important;
+}
+
+/* ==================== PrimeReact InputText Styling ==================== */
+/* InputText - Standalone (not in calendar or other components) */
+input.p-inputtext {
+  width: 100% !important;
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.875rem !important;
+  line-height: 1.5rem !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 0.375rem !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+  transition: all 0.15s ease !important;
+  box-sizing: border-box !important;
+}
+
+input.p-inputtext:hover:not(:disabled) {
+  border-color: #9ca3af !important;
+}
+
+input.p-inputtext:focus {
+  outline: none !important;
+  border-color: #16a34a !important;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1) !important;
+}
+
+input.p-inputtext::placeholder {
+  color: #9ca3af !important;
+}
+
+input.p-inputtext:disabled {
+  background-color: #f3f4f6 !important;
+  color: #9ca3af !important;
+  cursor: not-allowed !important;
+}
+
+/* ==================== PrimeReact InputNumber Styling ==================== */
+/* InputNumber Container */
+.p-inputnumber {
+  display: inline-flex !important;
+  width: 100% !important;
+}
+
+.p-inputnumber .p-inputnumber-input {
+  width: 100% !important;
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.875rem !important;
+  line-height: 1.5rem !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 0.375rem !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+  transition: all 0.15s ease !important;
+  box-sizing: border-box !important;
+}
+
+.p-inputnumber .p-inputnumber-input:hover {
+  border-color: #9ca3af !important;
+}
+
+.p-inputnumber .p-inputnumber-input:focus {
+  outline: none !important;
+  border-color: #16a34a !important;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1) !important;
+}
+
+.p-inputnumber .p-inputnumber-input::placeholder {
+  color: #9ca3af !important;
+}
+
+/* InputNumber Buttons */
+.p-inputnumber-buttons-stacked .p-button.p-inputnumber-button-up,
+.p-inputnumber-buttons-stacked .p-button.p-inputnumber-button-down,
+.p-inputnumber-buttons-horizontal .p-button.p-inputnumber-button-up,
+.p-inputnumber-buttons-horizontal .p-button.p-inputnumber-button-down {
+  background: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+  color: #6b7280 !important;
+}
+
+.p-inputnumber-buttons-stacked .p-button.p-inputnumber-button-up:hover,
+.p-inputnumber-buttons-stacked .p-button.p-inputnumber-button-down:hover,
+.p-inputnumber-buttons-horizontal .p-button.p-inputnumber-button-up:hover,
+.p-inputnumber-buttons-horizontal .p-button.p-inputnumber-button-down:hover {
+  background: #f9fafb !important;
+  color: #111827 !important;
+}
+
+/* Disabled State */
+.p-inputnumber.p-disabled .p-inputnumber-input {
+  background-color: #f3f4f6 !important;
+  color: #9ca3af !important;
+  cursor: not-allowed !important;
+}
+
+/* ==================== Error Tooltip Styling (Red) ==================== */
+.p-tooltip.error-tooltip .p-tooltip-text {
+  background-color: #dc2626 !important;
+  color: #ffffff !important;
+  padding: 0.5rem 0.75rem !important;
+  border-radius: 0.375rem !important;
+  font-size: 0.75rem !important;
+  line-height: 1rem !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+  max-width: 300px !important;
+}
+
+.p-tooltip.error-tooltip .p-tooltip-arrow {
+  border-bottom-color: #dc2626 !important;
+}
+
+.p-tooltip.error-tooltip.p-tooltip-top .p-tooltip-arrow {
+  border-top-color: #dc2626 !important;
+  border-bottom-color: transparent !important;
+}
+
+.p-tooltip.error-tooltip.p-tooltip-bottom .p-tooltip-arrow {
+  border-bottom-color: #dc2626 !important;
+  border-top-color: transparent !important;
+}
+
+.p-tooltip.error-tooltip.p-tooltip-left .p-tooltip-arrow {
+  border-left-color: #dc2626 !important;
+  border-right-color: transparent !important;
+}
+
+.p-tooltip.error-tooltip.p-tooltip-right .p-tooltip-arrow {
+  border-right-color: #dc2626 !important;
+  border-left-color: transparent !important;
+}

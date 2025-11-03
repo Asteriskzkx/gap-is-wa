@@ -7,7 +7,9 @@ import FarmerLayout from "@/components/layout/FarmerLayout";
 export default function EditRubberFarmApplication() {
   return (
     <FarmerLayout>
-      <RubberFarmEditForm />
+      <div className="max-w-3xl mx-auto">
+        <RubberFarmEditForm />
+      </div>
     </FarmerLayout>
   );
 }

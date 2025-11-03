@@ -6,15 +6,14 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import thaiProvinceData from "@/data/thai-provinces.json";
 import DynamicMapSelector from "./maps/DynamicMap";
-import ReactDatePicker, { registerLocale } from "react-datepicker";
-// @ts-ignore: side-effect CSS import; styles are handled by the bundler and no typings are available
-import "react-datepicker/dist/react-datepicker.css";
-import { format, parseISO } from "date-fns";
-import { th } from "date-fns/locale/th"; // นำเข้า locale ภาษาไทย
-import { addYears } from "date-fns/addYears"; // สำหรับการปรับปีเป็น พ.ศ.
-
-// ลงทะเบียน locale ภาษาไทย
-registerLocale("th", th);
+import { parseISO } from "date-fns";
+import {
+  PrimaryAutoComplete,
+  PrimaryDropdown,
+  PrimaryInputText,
+  PrimaryInputNumber,
+  PrimaryCalendar,
+} from "./ui";
 
 // ประเภทข้อมูลสำหรับโครงสร้าง API จังหวัด อำเภอ ตำบล (ตามที่มีใน FarmerRegisterPage)
 interface Tambon {
@@ -309,7 +308,7 @@ export default function RubberFarmRegistrationForm() {
   const updatePlantingDetail = (
     index: number,
     field: keyof PlantingDetail,
-    value: string | number
+    value: string | number | Date
   ) => {
     const updatedDetails = [...plantingDetails];
 
@@ -325,10 +324,19 @@ export default function RubberFarmRegistrationForm() {
     } else if (field === "specie") {
       updatedDetails[index][field] = String(value);
     } else if (field === "yearOfTapping" || field === "monthOfTapping") {
-      // เมื่อได้รับค่าจาก input type="date" ให้แปลงเป็น ISO string เต็มรูปแบบ
-      const date = new Date(value as string);
-      if (!isNaN(date.getTime())) {
+      // เมื่อได้รับค่าจาก Calendar ให้แปลงเป็น ISO string โดยใช้เวลาท้องถิ่น
+      const date = value instanceof Date ? value : new Date(value as string);
+      if (!Number.isNaN(date.getTime())) {
         // ตรวจสอบว่าเป็นวันที่ที่ถูกต้อง
+        // ตั้งค่าเป็นวันแรกของเดือน/ปี และเวลาเที่ยงคืนตามเวลาท้องถิ่น
+        if (field === "yearOfTapping") {
+          // เก็บเฉพาะปี - ตั้งเป็นวันที่ 1 มกราคม
+          date.setMonth(0, 1);
+        } else {
+          // เก็บเดือนและปี - ตั้งเป็นวันที่ 1 ของเดือนนั้น
+          date.setDate(1);
+        }
+        date.setHours(0, 0, 0, 0);
         updatedDetails[index][field] = date.toISOString();
       }
     }
@@ -620,14 +628,16 @@ export default function RubberFarmRegistrationForm() {
                 >
                   หมู่บ้าน/ชุมชน <span className="text-red-500">*</span>
                 </label>
-                <input
+                <PrimaryInputText
                   id="villageName"
                   name="villageName"
-                  type="text"
-                  required
                   value={rubberFarm.villageName}
-                  onChange={updateFarmData}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
+                  onChange={(value) =>
+                    updateFarmData({
+                      target: { name: "villageName", value },
+                    } as any)
+                  }
+                  required
                 />
               </div>
 
@@ -638,24 +648,19 @@ export default function RubberFarmRegistrationForm() {
                 >
                   หมู่ที่ <span className="text-red-500">*</span>
                 </label>
-                <input
+                <PrimaryInputNumber
                   id="moo"
                   name="moo"
-                  type="number"
-                  required
-                  value={rubberFarm.moo || ""}
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value, 10);
-                    if (
-                      e.target.value === "" ||
-                      (value >= 1 && value <= 1000)
-                    ) {
-                      updateFarmData(e); // อัปเดตค่าเฉพาะเมื่ออยู่ในช่วงที่กำหนด
-                    }
-                  }}
+                  value={rubberFarm.moo || null}
+                  onChange={(value) =>
+                    updateFarmData({
+                      target: { name: "moo", value: value || 0 },
+                    } as any)
+                  }
                   min={1}
                   max={1000}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
+                  maxFractionDigits={0}
+                  required
                 />
               </div>
             </div>
@@ -666,15 +671,17 @@ export default function RubberFarmRegistrationForm() {
                   htmlFor="road"
                   className="block text-sm font-medium text-gray-700 mb-1"
                 >
-                  ถนน <span className="text-red-500">*</span>
+                  ถนน
                 </label>
-                <input
+                <PrimaryInputText
                   id="road"
                   name="road"
-                  type="text"
                   value={rubberFarm.road}
-                  onChange={updateFarmData}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
+                  onChange={(value) =>
+                    updateFarmData({
+                      target: { name: "road", value },
+                    } as any)
+                  }
                 />
               </div>
 
@@ -683,15 +690,17 @@ export default function RubberFarmRegistrationForm() {
                   htmlFor="alley"
                   className="block text-sm font-medium text-gray-700 mb-1"
                 >
-                  ซอย <span className="text-red-500">*</span>
+                  ซอย
                 </label>
-                <input
+                <PrimaryInputText
                   id="alley"
                   name="alley"
-                  type="text"
                   value={rubberFarm.alley}
-                  onChange={updateFarmData}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
+                  onChange={(value) =>
+                    updateFarmData({
+                      target: { name: "alley", value },
+                    } as any)
+                  }
                 />
               </div>
             </div>
@@ -705,21 +714,22 @@ export default function RubberFarmRegistrationForm() {
                 >
                   จังหวัด <span className="text-red-500">*</span>
                 </label>
-                <select
+                <PrimaryAutoComplete
                   id="provinceId"
                   name="provinceId"
-                  required
                   value={rubberFarm.provinceId || ""}
-                  onChange={updateFarmData}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
-                >
-                  <option value="">-- เลือกจังหวัด --</option>
-                  {provinces.map((province) => (
-                    <option key={province.id} value={province.id}>
-                      {province.name_th}
-                    </option>
-                  ))}
-                </select>
+                  options={provinces.map((province) => ({
+                    label: province.name_th,
+                    value: province.id,
+                  }))}
+                  onChange={(value) => {
+                    updateFarmData({
+                      target: { name: "provinceId", value },
+                    } as any);
+                  }}
+                  placeholder="-- เลือกจังหวัด --"
+                  required
+                />
               </div>
 
               {/* Dropdown อำเภอ/เขต */}
@@ -730,22 +740,23 @@ export default function RubberFarmRegistrationForm() {
                 >
                   อำเภอ/เขต <span className="text-red-500">*</span>
                 </label>
-                <select
+                <PrimaryAutoComplete
                   id="amphureId"
                   name="amphureId"
-                  required
                   value={rubberFarm.amphureId || ""}
-                  onChange={updateFarmData}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
+                  options={amphures.map((amphure) => ({
+                    label: amphure.name_th,
+                    value: amphure.id,
+                  }))}
+                  onChange={(value) => {
+                    updateFarmData({
+                      target: { name: "amphureId", value },
+                    } as any);
+                  }}
+                  placeholder="-- เลือกอำเภอ/เขต --"
                   disabled={!rubberFarm.provinceId}
-                >
-                  <option value="">-- เลือกอำเภอ/เขต --</option>
-                  {amphures.map((amphure) => (
-                    <option key={amphure.id} value={amphure.id}>
-                      {amphure.name_th}
-                    </option>
-                  ))}
-                </select>
+                  required
+                />
               </div>
 
               {/* Dropdown ตำบล/แขวง */}
@@ -756,22 +767,23 @@ export default function RubberFarmRegistrationForm() {
                 >
                   ตำบล/แขวง <span className="text-red-500">*</span>
                 </label>
-                <select
+                <PrimaryAutoComplete
                   id="tambonId"
                   name="tambonId"
-                  required
                   value={rubberFarm.tambonId || ""}
-                  onChange={updateFarmData}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
+                  options={tambons.map((tambon) => ({
+                    label: tambon.name_th,
+                    value: tambon.id,
+                  }))}
+                  onChange={(value) => {
+                    updateFarmData({
+                      target: { name: "tambonId", value },
+                    } as any);
+                  }}
+                  placeholder="-- เลือกตำบล/แขวง --"
                   disabled={!rubberFarm.amphureId}
-                >
-                  <option value="">-- เลือกตำบล/แขวง --</option>
-                  {tambons.map((tambon) => (
-                    <option key={tambon.id} value={tambon.id}>
-                      {tambon.name_th}
-                    </option>
-                  ))}
-                </select>
+                  required
+                />
               </div>
             </div>
 
@@ -843,51 +855,38 @@ export default function RubberFarmRegistrationForm() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       พันธุ์ยาง <span className="text-red-500">*</span>
                     </label>
-                    <select
+                    <PrimaryAutoComplete
                       value={detail.specie}
-                      onChange={(e) =>
-                        updatePlantingDetail(index, "specie", e.target.value)
+                      options={[
+                        { label: "RRIT 251", value: "RRIT 251" },
+                        { label: "RRIM 600", value: "RRIM 600" },
+                        { label: "BPM 24", value: "BPM 24" },
+                        { label: "PB 235", value: "PB 235" },
+                        { label: "RRIT 408", value: "RRIT 408" },
+                        { label: "RRIT 226", value: "RRIT 226" },
+                        { label: "อื่นๆ", value: "อื่นๆ" },
+                      ]}
+                      onChange={(value) =>
+                        updatePlantingDetail(index, "specie", value)
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    >
-                      <option value="">-- เลือกพันธุ์ยาง --</option>
-                      <option value="RRIT 251">RRIT 251</option>
-                      <option value="RRIM 600">RRIM 600</option>
-                      <option value="BPM 24">BPM 24</option>
-                      <option value="PB 235">PB 235</option>
-                      <option value="RRIT 408">RRIT 408</option>
-                      <option value="RRIT 226">RRIT 226</option>
-                      <option value="อื่นๆ">อื่นๆ</option>
-                    </select>
+                      placeholder="-- เลือกพันธุ์ยาง --"
+                    />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       พื้นที่แปลง (ไร่) <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="number"
-                      step="0.0001"
+                    <PrimaryInputNumber
+                      value={detail.areaOfPlot || null}
+                      onChange={(value) =>
+                        updatePlantingDetail(index, "areaOfPlot", value || 0)
+                      }
                       min={0}
                       max={10000}
+                      minFractionDigits={0}
+                      maxFractionDigits={4}
                       required
-                      value={detail.areaOfPlot || ""}
-                      onChange={(e) => {
-                        const value = parseFloat(e.target.value);
-                        if (
-                          e.target.value === "" ||
-                          (value >= 0 && value <= 10000)
-                        ) {
-                          const formattedValue = parseFloat(value.toFixed(4));
-
-                          updatePlantingDetail(
-                            index,
-                            "areaOfPlot",
-                            formattedValue
-                          );
-                        }
-                      }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     />
                   </div>
                 </div>
@@ -897,22 +896,19 @@ export default function RubberFarmRegistrationForm() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       จำนวนต้นยางทั้งหมด <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="number"
-                      value={detail.numberOfRubber || ""}
+                    <PrimaryInputNumber
+                      value={detail.numberOfRubber || null}
+                      onChange={(value) =>
+                        updatePlantingDetail(
+                          index,
+                          "numberOfRubber",
+                          value || 0
+                        )
+                      }
                       min={0}
                       max={10000}
+                      maxFractionDigits={0}
                       required
-                      onChange={(e) => {
-                        const value = parseFloat(e.target.value);
-                        if (
-                          e.target.value === "" ||
-                          (value >= 0 && value <= 10000)
-                        ) {
-                          updatePlantingDetail(index, "numberOfRubber", value);
-                        }
-                      }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     />
                   </div>
 
@@ -921,22 +917,19 @@ export default function RubberFarmRegistrationForm() {
                       จำนวนต้นยางที่กรีดได้{" "}
                       <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="number"
-                      value={detail.numberOfTapping || ""}
+                    <PrimaryInputNumber
+                      value={detail.numberOfTapping || null}
+                      onChange={(value) =>
+                        updatePlantingDetail(
+                          index,
+                          "numberOfTapping",
+                          value || 0
+                        )
+                      }
                       min={0}
                       max={10000}
+                      maxFractionDigits={0}
                       required
-                      onChange={(e) => {
-                        const value = parseFloat(e.target.value);
-                        if (
-                          e.target.value === "" ||
-                          (value >= 0 && value <= 10000)
-                        ) {
-                          updatePlantingDetail(index, "numberOfTapping", value);
-                        }
-                      }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     />
                   </div>
 
@@ -944,22 +937,15 @@ export default function RubberFarmRegistrationForm() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       อายุต้นยาง (ปี) <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="number"
-                      value={detail.ageOfRubber || ""}
+                    <PrimaryInputNumber
+                      value={detail.ageOfRubber || null}
+                      onChange={(value) =>
+                        updatePlantingDetail(index, "ageOfRubber", value || 0)
+                      }
                       min={0}
                       max={100}
+                      maxFractionDigits={0}
                       required
-                      onChange={(e) => {
-                        const value = parseFloat(e.target.value);
-                        if (
-                          e.target.value === "" ||
-                          (value >= 0 && value <= 100)
-                        ) {
-                          updatePlantingDetail(index, "ageOfRubber", value);
-                        }
-                      }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     />
                   </div>
                 </div>
@@ -969,25 +955,23 @@ export default function RubberFarmRegistrationForm() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       ปีที่เริ่มกรีด <span className="text-red-500">*</span>
                     </label>
-                    <ReactDatePicker
-                      selected={
+                    <PrimaryCalendar
+                      value={
                         detail.yearOfTapping
                           ? parseISO(detail.yearOfTapping)
                           : null
                       }
-                      onChange={(date: Date | null) =>
+                      onChange={(value) =>
                         updatePlantingDetail(
                           index,
                           "yearOfTapping",
-                          date ? date.toISOString() : ""
+                          value || ""
                         )
                       }
-                      locale="th"
-                      dateFormat="พ.ศ. yyyy"
-                      showYearPicker
-                      yearItemNumber={6}
-                      renderYearContent={(year) => year + 543} // แสดงปีเป็น พ.ศ. โดยไม่เปลี่ยนค่าจริงของ Date
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      view="year"
+                      dateFormat="yy"
+                      placeholder="เลือกปี"
+                      required
                     />
                   </div>
 
@@ -995,65 +979,53 @@ export default function RubberFarmRegistrationForm() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       เดือนที่เริ่มกรีด <span className="text-red-500">*</span>
                     </label>
-                    <select
+                    <PrimaryDropdown
                       value={
                         detail.monthOfTapping
                           ? new Date(detail.monthOfTapping).getMonth()
                           : ""
                       }
-                      onChange={(e) => {
-                        const month = parseInt(e.target.value);
+                      options={[
+                        { label: "มกราคม", value: 0 },
+                        { label: "กุมภาพันธ์", value: 1 },
+                        { label: "มีนาคม", value: 2 },
+                        { label: "เมษายน", value: 3 },
+                        { label: "พฤษภาคม", value: 4 },
+                        { label: "มิถุนายน", value: 5 },
+                        { label: "กรกฎาคม", value: 6 },
+                        { label: "สิงหาคม", value: 7 },
+                        { label: "กันยายน", value: 8 },
+                        { label: "ตุลาคม", value: 9 },
+                        { label: "พฤศจิกายน", value: 10 },
+                        { label: "ธันวาคม", value: 11 },
+                      ]}
+                      onChange={(value) => {
                         const date = new Date();
-                        date.setMonth(month);
-                        updatePlantingDetail(
-                          index,
-                          "monthOfTapping",
-                          date.toISOString()
-                        );
+                        date.setMonth(value);
+                        updatePlantingDetail(index, "monthOfTapping", date);
                       }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    >
-                      <option value="0">มกราคม</option>
-                      <option value="1">กุมภาพันธ์</option>
-                      <option value="2">มีนาคม</option>
-                      <option value="3">เมษายน</option>
-                      <option value="4">พฤษภาคม</option>
-                      <option value="5">มิถุนายน</option>
-                      <option value="6">กรกฎาคม</option>
-                      <option value="7">สิงหาคม</option>
-                      <option value="8">กันยายน</option>
-                      <option value="9">ตุลาคม</option>
-                      <option value="10">พฤศจิกายน</option>
-                      <option value="11">ธันวาคม</option>
-                    </select>
+                      placeholder="-- เลือกเดือน --"
+                    />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       ผลผลิตรวม (กก.) <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="number"
-                      step="0.0001"
+                    <PrimaryInputNumber
+                      value={detail.totalProduction || null}
+                      onChange={(value) =>
+                        updatePlantingDetail(
+                          index,
+                          "totalProduction",
+                          value || 0
+                        )
+                      }
                       min={0}
                       max={10000}
-                      value={detail.totalProduction || ""}
-                      onChange={(e) => {
-                        const value = parseFloat(e.target.value);
-                        if (
-                          e.target.value === "" ||
-                          (value >= 0 && value <= 10000)
-                        ) {
-                          const formattedValue = parseFloat(value.toFixed(4));
-
-                          updatePlantingDetail(
-                            index,
-                            "totalProduction",
-                            formattedValue
-                          );
-                        }
-                      }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      minFractionDigits={0}
+                      maxFractionDigits={4}
+                      required
                     />
                   </div>
                 </div>
