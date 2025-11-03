@@ -50,7 +50,7 @@ export default function PrimaryDropdown({
       disabled={disabled}
       required={required}
       showClear={showClear}
-      className={`w-full ${className}`}
+      className={`w-full primary-dropdown ${className}`}
       panelClassName="dropdown-panel"
     />
   );

@@ -5,11 +5,16 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import DynamicMapSelector from "./maps/DynamicMap";
-import { Calendar } from "primereact/calendar";
 import { parseISO } from "date-fns";
 import thaiProvinceData from "@/data/thai-provinces.json";
 import { toast } from "react-hot-toast";
-import { PrimaryAutoComplete, PrimaryDropdown } from "./ui";
+import {
+  PrimaryAutoComplete,
+  PrimaryDropdown,
+  PrimaryInputText,
+  PrimaryInputNumber,
+  PrimaryCalendar,
+} from "./ui";
 
 // Interfaces for the component
 interface Tambon {
@@ -1116,14 +1121,16 @@ export default function RubberFarmEditForm() {
                 >
                   หมู่บ้าน/ชุมชน <span className="text-red-500">*</span>
                 </label>
-                <input
+                <PrimaryInputText
                   id="villageName"
                   name="villageName"
-                  type="text"
-                  required
                   value={rubberFarm.villageName}
-                  onChange={updateFarmData}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 text-sm md:text-base"
+                  onChange={(value) =>
+                    updateFarmData({
+                      target: { name: "villageName", value },
+                    } as any)
+                  }
+                  required
                 />
               </div>
 
@@ -1134,16 +1141,19 @@ export default function RubberFarmEditForm() {
                 >
                   หมู่ที่ <span className="text-red-500">*</span>
                 </label>
-                <input
+                <PrimaryInputNumber
                   id="moo"
                   name="moo"
-                  type="number"
-                  required
-                  value={rubberFarm.moo || ""}
-                  onChange={updateFarmData}
+                  value={rubberFarm.moo || null}
+                  onChange={(value) =>
+                    updateFarmData({
+                      target: { name: "moo", value: value || 0 },
+                    } as any)
+                  }
                   min={0}
                   max={1000}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 text-sm md:text-base"
+                  maxFractionDigits={0}
+                  required
                 />
               </div>
             </div>
@@ -1157,13 +1167,15 @@ export default function RubberFarmEditForm() {
                 >
                   ถนน
                 </label>
-                <input
+                <PrimaryInputText
                   id="road"
                   name="road"
-                  type="text"
                   value={rubberFarm.road}
-                  onChange={updateFarmData}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 text-sm md:text-base"
+                  onChange={(value) =>
+                    updateFarmData({
+                      target: { name: "road", value },
+                    } as any)
+                  }
                 />
               </div>
 
@@ -1174,13 +1186,15 @@ export default function RubberFarmEditForm() {
                 >
                   ซอย
                 </label>
-                <input
+                <PrimaryInputText
                   id="alley"
                   name="alley"
-                  type="text"
                   value={rubberFarm.alley}
-                  onChange={updateFarmData}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 text-sm md:text-base"
+                  onChange={(value) =>
+                    updateFarmData({
+                      target: { name: "alley", value },
+                    } as any)
+                  }
                 />
               </div>
             </div>
@@ -1379,19 +1393,15 @@ export default function RubberFarmEditForm() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       พื้นที่แปลง (ไร่) <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min={0}
-                      value={detail.areaOfPlot || ""}
-                      onChange={(e) =>
-                        updatePlantingDetail(
-                          index,
-                          "areaOfPlot",
-                          e.target.value
-                        )
+                    <PrimaryInputNumber
+                      value={detail.areaOfPlot || null}
+                      onChange={(value) =>
+                        updatePlantingDetail(index, "areaOfPlot", value || 0)
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      min={0}
+                      max={10000}
+                      minFractionDigits={0}
+                      maxFractionDigits={4}
                     />
                   </div>
                 </div>
@@ -1401,18 +1411,18 @@ export default function RubberFarmEditForm() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       จำนวนต้นยางทั้งหมด <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="number"
-                      value={detail.numberOfRubber || ""}
-                      min={0}
-                      onChange={(e) =>
+                    <PrimaryInputNumber
+                      value={detail.numberOfRubber || null}
+                      onChange={(value) =>
                         updatePlantingDetail(
                           index,
                           "numberOfRubber",
-                          e.target.value
+                          value || 0
                         )
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      min={0}
+                      max={10000}
+                      maxFractionDigits={0}
                     />
                   </div>
 
@@ -1420,18 +1430,18 @@ export default function RubberFarmEditForm() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       จำนวนต้นยางที่กรีดได้
                     </label>
-                    <input
-                      type="number"
-                      value={detail.numberOfTapping || ""}
-                      min={0}
-                      onChange={(e) =>
+                    <PrimaryInputNumber
+                      value={detail.numberOfTapping || null}
+                      onChange={(value) =>
                         updatePlantingDetail(
                           index,
                           "numberOfTapping",
-                          e.target.value
+                          value || 0
                         )
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      min={0}
+                      max={10000}
+                      maxFractionDigits={0}
                     />
                   </div>
 
@@ -1439,18 +1449,14 @@ export default function RubberFarmEditForm() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       อายุต้นยาง (ปี)
                     </label>
-                    <input
-                      type="number"
-                      value={detail.ageOfRubber || ""}
-                      min={0}
-                      onChange={(e) =>
-                        updatePlantingDetail(
-                          index,
-                          "ageOfRubber",
-                          e.target.value
-                        )
+                    <PrimaryInputNumber
+                      value={detail.ageOfRubber || null}
+                      onChange={(value) =>
+                        updatePlantingDetail(index, "ageOfRubber", value || 0)
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      min={0}
+                      max={100}
+                      maxFractionDigits={0}
                     />
                   </div>
                 </div>
@@ -1460,24 +1466,22 @@ export default function RubberFarmEditForm() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       ปีที่เริ่มกรีด
                     </label>
-                    <Calendar
+                    <PrimaryCalendar
                       value={
                         detail.yearOfTapping
                           ? parseISO(detail.yearOfTapping)
                           : null
                       }
-                      onChange={(e) =>
+                      onChange={(value) =>
                         updatePlantingDetail(
                           index,
                           "yearOfTapping",
-                          e.value ? (e.value as Date) : ""
+                          value || ""
                         )
                       }
                       view="year"
                       dateFormat="yy"
                       placeholder="เลือกปี"
-                      className="w-full"
-                      showIcon
                     />
                   </div>
 
@@ -1518,19 +1522,19 @@ export default function RubberFarmEditForm() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       ผลผลิตรวม (กก.)
                     </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min={0}
-                      value={detail.totalProduction || ""}
-                      onChange={(e) =>
+                    <PrimaryInputNumber
+                      value={detail.totalProduction || null}
+                      onChange={(value) =>
                         updatePlantingDetail(
                           index,
                           "totalProduction",
-                          e.target.value
+                          value || 0
                         )
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      min={0}
+                      max={10000}
+                      minFractionDigits={0}
+                      maxFractionDigits={4}
                     />
                   </div>
                 </div>
