@@ -430,10 +430,10 @@ export default function AuditorScheduleInspectionPage() {
   const StepIndicator = () => (
     <div className="mb-8">
       <div className="hidden md:block">
-        <div className="flex items-center">
+        <div className="flex items-center justify-between w-full">
           {[1, 2, 3, 4, 5].map((step, index) => (
             <React.Fragment key={step}>
-              <div className="flex flex-col items-center flex-shrink-0">
+              <div className="flex flex-col items-center">
                 <div
                   className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-semibold border-2 transition-all duration-300 ${
                     currentStep >= step
@@ -461,9 +461,9 @@ export default function AuditorScheduleInspectionPage() {
                     step
                   )}
                 </div>
-                <div className="mt-3 text-center max-w-20">
+                <div className="mt-3 text-center">
                   <div
-                    className={`text-xs font-medium transition-colors duration-300 ${
+                    className={`text-xs font-medium transition-colors duration-300 whitespace-nowrap ${
                       currentStep >= step ? "text-green-600" : "text-gray-500"
                     }`}
                   >
@@ -476,7 +476,7 @@ export default function AuditorScheduleInspectionPage() {
                 </div>
               </div>
               {index < 4 && (
-                <div className="mx-4 mb-6 w-16 sm:w-24 md:w-32 lg:w-40 flex-shrink-0">
+                <div className="flex-1 mx-2 mb-6">
                   <div
                     className={`w-full h-1 rounded-full transition-colors duration-300 ${
                       currentStep > step ? "bg-green-600" : "bg-gray-300"
