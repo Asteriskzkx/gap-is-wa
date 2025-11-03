@@ -24,9 +24,6 @@ export async function GET(req: NextRequest) {
   if (url.searchParams.has("farmerId")) {
     return rubberFarmController.getRubberFarmsByFarmerId(req);
   }
-
-  // Otherwise, get all farms
-  return rubberFarmController.getAll(req);
 }
 
 export async function POST(req: NextRequest) {
