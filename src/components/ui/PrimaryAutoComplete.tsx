@@ -1,11 +1,12 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
   AutoComplete,
   AutoCompleteCompleteEvent,
   AutoCompleteChangeEvent,
 } from "primereact/autocomplete";
+import { Tooltip } from "primereact/tooltip";
 
 interface Option {
   label: string;
@@ -13,15 +14,17 @@ interface Option {
 }
 
 interface PrimaryAutoCompleteProps {
-  value: any;
-  options: Option[];
-  onChange: (value: any) => void;
-  placeholder?: string;
-  disabled?: boolean;
-  required?: boolean;
-  className?: string;
-  id?: string;
-  name?: string;
+  readonly value: any;
+  readonly options: Option[];
+  readonly onChange: (value: any) => void;
+  readonly placeholder?: string;
+  readonly disabled?: boolean;
+  readonly required?: boolean;
+  readonly className?: string;
+  readonly id?: string;
+  readonly name?: string;
+  readonly invalid?: boolean;
+  readonly errorMessage?: string;
 }
 
 export default function PrimaryAutoComplete({
@@ -34,9 +37,15 @@ export default function PrimaryAutoComplete({
   className = "",
   id,
   name,
+  invalid = false,
+  errorMessage = "",
 }: PrimaryAutoCompleteProps) {
   const [filteredOptions, setFilteredOptions] = React.useState<Option[]>([]);
   const [inputValue, setInputValue] = React.useState<string>("");
+
+  const inputId =
+    id || `autocomplete-${Math.random().toString(36).substring(2, 11)}`;
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Find the selected option to display its label
   const selectedOption = options.find((opt) => opt.value === value);
@@ -49,6 +58,19 @@ export default function PrimaryAutoComplete({
       setInputValue("");
     }
   }, [value, selectedOption]);
+
+  useEffect(() => {
+    if (invalid && errorMessage && containerRef.current) {
+      const input = containerRef.current.querySelector("input");
+      if (input) {
+        const event = new MouseEvent("mouseenter", {
+          bubbles: true,
+          cancelable: true,
+        });
+        input.dispatchEvent(event);
+      }
+    }
+  }, [invalid, errorMessage]);
 
   const searchOptions = (event: AutoCompleteCompleteEvent) => {
     const query = event.query.toLowerCase().trim();
@@ -116,24 +138,44 @@ export default function PrimaryAutoComplete({
   };
 
   return (
-    <AutoComplete
-      id={id}
-      name={name}
-      value={inputValue}
-      suggestions={filteredOptions}
-      completeMethod={searchOptions}
-      onChange={handleChange}
-      onBlur={handleBlur}
-      field="label"
-      placeholder={placeholder}
-      disabled={disabled}
-      required={required}
-      dropdown
-      showEmptyMessage
-      emptyMessage="ไม่พบข้อมูล"
-      className={`w-full ${className}`}
-      inputClassName="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
-      panelClassName="autocomplete-panel"
-    />
+    <div className="w-full" ref={containerRef}>
+      <AutoComplete
+        id={inputId}
+        name={name}
+        value={inputValue}
+        suggestions={filteredOptions}
+        completeMethod={searchOptions}
+        onChange={handleChange}
+        onBlur={handleBlur}
+        field="label"
+        placeholder={placeholder}
+        disabled={disabled}
+        required={required}
+        dropdown
+        showEmptyMessage
+        emptyMessage="ไม่พบข้อมูล"
+        invalid={invalid}
+        className={`w-full ${className}`}
+        inputClassName="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
+        panelClassName="autocomplete-panel"
+        data-pr-tooltip={invalid && errorMessage ? errorMessage : undefined}
+        data-pr-position="bottom"
+      />
+      {invalid && errorMessage && (
+        <Tooltip
+          target={`#${inputId}`}
+          position="bottom"
+          className="error-tooltip"
+          mouseTrack={false}
+          autoHide={false}
+          showDelay={0}
+          hideDelay={0}
+          pt={{
+            text: { className: "bg-red-600 text-white p-2 rounded shadow-lg" },
+            arrow: { className: "border-red-600" },
+          }}
+        />
+      )}
+    </div>
   );
 }

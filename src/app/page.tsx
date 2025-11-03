@@ -15,10 +15,50 @@ export default function LoginPage() {
   const [selectedRole, setSelectedRole] = useState("FARMER");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+
+  // Validate email format
+  const validateEmail = (email: string): boolean => {
+    if (!email) {
+      setEmailError("กรุณากรอกอีเมล");
+      return false;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setEmailError("รูปแบบอีเมลไม่ถูกต้อง");
+      return false;
+    }
+    setEmailError("");
+    return true;
+  };
+
+  // Validate password
+  const validatePassword = (password: string): boolean => {
+    if (!password) {
+      setPasswordError("กรุณากรอกรหัสผ่าน");
+      return false;
+    }
+    if (password.length < 6) {
+      setPasswordError("รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร");
+      return false;
+    }
+    setPasswordError("");
+    return true;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    // Validate form
+    const isEmailValid = validateEmail(email);
+    const isPasswordValid = validatePassword(password);
+
+    if (!isEmailValid || !isPasswordValid) {
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -38,7 +78,7 @@ export default function LoginPage() {
         const response = await fetch("/api/auth/session");
         const session = await response.json();
 
-        if (!session || !session.user) {
+        if (!session?.user) {
           throw new Error("ไม่สามารถดึงข้อมูล session ได้");
         }
 
@@ -185,10 +225,15 @@ export default function LoginPage() {
                 name="email"
                 type="email"
                 value={email}
-                onChange={setEmail}
+                onChange={(value) => {
+                  setEmail(value);
+                  if (emailError) validateEmail(value);
+                }}
                 placeholder="email@example.com"
                 autoComplete="email"
                 required
+                invalid={!!emailError}
+                errorMessage={emailError}
               />
             </div>
 
@@ -203,12 +248,17 @@ export default function LoginPage() {
                 id="password"
                 name="password"
                 value={password}
-                onChange={setPassword}
+                onChange={(value) => {
+                  setPassword(value);
+                  if (passwordError) validatePassword(value);
+                }}
                 placeholder="••••••••"
                 autoComplete="current-password"
                 required
                 feedback={false}
                 toggleMask={true}
+                invalid={!!passwordError}
+                errorMessage={passwordError}
               />
             </div>
 
