@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import { InputMask } from "primereact/inputmask";
-import { Tooltip } from "primereact/tooltip";
+import { Message } from "primereact/message";
 
 interface PrimaryInputMaskProps {
   readonly value: string;
@@ -43,25 +43,10 @@ export default function PrimaryInputMask({
 
   const inputId =
     id || `inputmask-${Math.random().toString(36).substring(2, 11)}`;
-  const inputRef = useRef<any>(null);
-
-  useEffect(() => {
-    if (invalid && errorMessage && inputRef.current) {
-      const input = inputRef.current.getElement();
-      if (input) {
-        const event = new MouseEvent("mouseenter", {
-          bubbles: true,
-          cancelable: true,
-        });
-        input.dispatchEvent(event);
-      }
-    }
-  }, [invalid, errorMessage]);
 
   return (
     <div className="w-full">
       <InputMask
-        ref={inputRef}
         id={inputId}
         name={name}
         value={value}
@@ -75,21 +60,15 @@ export default function PrimaryInputMask({
         autoClear={autoClear}
         invalid={invalid}
         className={`w-full ${className}`}
-        data-pr-tooltip={invalid && errorMessage ? errorMessage : undefined}
-        data-pr-position="bottom"
       />
       {invalid && errorMessage && (
-        <Tooltip
-          target={`#${inputId}`}
-          position="bottom"
-          className="error-tooltip"
-          mouseTrack={false}
-          autoHide={false}
-          showDelay={0}
-          hideDelay={0}
+        <Message
+          severity="error"
+          text={errorMessage}
+          className="mt-1 w-full"
           pt={{
-            text: { className: "bg-red-600 text-white p-2 rounded shadow-lg" },
-            arrow: { className: "border-red-600" },
+            root: { className: "rounded-md" },
+            text: { className: "text-sm" },
           }}
         />
       )}

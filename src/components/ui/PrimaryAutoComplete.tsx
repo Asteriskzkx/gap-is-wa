@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import {
   AutoComplete,
   AutoCompleteCompleteEvent,
   AutoCompleteChangeEvent,
 } from "primereact/autocomplete";
-import { Tooltip } from "primereact/tooltip";
+import { Message } from "primereact/message";
 
 interface Option {
   label: string;
@@ -45,7 +45,6 @@ export default function PrimaryAutoComplete({
 
   const inputId =
     id || `autocomplete-${Math.random().toString(36).substring(2, 11)}`;
-  const containerRef = useRef<HTMLDivElement>(null);
 
   // Find the selected option to display its label
   const selectedOption = options.find((opt) => opt.value === value);
@@ -58,19 +57,6 @@ export default function PrimaryAutoComplete({
       setInputValue("");
     }
   }, [value, selectedOption]);
-
-  useEffect(() => {
-    if (invalid && errorMessage && containerRef.current) {
-      const input = containerRef.current.querySelector("input");
-      if (input) {
-        const event = new MouseEvent("mouseenter", {
-          bubbles: true,
-          cancelable: true,
-        });
-        input.dispatchEvent(event);
-      }
-    }
-  }, [invalid, errorMessage]);
 
   const searchOptions = (event: AutoCompleteCompleteEvent) => {
     const query = event.query.toLowerCase().trim();
@@ -138,7 +124,7 @@ export default function PrimaryAutoComplete({
   };
 
   return (
-    <div className="w-full" ref={containerRef}>
+    <div className="w-full">
       <AutoComplete
         id={inputId}
         name={name}
@@ -158,21 +144,15 @@ export default function PrimaryAutoComplete({
         className={`w-full ${className}`}
         inputClassName="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
         panelClassName="autocomplete-panel"
-        data-pr-tooltip={invalid && errorMessage ? errorMessage : undefined}
-        data-pr-position="bottom"
       />
       {invalid && errorMessage && (
-        <Tooltip
-          target={`#${inputId}`}
-          position="bottom"
-          className="error-tooltip"
-          mouseTrack={false}
-          autoHide={false}
-          showDelay={0}
-          hideDelay={0}
+        <Message
+          severity="error"
+          text={errorMessage}
+          className="mt-1 w-full"
           pt={{
-            text: { className: "bg-red-600 text-white p-2 rounded shadow-lg" },
-            arrow: { className: "border-red-600" },
+            root: { className: "rounded-md" },
+            text: { className: "text-sm" },
           }}
         />
       )}

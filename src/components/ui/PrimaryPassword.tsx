@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import { Password } from "primereact/password";
-import { Tooltip } from "primereact/tooltip";
+import { Message } from "primereact/message";
 
 interface PrimaryPasswordProps {
   readonly value: string;
@@ -47,24 +47,9 @@ export default function PrimaryPassword({
 
   const inputId =
     id || `password-${Math.random().toString(36).substring(2, 11)}`;
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (invalid && errorMessage && containerRef.current) {
-      // Force show tooltip on the input inside Password component
-      const input = containerRef.current.querySelector("input");
-      if (input) {
-        const event = new MouseEvent("mouseenter", {
-          bubbles: true,
-          cancelable: true,
-        });
-        input.dispatchEvent(event);
-      }
-    }
-  }, [invalid, errorMessage]);
 
   return (
-    <div className="w-full" ref={containerRef}>
+    <div className="w-full">
       <Password
         inputId={inputId}
         name={name}
@@ -82,21 +67,15 @@ export default function PrimaryPassword({
         invalid={invalid}
         className={`w-full primary-password ${className}`}
         inputClassName="w-full"
-        data-pr-tooltip={invalid && errorMessage ? errorMessage : undefined}
-        data-pr-position="bottom"
       />
       {invalid && errorMessage && (
-        <Tooltip
-          target={`#${inputId}`}
-          position="bottom"
-          className="error-tooltip"
-          mouseTrack={false}
-          autoHide={false}
-          showDelay={0}
-          hideDelay={0}
+        <Message
+          severity="error"
+          text={errorMessage}
+          className="mt-1 w-full"
           pt={{
-            text: { className: "bg-red-600 text-white p-2 rounded shadow-lg" },
-            arrow: { className: "border-red-600" },
+            root: { className: "rounded-md" },
+            text: { className: "text-sm" },
           }}
         />
       )}

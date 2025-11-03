@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import { Calendar } from "primereact/calendar";
-import { Tooltip } from "primereact/tooltip";
+import { Message } from "primereact/message";
 
 interface PrimaryCalendarProps {
   readonly value: Date | null;
@@ -45,23 +45,9 @@ export default function PrimaryCalendar({
 
   const inputId =
     id || `calendar-${Math.random().toString(36).substring(2, 11)}`;
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (invalid && errorMessage && containerRef.current) {
-      const input = containerRef.current.querySelector("input");
-      if (input) {
-        const event = new MouseEvent("mouseenter", {
-          bubbles: true,
-          cancelable: true,
-        });
-        input.dispatchEvent(event);
-      }
-    }
-  }, [invalid, errorMessage]);
 
   return (
-    <div className="w-full" ref={containerRef}>
+    <div className="w-full">
       <Calendar
         id={inputId}
         name={name}
@@ -78,21 +64,15 @@ export default function PrimaryCalendar({
         invalid={invalid}
         className={`w-full primary-calendar ${className}`}
         inputClassName="w-full"
-        data-pr-tooltip={invalid && errorMessage ? errorMessage : undefined}
-        data-pr-position="bottom"
       />
       {invalid && errorMessage && (
-        <Tooltip
-          target={`#${inputId}`}
-          position="bottom"
-          className="error-tooltip"
-          mouseTrack={false}
-          autoHide={false}
-          showDelay={0}
-          hideDelay={0}
+        <Message
+          severity="error"
+          text={errorMessage}
+          className="mt-1 w-full"
           pt={{
-            text: { className: "bg-red-600 text-white p-2 rounded shadow-lg" },
-            arrow: { className: "border-red-600" },
+            root: { className: "rounded-md" },
+            text: { className: "text-sm" },
           }}
         />
       )}

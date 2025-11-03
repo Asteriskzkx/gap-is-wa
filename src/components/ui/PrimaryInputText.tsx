@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import { InputText } from "primereact/inputtext";
-import { Tooltip } from "primereact/tooltip";
+import { Message } from "primereact/message";
 
 interface PrimaryInputTextProps {
   readonly value: string;
@@ -40,23 +40,10 @@ export default function PrimaryInputText({
   };
 
   const inputId = id || `input-${Math.random().toString(36).substring(2, 11)}`;
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (invalid && errorMessage && inputRef.current) {
-      // Force show tooltip
-      const event = new MouseEvent("mouseenter", {
-        bubbles: true,
-        cancelable: true,
-      });
-      inputRef.current.dispatchEvent(event);
-    }
-  }, [invalid, errorMessage]);
 
   return (
     <div className="w-full">
       <InputText
-        ref={inputRef}
         id={inputId}
         name={name}
         type={type}
@@ -69,21 +56,15 @@ export default function PrimaryInputText({
         autoComplete={autoComplete}
         invalid={invalid}
         className={`w-full ${className}`}
-        data-pr-tooltip={invalid && errorMessage ? errorMessage : undefined}
-        data-pr-position="bottom"
       />
       {invalid && errorMessage && (
-        <Tooltip
-          target={`#${inputId}`}
-          position="bottom"
-          className="error-tooltip"
-          mouseTrack={false}
-          autoHide={false}
-          showDelay={0}
-          hideDelay={0}
+        <Message
+          severity="error"
+          text={errorMessage}
+          className="mt-1 w-full"
           pt={{
-            text: { className: "bg-red-600 text-white p-2 rounded shadow-lg" },
-            arrow: { className: "border-red-600" },
+            root: { className: "rounded-md" },
+            text: { className: "text-sm" },
           }}
         />
       )}
