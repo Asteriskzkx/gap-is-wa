@@ -98,58 +98,56 @@ export default function PrimaryDataTable({
 
   return (
     <div className={`primary-datatable-wrapper ${className}`}>
-      <div className="overflow-x-auto">
-        <DataTable
-          value={value}
-          loading={loading}
-          paginator={paginator}
-          rows={rows}
-          first={first}
-          totalRecords={actualTotalRecords}
-          lazy={lazy}
-          onPage={handlePageChange}
-          paginatorTemplate={paginatorTemplate}
-          emptyMessage={
-            <div className="text-center py-8 text-gray-500">{emptyMessage}</div>
-          }
-          rowClassName={rowClassName}
-          onRowClick={onRowClick}
-          selectionMode={selectionMode as any}
-          selection={selection}
-          onSelectionChange={onSelectionChange}
-          dataKey={dataKey}
-          className="w-full"
-          pt={{
-            table: { className: "w-full min-w-max" },
-            thead: { className: "bg-gray-50" },
-            tbody: { className: "bg-white divide-y divide-gray-200" },
-            headerRow: { className: "border-b border-gray-200" },
-            bodyRow: { className: "border-b border-gray-200" },
-          }}
-        >
-          {columns.map((col) => (
-            <Column
-              key={col.field}
-              field={col.field}
-              header={col.header}
-              body={col.body}
-              sortable={col.sortable}
-              style={col.style}
-              headerStyle={col.headerStyle}
-              className={col.className}
-              pt={{
-                headerCell: {
-                  className:
-                    "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider",
-                },
-                bodyCell: {
-                  className: "px-6 py-4 text-sm text-gray-900",
-                },
-              }}
-            />
-          ))}
-        </DataTable>
-      </div>
+      <DataTable
+        value={value}
+        loading={loading}
+        paginator={paginator}
+        rows={rows}
+        first={first}
+        totalRecords={actualTotalRecords}
+        lazy={lazy}
+        onPage={handlePageChange}
+        paginatorTemplate={paginatorTemplate}
+        emptyMessage={
+          <div className="text-center py-8 text-gray-500">{emptyMessage}</div>
+        }
+        rowClassName={rowClassName}
+        onRowClick={onRowClick}
+        selectionMode={selectionMode as any}
+        selection={selection}
+        onSelectionChange={onSelectionChange}
+        dataKey={dataKey}
+        className="w-full"
+        pt={{
+          table: { className: "w-full" },
+          thead: { className: "bg-gray-50" },
+          tbody: { className: "bg-white divide-y divide-gray-200" },
+          headerRow: { className: "border-b border-gray-200" },
+          bodyRow: { className: "border-b border-gray-200" },
+        }}
+      >
+        {columns.map((col) => (
+          <Column
+            key={col.field}
+            field={col.field}
+            header={col.header}
+            body={col.body}
+            sortable={col.sortable}
+            style={col.style}
+            headerStyle={col.headerStyle}
+            className={col.className}
+            pt={{
+              headerCell: {
+                className:
+                  "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider",
+              },
+              bodyCell: {
+                className: "px-6 py-4 text-sm text-gray-900",
+              },
+            }}
+          />
+        ))}
+      </DataTable>
     </div>
   );
 }
