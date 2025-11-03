@@ -6,20 +6,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import { PrimaryInputText, PrimaryPassword } from "@/components/ui";
-import { useCustomValidation } from "@/hooks/useCustomValidation";
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 
 export default function LoginPage() {
   const router = useRouter();
-  const formRef = useRef<HTMLFormElement>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [selectedRole, setSelectedRole] = useState("FARMER");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-
-  // Apply custom validation messages in Thai
-  useCustomValidation(formRef);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -147,7 +142,7 @@ export default function LoginPage() {
             </div>
           )}
 
-          <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label
                 htmlFor="role"
