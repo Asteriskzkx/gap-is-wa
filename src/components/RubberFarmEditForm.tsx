@@ -595,14 +595,44 @@ export default function RubberFarmEditForm() {
 
   // Validate planting details
   const validatePlantingDetails = (): boolean => {
-    // Check if at least one planting detail is filled
+    // ตรวจสอบว่ามีอย่างน้อยหนึ่งรายการที่กรอกข้อมูลครบถ้วน
     const validDetails = plantingDetails.filter(
       (detail) =>
-        detail.specie && detail.areaOfPlot > 0 && detail.numberOfRubber > 0
+        detail.specie &&
+        detail.areaOfPlot > 0 &&
+        detail.numberOfRubber > 0 &&
+        detail.numberOfTapping >= 0 &&
+        detail.ageOfRubber >= 0 &&
+        detail.yearOfTapping &&
+        detail.monthOfTapping &&
+        detail.totalProduction >= 0
     );
 
     if (validDetails.length === 0) {
-      setError("กรุณากรอกข้อมูลรายละเอียดการปลูกอย่างน้อย 1 รายการ");
+      setError("กรุณากรอกข้อมูลรายละเอียดการปลูกอย่างน้อย 1 รายการให้ครบถ้วน");
+      return false;
+    }
+
+    // ตรวจสอบว่า ถ้ามีการกรอก specie แล้ว ต้องกรอกข้อมูลทุก field
+    const incompleteDetails = plantingDetails.filter(
+      (detail) =>
+        detail.specie &&
+        (detail.areaOfPlot <= 0 ||
+          detail.numberOfRubber <= 0 ||
+          !detail.numberOfTapping ||
+          detail.numberOfTapping < 0 ||
+          !detail.ageOfRubber ||
+          detail.ageOfRubber < 0 ||
+          !detail.yearOfTapping ||
+          !detail.monthOfTapping ||
+          !detail.totalProduction ||
+          detail.totalProduction < 0)
+    );
+
+    if (incompleteDetails.length > 0) {
+      setError(
+        "กรุณากรอกข้อมูลให้ครบถ้วนในทุกรายการที่เลือกพันธุ์ยางแล้ว (พันธุ์ยาง, พื้นที่แปลง, จำนวนต้นยาง, จำนวนต้นกรีด, อายุต้นยาง, ปีที่เริ่มกรีด, เดือนที่เริ่มกรีด, ผลผลิตรวม)"
+      );
       return false;
     }
 
@@ -614,6 +644,12 @@ export default function RubberFarmEditForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    // Validate ก่อนส่ง
+    if (!validatePlantingDetails()) {
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -857,6 +893,7 @@ export default function RubberFarmEditForm() {
       return;
     }
     if (step === 2 && !validateFarmData()) return;
+    if (step === 3 && !validatePlantingDetails()) return; // เพิ่ม validation สำหรับ step 3
 
     if (step < maxSteps) {
       setStep(step + 1);
@@ -1402,6 +1439,16 @@ export default function RubberFarmEditForm() {
                       max={10000}
                       minFractionDigits={0}
                       maxFractionDigits={4}
+                      invalid={
+                        detail.specie !== "" &&
+                        (!detail.areaOfPlot || detail.areaOfPlot <= 0)
+                      }
+                      errorMessage={
+                        detail.specie &&
+                        (!detail.areaOfPlot || detail.areaOfPlot <= 0)
+                          ? "กรุณากรอกพื้นที่แปลงที่มากกว่า 0"
+                          : ""
+                      }
                     />
                   </div>
                 </div>
@@ -1423,12 +1470,23 @@ export default function RubberFarmEditForm() {
                       min={0}
                       max={10000}
                       maxFractionDigits={0}
+                      invalid={
+                        detail.specie !== "" &&
+                        (!detail.numberOfRubber || detail.numberOfRubber <= 0)
+                      }
+                      errorMessage={
+                        detail.specie &&
+                        (!detail.numberOfRubber || detail.numberOfRubber <= 0)
+                          ? "กรุณากรอกจำนวนต้นยางที่มากกว่า 0"
+                          : ""
+                      }
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      จำนวนต้นยางที่กรีดได้
+                      จำนวนต้นยางที่กรีดได้{" "}
+                      <span className="text-red-500">*</span>
                     </label>
                     <PrimaryInputNumber
                       value={detail.numberOfTapping || null}
@@ -1442,12 +1500,22 @@ export default function RubberFarmEditForm() {
                       min={0}
                       max={10000}
                       maxFractionDigits={0}
+                      invalid={
+                        detail.specie !== "" &&
+                        (!detail.numberOfTapping || detail.numberOfTapping < 0)
+                      }
+                      errorMessage={
+                        detail.specie &&
+                        (!detail.numberOfTapping || detail.numberOfTapping < 0)
+                          ? "กรุณากรอกจำนวนต้นยางที่กรีดได้"
+                          : ""
+                      }
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      อายุต้นยาง (ปี)
+                      อายุต้นยาง (ปี) <span className="text-red-500">*</span>
                     </label>
                     <PrimaryInputNumber
                       value={detail.ageOfRubber || null}
@@ -1457,6 +1525,16 @@ export default function RubberFarmEditForm() {
                       min={0}
                       max={100}
                       maxFractionDigits={0}
+                      invalid={
+                        detail.specie !== "" &&
+                        (!detail.ageOfRubber || detail.ageOfRubber < 0)
+                      }
+                      errorMessage={
+                        detail.specie &&
+                        (!detail.ageOfRubber || detail.ageOfRubber < 0)
+                          ? "กรุณากรอกอายุต้นยาง"
+                          : ""
+                      }
                     />
                   </div>
                 </div>
@@ -1464,7 +1542,7 @@ export default function RubberFarmEditForm() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      ปีที่เริ่มกรีด
+                      ปีที่เริ่มกรีด <span className="text-red-500">*</span>
                     </label>
                     <PrimaryCalendar
                       value={
@@ -1482,12 +1560,18 @@ export default function RubberFarmEditForm() {
                       view="year"
                       dateFormat="yy"
                       placeholder="เลือกปี"
+                      invalid={detail.specie !== "" && !detail.yearOfTapping}
+                      errorMessage={
+                        detail.specie && !detail.yearOfTapping
+                          ? "กรุณาเลือกปีที่เริ่มกรีด"
+                          : ""
+                      }
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      เดือนที่เริ่มกรีด
+                      เดือนที่เริ่มกรีด <span className="text-red-500">*</span>
                     </label>
                     <PrimaryDropdown
                       value={
@@ -1515,12 +1599,18 @@ export default function RubberFarmEditForm() {
                         updatePlantingDetail(index, "monthOfTapping", date);
                       }}
                       placeholder="-- เลือกเดือน --"
+                      invalid={detail.specie !== "" && !detail.monthOfTapping}
+                      errorMessage={
+                        detail.specie && !detail.monthOfTapping
+                          ? "กรุณาเลือกเดือนที่เริ่มกรีด"
+                          : ""
+                      }
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      ผลผลิตรวม (กก.)
+                      ผลผลิตรวม (กก.) <span className="text-red-500">*</span>
                     </label>
                     <PrimaryInputNumber
                       value={detail.totalProduction || null}
@@ -1535,6 +1625,16 @@ export default function RubberFarmEditForm() {
                       max={10000}
                       minFractionDigits={0}
                       maxFractionDigits={4}
+                      invalid={
+                        detail.specie !== "" &&
+                        (!detail.totalProduction || detail.totalProduction < 0)
+                      }
+                      errorMessage={
+                        detail.specie &&
+                        (!detail.totalProduction || detail.totalProduction < 0)
+                          ? "กรุณากรอกผลผลิตรวม"
+                          : ""
+                      }
                     />
                   </div>
                 </div>
