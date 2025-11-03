@@ -843,6 +843,21 @@ input.p-inputtext:disabled {
   background-color: #f0fdf4;
 }
 
+/* ทำให้ radio button และ input คลิกได้ */
+.primary-datatable-wrapper .p-datatable-tbody input[type="radio"],
+.primary-datatable-wrapper .p-datatable-tbody input[type="checkbox"] {
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
+}
+
+.primary-datatable-wrapper .p-datatable-tbody button {
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
+}
+
 .primary-datatable-wrapper .p-paginator {
   background: #ffffff;
   border-top: 1px solid #e5e7eb;
@@ -961,8 +976,8 @@ input.p-inputtext:disabled {
   }
 
   /* ซ่อน column อีเมลบนหน้าจอเล็ก */
-  .primary-datatable-wrapper .p-datatable-thead > tr > th:nth-child(5),
-  .primary-datatable-wrapper .p-datatable-tbody > tr > td:nth-child(5) {
+  .primary-datatable-wrapper .p-datatable-thead > tr > th:nth-child(4),
+  .primary-datatable-wrapper .p-datatable-tbody > tr > td:nth-child(4) {
     display: none;
   }
 }

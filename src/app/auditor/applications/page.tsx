@@ -423,20 +423,6 @@ export default function AuditorScheduleInspectionPage() {
               value={rubberFarms}
               columns={[
                 {
-                  field: "selection",
-                  header: "เลือก",
-                  body: (rowData: RubberFarm) => (
-                    <input
-                      type="radio"
-                      name="farm"
-                      checked={selectedFarm?.id === rowData.id}
-                      onChange={() => setSelectedFarm(rowData)}
-                      className="h-4 w-4 text-green-600 focus:ring-green-500"
-                    />
-                  ),
-                  style: { width: "60px" },
-                },
-                {
                   field: "id",
                   header: "รหัสสวน",
                   body: (rowData: RubberFarm) =>
@@ -481,8 +467,17 @@ export default function AuditorScheduleInspectionPage() {
               onPage={onPageChange}
               emptyMessage="ไม่พบข้อมูลสวนยางพารา"
               rowClassName={(data: RubberFarm) =>
-                selectedFarm?.id === data.id ? "bg-green-50" : ""
+                selectedFarm?.id === data.id
+                  ? "bg-green-50 cursor-pointer"
+                  : "cursor-pointer"
               }
+              onRowClick={(event: any) => {
+                // ถ้าคลิกที่ปุ่ม "ดูข้อมูล" ไม่ให้เลือกแถว
+                if (event.originalEvent.target.tagName === "BUTTON") {
+                  return;
+                }
+                setSelectedFarm(event.data);
+              }}
             />
           </div>
         );
