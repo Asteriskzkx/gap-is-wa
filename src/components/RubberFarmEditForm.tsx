@@ -9,6 +9,7 @@ import { Calendar } from "primereact/calendar";
 import { parseISO } from "date-fns";
 import thaiProvinceData from "@/data/thai-provinces.json";
 import { toast } from "react-hot-toast";
+import { PrimaryAutoComplete, PrimaryDropdown } from "./ui";
 
 // Interfaces for the component
 interface Tambon {
@@ -1194,21 +1195,22 @@ export default function RubberFarmEditForm() {
                 >
                   จังหวัด <span className="text-red-500">*</span>
                 </label>
-                <select
+                <PrimaryAutoComplete
                   id="provinceId"
                   name="provinceId"
-                  required
                   value={rubberFarm.provinceId || ""}
-                  onChange={updateFarmData}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 text-sm md:text-base bg-white"
-                >
-                  <option value="">-- เลือกจังหวัด --</option>
-                  {provinces.map((province) => (
-                    <option key={province.id} value={province.id}>
-                      {province.name_th}
-                    </option>
-                  ))}
-                </select>
+                  options={provinces.map((province) => ({
+                    label: province.name_th,
+                    value: province.id,
+                  }))}
+                  onChange={(value) => {
+                    updateFarmData({
+                      target: { name: "provinceId", value },
+                    } as any);
+                  }}
+                  placeholder="-- เลือกจังหวัด --"
+                  required
+                />
               </div>
 
               {/* District dropdown */}
@@ -1219,22 +1221,23 @@ export default function RubberFarmEditForm() {
                 >
                   อำเภอ/เขต <span className="text-red-500">*</span>
                 </label>
-                <select
+                <PrimaryAutoComplete
                   id="amphureId"
                   name="amphureId"
-                  required
                   value={rubberFarm.amphureId || ""}
-                  onChange={updateFarmData}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 text-sm md:text-base bg-white disabled:bg-gray-50 disabled:text-gray-500"
+                  options={amphures.map((amphure) => ({
+                    label: amphure.name_th,
+                    value: amphure.id,
+                  }))}
+                  onChange={(value) => {
+                    updateFarmData({
+                      target: { name: "amphureId", value },
+                    } as any);
+                  }}
+                  placeholder="-- เลือกอำเภอ/เขต --"
                   disabled={!rubberFarm.provinceId}
-                >
-                  <option value="">-- เลือกอำเภอ/เขต --</option>
-                  {amphures.map((amphure) => (
-                    <option key={amphure.id} value={amphure.id}>
-                      {amphure.name_th}
-                    </option>
-                  ))}
-                </select>
+                  required
+                />
               </div>
 
               {/* Sub-district dropdown */}
@@ -1245,22 +1248,23 @@ export default function RubberFarmEditForm() {
                 >
                   ตำบล/แขวง <span className="text-red-500">*</span>
                 </label>
-                <select
+                <PrimaryAutoComplete
                   id="tambonId"
                   name="tambonId"
-                  required
                   value={rubberFarm.tambonId || ""}
-                  onChange={updateFarmData}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 text-sm md:text-base bg-white disabled:bg-gray-50 disabled:text-gray-500"
+                  options={tambons.map((tambon) => ({
+                    label: tambon.name_th,
+                    value: tambon.id,
+                  }))}
+                  onChange={(value) => {
+                    updateFarmData({
+                      target: { name: "tambonId", value },
+                    } as any);
+                  }}
+                  placeholder="-- เลือกตำบล/แขวง --"
                   disabled={!rubberFarm.amphureId}
-                >
-                  <option value="">-- เลือกตำบล/แขวง --</option>
-                  {tambons.map((tambon) => (
-                    <option key={tambon.id} value={tambon.id}>
-                      {tambon.name_th}
-                    </option>
-                  ))}
-                </select>
+                  required
+                />
               </div>
             </div>
 
@@ -1353,22 +1357,22 @@ export default function RubberFarmEditForm() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       พันธุ์ยาง <span className="text-red-500">*</span>
                     </label>
-                    <select
+                    <PrimaryAutoComplete
                       value={detail.specie}
-                      onChange={(e) =>
-                        updatePlantingDetail(index, "specie", e.target.value)
+                      options={[
+                        { label: "RRIT 251", value: "RRIT 251" },
+                        { label: "RRIM 600", value: "RRIM 600" },
+                        { label: "BPM 24", value: "BPM 24" },
+                        { label: "PB 235", value: "PB 235" },
+                        { label: "RRIT 408", value: "RRIT 408" },
+                        { label: "RRIT 226", value: "RRIT 226" },
+                        { label: "อื่นๆ", value: "อื่นๆ" },
+                      ]}
+                      onChange={(value) =>
+                        updatePlantingDetail(index, "specie", value)
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    >
-                      <option value="">-- เลือกพันธุ์ยาง --</option>
-                      <option value="RRIT 251">RRIT 251</option>
-                      <option value="RRIM 600">RRIM 600</option>
-                      <option value="BPM 24">BPM 24</option>
-                      <option value="PB 235">PB 235</option>
-                      <option value="RRIT 408">RRIT 408</option>
-                      <option value="RRIT 226">RRIT 226</option>
-                      <option value="อื่นๆ">อื่นๆ</option>
-                    </select>
+                      placeholder="-- เลือกพันธุ์ยาง --"
+                    />
                   </div>
 
                   <div>
@@ -1481,24 +1485,32 @@ export default function RubberFarmEditForm() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       เดือนที่เริ่มกรีด
                     </label>
-                    <Calendar
+                    <PrimaryDropdown
                       value={
                         detail.monthOfTapping
-                          ? parseISO(detail.monthOfTapping)
-                          : null
+                          ? new Date(detail.monthOfTapping).getMonth()
+                          : ""
                       }
-                      onChange={(e) =>
-                        updatePlantingDetail(
-                          index,
-                          "monthOfTapping",
-                          e.value ? (e.value as Date) : ""
-                        )
-                      }
-                      view="month"
-                      dateFormat="MM/yy"
-                      placeholder="เลือกเดือน"
-                      className="w-full"
-                      showIcon
+                      options={[
+                        { label: "มกราคม", value: 0 },
+                        { label: "กุมภาพันธ์", value: 1 },
+                        { label: "มีนาคม", value: 2 },
+                        { label: "เมษายน", value: 3 },
+                        { label: "พฤษภาคม", value: 4 },
+                        { label: "มิถุนายน", value: 5 },
+                        { label: "กรกฎาคม", value: 6 },
+                        { label: "สิงหาคม", value: 7 },
+                        { label: "กันยายน", value: 8 },
+                        { label: "ตุลาคม", value: 9 },
+                        { label: "พฤศจิกายน", value: 10 },
+                        { label: "ธันวาคม", value: 11 },
+                      ]}
+                      onChange={(value) => {
+                        const date = new Date();
+                        date.setMonth(value);
+                        updatePlantingDetail(index, "monthOfTapping", date);
+                      }}
+                      placeholder="-- เลือกเดือน --"
                     />
                   </div>
 
