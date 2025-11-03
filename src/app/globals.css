@@ -271,16 +271,33 @@ button {
   box-shadow: 0 0 0 1px #16a34a !important;
 }
 
-/* Primary Calendar - Match other input heights */
+/* Primary Calendar - Match other input heights exactly */
+.primary-calendar.p-calendar,
+.primary-calendar.p-calendar .p-inputwrapper,
+.primary-calendar.p-calendar.p-component,
+.primary-calendar.p-calendar.p-inputwrapper {
+  height: auto !important;
+  display: inline-flex !important;
+}
+
 .primary-calendar .p-inputtext {
-  font-size: 0.875rem !important;
-  height: 2.5rem !important;
   padding: 0.5rem 0.75rem !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+  box-sizing: border-box !important;
+  height: 2.375rem !important;
+  min-height: 0 !important;
+  vertical-align: middle !important;
 }
 
 .primary-calendar .p-datepicker-trigger {
-  height: 2.5rem !important;
   padding: 0.5rem 0.75rem !important;
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 2.375rem !important;
+  vertical-align: middle !important;
 }
 
 /* Calendar Dropdown Panel */
