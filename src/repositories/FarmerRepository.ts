@@ -196,6 +196,17 @@ export class FarmerRepository extends BaseRepository<FarmerModel> {
     }
   }
 
+  /**
+   * Update farmer with optimistic locking
+   */
+  async updateWithLock(
+    id: number,
+    data: Partial<FarmerModel>,
+    currentVersion: number
+  ): Promise<FarmerModel> {
+    return this.updateWithOptimisticLock(id, data, currentVersion, "farmer");
+  }
+
   private mapToModel(user: PrismaUser, farmer: PrismaFarmer): FarmerModel {
     return this.mapper.toDomain({ user, farmer });
   }

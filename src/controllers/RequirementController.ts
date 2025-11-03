@@ -3,6 +3,7 @@ import { BaseController } from "./BaseController";
 import { RequirementModel } from "../models/RequirementModel";
 import { RequirementService } from "../services/RequirementService";
 import { requireValidId } from "../utils/ParamUtils";
+import { OptimisticLockError } from "../errors/OptimisticLockError";
 
 export class RequirementController extends BaseController<RequirementModel> {
   private requirementService: RequirementService;
@@ -102,7 +103,7 @@ export class RequirementController extends BaseController<RequirementModel> {
       }
 
       const data = await req.json();
-      const { evaluationResult, evaluationMethod, note } = data;
+      const { evaluationResult, evaluationMethod, note, version } = data;
 
       if (!evaluationResult || !evaluationMethod) {
         return NextResponse.json(
@@ -116,7 +117,8 @@ export class RequirementController extends BaseController<RequirementModel> {
           requirementId,
           evaluationResult,
           evaluationMethod,
-          note || ""
+          note || "",
+          version
         );
 
       if (!updatedRequirement) {
@@ -128,6 +130,10 @@ export class RequirementController extends BaseController<RequirementModel> {
 
       return NextResponse.json(updatedRequirement.toJSON(), { status: 200 });
     } catch (error: any) {
+      // Handle optimistic lock error
+      if (error instanceof OptimisticLockError) {
+        return NextResponse.json(error.toJSON(), { status: 409 });
+      }
       return this.handleControllerError(error);
     }
   }

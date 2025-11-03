@@ -3,6 +3,7 @@ import { InspectionItemModel } from "../models/InspectionItemModel";
 import { InspectionItemRepository } from "../repositories/InspectionItemRepository";
 import { RequirementRepository } from "../repositories/RequirementRepository";
 import { RequirementModel } from "../models/RequirementModel";
+import { OptimisticLockError } from "../errors/OptimisticLockError";
 
 export class InspectionItemService extends BaseService<InspectionItemModel> {
   private inspectionItemRepository: InspectionItemRepository;
@@ -90,13 +91,24 @@ export class InspectionItemService extends BaseService<InspectionItemModel> {
 
   async updateInspectionItemResult(
     itemId: number,
-    result: string
+    result: string,
+    currentVersion?: number
   ): Promise<InspectionItemModel | null> {
     try {
-      return await this.update(itemId, { inspectionItemResult: result });
+      if (currentVersion !== undefined) {
+        // Use optimistic locking
+        return await this.inspectionItemRepository.updateWithLock(
+          itemId,
+          { inspectionItemResult: result },
+          currentVersion
+        );
+      } else {
+        // Fallback to regular update
+        return await this.update(itemId, { inspectionItemResult: result });
+      }
     } catch (error) {
       this.handleServiceError(error);
-      return null;
+      throw error;
     }
   }
 

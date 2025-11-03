@@ -40,7 +40,8 @@ export class FarmerMapper implements BaseMapper<any, FarmerModel> {
       prismaEntity.farmer.phoneNumber,
       prismaEntity.farmer.mobilePhoneNumber,
       prismaEntity.farmer.createdAt,
-      prismaEntity.farmer.updatedAt
+      prismaEntity.farmer.updatedAt,
+      prismaEntity.farmer.version
     );
   }
 

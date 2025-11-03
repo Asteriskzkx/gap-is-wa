@@ -23,7 +23,8 @@ export class AdminMapper implements BaseMapper<any, AdminModel> {
       prismaEntity.admin.firstName,
       prismaEntity.admin.lastName,
       prismaEntity.admin.createdAt,
-      prismaEntity.admin.updatedAt
+      prismaEntity.admin.updatedAt,
+      prismaEntity.admin.version
     );
   }
 

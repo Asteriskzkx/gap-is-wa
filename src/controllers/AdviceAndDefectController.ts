@@ -3,6 +3,7 @@ import { BaseController } from "./BaseController";
 import { AdviceAndDefectModel } from "../models/AdviceAndDefectModel";
 import { AdviceAndDefectService } from "../services/AdviceAndDefectService";
 import { requireValidId } from "../utils/ParamUtils";
+import { OptimisticLockError } from "../errors/OptimisticLockError";
 
 export class AdviceAndDefectController extends BaseController<AdviceAndDefectModel> {
   private adviceAndDefectService: AdviceAndDefectService;
@@ -98,16 +99,18 @@ export class AdviceAndDefectController extends BaseController<AdviceAndDefectMod
       }
 
       const data = await req.json();
+      const { version, ...updateData } = data;
 
       // Parse the date if it's a string and provided
-      if (data.date && !(data.date instanceof Date)) {
-        data.date = new Date(data.date);
+      if (updateData.date && !(updateData.date instanceof Date)) {
+        updateData.date = new Date(updateData.date);
       }
 
       const updatedAdviceAndDefect =
         await this.adviceAndDefectService.updateAdviceAndDefect(
           adviceAndDefectId,
-          data
+          updateData,
+          version
         );
 
       if (!updatedAdviceAndDefect) {
@@ -121,6 +124,10 @@ export class AdviceAndDefectController extends BaseController<AdviceAndDefectMod
         status: 200,
       });
     } catch (error: any) {
+      // Handle optimistic lock error
+      if (error instanceof OptimisticLockError) {
+        return NextResponse.json(error.toJSON(), { status: 409 });
+      }
       return this.handleControllerError(error);
     }
   }

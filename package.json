@@ -27,6 +27,7 @@
     "@prisma/client": "^5.10.0",
     "@types/leaflet-draw": "^1.0.11",
     "bcrypt": "^5.1.1",
+    "classnames": "^2.5.1",
     "esri-leaflet-geocoder": "^3.1.5",
     "jsonwebtoken": "^9.0.2",
     "leaflet": "^1.9.4",
@@ -36,6 +37,8 @@
     "next-auth": "^4.24.13",
     "pg": "^8.11.3",
     "pg-hstore": "^2.3.4",
+    "primeicons": "^7.0.0",
+    "primereact": "^10.9.7",
     "prisma": "^5.10.0",
     "react": "^18",
     "react-datepicker": "^8.3.0",
@@ -43,7 +46,8 @@
     "react-hot-toast": "^2.5.2",
     "react-icons": "^5.5.0",
     "react-leaflet": "^4.2.1",
-    "react-leaflet-draw": "^0.20.6"
+    "react-leaflet-draw": "^0.20.6",
+    "sharp": "^0.33.0"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",

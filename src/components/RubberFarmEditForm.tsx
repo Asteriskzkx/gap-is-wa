@@ -2,12 +2,19 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import DynamicMapSelector from "./maps/DynamicMap";
-import ReactDatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
 import { parseISO } from "date-fns";
 import thaiProvinceData from "@/data/thai-provinces.json";
+import { toast } from "react-hot-toast";
+import {
+  PrimaryAutoComplete,
+  PrimaryDropdown,
+  PrimaryInputText,
+  PrimaryInputNumber,
+  PrimaryCalendar,
+} from "./ui";
 
 // Interfaces for the component
 interface Tambon {
@@ -41,6 +48,7 @@ interface PlantingDetail {
   yearOfTapping: string;
   monthOfTapping: string;
   totalProduction: number;
+  version?: number;
 }
 
 interface RubberFarm {
@@ -56,6 +64,7 @@ interface RubberFarm {
   provinceId: number;
   amphureId: number;
   tambonId: number;
+  version?: number; // เพิ่ม version field
   location: {
     type: string;
     coordinates: [number, number];
@@ -65,6 +74,7 @@ interface RubberFarm {
 
 export default function RubberFarmEditForm() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -88,6 +98,7 @@ export default function RubberFarmEditForm() {
     provinceId: 0,
     amphureId: 0,
     tambonId: 0,
+    version: undefined, // เพิ่ม version field
     location: {
       type: "Point",
       coordinates: [0, 0],
@@ -104,13 +115,18 @@ export default function RubberFarmEditForm() {
   const [tambons, setTambons] = useState<Tambon[]>([]);
   const [isLoadingProvinces, setIsLoadingProvinces] = useState(true);
 
-  // Fetch farmerId from local storage and get farms data
+  // Check authentication and fetch farmer data
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      fetchFarmerData(token);
-    } else {
-      router.push("/");
+    if (status === "loading") return; // Wait for session to load
+
+    if (status === "unauthenticated") {
+      router.push("/"); // Redirect to login
+      return;
+    }
+
+    if (status === "authenticated" && session?.user?.roleData?.farmerId) {
+      setFarmerId(session.user.roleData.farmerId);
+      fetchFarmerFarms(session.user.roleData.farmerId);
     }
 
     // Load province data
@@ -143,43 +159,15 @@ export default function RubberFarmEditForm() {
     };
 
     loadProvinceData();
-  }, []);
-
-  // Fetch farmer data and farms
-  const fetchFarmerData = async (token: string) => {
-    try {
-      const response = await fetch("/api/v1/farmers/current", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data && data.farmerId) {
-          setFarmerId(data.farmerId);
-          fetchFarmerFarms(token, data.farmerId);
-        } else {
-          setError("ไม่พบข้อมูล farmerId ในระบบ");
-        }
-      } else {
-        throw new Error("ไม่สามารถดึงข้อมูลเกษตรกรได้");
-      }
-    } catch (error) {
-      console.error("Error fetching farmer data:", error);
-      setError("ไม่สามารถดึงข้อมูลเกษตรกรได้ กรุณาเข้าสู่ระบบใหม่");
-    }
-  };
+  }, [status, session, router]);
 
   // Fetch farms belonging to the farmer
-  const fetchFarmerFarms = async (token: string, farmerId: number) => {
+  const fetchFarmerFarms = async (farmerId: number) => {
     try {
       const response = await fetch(
         `/api/v1/rubber-farms?farmerId=${farmerId}`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          credentials: "include",
         }
       );
 
@@ -210,15 +198,18 @@ export default function RubberFarmEditForm() {
       setIsLoading(true);
       setIsLoadingFarmData(true);
 
-      const token = localStorage.getItem("token");
       const response = await fetch(`/api/v1/rubber-farms/${farmId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       });
 
       if (response.ok) {
         const data = await response.json();
+
+        console.log("🔍 Fetched Farm Data:", {
+          rubberFarmId: data.rubberFarmId,
+          version: data.version,
+          plantingDetailsCount: data.plantingDetails?.length || 0,
+        });
 
         // ตรวจสอบว่า provinces data โหลดเสร็จแล้ว
         if (provinces.length === 0) {
@@ -297,7 +288,7 @@ export default function RubberFarmEditForm() {
           }, 10); // delay เล็กน้อย
         }, 10);
 
-        // Set planting details
+        // Set planting details with version
         if (data.plantingDetails && data.plantingDetails.length > 0) {
           const correctedDetails = data.plantingDetails.map(
             (detail: PlantingDetail) => ({
@@ -309,8 +300,18 @@ export default function RubberFarmEditForm() {
               numberOfTapping: Number(detail.numberOfTapping) || 0,
               ageOfRubber: Number(detail.ageOfRubber) || 0,
               totalProduction: Number(detail.totalProduction) || 0,
+              version: detail.version, // เก็บ version จาก API
             })
           );
+
+          console.log(
+            "🔍 PlantingDetails Set:",
+            correctedDetails.map((d: PlantingDetail) => ({
+              id: d.plantingDetailId,
+              version: d.version,
+            }))
+          );
+
           setPlantingDetails(correctedDetails);
         }
       } else {
@@ -510,17 +511,30 @@ export default function RubberFarmEditForm() {
     } else if (field === "specie") {
       updatedDetails[index][field] = String(value);
     } else if (field === "yearOfTapping" || field === "monthOfTapping") {
-      // ทำให้แน่ใจว่าค่าวันที่เป็น ISO string
+      // ทำให้แน่ใจว่าค่าวันที่เป็น ISO string โดยใช้เวลาท้องถิ่น
       try {
         const date = value instanceof Date ? value : new Date(value as string);
-        if (!isNaN(date.getTime())) {
+        if (!Number.isNaN(date.getTime())) {
+          // ตั้งค่าเป็นวันแรกของเดือน/ปี และเวลาเที่ยงคืนตามเวลาท้องถิ่น
+          if (field === "yearOfTapping") {
+            // เก็บเฉพาะปี - ตั้งเป็นวันที่ 1 มกราคม
+            date.setMonth(0, 1);
+          } else {
+            // เก็บเดือนและปี - ตั้งเป็นวันที่ 1 ของเดือนนั้น
+            date.setDate(1);
+          }
+          date.setHours(0, 0, 0, 0);
           updatedDetails[index][field] = date.toISOString();
         } else {
-          updatedDetails[index][field] = new Date().toISOString();
+          const defaultDate = new Date();
+          defaultDate.setHours(0, 0, 0, 0);
+          updatedDetails[index][field] = defaultDate.toISOString();
         }
-      } catch (error) {
+      } catch {
         // ถ้ามีข้อผิดพลาดให้ใช้วันที่ปัจจุบัน
-        updatedDetails[index][field] = new Date().toISOString();
+        const defaultDate = new Date();
+        defaultDate.setHours(0, 0, 0, 0);
+        updatedDetails[index][field] = defaultDate.toISOString();
       }
     }
 
@@ -581,14 +595,44 @@ export default function RubberFarmEditForm() {
 
   // Validate planting details
   const validatePlantingDetails = (): boolean => {
-    // Check if at least one planting detail is filled
+    // ตรวจสอบว่ามีอย่างน้อยหนึ่งรายการที่กรอกข้อมูลครบถ้วน
     const validDetails = plantingDetails.filter(
       (detail) =>
-        detail.specie && detail.areaOfPlot > 0 && detail.numberOfRubber > 0
+        detail.specie &&
+        detail.areaOfPlot > 0 &&
+        detail.numberOfRubber > 0 &&
+        detail.numberOfTapping >= 0 &&
+        detail.ageOfRubber >= 0 &&
+        detail.yearOfTapping &&
+        detail.monthOfTapping &&
+        detail.totalProduction >= 0
     );
 
     if (validDetails.length === 0) {
-      setError("กรุณากรอกข้อมูลรายละเอียดการปลูกอย่างน้อย 1 รายการ");
+      setError("กรุณากรอกข้อมูลรายละเอียดการปลูกอย่างน้อย 1 รายการให้ครบถ้วน");
+      return false;
+    }
+
+    // ตรวจสอบว่า ถ้ามีการกรอก specie แล้ว ต้องกรอกข้อมูลทุก field
+    const incompleteDetails = plantingDetails.filter(
+      (detail) =>
+        detail.specie &&
+        (detail.areaOfPlot <= 0 ||
+          detail.numberOfRubber <= 0 ||
+          !detail.numberOfTapping ||
+          detail.numberOfTapping < 0 ||
+          !detail.ageOfRubber ||
+          detail.ageOfRubber < 0 ||
+          !detail.yearOfTapping ||
+          !detail.monthOfTapping ||
+          !detail.totalProduction ||
+          detail.totalProduction < 0)
+    );
+
+    if (incompleteDetails.length > 0) {
+      setError(
+        "กรุณากรอกข้อมูลให้ครบถ้วนในทุกรายการที่เลือกพันธุ์ยางแล้ว (พันธุ์ยาง, พื้นที่แปลง, จำนวนต้นยาง, จำนวนต้นกรีด, อายุต้นยาง, ปีที่เริ่มกรีด, เดือนที่เริ่มกรีด, ผลผลิตรวม)"
+      );
       return false;
     }
 
@@ -600,6 +644,12 @@ export default function RubberFarmEditForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    // Validate ก่อนส่ง
+    if (!validatePlantingDetails()) {
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -625,7 +675,7 @@ export default function RubberFarmEditForm() {
       console.log("New details:", newDetails);
 
       // สร้าง payload สำหรับอัพเดทฟาร์ม
-      const farmUpdatePayload = {
+      const farmUpdatePayload: any = {
         villageName: rubberFarm.villageName,
         moo: Number(rubberFarm.moo) || 0,
         road: rubberFarm.road || "",
@@ -636,32 +686,63 @@ export default function RubberFarmEditForm() {
         location: rubberFarm.location,
       };
 
+      // เพิ่ม version ถ้ามี
+      if (rubberFarm.version !== undefined) {
+        farmUpdatePayload.version = rubberFarm.version;
+      }
+
+      console.log("🔍 RubberFarm Update - Current State:", {
+        rubberFarmId: rubberFarm.rubberFarmId,
+        version: rubberFarm.version,
+        payload: farmUpdatePayload,
+      });
+
       // อัพเดทข้อมูลฟาร์ม
-      const token = localStorage.getItem("token");
       const farmResponse = await fetch(
         `/api/v1/rubber-farms/${selectedFarmId}`,
         {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
+          credentials: "include",
           body: JSON.stringify(farmUpdatePayload),
         }
       );
+
+      if (farmResponse.status === 409) {
+        // Handle Optimistic Lock Conflict
+        const errorData = await farmResponse.json();
+        toast.error(
+          errorData.userMessage ||
+            "ข้อมูลถูกแก้ไขโดยผู้ใช้อื่นแล้ว กรุณาโหลดข้อมูลใหม่และลองอีกครั้ง",
+          { duration: 5000 }
+        );
+        // Refresh farm data
+        if (selectedFarmId) {
+          await fetchFarmDetails(selectedFarmId);
+        }
+        setIsLoading(false);
+        return;
+      }
 
       if (!farmResponse.ok) {
         const errorData = await farmResponse.json();
         throw new Error(errorData.message || "ไม่สามารถอัปเดตข้อมูลสวนยางได้");
       }
 
+      // อัพเดต version จาก response
+      const updatedFarmData = await farmResponse.json();
+      setRubberFarm((prev) => ({
+        ...prev,
+        version: updatedFarmData.version,
+      }));
+
       for (const id of deletedPlantingDetailIds) {
         try {
           const res = await fetch(`/api/v1/planting-details/${id}`, {
             method: "DELETE",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            credentials: "include",
           });
           if (!res.ok) {
             const errorData = await res.json();
@@ -677,7 +758,7 @@ export default function RubberFarmEditForm() {
         try {
           if (detail.plantingDetailId) {
             // เตรียมข้อมูลสำหรับอัพเดท
-            const detailUpdatePayload = {
+            const detailUpdatePayload: any = {
               specie: detail.specie,
               areaOfPlot: Number(detail.areaOfPlot),
               numberOfRubber: Number(detail.numberOfRubber),
@@ -688,9 +769,17 @@ export default function RubberFarmEditForm() {
               totalProduction: Number(detail.totalProduction) || 0,
             };
 
+            // เพิ่ม version ถ้ามี
+            if (detail.version !== undefined) {
+              detailUpdatePayload.version = detail.version;
+            }
+
             console.log(
-              `Updating detail ${detail.plantingDetailId}:`,
-              detailUpdatePayload
+              `🔍 PlantingDetail Update - ID: ${detail.plantingDetailId}`,
+              {
+                currentVersion: detail.version,
+                payload: detailUpdatePayload,
+              }
             );
 
             const detailResponse = await fetch(
@@ -699,15 +788,42 @@ export default function RubberFarmEditForm() {
                 method: "PUT",
                 headers: {
                   "Content-Type": "application/json",
-                  Authorization: `Bearer ${token}`,
                 },
+                credentials: "include",
                 body: JSON.stringify(detailUpdatePayload),
               }
             );
 
+            if (detailResponse.status === 409) {
+              // Handle Optimistic Lock Conflict
+              const errorData = await detailResponse.json();
+              toast.error(
+                errorData.userMessage ||
+                  "ข้อมูลรายละเอียดการปลูกถูกแก้ไขโดยผู้ใช้อื่นแล้ว กรุณาโหลดข้อมูลใหม่และลองอีกครั้ง",
+                { duration: 5000 }
+              );
+              // Refresh farm data
+              if (selectedFarmId) {
+                await fetchFarmDetails(selectedFarmId);
+              }
+              setIsLoading(false);
+              return;
+            }
+
             if (!detailResponse.ok) {
               const errorData = await detailResponse.json();
               console.error("Error updating planting detail:", errorData);
+            } else {
+              // อัพเดต version จาก response
+              const updatedDetailData = await detailResponse.json();
+              const detailIndex = plantingDetails.findIndex(
+                (d) => d.plantingDetailId === detail.plantingDetailId
+              );
+              if (detailIndex !== -1) {
+                const updatedDetails = [...plantingDetails];
+                updatedDetails[detailIndex].version = updatedDetailData.version;
+                setPlantingDetails(updatedDetails);
+              }
             }
           }
         } catch (detailError) {
@@ -737,8 +853,8 @@ export default function RubberFarmEditForm() {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
             },
+            credentials: "include",
             body: JSON.stringify(newDetailPayload),
           });
 
@@ -755,6 +871,7 @@ export default function RubberFarmEditForm() {
       }
 
       setSuccess(true);
+      toast.success("บันทึกข้อมูลสำเร็จ", { duration: 3000 });
 
       // รอสักครู่แล้วเปลี่ยนหน้า
       setTimeout(() => {
@@ -763,6 +880,7 @@ export default function RubberFarmEditForm() {
     } catch (error: any) {
       console.error("Error updating farm data:", error);
       setError(error.message || "เกิดข้อผิดพลาดในการอัปเดตข้อมูล");
+      toast.error(error.message || "เกิดข้อผิดพลาดในการอัปเดตข้อมูล");
     } finally {
       setIsLoading(false);
     }
@@ -775,6 +893,7 @@ export default function RubberFarmEditForm() {
       return;
     }
     if (step === 2 && !validateFarmData()) return;
+    if (step === 3 && !validatePlantingDetails()) return; // เพิ่ม validation สำหรับ step 3
 
     if (step < maxSteps) {
       setStep(step + 1);
@@ -1039,14 +1158,16 @@ export default function RubberFarmEditForm() {
                 >
                   หมู่บ้าน/ชุมชน <span className="text-red-500">*</span>
                 </label>
-                <input
+                <PrimaryInputText
                   id="villageName"
                   name="villageName"
-                  type="text"
-                  required
                   value={rubberFarm.villageName}
-                  onChange={updateFarmData}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 text-sm md:text-base"
+                  onChange={(value) =>
+                    updateFarmData({
+                      target: { name: "villageName", value },
+                    } as any)
+                  }
+                  required
                 />
               </div>
 
@@ -1057,16 +1178,19 @@ export default function RubberFarmEditForm() {
                 >
                   หมู่ที่ <span className="text-red-500">*</span>
                 </label>
-                <input
+                <PrimaryInputNumber
                   id="moo"
                   name="moo"
-                  type="number"
-                  required
-                  value={rubberFarm.moo || ""}
-                  onChange={updateFarmData}
+                  value={rubberFarm.moo || null}
+                  onChange={(value) =>
+                    updateFarmData({
+                      target: { name: "moo", value: value || 0 },
+                    } as any)
+                  }
                   min={0}
                   max={1000}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 text-sm md:text-base"
+                  maxFractionDigits={0}
+                  required
                 />
               </div>
             </div>
@@ -1080,13 +1204,15 @@ export default function RubberFarmEditForm() {
                 >
                   ถนน
                 </label>
-                <input
+                <PrimaryInputText
                   id="road"
                   name="road"
-                  type="text"
                   value={rubberFarm.road}
-                  onChange={updateFarmData}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 text-sm md:text-base"
+                  onChange={(value) =>
+                    updateFarmData({
+                      target: { name: "road", value },
+                    } as any)
+                  }
                 />
               </div>
 
@@ -1097,13 +1223,15 @@ export default function RubberFarmEditForm() {
                 >
                   ซอย
                 </label>
-                <input
+                <PrimaryInputText
                   id="alley"
                   name="alley"
-                  type="text"
                   value={rubberFarm.alley}
-                  onChange={updateFarmData}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 text-sm md:text-base"
+                  onChange={(value) =>
+                    updateFarmData({
+                      target: { name: "alley", value },
+                    } as any)
+                  }
                 />
               </div>
             </div>
@@ -1118,21 +1246,22 @@ export default function RubberFarmEditForm() {
                 >
                   จังหวัด <span className="text-red-500">*</span>
                 </label>
-                <select
+                <PrimaryAutoComplete
                   id="provinceId"
                   name="provinceId"
-                  required
                   value={rubberFarm.provinceId || ""}
-                  onChange={updateFarmData}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 text-sm md:text-base bg-white"
-                >
-                  <option value="">-- เลือกจังหวัด --</option>
-                  {provinces.map((province) => (
-                    <option key={province.id} value={province.id}>
-                      {province.name_th}
-                    </option>
-                  ))}
-                </select>
+                  options={provinces.map((province) => ({
+                    label: province.name_th,
+                    value: province.id,
+                  }))}
+                  onChange={(value) => {
+                    updateFarmData({
+                      target: { name: "provinceId", value },
+                    } as any);
+                  }}
+                  placeholder="-- เลือกจังหวัด --"
+                  required
+                />
               </div>
 
               {/* District dropdown */}
@@ -1143,22 +1272,23 @@ export default function RubberFarmEditForm() {
                 >
                   อำเภอ/เขต <span className="text-red-500">*</span>
                 </label>
-                <select
+                <PrimaryAutoComplete
                   id="amphureId"
                   name="amphureId"
-                  required
                   value={rubberFarm.amphureId || ""}
-                  onChange={updateFarmData}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 text-sm md:text-base bg-white disabled:bg-gray-50 disabled:text-gray-500"
+                  options={amphures.map((amphure) => ({
+                    label: amphure.name_th,
+                    value: amphure.id,
+                  }))}
+                  onChange={(value) => {
+                    updateFarmData({
+                      target: { name: "amphureId", value },
+                    } as any);
+                  }}
+                  placeholder="-- เลือกอำเภอ/เขต --"
                   disabled={!rubberFarm.provinceId}
-                >
-                  <option value="">-- เลือกอำเภอ/เขต --</option>
-                  {amphures.map((amphure) => (
-                    <option key={amphure.id} value={amphure.id}>
-                      {amphure.name_th}
-                    </option>
-                  ))}
-                </select>
+                  required
+                />
               </div>
 
               {/* Sub-district dropdown */}
@@ -1169,22 +1299,23 @@ export default function RubberFarmEditForm() {
                 >
                   ตำบล/แขวง <span className="text-red-500">*</span>
                 </label>
-                <select
+                <PrimaryAutoComplete
                   id="tambonId"
                   name="tambonId"
-                  required
                   value={rubberFarm.tambonId || ""}
-                  onChange={updateFarmData}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 text-sm md:text-base bg-white disabled:bg-gray-50 disabled:text-gray-500"
+                  options={tambons.map((tambon) => ({
+                    label: tambon.name_th,
+                    value: tambon.id,
+                  }))}
+                  onChange={(value) => {
+                    updateFarmData({
+                      target: { name: "tambonId", value },
+                    } as any);
+                  }}
+                  placeholder="-- เลือกตำบล/แขวง --"
                   disabled={!rubberFarm.amphureId}
-                >
-                  <option value="">-- เลือกตำบล/แขวง --</option>
-                  {tambons.map((tambon) => (
-                    <option key={tambon.id} value={tambon.id}>
-                      {tambon.name_th}
-                    </option>
-                  ))}
-                </select>
+                  required
+                />
               </div>
             </div>
 
@@ -1277,41 +1408,47 @@ export default function RubberFarmEditForm() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       พันธุ์ยาง <span className="text-red-500">*</span>
                     </label>
-                    <select
+                    <PrimaryAutoComplete
                       value={detail.specie}
-                      onChange={(e) =>
-                        updatePlantingDetail(index, "specie", e.target.value)
+                      options={[
+                        { label: "RRIT 251", value: "RRIT 251" },
+                        { label: "RRIM 600", value: "RRIM 600" },
+                        { label: "BPM 24", value: "BPM 24" },
+                        { label: "PB 235", value: "PB 235" },
+                        { label: "RRIT 408", value: "RRIT 408" },
+                        { label: "RRIT 226", value: "RRIT 226" },
+                        { label: "อื่นๆ", value: "อื่นๆ" },
+                      ]}
+                      onChange={(value) =>
+                        updatePlantingDetail(index, "specie", value)
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    >
-                      <option value="">-- เลือกพันธุ์ยาง --</option>
-                      <option value="RRIT 251">RRIT 251</option>
-                      <option value="RRIM 600">RRIM 600</option>
-                      <option value="BPM 24">BPM 24</option>
-                      <option value="PB 235">PB 235</option>
-                      <option value="RRIT 408">RRIT 408</option>
-                      <option value="RRIT 226">RRIT 226</option>
-                      <option value="อื่นๆ">อื่นๆ</option>
-                    </select>
+                      placeholder="-- เลือกพันธุ์ยาง --"
+                    />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       พื้นที่แปลง (ไร่) <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min={0}
-                      value={detail.areaOfPlot || ""}
-                      onChange={(e) =>
-                        updatePlantingDetail(
-                          index,
-                          "areaOfPlot",
-                          e.target.value
-                        )
+                    <PrimaryInputNumber
+                      value={detail.areaOfPlot || null}
+                      onChange={(value) =>
+                        updatePlantingDetail(index, "areaOfPlot", value || 0)
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      min={0}
+                      max={10000}
+                      minFractionDigits={0}
+                      maxFractionDigits={4}
+                      invalid={
+                        detail.specie !== "" &&
+                        (!detail.areaOfPlot || detail.areaOfPlot <= 0)
+                      }
+                      errorMessage={
+                        detail.specie &&
+                        (!detail.areaOfPlot || detail.areaOfPlot <= 0)
+                          ? "กรุณากรอกพื้นที่แปลงที่มากกว่า 0"
+                          : ""
+                      }
                     />
                   </div>
                 </div>
@@ -1321,56 +1458,83 @@ export default function RubberFarmEditForm() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       จำนวนต้นยางทั้งหมด <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="number"
-                      value={detail.numberOfRubber || ""}
-                      min={0}
-                      onChange={(e) =>
+                    <PrimaryInputNumber
+                      value={detail.numberOfRubber || null}
+                      onChange={(value) =>
                         updatePlantingDetail(
                           index,
                           "numberOfRubber",
-                          e.target.value
+                          value || 0
                         )
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      min={0}
+                      max={10000}
+                      maxFractionDigits={0}
+                      invalid={
+                        detail.specie !== "" &&
+                        (!detail.numberOfRubber || detail.numberOfRubber <= 0)
+                      }
+                      errorMessage={
+                        detail.specie &&
+                        (!detail.numberOfRubber || detail.numberOfRubber <= 0)
+                          ? "กรุณากรอกจำนวนต้นยางที่มากกว่า 0"
+                          : ""
+                      }
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      จำนวนต้นยางที่กรีดได้
+                      จำนวนต้นยางที่กรีดได้{" "}
+                      <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="number"
-                      value={detail.numberOfTapping || ""}
-                      min={0}
-                      onChange={(e) =>
+                    <PrimaryInputNumber
+                      value={detail.numberOfTapping || null}
+                      onChange={(value) =>
                         updatePlantingDetail(
                           index,
                           "numberOfTapping",
-                          e.target.value
+                          value || 0
                         )
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      min={0}
+                      max={10000}
+                      maxFractionDigits={0}
+                      invalid={
+                        detail.specie !== "" &&
+                        (!detail.numberOfTapping || detail.numberOfTapping < 0)
+                      }
+                      errorMessage={
+                        detail.specie &&
+                        (!detail.numberOfTapping || detail.numberOfTapping < 0)
+                          ? "กรุณากรอกจำนวนต้นยางที่กรีดได้"
+                          : ""
+                      }
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      อายุต้นยาง (ปี)
+                      อายุต้นยาง (ปี) <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="number"
-                      value={detail.ageOfRubber || ""}
-                      min={0}
-                      onChange={(e) =>
-                        updatePlantingDetail(
-                          index,
-                          "ageOfRubber",
-                          e.target.value
-                        )
+                    <PrimaryInputNumber
+                      value={detail.ageOfRubber || null}
+                      onChange={(value) =>
+                        updatePlantingDetail(index, "ageOfRubber", value || 0)
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      min={0}
+                      max={100}
+                      maxFractionDigits={0}
+                      invalid={
+                        detail.specie !== "" &&
+                        (!detail.ageOfRubber || detail.ageOfRubber < 0)
+                      }
+                      errorMessage={
+                        detail.specie &&
+                        (!detail.ageOfRubber || detail.ageOfRubber < 0)
+                          ? "กรุณากรอกอายุต้นยาง"
+                          : ""
+                      }
                     />
                   </div>
                 </div>
@@ -1378,65 +1542,99 @@ export default function RubberFarmEditForm() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      ปีที่เริ่มกรีด
+                      ปีที่เริ่มกรีด <span className="text-red-500">*</span>
                     </label>
-                    <ReactDatePicker
-                      selected={
+                    <PrimaryCalendar
+                      value={
                         detail.yearOfTapping
                           ? parseISO(detail.yearOfTapping)
                           : null
                       }
-                      onChange={(date) =>
+                      onChange={(value) =>
                         updatePlantingDetail(
                           index,
                           "yearOfTapping",
-                          date ? date.toISOString() : ""
+                          value || ""
                         )
                       }
-                      dateFormat="dd/MM/yyyy"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      view="year"
+                      dateFormat="yy"
+                      placeholder="เลือกปี"
+                      invalid={detail.specie !== "" && !detail.yearOfTapping}
+                      errorMessage={
+                        detail.specie && !detail.yearOfTapping
+                          ? "กรุณาเลือกปีที่เริ่มกรีด"
+                          : ""
+                      }
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      เดือนที่เริ่มกรีด
+                      เดือนที่เริ่มกรีด <span className="text-red-500">*</span>
                     </label>
-                    <ReactDatePicker
-                      selected={
+                    <PrimaryDropdown
+                      value={
                         detail.monthOfTapping
-                          ? parseISO(detail.monthOfTapping)
-                          : null
+                          ? new Date(detail.monthOfTapping).getMonth()
+                          : ""
                       }
-                      onChange={(date) =>
-                        updatePlantingDetail(
-                          index,
-                          "monthOfTapping",
-                          date ? date.toISOString() : ""
-                        )
+                      options={[
+                        { label: "มกราคม", value: 0 },
+                        { label: "กุมภาพันธ์", value: 1 },
+                        { label: "มีนาคม", value: 2 },
+                        { label: "เมษายน", value: 3 },
+                        { label: "พฤษภาคม", value: 4 },
+                        { label: "มิถุนายน", value: 5 },
+                        { label: "กรกฎาคม", value: 6 },
+                        { label: "สิงหาคม", value: 7 },
+                        { label: "กันยายน", value: 8 },
+                        { label: "ตุลาคม", value: 9 },
+                        { label: "พฤศจิกายน", value: 10 },
+                        { label: "ธันวาคม", value: 11 },
+                      ]}
+                      onChange={(value) => {
+                        const date = new Date();
+                        date.setMonth(value);
+                        updatePlantingDetail(index, "monthOfTapping", date);
+                      }}
+                      placeholder="-- เลือกเดือน --"
+                      invalid={detail.specie !== "" && !detail.monthOfTapping}
+                      errorMessage={
+                        detail.specie && !detail.monthOfTapping
+                          ? "กรุณาเลือกเดือนที่เริ่มกรีด"
+                          : ""
                       }
-                      dateFormat="dd/MM/yyyy"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      ผลผลิตรวม (กก.)
+                      ผลผลิตรวม (กก.) <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min={0}
-                      value={detail.totalProduction || ""}
-                      onChange={(e) =>
+                    <PrimaryInputNumber
+                      value={detail.totalProduction || null}
+                      onChange={(value) =>
                         updatePlantingDetail(
                           index,
                           "totalProduction",
-                          e.target.value
+                          value || 0
                         )
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      min={0}
+                      max={10000}
+                      minFractionDigits={0}
+                      maxFractionDigits={4}
+                      invalid={
+                        detail.specie !== "" &&
+                        (!detail.totalProduction || detail.totalProduction < 0)
+                      }
+                      errorMessage={
+                        detail.specie &&
+                        (!detail.totalProduction || detail.totalProduction < 0)
+                          ? "กรุณากรอกผลผลิตรวม"
+                          : ""
+                      }
                     />
                   </div>
                 </div>

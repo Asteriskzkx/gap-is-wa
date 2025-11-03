@@ -381,9 +381,7 @@ export default function AuditorLayout({ children }: AuditorLayoutProps) {
         </header>
 
         {/* Main Content Area */}
-        <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {children}
-        </main>
+        <main className="flex-grow">{children}</main>
 
         {/* Footer */}
         <Footer />

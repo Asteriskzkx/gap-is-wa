@@ -4,6 +4,7 @@ import { FarmerModel } from "../models/FarmerModel";
 import { FarmerService } from "../services/FarmerService";
 import { requireValidId, isValidId } from "../utils/ParamUtils";
 import { checkAuthorization } from "@/lib/session";
+import { OptimisticLockError } from "../errors/OptimisticLockError";
 
 export class FarmerController extends BaseController<FarmerModel> {
   private farmerService: FarmerService;
@@ -215,11 +216,12 @@ export class FarmerController extends BaseController<FarmerModel> {
       }
 
       const data = await req.json();
+      const { version, ...updateData } = data;
 
       // If updating ID number, validate it
-      if (data.identificationNumber) {
+      if (updateData.identificationNumber) {
         const isValidID = await this.farmerService.validateIdentificationNumber(
-          data.identificationNumber
+          updateData.identificationNumber
         );
         if (!isValidID) {
           return NextResponse.json(
@@ -234,7 +236,8 @@ export class FarmerController extends BaseController<FarmerModel> {
 
       const updatedFarmer = await this.farmerService.updateFarmerProfile(
         farmerId,
-        data
+        updateData,
+        version
       );
 
       if (!updatedFarmer) {
@@ -249,6 +252,10 @@ export class FarmerController extends BaseController<FarmerModel> {
 
       return NextResponse.json(updatedFarmer.toJSON(), { status: 200 });
     } catch (error: any) {
+      // Handle optimistic lock error
+      if (error instanceof OptimisticLockError) {
+        return NextResponse.json(error.toJSON(), { status: 409 });
+      }
       if (error.message.includes("already in use")) {
         return NextResponse.json({ message: error.message }, { status: 409 });
       }

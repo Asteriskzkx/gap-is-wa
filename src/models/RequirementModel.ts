@@ -8,6 +8,7 @@ export class RequirementModel extends BaseModel {
   evaluationResult: string;
   evaluationMethod: string;
   note: string;
+  version?: number; // Optimistic locking
 
   // Relations
   requirementMaster?: any;
@@ -21,7 +22,8 @@ export class RequirementModel extends BaseModel {
     evaluationMethod: string,
     note: string,
     createdAt: Date = new Date(),
-    updatedAt: Date = new Date()
+    updatedAt: Date = new Date(),
+    version?: number
   ) {
     super(requirementId, createdAt, updatedAt);
     this.requirementId = requirementId;
@@ -31,6 +33,7 @@ export class RequirementModel extends BaseModel {
     this.evaluationResult = evaluationResult;
     this.evaluationMethod = evaluationMethod;
     this.note = note;
+    this.version = version;
   }
 
   static create(
@@ -73,6 +76,7 @@ export class RequirementModel extends BaseModel {
       note: this.note,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
+      version: this.version, // เพิ่ม version
       requirementMaster: this.requirementMaster,
     };
   }

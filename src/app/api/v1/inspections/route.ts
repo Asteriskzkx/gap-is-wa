@@ -1,8 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { inspectionController } from "@/utils/dependencyInjections";
+import { checkAuthorization } from "@/lib/session";
 
 // Route handlers for /api/v1/inspections
 export async function GET(req: NextRequest) {
+  const { authorized, error } = await checkAuthorization(req, [
+    "AUDITOR",
+    "ADMIN",
+    "COMMITTEE",
+    "FARMER",
+  ]);
+
+  if (!authorized) {
+    return NextResponse.json(
+      { message: error || "Unauthorized" },
+      { status: 401 }
+    );
+  }
+
   const url = new URL(req.url);
 
   // ถ้ามี filter parameters
@@ -17,6 +32,18 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const { authorized, error } = await checkAuthorization(req, [
+    "AUDITOR",
+    "ADMIN",
+  ]);
+
+  if (!authorized) {
+    return NextResponse.json(
+      { message: error || "Unauthorized" },
+      { status: 401 }
+    );
+  }
+
   const path = req.nextUrl.pathname;
 
   if (path.endsWith("/add-auditor")) {

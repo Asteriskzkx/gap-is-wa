@@ -375,9 +375,7 @@ export default function FarmerLayout({ children }: FarmerLayoutProps) {
         </header>
 
         {/* Main Content Area - ใช้ flex-grow เพื่อขยายพื้นที่ให้เต็ม */}
-        <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {children}
-        </main>
+        <main className="flex-grow">{children}</main>
 
         {/* Footer - เพิ่ม mt-auto เพื่อให้อยู่ด้านล่างสุดเสมอ */}
         <Footer />

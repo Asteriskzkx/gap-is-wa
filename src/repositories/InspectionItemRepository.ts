@@ -124,6 +124,22 @@ export class InspectionItemRepository extends BaseRepository<InspectionItemModel
     }
   }
 
+  /**
+   * Update inspection item with optimistic locking
+   */
+  async updateWithLock(
+    id: number,
+    data: Partial<InspectionItemModel>,
+    currentVersion: number
+  ): Promise<InspectionItemModel> {
+    return this.updateWithOptimisticLock(
+      id,
+      data,
+      currentVersion,
+      "inspectionItem"
+    );
+  }
+
   private mapToModel(prismaInspectionItem: any): InspectionItemModel {
     return this.mapper.toDomain(prismaInspectionItem);
   }

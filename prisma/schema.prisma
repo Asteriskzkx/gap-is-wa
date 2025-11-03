@@ -97,6 +97,7 @@ model Farmer {
   zipCode              String   @db.VarChar(5)
   phoneNumber          String   @db.VarChar(10)
   mobilePhoneNumber    String   @db.VarChar(10)
+  version              Int      @default(0)
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
@@ -111,6 +112,7 @@ model Auditor {
   namePrefix String   @db.VarChar(25)
   firstName  String   @db.VarChar(100)
   lastName   String   @db.VarChar(100)
+  version    Int      @default(0)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -128,6 +130,7 @@ model Committee {
   namePrefix  String   @db.VarChar(25)
   firstName   String   @db.VarChar(100)
   lastName    String   @db.VarChar(100)
+  version     Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -142,6 +145,7 @@ model Admin {
   namePrefix String   @db.VarChar(25)
   firstName  String   @db.VarChar(100)
   lastName   String   @db.VarChar(100)
+  version    Int      @default(0)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 }
@@ -158,6 +162,7 @@ model RubberFarm {
   district     String   @db.VarChar(100)
   province     String   @db.VarChar(100)
   location     Json // For GeoJSON data
+  version      Int      @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -178,6 +183,7 @@ model PlantingDetail {
   yearOfTapping    DateTime
   monthOfTapping   DateTime
   totalProduction  Float
+  version          Int        @default(0)
   createdAt        DateTime   @default(now())
   updatedAt        DateTime   @updatedAt
 }
@@ -235,6 +241,7 @@ model Inspection {
   auditorChief          Auditor              @relation(fields: [auditorChiefId], references: [auditorId])
   rubberFarmId          Int
   rubberFarm            RubberFarm           @relation(fields: [rubberFarmId], references: [rubberFarmId])
+  version               Int                  @default(0)
   createdAt             DateTime             @default(now())
   updatedAt             DateTime             @updatedAt
 
@@ -267,6 +274,7 @@ model InspectionItem {
   inspectionItemNo       Int
   inspectionItemResult   String               @db.VarChar(100)
   otherConditions        Json // Store list of strings as JSON
+  version                Int                  @default(0)
   createdAt              DateTime             @default(now())
   updatedAt              DateTime             @updatedAt
 
@@ -284,6 +292,7 @@ model Requirement {
   evaluationResult    String            @db.VarChar(20)
   evaluationMethod    String            @db.VarChar(20)
   note                String            @db.VarChar(255)
+  version             Int               @default(0)
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
 }
@@ -300,6 +309,7 @@ model DataRecord {
   relatedPlants        Json
   moreInfo             String     @db.VarChar(255)
   map                  Json // For GeoJSON data
+  version              Int        @default(0)
   createdAt            DateTime   @default(now())
   updatedAt            DateTime   @updatedAt
 }
@@ -311,6 +321,7 @@ model AdviceAndDefect {
   date              DateTime
   adviceList        Json
   defectList        Json
+  version           Int        @default(0)
   createdAt         DateTime   @default(now())
   updatedAt         DateTime   @updatedAt
 }
@@ -320,6 +331,7 @@ model Certificate {
   inspectionId  Int        @unique
   inspection    Inspection @relation(fields: [inspectionId], references: [inspectionId], onDelete: Cascade)
   pdfFileUrl    String     @db.VarChar(255) // Store S3 URL reference to the PDF file
+  version       Int        @default(0)
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
 

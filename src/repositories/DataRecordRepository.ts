@@ -108,6 +108,22 @@ export class DataRecordRepository extends BaseRepository<DataRecordModel> {
     }
   }
 
+  /**
+   * Update data record with optimistic locking
+   */
+  async updateWithLock(
+    id: number,
+    data: Partial<DataRecordModel>,
+    currentVersion: number
+  ): Promise<DataRecordModel> {
+    return this.updateWithOptimisticLock(
+      id,
+      data,
+      currentVersion,
+      "dataRecord"
+    );
+  }
+
   private mapToModel(prismaDataRecord: PrismaDataRecord): DataRecordModel {
     return this.mapper.toDomain(prismaDataRecord);
   }

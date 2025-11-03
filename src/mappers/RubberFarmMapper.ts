@@ -28,7 +28,8 @@ export class RubberFarmMapper implements BaseMapper<any, RubberFarmModel> {
           )
         : [],
       prismaEntity.createdAt,
-      prismaEntity.updatedAt
+      prismaEntity.updatedAt,
+      prismaEntity.version
     );
 
     return rubberFarmModel;

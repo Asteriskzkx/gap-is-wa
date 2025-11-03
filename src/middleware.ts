@@ -37,7 +37,7 @@ export default withAuth(
   }
 );
 
-// กำหนด routes ที่ต้องการป้องกัน
+// กำหนด routes ที่ต้องการป้องกันด้วย NextAuth middleware
 export const config = {
   matcher: [
     "/farmer/:path*",

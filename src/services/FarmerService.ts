@@ -2,6 +2,7 @@ import { BaseService } from "./BaseService";
 import { FarmerModel } from "../models/FarmerModel";
 import { FarmerRepository } from "../repositories/FarmerRepository";
 import { UserService } from "./UserService";
+import { OptimisticLockError } from "../errors/OptimisticLockError";
 
 export class FarmerService extends BaseService<FarmerModel> {
   private farmerRepository: FarmerRepository;
@@ -113,7 +114,8 @@ export class FarmerService extends BaseService<FarmerModel> {
 
   async updateFarmerProfile(
     farmerId: number,
-    data: Partial<FarmerModel>
+    data: Partial<FarmerModel>,
+    currentVersion?: number
   ): Promise<FarmerModel | null> {
     // เปลี่ยนจากEstring เปแE��Enumber
     try {
@@ -125,7 +127,17 @@ export class FarmerService extends BaseService<FarmerModel> {
         }
       }
 
-      return await this.update(farmerId, data);
+      if (currentVersion !== undefined) {
+        // Use optimistic locking
+        return await this.farmerRepository.updateWithLock(
+          farmerId,
+          data,
+          currentVersion
+        );
+      } else {
+        // Fallback to regular update
+        return await this.update(farmerId, data);
+      }
     } catch (error) {
       this.handleServiceError(error);
       throw error;

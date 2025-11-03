@@ -4,6 +4,7 @@ import { RubberFarmModel } from "../models/RubberFarmModel";
 import { RubberFarmService } from "../services/RubberFarmService";
 import { requireValidId } from "../utils/ParamUtils";
 import { checkAuthorization } from "@/lib/session";
+import { OptimisticLockError } from "../errors/OptimisticLockError";
 
 export class RubberFarmController extends BaseController<RubberFarmModel> {
   private rubberFarmService: RubberFarmService;
@@ -126,9 +127,12 @@ export class RubberFarmController extends BaseController<RubberFarmModel> {
       }
 
       const data = await req.json();
+      const { version, ...updateData } = data;
+
       const updatedFarm = await this.rubberFarmService.updateRubberFarm(
         farmId,
-        data
+        updateData,
+        version
       );
 
       if (!updatedFarm) {
@@ -139,7 +143,11 @@ export class RubberFarmController extends BaseController<RubberFarmModel> {
       }
 
       return NextResponse.json(updatedFarm, { status: 200 });
-    } catch (error) {
+    } catch (error: any) {
+      // Handle optimistic lock error
+      if (error instanceof OptimisticLockError) {
+        return NextResponse.json(error.toJSON(), { status: 409 });
+      }
       return this.handleControllerError(error);
     }
   }

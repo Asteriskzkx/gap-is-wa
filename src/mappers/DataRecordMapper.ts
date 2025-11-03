@@ -18,7 +18,8 @@ export class DataRecordMapper
       prismaEntity.moreInfo,
       prismaEntity.map,
       prismaEntity.createdAt,
-      prismaEntity.updatedAt
+      prismaEntity.updatedAt,
+      prismaEntity.version
     );
   }
 

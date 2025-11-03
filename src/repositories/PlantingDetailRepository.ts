@@ -131,6 +131,29 @@ export class PlantingDetailRepository extends BaseRepository<PlantingDetailModel
     }
   }
 
+  async updateWithLock(
+    id: number,
+    data: Partial<PlantingDetailModel>,
+    currentVersion: number
+  ): Promise<PlantingDetailModel | null> {
+    return this.updateWithOptimisticLock(
+      id,
+      {
+        specie: data.specie,
+        areaOfPlot: data.areaOfPlot,
+        numberOfRubber: data.numberOfRubber,
+        numberOfTapping: data.numberOfTapping,
+        ageOfRubber: data.ageOfRubber,
+        yearOfTapping: data.yearOfTapping,
+        monthOfTapping: data.monthOfTapping,
+        totalProduction: data.totalProduction,
+        updatedAt: new Date(),
+      },
+      currentVersion,
+      "plantingDetail"
+    );
+  }
+
   async delete(id: number): Promise<boolean> {
     try {
       await this.prisma.plantingDetail.delete({

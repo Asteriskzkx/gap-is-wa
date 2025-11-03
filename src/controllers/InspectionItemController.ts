@@ -3,6 +3,7 @@ import { BaseController } from "./BaseController";
 import { InspectionItemModel } from "../models/InspectionItemModel";
 import { InspectionItemService } from "../services/InspectionItemService";
 import { requireValidId } from "../utils/ParamUtils";
+import { OptimisticLockError } from "../errors/OptimisticLockError";
 
 export class InspectionItemController extends BaseController<InspectionItemModel> {
   private inspectionItemService: InspectionItemService;
@@ -99,7 +100,7 @@ export class InspectionItemController extends BaseController<InspectionItemModel
       }
 
       const data = await req.json();
-      const { result } = data;
+      const { result, version } = data;
 
       if (!result) {
         return NextResponse.json(
@@ -111,7 +112,8 @@ export class InspectionItemController extends BaseController<InspectionItemModel
       const updatedItem =
         await this.inspectionItemService.updateInspectionItemResult(
           itemId,
-          result
+          result,
+          version
         );
 
       if (!updatedItem) {
@@ -123,6 +125,10 @@ export class InspectionItemController extends BaseController<InspectionItemModel
 
       return NextResponse.json(updatedItem.toJSON(), { status: 200 });
     } catch (error: any) {
+      // Handle optimistic lock error
+      if (error instanceof OptimisticLockError) {
+        return NextResponse.json(error.toJSON(), { status: 409 });
+      }
       return this.handleControllerError(error);
     }
   }

@@ -191,15 +191,27 @@ export class AuditorController extends BaseController<AuditorModel> {
         );
       }
 
-      // ดึงรายการ farms ที่พร้อมใช้งาน
+      // ดึงค่า pagination จาก query parameters
+      const { searchParams } = new URL(req.url);
+      const limit = Number.parseInt(searchParams.get("limit") || "10");
+      const offset = Number.parseInt(searchParams.get("offset") || "0");
+
+      // ดึงรายการ farms ที่พร้อมใช้งานทั้งหมด
       const availableFarms =
         await this.auditorService.getAvailableRubberFarms();
 
+      // คำนวณ pagination
+      const total = availableFarms.length;
+      const paginatedFarms = availableFarms.slice(offset, offset + limit);
+
       return NextResponse.json(
         {
-          message: "Available farms retrieved successfully",
-          data: availableFarms,
-          total: availableFarms.length,
+          results: paginatedFarms,
+          paginator: {
+            limit,
+            offset,
+            total,
+          },
         },
         { status: 200 }
       );
