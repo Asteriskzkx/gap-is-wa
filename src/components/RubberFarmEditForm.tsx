@@ -1259,7 +1259,7 @@ export default function RubberFarmEditForm() {
                       target: { name: "provinceId", value },
                     } as any);
                   }}
-                  placeholder="-- เลือกจังหวัด --"
+                  placeholder="เลือกจังหวัด"
                   required
                 />
               </div>
@@ -1285,7 +1285,7 @@ export default function RubberFarmEditForm() {
                       target: { name: "amphureId", value },
                     } as any);
                   }}
-                  placeholder="-- เลือกอำเภอ/เขต --"
+                  placeholder="เลือกอำเภอ/เขต"
                   disabled={!rubberFarm.provinceId}
                   required
                 />
@@ -1312,7 +1312,7 @@ export default function RubberFarmEditForm() {
                       target: { name: "tambonId", value },
                     } as any);
                   }}
-                  placeholder="-- เลือกตำบล/แขวง --"
+                  placeholder="เลือกตำบล/แขวง"
                   disabled={!rubberFarm.amphureId}
                   required
                 />
@@ -1422,7 +1422,7 @@ export default function RubberFarmEditForm() {
                       onChange={(value) =>
                         updatePlantingDetail(index, "specie", value)
                       }
-                      placeholder="-- เลือกพันธุ์ยาง --"
+                      placeholder="เลือกพันธุ์ยาง"
                     />
                   </div>
 
@@ -1598,7 +1598,7 @@ export default function RubberFarmEditForm() {
                         date.setMonth(value);
                         updatePlantingDetail(index, "monthOfTapping", date);
                       }}
-                      placeholder="-- เลือกเดือน --"
+                      placeholder="เลือกเดือน"
                       invalid={detail.specie !== "" && !detail.monthOfTapping}
                       errorMessage={
                         detail.specie && !detail.monthOfTapping

@@ -5,7 +5,32 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { DataTablePageEvent, DataTableSortEvent } from "primereact/datatable";
 import AuditorLayout from "@/components/layout/AuditorLayout";
-import { PrimaryDataTable } from "@/components/ui";
+import { PrimaryDataTable, PrimaryAutoComplete } from "@/components/ui";
+import thaiProvinceData from "@/data/thai-provinces.json";
+
+// Interface สำหรับข้อมูลจังหวัด อำเภอ ตำบล
+interface Tambon {
+  id: number;
+  name_th: string;
+  name_en: string;
+  zip_code: number;
+  amphure_id: number;
+}
+
+interface Amphure {
+  id: number;
+  name_th: string;
+  name_en: string;
+  province_id: number;
+  tambon: Tambon[]; // ชื่อ property ใน JSON คือ tambon (เอกพจน์)
+}
+
+interface Province {
+  id: number;
+  name_th: string;
+  name_en: string;
+  amphure: Amphure[]; // ชื่อ property ใน JSON คือ amphure (เอกพจน์)
+}
 
 interface RubberFarm {
   id: number;
@@ -79,11 +104,19 @@ export default function AuditorScheduleInspectionPage() {
 
   // State for search and pagination
   const [searchFilters, setSearchFilters] = useState({
+    provinceId: null as number | null,
+    amphureId: null as number | null,
+    tambonId: null as number | null,
     province: "",
     district: "",
     subDistrict: "",
   });
   const [auditorSearchTerm, setAuditorSearchTerm] = useState("");
+
+  // State สำหรับข้อมูลจังหวัด อำเภอ ตำบล
+  const [provinces, setProvinces] = useState<Province[]>([]);
+  const [amphures, setAmphures] = useState<Amphure[]>([]);
+  const [tambons, setTambons] = useState<Tambon[]>([]);
 
   // Pagination state for lazy loading
   const [farmsPagination, setFarmsPagination] = useState({
@@ -234,6 +267,71 @@ export default function AuditorScheduleInspectionPage() {
     }
   };
 
+  // โหลดข้อมูลจังหวัด
+  useEffect(() => {
+    setProvinces(thaiProvinceData as Province[]);
+  }, []);
+
+  // อัพเดทอำเภอเมื่อเลือกจังหวัด
+  useEffect(() => {
+    if (searchFilters.provinceId) {
+      const selectedProvince = provinces.find(
+        (p) => p.id === searchFilters.provinceId
+      );
+      if (selectedProvince) {
+        setAmphures(selectedProvince.amphure); // แก้ไขจาก amphures เป็น amphure
+        // หาชื่อจังหวัดและอัพเดท
+        setSearchFilters((prev) => ({
+          ...prev,
+          province: selectedProvince.name_th,
+          amphureId: null,
+          tambonId: null,
+          district: "",
+          subDistrict: "",
+        }));
+      }
+    } else {
+      setAmphures([]);
+      setTambons([]);
+    }
+  }, [searchFilters.provinceId, provinces]);
+
+  // อัพเดทตำบลเมื่อเลือกอำเภอ
+  useEffect(() => {
+    if (searchFilters.amphureId) {
+      const selectedAmphure = amphures.find(
+        (a) => a.id === searchFilters.amphureId
+      );
+      if (selectedAmphure) {
+        setTambons(selectedAmphure.tambon); // แก้ไขจาก tambons เป็น tambon
+        // หาชื่ออำเภอและอัพเดท
+        setSearchFilters((prev) => ({
+          ...prev,
+          district: selectedAmphure.name_th,
+          tambonId: null,
+          subDistrict: "",
+        }));
+      }
+    } else {
+      setTambons([]);
+    }
+  }, [searchFilters.amphureId, amphures]);
+
+  // อัพเดทชื่อตำบลเมื่อเลือกตำบล
+  useEffect(() => {
+    if (searchFilters.tambonId) {
+      const selectedTambon = tambons.find(
+        (t) => t.id === searchFilters.tambonId
+      );
+      if (selectedTambon) {
+        setSearchFilters((prev) => ({
+          ...prev,
+          subDistrict: selectedTambon.name_th,
+        }));
+      }
+    }
+  }, [searchFilters.tambonId, tambons]);
+
   useEffect(() => {
     // ตรวจสอบ session
     if (status === "unauthenticated") {
@@ -326,6 +424,9 @@ export default function AuditorScheduleInspectionPage() {
   // Handle reset search
   const handleResetSearch = () => {
     setSearchFilters({
+      provinceId: null,
+      amphureId: null,
+      tambonId: null,
       province: "",
       district: "",
       subDistrict: "",
@@ -564,54 +665,77 @@ export default function AuditorScheduleInspectionPage() {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                  <label
+                    htmlFor="searchProvinceId"
+                    className="block text-sm font-medium text-gray-600 mb-1"
+                  >
                     จังหวัด
                   </label>
-                  <input
-                    type="text"
-                    placeholder="พิมพ์จังหวัด..."
-                    value={searchFilters.province}
-                    onChange={(e) =>
+                  <PrimaryAutoComplete
+                    id="searchProvinceId"
+                    value={searchFilters.provinceId || ""}
+                    options={provinces.map((province) => ({
+                      label: province.name_th,
+                      value: province.id,
+                    }))}
+                    onChange={(value) => {
                       setSearchFilters({
                         ...searchFilters,
-                        province: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                        provinceId: value as number,
+                        amphureId: null,
+                        tambonId: null,
+                      });
+                    }}
+                    placeholder="เลือกจังหวัด"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                  <label
+                    htmlFor="searchAmphureId"
+                    className="block text-sm font-medium text-gray-600 mb-1"
+                  >
                     อำเภอ/เขต
                   </label>
-                  <input
-                    type="text"
-                    placeholder="พิมพ์อำเภอ/เขต..."
-                    value={searchFilters.district}
-                    onChange={(e) =>
+                  <PrimaryAutoComplete
+                    id="searchAmphureId"
+                    value={searchFilters.amphureId || ""}
+                    options={amphures.map((amphure) => ({
+                      label: amphure.name_th,
+                      value: amphure.id,
+                    }))}
+                    onChange={(value) => {
                       setSearchFilters({
                         ...searchFilters,
-                        district: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                        amphureId: value as number,
+                        tambonId: null,
+                      });
+                    }}
+                    placeholder="เลือกอำเภอ/เขต"
+                    disabled={!searchFilters.provinceId}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                  <label
+                    htmlFor="searchTambonId"
+                    className="block text-sm font-medium text-gray-600 mb-1"
+                  >
                     ตำบล/แขวง
                   </label>
-                  <input
-                    type="text"
-                    placeholder="พิมพ์ตำบล/แขวง..."
-                    value={searchFilters.subDistrict}
-                    onChange={(e) =>
+                  <PrimaryAutoComplete
+                    id="searchTambonId"
+                    value={searchFilters.tambonId || ""}
+                    options={tambons.map((tambon) => ({
+                      label: tambon.name_th,
+                      value: tambon.id,
+                    }))}
+                    onChange={(value) => {
                       setSearchFilters({
                         ...searchFilters,
-                        subDistrict: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                        tambonId: value as number,
+                      });
+                    }}
+                    placeholder="เลือกตำบล/แขวง"
+                    disabled={!searchFilters.amphureId}
                   />
                 </div>
               </div>

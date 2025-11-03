@@ -1943,7 +1943,7 @@ export default function AuditorInspectionsPage() {
                                 }
                               >
                                 <option value="NOT_EVALUATED">
-                                  -- เลือกผลการตรวจ --
+                                  เลือกผลการตรวจ
                                 </option>
                                 <option value="ใช่">ใช่ (ผ่าน)</option>
                                 <option value="ไม่ใช่">ไม่ใช่ (ไม่ผ่าน)</option>
@@ -1969,7 +1969,7 @@ export default function AuditorInspectionsPage() {
                                 }
                               >
                                 <option value="PENDING">
-                                  -- เลือกวิธีการตรวจ --
+                                  เลือกวิธีการตรวจ
                                 </option>
                                 <option value="พินิจ">พินิจ</option>
                                 <option value="สัมภาษณ์">สัมภาษณ์</option>

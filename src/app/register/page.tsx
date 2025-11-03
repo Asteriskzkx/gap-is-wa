@@ -683,7 +683,7 @@ export default function FarmerRegisterPage() {
                       onChange={updateFormData}
                       className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
                     >
-                      <option value="">-- เลือกคำนำหน้า --</option>
+                      <option value="">เลือกคำนำหน้า</option>
                       <option value="นาย">นาย</option>
                       <option value="นาง">นาง</option>
                       <option value="นางสาว">นางสาว</option>
@@ -954,7 +954,7 @@ export default function FarmerRegisterPage() {
                       }
                       className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
                     >
-                      <option value="">-- เลือกจังหวัด --</option>
+                      <option value="">เลือกจังหวัด</option>
                       {provinces.map((province) => (
                         <option key={province.id} value={province.id}>
                           {province.name_th}
@@ -985,7 +985,7 @@ export default function FarmerRegisterPage() {
                       className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
                       disabled={amphures.length === 0}
                     >
-                      <option value="">-- เลือกอำเภอ/เขต --</option>
+                      <option value="">เลือกอำเภอ/เขต</option>
                       {amphures.map((amphure) => (
                         <option key={amphure.id} value={amphure.id}>
                           {amphure.name_th}
@@ -1018,7 +1018,7 @@ export default function FarmerRegisterPage() {
                       className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
                       disabled={tambons.length === 0}
                     >
-                      <option value="">-- เลือกตำบล/แขวง --</option>
+                      <option value="">เลือกตำบล/แขวง</option>
                       {tambons.map((tambon) => (
                         <option key={tambon.id} value={tambon.id}>
                           {tambon.name_th}
