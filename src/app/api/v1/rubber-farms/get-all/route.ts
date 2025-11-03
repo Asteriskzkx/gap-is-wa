@@ -1,8 +1,9 @@
 import { checkAuthorization } from "@/lib/session";
-import { adminController } from "@/utils/dependencyInjections";
+import { rubberFarmController } from "@/utils/dependencyInjections";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req: NextRequest) {
+// Route handlers for /api/v1/rubber-farms/get-all
+export async function GET(req: NextRequest) {
   const { authorized, error } = await checkAuthorization(req, ["ADMIN"]);
 
   if (!authorized) {
@@ -12,5 +13,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  return adminController.registerAdmin(req);
+  // Otherwise, get all farms
+  return rubberFarmController.getAll(req);
 }
