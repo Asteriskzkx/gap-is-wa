@@ -5,12 +5,11 @@ import RubberFarmRegistrationForm from "@/components/RubberFarmRegistrationForm"
 import FarmerLayout from "@/components/layout/FarmerLayout";
 
 export default function RubberFarmApplication() {
-
-
-
   return (
     <FarmerLayout>
-      <RubberFarmRegistrationForm />
+      <div className="max-w-3xl mx-auto">
+        <RubberFarmRegistrationForm />
+      </div>
     </FarmerLayout>
   );
 }
