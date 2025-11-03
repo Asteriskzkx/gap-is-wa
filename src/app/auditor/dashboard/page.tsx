@@ -218,23 +218,31 @@ export default function AuditorDashboardPage() {
 
   const fetchAvailableFarms = async (auditorId: number) => {
     try {
-      const response = await fetch("/api/v1/auditors/available-farms");
+      // Fetch with limit to get total count, we only need the count here
+      const response = await fetch(
+        "/api/v1/auditors/available-farms?limit=1&offset=0"
+      );
 
       if (response.ok) {
         const result = await response.json();
-        // จัดการกับ response ที่อาจมีรูปแบบแตกต่างกัน
-        const availableFarmsData = Array.isArray(result.data)
-          ? result.data
-          : Array.isArray(result)
-          ? result
-          : [];
-
-        setAvailableFarms(availableFarmsData.length);
+        // Handle new paginated response format
+        if (result.paginator) {
+          setAvailableFarms(result.paginator.total);
+        } else {
+          // Fallback for old format
+          const availableFarmsData = Array.isArray(result.data)
+            ? result.data
+            : Array.isArray(result)
+            ? result
+            : [];
+          setAvailableFarms(availableFarmsData.length);
+        }
 
         // อัปเดตค่า summary โดยเพิ่มจำนวนสวนยางที่รอนัดหมาย
         setInspectionSummary((prev) => ({
           ...prev,
-          pendingSchedule: prev.pendingSchedule + availableFarmsData.length,
+          pendingSchedule:
+            prev.pendingSchedule + (result.paginator?.total || 0),
         }));
       }
     } catch (error) {
@@ -277,452 +285,456 @@ export default function AuditorDashboardPage() {
 
   return (
     <AuditorLayout>
-      {/* Page Title */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">
-          หน้าหลักผู้ตรวจประเมิน
-        </h1>
-        <p className="mt-1 text-sm text-gray-500">
-          ยินดีต้อนรับสู่ระบบสารสนเทศสำหรับการจัดการข้อมูลทางการเกษตรผลผลิตยางพาราตามมาตรฐานจีเอพี
-        </p>
-      </div>
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
+        {/* Page Title */}
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-900">
+            หน้าหลักผู้ตรวจประเมิน
+          </h1>
+          <p className="mt-1 text-sm text-gray-500">
+            ยินดีต้อนรับสู่ระบบสารสนเทศสำหรับการจัดการข้อมูลทางการเกษตรผลผลิตยางพาราตามมาตรฐานจีเอพี
+          </p>
+        </div>
 
-      {/* Action Cards Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {navItems
-          .filter((item) => item.title !== "หน้าหลัก")
-          .map((item, index) => (
-            <div
-              key={index}
-              className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-6"
-            >
-              <Link href={item.href} className="block">
-                <div className="flex flex-col h-full">
-                  <div
-                    className={`p-3 rounded-full mb-4 w-12 h-12 flex items-center justify-center ${
-                      index === 0
-                        ? "bg-blue-100 text-blue-600"
+        {/* Action Cards Row */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {navItems
+            .filter((item) => item.title !== "หน้าหลัก")
+            .map((item, index) => (
+              <div
+                key={index}
+                className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-6"
+              >
+                <Link href={item.href} className="block">
+                  <div className="flex flex-col h-full">
+                    <div
+                      className={`p-3 rounded-full mb-4 w-12 h-12 flex items-center justify-center ${
+                        index === 0
+                          ? "bg-blue-100 text-blue-600"
+                          : index === 1
+                          ? "bg-green-100 text-green-600"
+                          : index === 2
+                          ? "bg-purple-100 text-purple-600"
+                          : index === 3
+                          ? "bg-amber-100 text-amber-600"
+                          : "bg-indigo-100 text-indigo-600"
+                      }`}
+                    >
+                      {item.icon}
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      {item.title}
+                    </h3>
+                    <p className="text-sm text-gray-500 flex-grow">
+                      {index === 0
+                        ? "ดำเนินการตรวจประเมินแหล่งผลิตยางพาราตามมาตรฐานจีเอพี"
                         : index === 1
-                        ? "bg-green-100 text-green-600"
+                        ? "กำหนดและแจ้งวันตรวจประเมินแหล่งผลิตแก่เกษตรกร"
                         : index === 2
-                        ? "bg-purple-100 text-purple-600"
+                        ? "สรุปและบันทึกผลการตรวจประเมินแหล่งผลิตยางพารา"
                         : index === 3
-                        ? "bg-amber-100 text-amber-600"
-                        : "bg-indigo-100 text-indigo-600"
-                    }`}
-                  >
-                    {item.icon}
+                        ? "จัดเก็บข้อมูลสำคัญของสวนยางพาราที่ได้รับการตรวจประเมิน"
+                        : "บันทึกรายละเอียดคำแนะนำและข้อบกพร่องที่พบระหว่างการตรวจ"}
+                    </p>
+                    <div className="mt-4 flex items-center text-blue-600 font-medium text-sm">
+                      <span>เข้าสู่เมนู</span>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4 ml-1"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    </div>
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    {item.title}
-                  </h3>
-                  <p className="text-sm text-gray-500 flex-grow">
-                    {index === 0
-                      ? "ดำเนินการตรวจประเมินแหล่งผลิตยางพาราตามมาตรฐานจีเอพี"
-                      : index === 1
-                      ? "กำหนดและแจ้งวันตรวจประเมินแหล่งผลิตแก่เกษตรกร"
-                      : index === 2
-                      ? "สรุปและบันทึกผลการตรวจประเมินแหล่งผลิตยางพารา"
-                      : index === 3
-                      ? "จัดเก็บข้อมูลสำคัญของสวนยางพาราที่ได้รับการตรวจประเมิน"
-                      : "บันทึกรายละเอียดคำแนะนำและข้อบกพร่องที่พบระหว่างการตรวจ"}
-                  </p>
-                  <div className="mt-4 flex items-center text-blue-600 font-medium text-sm">
-                    <span>เข้าสู่เมนู</span>
+                </Link>
+              </div>
+            ))}
+        </div>
+
+        {/* Status Section */}
+        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 mb-8">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            สรุปสถานะงานตรวจประเมิน
+          </h2>
+          {loading ? (
+            <LoadingIndicator />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              <div className="bg-amber-50 border border-amber-100 rounded-lg p-3 sm:p-4">
+                <div className="flex items-start">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6 text-amber-500 mr-3 mt-0.5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+                  <div>
+                    <h3 className="text-base font-medium text-amber-800">
+                      {availableFarms} รายการ
+                    </h3>
+                    <p className="text-sm text-amber-700 mt-1">รอการนัดหมาย</p>
+                  </div>
+                </div>
+                <div className="mt-2 pt-2 border-t border-amber-200">
+                  <Link
+                    href="/auditor/applications"
+                    className="text-xs text-amber-600 hover:text-amber-800 flex items-center mt-1"
+                  >
+                    จัดการนัดหมาย
                     <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4 ml-1"
+                      className="w-3 h-3 ml-1"
                       fill="none"
-                      viewBox="0 0 24 24"
                       stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
                     >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        strokeWidth={2}
+                        strokeWidth="2"
                         d="M9 5l7 7-7 7"
-                      />
+                      ></path>
                     </svg>
+                  </Link>
+                </div>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 sm:p-4">
+                <div className="flex items-start">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6 text-blue-500 mr-3 mt-0.5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75a2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25z"
+                    />
+                  </svg>
+                  <div>
+                    <h3 className="text-base font-medium text-blue-800">
+                      {inspectionSummary.pendingInspection} รายการ
+                    </h3>
+                    <p className="text-sm text-blue-700 mt-1">
+                      รอการตรวจประเมิน
+                    </p>
                   </div>
                 </div>
-              </Link>
-            </div>
-          ))}
-      </div>
-
-      {/* Status Section */}
-      <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 mb-8">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">
-          สรุปสถานะงานตรวจประเมิน
-        </h2>
-        {loading ? (
-          <LoadingIndicator />
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            <div className="bg-amber-50 border border-amber-100 rounded-lg p-3 sm:p-4">
-              <div className="flex items-start">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-amber-500 mr-3 mt-0.5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-                <div>
-                  <h3 className="text-base font-medium text-amber-800">
-                    {availableFarms} รายการ
-                  </h3>
-                  <p className="text-sm text-amber-700 mt-1">รอการนัดหมาย</p>
+                <div className="mt-2 pt-2 border-t border-blue-200">
+                  <Link
+                    href="/auditor/inspections"
+                    className="text-xs text-blue-600 hover:text-blue-800 flex items-center"
+                  >
+                    ดำเนินการตรวจ
+                    <svg
+                      className="w-3 h-3 ml-1"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M9 5l7 7-7 7"
+                      ></path>
+                    </svg>
+                  </Link>
                 </div>
               </div>
-              <div className="mt-2 pt-2 border-t border-amber-200">
-                <Link
-                  href="/auditor/applications"
-                  className="text-xs text-amber-600 hover:text-amber-800 flex items-center mt-1"
-                >
-                  จัดการนัดหมาย
+
+              <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-3 sm:p-4">
+                <div className="flex items-start">
                   <svg
-                    className="w-3 h-3 ml-1"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
                     xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6 text-yellow-500 mr-3 mt-0.5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
                   >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M9 5l7 7-7 7"
-                    ></path>
+                      strokeWidth={2}
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
-                </Link>
-              </div>
-            </div>
-
-            <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 sm:p-4">
-              <div className="flex items-start">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-blue-500 mr-3 mt-0.5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75a2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25z"
-                  />
-                </svg>
-                <div>
-                  <h3 className="text-base font-medium text-blue-800">
-                    {inspectionSummary.pendingInspection} รายการ
-                  </h3>
-                  <p className="text-sm text-blue-700 mt-1">รอการตรวจประเมิน</p>
-                </div>
-              </div>
-              <div className="mt-2 pt-2 border-t border-blue-200">
-                <Link
-                  href="/auditor/inspections"
-                  className="text-xs text-blue-600 hover:text-blue-800 flex items-center"
-                >
-                  ดำเนินการตรวจ
-                  <svg
-                    className="w-3 h-3 ml-1"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M9 5l7 7-7 7"
-                    ></path>
-                  </svg>
-                </Link>
-              </div>
-            </div>
-
-            <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-3 sm:p-4">
-              <div className="flex items-start">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-yellow-500 mr-3 mt-0.5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <div>
-                  <h3 className="text-base font-medium text-yellow-800">
-                    {inspectionSummary.pendingResult} รายการ
-                  </h3>
-                  <p className="text-sm text-yellow-700 mt-1">รอสรุปผล</p>
-                </div>
-              </div>
-              <div className="mt-2 pt-2 border-t border-yellow-200">
-                <Link
-                  href="/auditor/reports"
-                  className="text-xs text-yellow-600 hover:text-yellow-800 flex items-center"
-                >
-                  จัดการรายงาน
-                  <svg
-                    className="w-3 h-3 ml-1"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M9 5l7 7-7 7"
-                    ></path>
-                  </svg>
-                </Link>
-              </div>
-            </div>
-
-            <div className="bg-green-50 border border-green-100 rounded-lg p-3 sm:p-4">
-              <div className="flex items-start">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-green-500 mr-3 mt-0.5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <div>
-                  <h3 className="text-base font-medium text-green-800">
-                    {inspectionSummary.completed} รายการ
-                  </h3>
-                  <p className="text-sm text-green-700 mt-1">
-                    ประเมินเสร็จสิ้น
-                  </p>
-                </div>
-              </div>
-              <div className="mt-2 pt-2 border-t border-green-200">
-                <div className="flex justify-between">
-                  <span className="text-xs text-green-600">
-                    ผ่าน: {inspectionSummary.passed}
-                  </span>
-                  <span className="text-xs text-red-600">
-                    ไม่ผ่าน: {inspectionSummary.failed}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Recent Activity Section */}
-      <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 mb-8">
-        <div className="flex justify-between items-center mb-4 sm:mb-6">
-          <h2 className="text-lg font-semibold text-gray-900">
-            การตรวจประเมินล่าสุด
-          </h2>
-          <Link
-            href="/auditor/reports"
-            className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
-          >
-            ดูทั้งหมด
-            <svg
-              className="w-4 h-4 ml-1"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M9 5l7 7-7 7"
-              ></path>
-            </svg>
-          </Link>
-        </div>
-
-        <div>
-          {loading ? (
-            <div className="animate-pulse">
-              <div className="h-10 bg-gray-200 rounded mb-4"></div>
-              <div className="h-12 bg-gray-200 rounded mb-4"></div>
-              <div className="h-12 bg-gray-200 rounded mb-4"></div>
-              <div className="h-12 bg-gray-200 rounded"></div>
-            </div>
-          ) : recentInspections.length > 0 ? (
-            <>
-              {/* มุมมองแบบการ์ดสำหรับมือถือ */}
-              <div className="md:hidden space-y-4">
-                {recentInspections.map((inspection, index) => (
-                  <div
-                    key={index}
-                    className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-medium text-gray-900">
-                          {inspection.inspectionNo}
-                        </h3>
-                        <p className="text-sm text-gray-700 mt-1">
-                          {inspection.rubberFarm?.farmer
-                            ? `${inspection.rubberFarm.farmer.namePrefix}${inspection.rubberFarm.farmer.firstName} ${inspection.rubberFarm.farmer.lastName}`
-                            : "ไม่มีข้อมูล"}
-                        </p>
-                      </div>
-                      <span
-                        className={`px-2 py-1 text-xs leading-5 font-semibold rounded-full ${
-                          inspection.inspectionResult === "รอผลการตรวจประเมิน"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : inspection.inspectionResult === "ผ่าน"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {inspection.inspectionResult === "รอผลการตรวจประเมิน"
-                          ? "รอสรุปผล"
-                          : inspection.inspectionResult}
-                      </span>
-                    </div>
-
-                    <div className="text-sm text-gray-500 mt-2">
-                      วันที่:{" "}
-                      {new Date(
-                        inspection.inspectionDateAndTime
-                      ).toLocaleDateString("th-TH")}
-                    </div>
-
-                    <div className="mt-3 flex justify-end">
-                      <Link
-                        href={`/auditor/inspection-summary/${inspection.inspectionId}`}
-                        className="text-sm text-indigo-600 hover:text-indigo-900 flex items-center"
-                      >
-                        {inspection.inspectionResult === "รอผลการตรวจประเมิน"
-                          ? "สรุปผล"
-                          : "ดูรายละเอียด"}
-                        <svg
-                          className="w-4 h-4 ml-1"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M9 5l7 7-7 7"
-                          ></path>
-                        </svg>
-                      </Link>
-                    </div>
+                  <div>
+                    <h3 className="text-base font-medium text-yellow-800">
+                      {inspectionSummary.pendingResult} รายการ
+                    </h3>
+                    <p className="text-sm text-yellow-700 mt-1">รอสรุปผล</p>
                   </div>
-                ))}
+                </div>
+                <div className="mt-2 pt-2 border-t border-yellow-200">
+                  <Link
+                    href="/auditor/reports"
+                    className="text-xs text-yellow-600 hover:text-yellow-800 flex items-center"
+                  >
+                    จัดการรายงาน
+                    <svg
+                      className="w-3 h-3 ml-1"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M9 5l7 7-7 7"
+                      ></path>
+                    </svg>
+                  </Link>
+                </div>
               </div>
 
-              {/* มุมมองแบบตารางสำหรับหน้าจอขนาดกลางขึ้นไป */}
-              <div className="hidden md:block overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        เลขที่
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        เกษตรกร
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        วันที่
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        สถานะ
-                      </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        จัดการ
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {recentInspections.map((inspection, index) => (
-                      <tr key={index} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {inspection.inspectionNo}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
-                          {inspection.rubberFarm?.farmer
-                            ? `${inspection.rubberFarm.farmer.namePrefix}${inspection.rubberFarm.farmer.firstName} ${inspection.rubberFarm.farmer.lastName}`
-                            : "ไม่มีข้อมูล"}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(
-                            inspection.inspectionDateAndTime
-                          ).toLocaleDateString("th-TH")}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          <span
-                            className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                              inspection.inspectionResult ===
-                              "รอผลการตรวจประเมิน"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : inspection.inspectionResult === "ผ่าน"
-                                ? "bg-green-100 text-green-800"
-                                : "bg-red-100 text-red-800"
-                            }`}
-                          >
-                            {inspection.inspectionResult ===
-                            "รอผลการตรวจประเมิน"
-                              ? "รอสรุปผล"
-                              : inspection.inspectionResult}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
-                          <Link
-                            href={`/auditor/inspection-summary/${inspection.inspectionId}`}
-                            className="text-indigo-600 hover:text-indigo-900"
-                          >
-                            {inspection.inspectionResult ===
-                            "รอผลการตรวจประเมิน"
-                              ? "สรุปผล"
-                              : "ดูรายละเอียด"}
-                          </Link>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="bg-green-50 border border-green-100 rounded-lg p-3 sm:p-4">
+                <div className="flex items-start">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6 text-green-500 mr-3 mt-0.5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <div>
+                    <h3 className="text-base font-medium text-green-800">
+                      {inspectionSummary.completed} รายการ
+                    </h3>
+                    <p className="text-sm text-green-700 mt-1">
+                      ประเมินเสร็จสิ้น
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-2 pt-2 border-t border-green-200">
+                  <div className="flex justify-between">
+                    <span className="text-xs text-green-600">
+                      ผ่าน: {inspectionSummary.passed}
+                    </span>
+                    <span className="text-xs text-red-600">
+                      ไม่ผ่าน: {inspectionSummary.failed}
+                    </span>
+                  </div>
+                </div>
               </div>
-            </>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              ไม่มีการตรวจประเมินล่าสุด
             </div>
           )}
+        </div>
+
+        {/* Recent Activity Section */}
+        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 mb-8">
+          <div className="flex justify-between items-center mb-4 sm:mb-6">
+            <h2 className="text-lg font-semibold text-gray-900">
+              การตรวจประเมินล่าสุด
+            </h2>
+            <Link
+              href="/auditor/reports"
+              className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
+            >
+              ดูทั้งหมด
+              <svg
+                className="w-4 h-4 ml-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M9 5l7 7-7 7"
+                ></path>
+              </svg>
+            </Link>
+          </div>
+
+          <div>
+            {loading ? (
+              <div className="animate-pulse">
+                <div className="h-10 bg-gray-200 rounded mb-4"></div>
+                <div className="h-12 bg-gray-200 rounded mb-4"></div>
+                <div className="h-12 bg-gray-200 rounded mb-4"></div>
+                <div className="h-12 bg-gray-200 rounded"></div>
+              </div>
+            ) : recentInspections.length > 0 ? (
+              <>
+                {/* มุมมองแบบการ์ดสำหรับมือถือ */}
+                <div className="md:hidden space-y-4">
+                  {recentInspections.map((inspection, index) => (
+                    <div
+                      key={index}
+                      className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-medium text-gray-900">
+                            {inspection.inspectionNo}
+                          </h3>
+                          <p className="text-sm text-gray-700 mt-1">
+                            {inspection.rubberFarm?.farmer
+                              ? `${inspection.rubberFarm.farmer.namePrefix}${inspection.rubberFarm.farmer.firstName} ${inspection.rubberFarm.farmer.lastName}`
+                              : "ไม่มีข้อมูล"}
+                          </p>
+                        </div>
+                        <span
+                          className={`px-2 py-1 text-xs leading-5 font-semibold rounded-full ${
+                            inspection.inspectionResult === "รอผลการตรวจประเมิน"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : inspection.inspectionResult === "ผ่าน"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {inspection.inspectionResult === "รอผลการตรวจประเมิน"
+                            ? "รอสรุปผล"
+                            : inspection.inspectionResult}
+                        </span>
+                      </div>
+
+                      <div className="text-sm text-gray-500 mt-2">
+                        วันที่:{" "}
+                        {new Date(
+                          inspection.inspectionDateAndTime
+                        ).toLocaleDateString("th-TH")}
+                      </div>
+
+                      <div className="mt-3 flex justify-end">
+                        <Link
+                          href={`/auditor/inspection-summary/${inspection.inspectionId}`}
+                          className="text-sm text-indigo-600 hover:text-indigo-900 flex items-center"
+                        >
+                          {inspection.inspectionResult === "รอผลการตรวจประเมิน"
+                            ? "สรุปผล"
+                            : "ดูรายละเอียด"}
+                          <svg
+                            className="w-4 h-4 ml-1"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M9 5l7 7-7 7"
+                            ></path>
+                          </svg>
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* มุมมองแบบตารางสำหรับหน้าจอขนาดกลางขึ้นไป */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          เลขที่
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          เกษตรกร
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          วันที่
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          สถานะ
+                        </th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          จัดการ
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {recentInspections.map((inspection, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {inspection.inspectionNo}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                            {inspection.rubberFarm?.farmer
+                              ? `${inspection.rubberFarm.farmer.namePrefix}${inspection.rubberFarm.farmer.firstName} ${inspection.rubberFarm.farmer.lastName}`
+                              : "ไม่มีข้อมูล"}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                            {new Date(
+                              inspection.inspectionDateAndTime
+                            ).toLocaleDateString("th-TH")}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            <span
+                              className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                inspection.inspectionResult ===
+                                "รอผลการตรวจประเมิน"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : inspection.inspectionResult === "ผ่าน"
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-red-100 text-red-800"
+                              }`}
+                            >
+                              {inspection.inspectionResult ===
+                              "รอผลการตรวจประเมิน"
+                                ? "รอสรุปผล"
+                                : inspection.inspectionResult}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
+                            <Link
+                              href={`/auditor/inspection-summary/${inspection.inspectionId}`}
+                              className="text-indigo-600 hover:text-indigo-900"
+                            >
+                              {inspection.inspectionResult ===
+                              "รอผลการตรวจประเมิน"
+                                ? "สรุปผล"
+                                : "ดูรายละเอียด"}
+                            </Link>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                ไม่มีการตรวจประเมินล่าสุด
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </AuditorLayout>

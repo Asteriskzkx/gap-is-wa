@@ -3,7 +3,9 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { DataTablePageEvent } from "primereact/datatable";
 import AuditorLayout from "@/components/layout/AuditorLayout";
+import { PrimaryDataTable } from "@/components/ui";
 
 interface RubberFarm {
   id: number;
@@ -75,8 +77,13 @@ export default function AuditorScheduleInspectionPage() {
   // State for search and pagination
   const [farmSearchTerm, setFarmSearchTerm] = useState("");
   const [auditorSearchTerm, setAuditorSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
+
+  // Pagination state for lazy loading
+  const [farmsPagination, setFarmsPagination] = useState({
+    first: 0,
+    rows: 10,
+    totalRecords: 0,
+  });
 
   // Auditor info
   const [auditor, setAuditor] = useState({
@@ -106,29 +113,39 @@ export default function AuditorScheduleInspectionPage() {
     }
   };
 
-  // Define fetch functions outside useEffect
-  const fetchRubberFarms = async () => {
+  // Fetch rubber farms with pagination
+  const fetchRubberFarms = async (offset = 0, limit = 10) => {
     try {
       setLoading(true);
-      const response = await fetch("/api/v1/auditors/available-farms");
+      const response = await fetch(
+        `/api/v1/auditors/available-farms?limit=${limit}&offset=${offset}`
+      );
 
       if (response.ok) {
         const result = await response.json();
-        if (Array.isArray(result.data)) {
-          setRubberFarms(result.data);
-        } else if (Array.isArray(result)) {
-          setRubberFarms(result);
+
+        // Handle new paginated response format
+        if (result.results && result.paginator) {
+          setRubberFarms(result.results);
+          setFarmsPagination({
+            first: result.paginator.offset,
+            rows: result.paginator.limit,
+            totalRecords: result.paginator.total,
+          });
         } else {
           console.error("Unexpected API response format:", result);
           setRubberFarms([]);
+          setFarmsPagination({ first: 0, rows: 10, totalRecords: 0 });
         }
       } else {
         console.error("Failed to fetch rubber farms:", response.status);
         setRubberFarms([]);
+        setFarmsPagination({ first: 0, rows: 10, totalRecords: 0 });
       }
     } catch (error) {
       console.error("Error fetching rubber farms:", error);
       setRubberFarms([]);
+      setFarmsPagination({ first: 0, rows: 10, totalRecords: 0 });
     } finally {
       setLoading(false);
     }
@@ -175,24 +192,16 @@ export default function AuditorScheduleInspectionPage() {
       });
 
       // Fetch data
-      fetchRubberFarms();
+      fetchRubberFarms(0, 10);
       fetchInspectionTypes();
       fetchAuditors();
     }
   }, [status, session, router]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Filter and pagination for farms
-  const filteredFarms = rubberFarms.filter(
-    (farm) =>
-      farm.location.toLowerCase().includes(farmSearchTerm.toLowerCase()) ||
-      farm.farmerName.toLowerCase().includes(farmSearchTerm.toLowerCase()) ||
-      farm.farmerEmail.toLowerCase().includes(farmSearchTerm.toLowerCase())
-  );
-
-  const indexOfLastFarm = currentPage * itemsPerPage;
-  const indexOfFirstFarm = indexOfLastFarm - itemsPerPage;
-  const currentFarms = filteredFarms.slice(indexOfFirstFarm, indexOfLastFarm);
-  const totalPages = Math.ceil(filteredFarms.length / itemsPerPage);
+  // Handle page change for DataTable
+  const onPageChange = (event: DataTablePageEvent) => {
+    fetchRubberFarms(event.first, event.rows);
+  };
 
   // Filter for auditors
   const filteredAuditors = auditors.filter(
@@ -409,117 +418,67 @@ export default function AuditorScheduleInspectionPage() {
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
               />
             </div>
-            <div className="overflow-x-auto w-full">
-              <table className="w-full min-w-[600px] divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      เลือก
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      รหัสสวน
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      พื้นที่
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      เกษตรกร
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      อีเมล
-                    </th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      การดำเนินการ
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {loading ? (
-                    <tr>
-                      <td colSpan={6} className="text-center py-4">
-                        <div className="flex justify-center">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
-                        </div>
-                      </td>
-                    </tr>
-                  ) : currentFarms.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={6}
-                        className="text-center py-4 text-gray-500"
-                      >
-                        ไม่พบข้อมูลสวนยางพารา
-                      </td>
-                    </tr>
-                  ) : (
-                    currentFarms.map((farm) => (
-                      <tr
-                        key={farm.id}
-                        className={`hover:bg-gray-50 ${
-                          selectedFarm?.id === farm.id ? "bg-green-50" : ""
-                        }`}
-                      >
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <input
-                            type="radio"
-                            name="farm"
-                            checked={selectedFarm?.id === farm.id}
-                            onChange={() => setSelectedFarm(farm)}
-                            className="h-4 w-4 text-green-600 focus:ring-green-500"
-                          />
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          RF{farm.id.toString().padStart(5, "0")}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {farm.location}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {farm.farmerName}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {farm.farmerEmail}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center">
-                          <button
-                            onClick={() => fetchFarmDetails(farm.id)}
-                            disabled={loadingFarmDetails}
-                            className="text-blue-600 hover:text-blue-900 text-sm font-medium disabled:text-gray-400"
-                          >
-                            ดูข้อมูล
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-            {totalPages > 1 && (
-              <div className="mt-4 flex justify-between items-center">
-                <p className="text-sm text-gray-700">
-                  แสดง {indexOfFirstFarm + 1} ถึง{" "}
-                  {Math.min(indexOfLastFarm, filteredFarms.length)} จาก{" "}
-                  {filteredFarms.length} รายการ
-                </p>
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => setCurrentPage(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="px-3 py-1 border rounded-md disabled:opacity-50"
-                  >
-                    ก่อนหน้า
-                  </button>
-                  <button
-                    onClick={() => setCurrentPage(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className="px-3 py-1 border rounded-md disabled:opacity-50"
-                  >
-                    ถัดไป
-                  </button>
-                </div>
-              </div>
-            )}
+
+            <PrimaryDataTable
+              value={rubberFarms}
+              columns={[
+                {
+                  field: "id",
+                  header: "รหัสสวน",
+                  body: (rowData: RubberFarm) =>
+                    `RF${rowData.id.toString().padStart(5, "0")}`,
+                  style: { minWidth: "100px" },
+                },
+                {
+                  field: "location",
+                  header: "พื้นที่",
+                  style: { minWidth: "200px" },
+                },
+                {
+                  field: "farmerName",
+                  header: "เกษตรกร",
+                  style: { minWidth: "150px" },
+                },
+                {
+                  field: "farmerEmail",
+                  header: "อีเมล",
+                  style: { minWidth: "200px" },
+                },
+                {
+                  field: "actions",
+                  header: "การดำเนินการ",
+                  body: (rowData: RubberFarm) => (
+                    <button
+                      onClick={() => fetchFarmDetails(rowData.id)}
+                      disabled={loadingFarmDetails}
+                      className="text-blue-600 hover:text-blue-900 text-sm font-medium disabled:text-gray-400 whitespace-nowrap"
+                    >
+                      ดูข้อมูล
+                    </button>
+                  ),
+                  style: { width: "120px" },
+                },
+              ]}
+              loading={loading}
+              paginator
+              rows={farmsPagination.rows}
+              totalRecords={farmsPagination.totalRecords}
+              lazy
+              onPage={onPageChange}
+              emptyMessage="ไม่พบข้อมูลสวนยางพารา"
+              rowClassName={(data: RubberFarm) =>
+                selectedFarm?.id === data.id
+                  ? "bg-green-50 cursor-pointer"
+                  : "cursor-pointer"
+              }
+              onRowClick={(event: any) => {
+                // ถ้าคลิกที่ปุ่ม "ดูข้อมูล" ไม่ให้เลือกแถว
+                if (event.originalEvent.target.tagName === "BUTTON") {
+                  return;
+                }
+                setSelectedFarm(event.data);
+              }}
+            />
           </div>
         );
       case 2:
@@ -804,7 +763,7 @@ export default function AuditorScheduleInspectionPage() {
 
   return (
     <AuditorLayout>
-      <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-8 overflow-x-auto">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900">
             แจ้งกำหนดการวันที่ตรวจประเมิน
