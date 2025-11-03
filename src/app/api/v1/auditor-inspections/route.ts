@@ -1,8 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auditorInspectionController } from "@/utils/dependencyInjections";
+import { checkAuthorization } from "@/lib/session";
 
 export async function GET(req: NextRequest) {
   try {
+    const { authorized, error } = await checkAuthorization(req, [
+      "AUDITOR",
+      "ADMIN",
+      "COMMITTEE",
+    ]);
+
+    if (!authorized) {
+      return NextResponse.json(
+        { message: error || "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     const searchParams = new URL(req.url).searchParams;
     const auditorId = searchParams.get("auditorId");
     const inspectionId = searchParams.get("inspectionId");
@@ -27,6 +41,18 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const { authorized, error } = await checkAuthorization(req, [
+      "AUDITOR",
+      "ADMIN",
+    ]);
+
+    if (!authorized) {
+      return NextResponse.json(
+        { message: error || "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     return auditorInspectionController.createAuditorInspection(req);
   } catch (error) {
     console.error("Error in auditor-inspections route:", error);
