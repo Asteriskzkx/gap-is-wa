@@ -10,3 +10,5 @@ export { default as PrimaryDropdown } from "./PrimaryDropdown";
 export { default as PrimaryInputText } from "./PrimaryInputText";
 export { default as PrimaryInputNumber } from "./PrimaryInputNumber";
 export { default as PrimaryCalendar } from "./PrimaryCalendar";
+export { default as PrimaryPassword } from "./PrimaryPassword";
+export { default as PrimaryInputMask } from "./PrimaryInputMask";

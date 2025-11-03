@@ -13,6 +13,8 @@ interface PrimaryInputTextProps {
   readonly id?: string;
   readonly name?: string;
   readonly maxLength?: number;
+  readonly type?: string;
+  readonly autoComplete?: string;
 }
 
 export default function PrimaryInputText({
@@ -25,6 +27,8 @@ export default function PrimaryInputText({
   id,
   name,
   maxLength,
+  type = "text",
+  autoComplete,
 }: PrimaryInputTextProps) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(e.target.value);
@@ -34,12 +38,14 @@ export default function PrimaryInputText({
     <InputText
       id={id}
       name={name}
+      type={type}
       value={value}
       onChange={handleChange}
       placeholder={placeholder}
       disabled={disabled}
       required={required}
       maxLength={maxLength}
+      autoComplete={autoComplete}
       className={`w-full ${className}`}
     />
   );
