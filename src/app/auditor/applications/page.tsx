@@ -3,13 +3,45 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { DataTablePageEvent } from "primereact/datatable";
+import { DataTablePageEvent, DataTableSortEvent } from "primereact/datatable";
 import AuditorLayout from "@/components/layout/AuditorLayout";
-import { PrimaryDataTable } from "@/components/ui";
+import {
+  PrimaryDataTable,
+  PrimaryAutoComplete,
+  PrimaryCalendar,
+} from "@/components/ui";
+import thaiProvinceData from "@/data/thai-provinces.json";
+
+// Interface สำหรับข้อมูลจังหวัด อำเภอ ตำบล
+interface Tambon {
+  id: number;
+  name_th: string;
+  name_en: string;
+  zip_code: number;
+  amphure_id: number;
+}
+
+interface Amphure {
+  id: number;
+  name_th: string;
+  name_en: string;
+  province_id: number;
+  tambon: Tambon[]; // ชื่อ property ใน JSON คือ tambon (เอกพจน์)
+}
+
+interface Province {
+  id: number;
+  name_th: string;
+  name_en: string;
+  amphure: Amphure[]; // ชื่อ property ใน JSON คือ amphure (เอกพจน์)
+}
 
 interface RubberFarm {
   id: number;
   location: string;
+  province: string;
+  district: string;
+  subDistrict: string;
   farmerName: string;
   farmerEmail: string;
 }
@@ -72,11 +104,23 @@ export default function AuditorScheduleInspectionPage() {
   const [selectedInspectionType, setSelectedInspectionType] =
     useState<InspectionType | null>(null);
   const [selectedAuditors, setSelectedAuditors] = useState<Auditor[]>([]);
-  const [inspectionDate, setInspectionDate] = useState("");
+  const [inspectionDate, setInspectionDate] = useState<Date | null>(null);
 
   // State for search and pagination
-  const [farmSearchTerm, setFarmSearchTerm] = useState("");
+  const [searchFilters, setSearchFilters] = useState({
+    provinceId: null as number | null,
+    amphureId: null as number | null,
+    tambonId: null as number | null,
+    province: "",
+    district: "",
+    subDistrict: "",
+  });
   const [auditorSearchTerm, setAuditorSearchTerm] = useState("");
+
+  // State สำหรับข้อมูลจังหวัด อำเภอ ตำบล
+  const [provinces, setProvinces] = useState<Province[]>([]);
+  const [amphures, setAmphures] = useState<Amphure[]>([]);
+  const [tambons, setTambons] = useState<Tambon[]>([]);
 
   // Pagination state for lazy loading
   const [farmsPagination, setFarmsPagination] = useState({
@@ -84,6 +128,16 @@ export default function AuditorScheduleInspectionPage() {
     rows: 10,
     totalRecords: 0,
   });
+
+  // Sort state
+  const [sortField, setSortField] = useState<string | undefined>(undefined);
+  const [sortOrder, setSortOrder] = useState<1 | -1 | 0 | null>(null);
+  const [multiSortMeta, setMultiSortMeta] = useState<
+    Array<{
+      field: string;
+      order: 1 | -1 | 0 | null;
+    }>
+  >([]);
 
   // Auditor info
   const [auditor, setAuditor] = useState({
@@ -114,11 +168,53 @@ export default function AuditorScheduleInspectionPage() {
   };
 
   // Fetch rubber farms with pagination
-  const fetchRubberFarms = async (offset = 0, limit = 10) => {
+  const fetchRubberFarms = async (
+    offset = 0,
+    limit = 10,
+    filters?: {
+      province?: string;
+      district?: string;
+      subDistrict?: string;
+    },
+    sorting?: {
+      sortField?: string;
+      sortOrder?: string;
+      multiSortMeta?: Array<{
+        field: string;
+        order: number;
+      }>;
+    }
+  ) => {
     try {
       setLoading(true);
+
+      // สร้าง query parameters
+      const params = new URLSearchParams({
+        limit: limit.toString(),
+        offset: offset.toString(),
+      });
+
+      // เพิ่ม search filters
+      if (filters?.province) params.append("province", filters.province);
+      if (filters?.district) params.append("district", filters.district);
+      if (filters?.subDistrict)
+        params.append("subDistrict", filters.subDistrict);
+
+      // เพิ่ม sort parameters
+      if (sorting?.sortField) params.append("sortField", sorting.sortField);
+      if (sorting?.sortOrder) params.append("sortOrder", sorting.sortOrder);
+      if (sorting?.multiSortMeta) {
+        // Filter เฉพาะ items ที่มี order เป็น 1 หรือ -1
+        const validSortMeta = sorting.multiSortMeta.filter(
+          (item) => item.order === 1 || item.order === -1
+        );
+        if (validSortMeta.length > 0) {
+          params.append("multiSortMeta", JSON.stringify(validSortMeta));
+        }
+      }
+
       const response = await fetch(
-        `/api/v1/auditors/available-farms?limit=${limit}&offset=${offset}`
+        `/api/v1/auditors/available-farms?${params.toString()}`
       );
 
       if (response.ok) {
@@ -175,6 +271,71 @@ export default function AuditorScheduleInspectionPage() {
     }
   };
 
+  // โหลดข้อมูลจังหวัด
+  useEffect(() => {
+    setProvinces(thaiProvinceData as Province[]);
+  }, []);
+
+  // อัพเดทอำเภอเมื่อเลือกจังหวัด
+  useEffect(() => {
+    if (searchFilters.provinceId) {
+      const selectedProvince = provinces.find(
+        (p) => p.id === searchFilters.provinceId
+      );
+      if (selectedProvince) {
+        setAmphures(selectedProvince.amphure); // แก้ไขจาก amphures เป็น amphure
+        // หาชื่อจังหวัดและอัพเดท
+        setSearchFilters((prev) => ({
+          ...prev,
+          province: selectedProvince.name_th,
+          amphureId: null,
+          tambonId: null,
+          district: "",
+          subDistrict: "",
+        }));
+      }
+    } else {
+      setAmphures([]);
+      setTambons([]);
+    }
+  }, [searchFilters.provinceId, provinces]);
+
+  // อัพเดทตำบลเมื่อเลือกอำเภอ
+  useEffect(() => {
+    if (searchFilters.amphureId) {
+      const selectedAmphure = amphures.find(
+        (a) => a.id === searchFilters.amphureId
+      );
+      if (selectedAmphure) {
+        setTambons(selectedAmphure.tambon); // แก้ไขจาก tambons เป็น tambon
+        // หาชื่ออำเภอและอัพเดท
+        setSearchFilters((prev) => ({
+          ...prev,
+          district: selectedAmphure.name_th,
+          tambonId: null,
+          subDistrict: "",
+        }));
+      }
+    } else {
+      setTambons([]);
+    }
+  }, [searchFilters.amphureId, amphures]);
+
+  // อัพเดทชื่อตำบลเมื่อเลือกตำบล
+  useEffect(() => {
+    if (searchFilters.tambonId) {
+      const selectedTambon = tambons.find(
+        (t) => t.id === searchFilters.tambonId
+      );
+      if (selectedTambon) {
+        setSearchFilters((prev) => ({
+          ...prev,
+          subDistrict: selectedTambon.name_th,
+        }));
+      }
+    }
+  }, [searchFilters.tambonId, tambons]);
+
   useEffect(() => {
     // ตรวจสอบ session
     if (status === "unauthenticated") {
@@ -192,7 +353,14 @@ export default function AuditorScheduleInspectionPage() {
       });
 
       // Fetch data
-      fetchRubberFarms(0, 10);
+      fetchRubberFarms(0, 10, searchFilters, {
+        sortField,
+        sortOrder:
+          sortOrder === 1 ? "asc" : sortOrder === -1 ? "desc" : undefined,
+        multiSortMeta: multiSortMeta.filter(
+          (item) => item.order === 1 || item.order === -1
+        ) as Array<{ field: string; order: number }>,
+      });
       fetchInspectionTypes();
       fetchAuditors();
     }
@@ -200,7 +368,91 @@ export default function AuditorScheduleInspectionPage() {
 
   // Handle page change for DataTable
   const onPageChange = (event: DataTablePageEvent) => {
-    fetchRubberFarms(event.first, event.rows);
+    fetchRubberFarms(event.first, event.rows, searchFilters, {
+      sortField,
+      sortOrder:
+        sortOrder === 1 ? "asc" : sortOrder === -1 ? "desc" : undefined,
+      multiSortMeta: multiSortMeta.filter(
+        (item) => item.order === 1 || item.order === -1
+      ) as Array<{ field: string; order: number }>,
+    });
+  };
+
+  // Handle sort change
+  const onSortChange = (event: DataTableSortEvent) => {
+    if (event.multiSortMeta) {
+      const validMultiSort = event.multiSortMeta.filter(
+        (item) => item.order !== undefined
+      ) as Array<{ field: string; order: 1 | -1 | 0 | null }>;
+      setMultiSortMeta(validMultiSort);
+      const validSortMeta = validMultiSort.filter(
+        (item) => item.order === 1 || item.order === -1
+      ) as Array<{ field: string; order: number }>;
+      fetchRubberFarms(
+        farmsPagination.first,
+        farmsPagination.rows,
+        searchFilters,
+        {
+          multiSortMeta: validSortMeta,
+        }
+      );
+    } else {
+      setSortField(event.sortField);
+      const validOrder = event.sortOrder !== undefined ? event.sortOrder : null;
+      setSortOrder(validOrder);
+      fetchRubberFarms(
+        farmsPagination.first,
+        farmsPagination.rows,
+        searchFilters,
+        {
+          sortField: event.sortField,
+          sortOrder: event.sortOrder === 1 ? "asc" : "desc",
+        }
+      );
+    }
+  };
+
+  // Handle search
+  const handleSearch = () => {
+    const validSortMeta = multiSortMeta.filter(
+      (item) => item.order === 1 || item.order === -1
+    ) as Array<{ field: string; order: number }>;
+    fetchRubberFarms(0, farmsPagination.rows, searchFilters, {
+      sortField,
+      sortOrder:
+        sortOrder === 1 ? "asc" : sortOrder === -1 ? "desc" : undefined,
+      multiSortMeta: validSortMeta,
+    });
+  };
+
+  // Handle reset search
+  const handleResetSearch = () => {
+    setSearchFilters({
+      provinceId: null,
+      amphureId: null,
+      tambonId: null,
+      province: "",
+      district: "",
+      subDistrict: "",
+    });
+    const validSortMeta = multiSortMeta.filter(
+      (item) => item.order === 1 || item.order === -1
+    ) as Array<{ field: string; order: number }>;
+    fetchRubberFarms(
+      0,
+      farmsPagination.rows,
+      {
+        province: "",
+        district: "",
+        subDistrict: "",
+      },
+      {
+        sortField,
+        sortOrder:
+          sortOrder === 1 ? "asc" : sortOrder === -1 ? "desc" : undefined,
+        multiSortMeta: validSortMeta,
+      }
+    );
   };
 
   // Filter for auditors
@@ -249,7 +501,7 @@ export default function AuditorScheduleInspectionPage() {
         body: JSON.stringify({
           rubberFarmId: selectedFarm!.id,
           inspectionTypeId: selectedInspectionType!.inspectionTypeId,
-          inspectionDateAndTime: new Date(inspectionDate).toISOString(),
+          inspectionDateAndTime: inspectionDate!.toISOString(),
           additionalAuditorIds: selectedAuditors.map((a) => a.id),
         }),
       });
@@ -278,15 +530,13 @@ export default function AuditorScheduleInspectionPage() {
     });
   };
 
-  const today = new Date().toISOString().split("T")[0];
-
   const StepIndicator = () => (
     <div className="mb-8">
       <div className="hidden md:block">
-        <div className="flex items-center">
+        <div className="flex items-center justify-between w-full">
           {[1, 2, 3, 4, 5].map((step, index) => (
             <React.Fragment key={step}>
-              <div className="flex flex-col items-center flex-shrink-0">
+              <div className="flex flex-col items-center">
                 <div
                   className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-semibold border-2 transition-all duration-300 ${
                     currentStep >= step
@@ -314,9 +564,9 @@ export default function AuditorScheduleInspectionPage() {
                     step
                   )}
                 </div>
-                <div className="mt-3 text-center max-w-20">
+                <div className="mt-3 text-center">
                   <div
-                    className={`text-xs font-medium transition-colors duration-300 ${
+                    className={`text-xs font-medium transition-colors duration-300 whitespace-nowrap ${
                       currentStep >= step ? "text-green-600" : "text-gray-500"
                     }`}
                   >
@@ -329,7 +579,7 @@ export default function AuditorScheduleInspectionPage() {
                 </div>
               </div>
               {index < 4 && (
-                <div className="mx-4 mb-6 w-16 sm:w-24 md:w-32 lg:w-40 flex-shrink-0">
+                <div className="flex-1 mx-2 mb-6">
                   <div
                     className={`w-full h-1 rounded-full transition-colors duration-300 ${
                       currentStep > step ? "bg-green-600" : "bg-gray-300"
@@ -409,14 +659,102 @@ export default function AuditorScheduleInspectionPage() {
             <h2 className="text-xl font-semibold text-gray-900 mb-4">
               ขั้นตอนที่ 1: เลือกสวนยางพารา
             </h2>
-            <div className="mb-4">
-              <input
-                type="text"
-                placeholder="ค้นหาสวนยางพารา..."
-                value={farmSearchTerm}
-                onChange={(e) => setFarmSearchTerm(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-              />
+
+            {/* Search Form */}
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">
+                ค้นหาสวนยางพารา
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label
+                    htmlFor="searchProvinceId"
+                    className="block text-sm font-medium text-gray-600 mb-1"
+                  >
+                    จังหวัด
+                  </label>
+                  <PrimaryAutoComplete
+                    id="searchProvinceId"
+                    value={searchFilters.provinceId || ""}
+                    options={provinces.map((province) => ({
+                      label: province.name_th,
+                      value: province.id,
+                    }))}
+                    onChange={(value) => {
+                      setSearchFilters({
+                        ...searchFilters,
+                        provinceId: value as number,
+                        amphureId: null,
+                        tambonId: null,
+                      });
+                    }}
+                    placeholder="เลือกจังหวัด"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="searchAmphureId"
+                    className="block text-sm font-medium text-gray-600 mb-1"
+                  >
+                    อำเภอ/เขต
+                  </label>
+                  <PrimaryAutoComplete
+                    id="searchAmphureId"
+                    value={searchFilters.amphureId || ""}
+                    options={amphures.map((amphure) => ({
+                      label: amphure.name_th,
+                      value: amphure.id,
+                    }))}
+                    onChange={(value) => {
+                      setSearchFilters({
+                        ...searchFilters,
+                        amphureId: value as number,
+                        tambonId: null,
+                      });
+                    }}
+                    placeholder="เลือกอำเภอ/เขต"
+                    disabled={!searchFilters.provinceId}
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="searchTambonId"
+                    className="block text-sm font-medium text-gray-600 mb-1"
+                  >
+                    ตำบล/แขวง
+                  </label>
+                  <PrimaryAutoComplete
+                    id="searchTambonId"
+                    value={searchFilters.tambonId || ""}
+                    options={tambons.map((tambon) => ({
+                      label: tambon.name_th,
+                      value: tambon.id,
+                    }))}
+                    onChange={(value) => {
+                      setSearchFilters({
+                        ...searchFilters,
+                        tambonId: value as number,
+                      });
+                    }}
+                    placeholder="เลือกตำบล/แขวง"
+                    disabled={!searchFilters.amphureId}
+                  />
+                </div>
+              </div>
+              <div className="mt-4 flex gap-2">
+                <button
+                  onClick={handleSearch}
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm font-medium"
+                >
+                  ค้นหา
+                </button>
+                <button
+                  onClick={handleResetSearch}
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 text-sm font-medium"
+                >
+                  ล้างค่า
+                </button>
+              </div>
             </div>
 
             <PrimaryDataTable
@@ -428,21 +766,37 @@ export default function AuditorScheduleInspectionPage() {
                   body: (rowData: RubberFarm) =>
                     `RF${rowData.id.toString().padStart(5, "0")}`,
                   style: { minWidth: "100px" },
+                  sortable: true,
                 },
                 {
-                  field: "location",
-                  header: "พื้นที่",
-                  style: { minWidth: "200px" },
+                  field: "province",
+                  header: "จังหวัด",
+                  style: { minWidth: "120px" },
+                  sortable: true,
+                },
+                {
+                  field: "district",
+                  header: "อำเภอ/เขต",
+                  style: { minWidth: "120px" },
+                  sortable: true,
+                },
+                {
+                  field: "subDistrict",
+                  header: "ตำบล/แขวง",
+                  style: { minWidth: "120px" },
+                  sortable: true,
                 },
                 {
                   field: "farmerName",
                   header: "เกษตรกร",
                   style: { minWidth: "150px" },
+                  sortable: true,
                 },
                 {
                   field: "farmerEmail",
                   header: "อีเมล",
                   style: { minWidth: "200px" },
+                  sortable: true,
                 },
                 {
                   field: "actions",
@@ -465,6 +819,9 @@ export default function AuditorScheduleInspectionPage() {
               totalRecords={farmsPagination.totalRecords}
               lazy
               onPage={onPageChange}
+              sortMode="multiple"
+              multiSortMeta={multiSortMeta}
+              onSort={onSortChange}
               emptyMessage="ไม่พบข้อมูลสวนยางพารา"
               rowClassName={(data: RubberFarm) =>
                 selectedFarm?.id === data.id
@@ -631,14 +988,17 @@ export default function AuditorScheduleInspectionPage() {
               >
                 วันที่และเวลาตรวจประเมิน
               </label>
-              <input
-                type="datetime-local"
+              <PrimaryCalendar
                 id="inspectionDate"
                 value={inspectionDate}
-                onChange={(e) => setInspectionDate(e.target.value)}
-                min={today}
-                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-lg"
+                onChange={setInspectionDate}
+                placeholder="เลือกวันที่และเวลา"
+                showTime
+                hourFormat="24"
+                dateFormat="dd/mm/yy"
+                minDate={new Date()}
                 required
+                showIcon
               />
               <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
                 <p className="text-sm text-blue-700">
@@ -734,7 +1094,7 @@ export default function AuditorScheduleInspectionPage() {
                 <div className="mt-2 p-4 bg-white rounded-md border border-gray-200">
                   <p className="text-sm font-medium text-gray-900">
                     {inspectionDate
-                      ? new Date(inspectionDate).toLocaleString("th-TH", {
+                      ? inspectionDate.toLocaleString("th-TH", {
                           year: "numeric",
                           month: "long",
                           day: "numeric",

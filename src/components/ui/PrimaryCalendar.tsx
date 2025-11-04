@@ -16,6 +16,9 @@ interface PrimaryCalendarProps {
   readonly view?: "date" | "month" | "year";
   readonly dateFormat?: string;
   readonly showIcon?: boolean;
+  readonly showTime?: boolean;
+  readonly hourFormat?: "12" | "24";
+  readonly timeOnly?: boolean;
   readonly minDate?: Date;
   readonly maxDate?: Date;
   readonly invalid?: boolean;
@@ -34,6 +37,9 @@ export default function PrimaryCalendar({
   view = "date",
   dateFormat = "dd/mm/yy",
   showIcon = true,
+  showTime = false,
+  hourFormat = "24",
+  timeOnly = false,
   minDate,
   maxDate,
   invalid = false,
@@ -59,6 +65,9 @@ export default function PrimaryCalendar({
         view={view}
         dateFormat={dateFormat}
         showIcon={showIcon}
+        showTime={showTime}
+        hourFormat={hourFormat}
+        timeOnly={timeOnly}
         minDate={minDate}
         maxDate={maxDate}
         invalid={invalid}
