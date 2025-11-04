@@ -26,6 +26,7 @@ interface InspectionFormModalProps {
     value: string
   ) => void;
   renderAdditionalFields: (itemIndex: number) => React.ReactNode;
+  allRequiredFieldsFilled: boolean;
 }
 
 export const InspectionFormModal: React.FC<InspectionFormModalProps> = ({
@@ -42,6 +43,7 @@ export const InspectionFormModal: React.FC<InspectionFormModalProps> = ({
   updateRequirementEvaluation,
   updateOtherConditions,
   renderAdditionalFields,
+  allRequiredFieldsFilled,
 }) => {
   if (!show) return null;
 
@@ -107,48 +109,55 @@ export const InspectionFormModal: React.FC<InspectionFormModalProps> = ({
 
         {/* Footer */}
         <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3">
             {/* Previous Button - Always enabled */}
             <PrimaryButton
               label="ก่อนหน้า"
               icon="pi pi-chevron-left"
               onClick={onPrevious}
               color="secondary"
+              className="w-full md:w-auto"
             />
 
             {/* Middle Buttons */}
-            <div className="flex space-x-3">
-              <PrimaryButton
-                label={saving ? "กำลังบันทึก..." : "บันทึกหน้านี้"}
-                icon="pi pi-save"
-                onClick={onSave}
-                disabled={saving}
-                loading={saving}
-                color="info"
-                tooltip="บันทึกเฉพาะรายการตรวจหน้านี้"
-              />
+            <PrimaryButton
+              label={saving ? "กำลังบันทึก..." : "บันทึกหน้านี้"}
+              icon="pi pi-save"
+              onClick={onSave}
+              disabled={saving}
+              loading={saving}
+              color="info"
+              tooltip="บันทึกเฉพาะรายการตรวจหน้านี้"
+              className="w-full md:w-auto"
+            />
 
+            <PrimaryButton
+              label={saving ? "กำลังบันทึก..." : "บันทึกทั้งหมด"}
+              icon="pi pi-check-circle"
+              onClick={onSaveAll}
+              disabled={saving}
+              loading={saving}
+              color="success"
+              variant="outlined"
+              tooltip="บันทึกทุกรายการตรวจที่กรอกข้อมูลแล้ว"
+              className="w-full md:w-auto"
+            />
+
+            {isLastItem && (
               <PrimaryButton
-                label={saving ? "กำลังบันทึก..." : "บันทึกทั้งหมด"}
-                icon="pi pi-check-circle"
-                onClick={onSaveAll}
-                disabled={saving}
-                loading={saving}
+                label="จบการตรวจประเมิน"
+                icon="pi pi-check"
+                onClick={onComplete}
+                disabled={saving || !allRequiredFieldsFilled}
                 color="success"
-                variant="outlined"
-                tooltip="บันทึกทุกรายการตรวจที่กรอกข้อมูลแล้ว"
+                className="w-full md:w-auto"
+                tooltip={
+                  allRequiredFieldsFilled
+                    ? undefined
+                    : "กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน"
+                }
               />
-
-              {isLastItem && (
-                <PrimaryButton
-                  label="จบการตรวจประเมิน"
-                  icon="pi pi-check"
-                  onClick={onComplete}
-                  disabled={saving}
-                  color="success"
-                />
-              )}
-            </div>
+            )}
 
             {/* Next Button */}
             <PrimaryButton
@@ -158,6 +167,7 @@ export const InspectionFormModal: React.FC<InspectionFormModalProps> = ({
               onClick={onNext}
               disabled={isLastItem}
               color="secondary"
+              className="w-full md:w-auto"
             />
           </div>
         </div>

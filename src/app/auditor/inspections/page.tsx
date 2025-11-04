@@ -480,42 +480,88 @@ export default function AuditorInspectionsPage() {
     // For inspection item 2: Land condition - MultiSelect
     if (itemNo === 2) {
       const currentLandConditions = otherConditions.landConditions || [];
-      console.log(
-        "Rendering land condition, current values:",
-        currentLandConditions
-      );
-      console.log("Full otherConditions:", otherConditions);
+      const hasOtherSelected = currentLandConditions.includes("other");
 
       return (
         <div className="mt-6 border-t pt-4">
           <h4 className="text-sm font-semibold text-gray-700 mb-4">
             ลักษณะพื้นที่ปลูก
           </h4>
-          <PrimaryMultiSelect
-            id={`landConditions-${itemIndex}`}
-            value={currentLandConditions}
-            options={[
-              { label: "ที่ราบ", value: "flat" },
-              { label: "ที่ราบลุ่ม", value: "lowland" },
-              { label: "ที่ดอน", value: "upland" },
-              { label: "ยกร่อง", value: "raised-bed" },
-              { label: "ยกร่องน้ำขัง", value: "raised-bed-waterlogged" },
-              { label: "อื่นๆ", value: "other" },
-            ]}
-            onChange={(values) => {
-              console.log("MultiSelect changed, values:", values);
-              updateOtherConditions(itemIndex, "landConditions", values);
-            }}
-            placeholder="เลือกลักษณะพื้นที่ปลูก (เลือกได้หลายอัน)"
-            display="chip"
-            maxSelectedLabels={3}
-            selectAll={true}
-          />
+          <div className="space-y-4">
+            <PrimaryMultiSelect
+              id={`landConditions-${itemIndex}`}
+              value={currentLandConditions}
+              options={[
+                { label: "ที่ราบ", value: "flat" },
+                { label: "ที่ราบลุ่ม", value: "lowland" },
+                { label: "ที่ดอน", value: "upland" },
+                { label: "ยกร่อง", value: "raised-bed" },
+                { label: "ยกร่องน้ำขัง", value: "raised-bed-waterlogged" },
+                { label: "อื่นๆ", value: "other" },
+              ]}
+              onChange={(values) => {
+                updateOtherConditions(itemIndex, "landConditions", values);
+              }}
+              placeholder="เลือกลักษณะพื้นที่ปลูก (เลือกได้หลายอัน)"
+              display="chip"
+              maxSelectedLabels={6}
+              selectAll={true}
+            />
+
+            {hasOtherSelected && (
+              <div>
+                <label
+                  htmlFor={`landConditionsOther-${itemIndex}`}
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  ระบุลักษณะพื้นที่อื่นๆ
+                </label>
+                <PrimaryInputText
+                  id={`landConditionsOther-${itemIndex}`}
+                  value={otherConditions.landConditionsOther || ""}
+                  onChange={(value) =>
+                    updateOtherConditions(
+                      itemIndex,
+                      "landConditionsOther",
+                      value
+                    )
+                  }
+                  placeholder="ระบุลักษณะพื้นที่อื่นๆ"
+                />
+              </div>
+            )}
+          </div>
         </div>
       );
     }
 
     return null;
+  };
+
+  // Check if all required fields are filled for all items
+  const areAllRequiredFieldsFilled = (): boolean => {
+    // ตรวจสอบทุก item
+    for (const item of inspectionItems) {
+      // ตรวจสอบว่าทุก requirement มีการกรอก evaluationResult และ evaluationMethod
+      if (item.requirements && item.requirements.length > 0) {
+        for (const req of item.requirements) {
+          // ตรวจสอบว่ามีการเลือก evaluationResult หรือไม่ (ต้องไม่เป็น NOT_EVALUATED, empty, null, undefined)
+          if (
+            !req.evaluationResult ||
+            req.evaluationResult === "NOT_EVALUATED"
+          ) {
+            return false;
+          }
+
+          // ตรวจสอบว่ามีการเลือก evaluationMethod หรือไม่ (ต้องไม่เป็น PENDING, empty, null, undefined)
+          if (!req.evaluationMethod || req.evaluationMethod === "PENDING") {
+            return false;
+          }
+        }
+      }
+    }
+
+    return true;
   };
 
   // Handle save
@@ -820,6 +866,7 @@ export default function AuditorInspectionsPage() {
           updateRequirementEvaluation={updateRequirementEvaluation}
           updateOtherConditions={updateOtherConditions}
           renderAdditionalFields={renderAdditionalFields}
+          allRequiredFieldsFilled={areAllRequiredFieldsFilled()}
         />
       </div>
     </AuditorLayout>
