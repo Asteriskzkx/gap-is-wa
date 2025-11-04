@@ -5,7 +5,11 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { DataTablePageEvent, DataTableSortEvent } from "primereact/datatable";
 import AuditorLayout from "@/components/layout/AuditorLayout";
-import { PrimaryDataTable, PrimaryAutoComplete } from "@/components/ui";
+import {
+  PrimaryDataTable,
+  PrimaryAutoComplete,
+  PrimaryCalendar,
+} from "@/components/ui";
 import thaiProvinceData from "@/data/thai-provinces.json";
 
 // Interface สำหรับข้อมูลจังหวัด อำเภอ ตำบล
@@ -100,7 +104,7 @@ export default function AuditorScheduleInspectionPage() {
   const [selectedInspectionType, setSelectedInspectionType] =
     useState<InspectionType | null>(null);
   const [selectedAuditors, setSelectedAuditors] = useState<Auditor[]>([]);
-  const [inspectionDate, setInspectionDate] = useState("");
+  const [inspectionDate, setInspectionDate] = useState<Date | null>(null);
 
   // State for search and pagination
   const [searchFilters, setSearchFilters] = useState({
@@ -497,7 +501,7 @@ export default function AuditorScheduleInspectionPage() {
         body: JSON.stringify({
           rubberFarmId: selectedFarm!.id,
           inspectionTypeId: selectedInspectionType!.inspectionTypeId,
-          inspectionDateAndTime: new Date(inspectionDate).toISOString(),
+          inspectionDateAndTime: inspectionDate!.toISOString(),
           additionalAuditorIds: selectedAuditors.map((a) => a.id),
         }),
       });
@@ -525,8 +529,6 @@ export default function AuditorScheduleInspectionPage() {
         : [...prev, auditor];
     });
   };
-
-  const today = new Date().toISOString().split("T")[0];
 
   const StepIndicator = () => (
     <div className="mb-8">
@@ -986,14 +988,17 @@ export default function AuditorScheduleInspectionPage() {
               >
                 วันที่และเวลาตรวจประเมิน
               </label>
-              <input
-                type="datetime-local"
+              <PrimaryCalendar
                 id="inspectionDate"
                 value={inspectionDate}
-                onChange={(e) => setInspectionDate(e.target.value)}
-                min={today}
-                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-lg"
+                onChange={setInspectionDate}
+                placeholder="เลือกวันที่และเวลา"
+                showTime
+                hourFormat="24"
+                dateFormat="dd/mm/yy"
+                minDate={new Date()}
                 required
+                showIcon
               />
               <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
                 <p className="text-sm text-blue-700">
@@ -1089,7 +1094,7 @@ export default function AuditorScheduleInspectionPage() {
                 <div className="mt-2 p-4 bg-white rounded-md border border-gray-200">
                   <p className="text-sm font-medium text-gray-900">
                     {inspectionDate
-                      ? new Date(inspectionDate).toLocaleString("th-TH", {
+                      ? inspectionDate.toLocaleString("th-TH", {
                           year: "numeric",
                           month: "long",
                           day: "numeric",
