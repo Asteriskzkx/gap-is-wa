@@ -344,7 +344,7 @@ export default function FarmerApplicationsPage() {
                   sortable: true,
                   headerAlign: "center" as const,
                   bodyAlign: "left" as const,
-                  style: { width: "25%" },
+                  style: { width: "20%" },
                 },
                 {
                   field: "province",
@@ -354,7 +354,7 @@ export default function FarmerApplicationsPage() {
                   sortable: true,
                   headerAlign: "center" as const,
                   bodyAlign: "left" as const,
-                  style: { width: "10%" },
+                  style: { width: "15%" },
                 },
                 {
                   field: "district",
@@ -364,7 +364,7 @@ export default function FarmerApplicationsPage() {
                   sortable: true,
                   headerAlign: "center" as const,
                   bodyAlign: "left" as const,
-                  style: { width: "10%" },
+                  style: { width: "15%" },
                 },
                 {
                   field: "subDistrict",
@@ -374,7 +374,7 @@ export default function FarmerApplicationsPage() {
                   sortable: true,
                   headerAlign: "center" as const,
                   bodyAlign: "left" as const,
-                  style: { width: "10%" },
+                  style: { width: "15%" },
                 },
                 {
                   field: "inspectionDateAndTime",
@@ -386,7 +386,7 @@ export default function FarmerApplicationsPage() {
                   sortable: true,
                   headerAlign: "center" as const,
                   bodyAlign: "center" as const,
-                  style: { width: "20%" },
+                  style: { width: "15%" },
                 },
                 {
                   field: "status",
@@ -404,7 +404,7 @@ export default function FarmerApplicationsPage() {
                   sortable: false,
                   headerAlign: "center" as const,
                   bodyAlign: "center" as const,
-                  style: { width: "25%" },
+                  style: { width: "20%" },
                 },
               ]}
               loading={loading}
