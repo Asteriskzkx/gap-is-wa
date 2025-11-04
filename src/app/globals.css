@@ -281,6 +281,39 @@ button {
   color: #15803d !important;
 }
 
+/* Text Button - Info (Blue) */
+.p-button.p-button-text.p-button-info {
+  color: #2563eb !important;
+}
+
+.p-button.p-button-text.p-button-info:enabled:hover {
+  background: rgba(37, 99, 235, 0.04) !important;
+  color: #1d4ed8 !important;
+}
+
+/* Text Button - Secondary (Gray) */
+.p-button.p-button-text.p-button-secondary {
+  color: #6b7280 !important;
+}
+
+.p-button.p-button-text.p-button-secondary:enabled:hover {
+  background: rgba(107, 114, 128, 0.04) !important;
+  color: #4b5563 !important;
+}
+
+/* Rounded Button (Icon Only) */
+.p-button.p-button-rounded {
+  border-radius: 50% !important;
+  width: 2.5rem !important;
+  height: 2.5rem !important;
+  padding: 0 !important;
+}
+
+.p-button.p-button-rounded.p-button-icon-only {
+  width: 2.5rem !important;
+  height: 2.5rem !important;
+}
+
 /* Fix PrimeReact Button default styles */
 .p-button {
   font-family: inherit !important;
@@ -903,6 +936,33 @@ input.p-inputtext:disabled {
   font-size: 0.75rem;
   letter-spacing: 0.05em;
   border-bottom: 1px solid #e5e7eb;
+}
+
+/* Header alignment using flexbox */
+.primary-datatable-wrapper .p-datatable-thead .p-column-header-content {
+  display: flex;
+  align-items: center;
+}
+
+.primary-datatable-wrapper
+  .p-datatable-thead
+  .header-align-left
+  .p-column-header-content {
+  justify-content: flex-start;
+}
+
+.primary-datatable-wrapper
+  .p-datatable-thead
+  .header-align-center
+  .p-column-header-content {
+  justify-content: center;
+}
+
+.primary-datatable-wrapper
+  .p-datatable-thead
+  .header-align-right
+  .p-column-header-content {
+  justify-content: flex-end;
 }
 
 .primary-datatable-wrapper .p-datatable-tbody > tr {

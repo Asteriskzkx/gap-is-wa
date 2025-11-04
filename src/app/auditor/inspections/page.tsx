@@ -20,7 +20,6 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { DataTablePageEvent, DataTableSortEvent } from "primereact/datatable";
 import React, { useCallback, useEffect, useState } from "react";
-import { FaEye, FaFileAlt } from "react-icons/fa";
 
 interface Inspection {
   inspectionId: number;
@@ -81,31 +80,6 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => (
   >
     {status}
   </span>
-);
-
-// Action buttons component
-const ActionButtons: React.FC<{
-  onViewFarm: () => void;
-  onStartInspection: () => void;
-}> = ({ onViewFarm, onStartInspection }) => (
-  <div className="flex space-x-2">
-    <button
-      onClick={onViewFarm}
-      className="p-2 text-blue-600 hover:bg-blue-50 rounded"
-      title="ดูรายละเอียดสวน"
-      type="button"
-    >
-      <FaEye />
-    </button>
-    <button
-      onClick={onStartInspection}
-      className="p-2 text-green-600 hover:bg-green-50 rounded"
-      title="เริ่มตรวจประเมิน"
-      type="button"
-    >
-      <FaFileAlt />
-    </button>
-  </div>
 );
 
 // Helper types
@@ -608,6 +582,8 @@ export default function AuditorInspectionsPage() {
       header: "รหัสการตรวจ",
       sortable: true,
       body: (rowData: Inspection) => rowData.inspectionNo,
+      headerAlign: "center" as const,
+      bodyAlign: "left" as const,
     },
     {
       field: "inspectionDateAndTime",
@@ -615,6 +591,8 @@ export default function AuditorInspectionsPage() {
       sortable: true,
       body: (rowData: Inspection) =>
         new Date(rowData.inspectionDateAndTime).toLocaleDateString("th-TH"),
+      headerAlign: "center" as const,
+      bodyAlign: "left" as const,
     },
     {
       field: "inspectionType.typeName",
@@ -622,6 +600,8 @@ export default function AuditorInspectionsPage() {
       sortable: true,
       body: (rowData: Inspection) =>
         rowData.inspectionType?.typeName || "ไม่ระบุ",
+      headerAlign: "center" as const,
+      bodyAlign: "left" as const,
     },
     {
       field: "rubberFarm.farmer",
@@ -633,12 +613,16 @@ export default function AuditorInspectionsPage() {
           ? `${farmer.namePrefix}${farmer.firstName} ${farmer.lastName}`
           : "ไม่ระบุ";
       },
+      headerAlign: "center" as const,
+      bodyAlign: "left" as const,
     },
     {
       field: "rubberFarm.province",
       header: "จังหวัด",
       sortable: true,
       body: (rowData: Inspection) => rowData.rubberFarm?.province || "ไม่ระบุ",
+      headerAlign: "center" as const,
+      bodyAlign: "left" as const,
     },
     {
       field: "inspectionStatus",
@@ -647,16 +631,38 @@ export default function AuditorInspectionsPage() {
       body: (rowData: Inspection) => (
         <StatusBadge status={rowData.inspectionStatus} />
       ),
+      headerAlign: "center" as const,
+      bodyAlign: "left" as const,
     },
     {
       field: "actions",
       header: "จัดการ",
       body: (rowData: Inspection) => (
-        <ActionButtons
-          onViewFarm={() => viewFarmDetails(rowData.rubberFarmId)}
-          onStartInspection={() => selectInspection(rowData)}
-        />
+        <div className="flex justify-center gap-2">
+          <PrimaryButton
+            icon="pi pi-eye"
+            onClick={() => viewFarmDetails(rowData.rubberFarmId)}
+            color="info"
+            rounded
+            text
+            tooltip="ดูรายละเอียดสวน"
+            tooltipOptions={{ position: "left" }}
+          />
+          <PrimaryButton
+            icon="pi pi-file-edit"
+            onClick={() => selectInspection(rowData)}
+            color="success"
+            rounded
+            text
+            tooltip="เริ่มตรวจประเมิน"
+            tooltipOptions={{
+              position: "left",
+            }}
+          />
+        </div>
       ),
+      headerAlign: "center" as const,
+      bodyAlign: "center" as const,
     },
   ];
 

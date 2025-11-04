@@ -11,6 +11,10 @@ interface PrimaryButtonProps extends Omit<ButtonProps, "severity" | "size"> {
   readonly variant?: "solid" | "outlined" | "text";
   readonly color?: "success" | "danger" | "secondary" | "info";
   readonly size?: "small" | "normal" | "large";
+  readonly rounded?: boolean; // Rounded button (icon only)
+  readonly text?: boolean; // Text button (no background)
+  readonly tooltip?: string; // Tooltip text
+  readonly tooltipOptions?: object; // Tooltip options
 }
 
 /**
@@ -26,8 +30,8 @@ interface PrimaryButtonProps extends Omit<ButtonProps, "severity" | "size"> {
  * // ปุ่มพร้อม icon
  * <PrimaryButton label="บันทึก" icon="pi pi-check" color="success" />
  *
- * // ปุ่ม icon อย่างเดียว
- * <PrimaryButton icon="pi pi-trash" color="danger" />
+ * // ปุ่ม icon อย่างเดียว (rounded)
+ * <PrimaryButton icon="pi pi-trash" color="danger" rounded text />
  */
 export default function PrimaryButton({
   children,
@@ -41,6 +45,10 @@ export default function PrimaryButton({
   size = "large",
   className = "",
   disabled,
+  rounded = false,
+  text = false,
+  tooltip,
+  tooltipOptions,
   ...props
 }: PrimaryButtonProps) {
   const getClassName = () => {
@@ -71,9 +79,12 @@ export default function PrimaryButton({
       disabled={disabled || loading}
       severity={getSeverity()}
       outlined={variant === "outlined"}
-      text={variant === "text"}
+      text={text || variant === "text"}
+      rounded={rounded}
       size={getSize()}
       className={getClassName()}
+      tooltip={tooltip}
+      tooltipOptions={tooltipOptions}
       {...props}
     >
       {typeof children === "string" ? undefined : children}
