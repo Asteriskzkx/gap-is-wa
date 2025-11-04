@@ -694,7 +694,7 @@ export default function AuditorInspectionsPage() {
     },
     {
       field: "actions",
-      header: "จัดการ",
+      header: "",
       body: (rowData: Inspection) => (
         <div className="flex justify-center gap-2">
           <PrimaryButton
@@ -721,6 +721,7 @@ export default function AuditorInspectionsPage() {
       ),
       headerAlign: "center" as const,
       bodyAlign: "center" as const,
+      // style: { width: "5%" },
     },
   ];
 
@@ -817,11 +818,10 @@ export default function AuditorInspectionsPage() {
               color="success"
             />
             <PrimaryButton
-              label="รีเซ็ต"
+              label="ล้างค่า"
               icon="pi pi-refresh"
               onClick={handleResetSearch}
               color="secondary"
-              // variant="outlined"
             />
           </div>
         </div>

@@ -76,10 +76,71 @@ export class RubberFarmController extends BaseController<RubberFarmModel> {
         return NextResponse.json({ message: error.message }, { status: 400 });
       }
 
-      const farms = await this.rubberFarmService.getRubberFarmsByFarmerId(
-        farmerId
-      );
-      return NextResponse.json(farms, { status: 200 });
+      // ตรวจสอบว่ามี pagination parameters หรือไม่
+      const usePagination =
+        url.searchParams.has("limit") || url.searchParams.has("offset");
+
+      if (usePagination) {
+        // ใช้ pagination
+        const limit = Number.parseInt(
+          url.searchParams.get("limit") || "10",
+          10
+        );
+        const offset = Number.parseInt(
+          url.searchParams.get("offset") || "0",
+          10
+        );
+        const province = url.searchParams.get("province") || undefined;
+        const district = url.searchParams.get("district") || undefined;
+        const subDistrict = url.searchParams.get("subDistrict") || undefined;
+        const sortField = url.searchParams.get("sortField") || undefined;
+        const sortOrder = url.searchParams.get("sortOrder") as
+          | "asc"
+          | "desc"
+          | undefined;
+
+        // Handle multi-sort
+        let multiSortMeta: Array<{ field: string; order: 1 | -1 }> | undefined;
+        const multiSortParam = url.searchParams.get("multiSortMeta");
+        if (multiSortParam) {
+          try {
+            multiSortMeta = JSON.parse(multiSortParam);
+          } catch (error) {
+            console.error("Invalid multiSortMeta format");
+          }
+        }
+
+        const result =
+          await this.rubberFarmService.getRubberFarmsByFarmerIdWithPagination({
+            farmerId,
+            province,
+            district,
+            subDistrict,
+            sortField,
+            sortOrder,
+            multiSortMeta,
+            limit,
+            offset,
+          });
+
+        return NextResponse.json(
+          {
+            results: result.data,
+            paginator: {
+              total: result.total,
+              limit,
+              offset,
+            },
+          },
+          { status: 200 }
+        );
+      } else {
+        // ไม่ใช้ pagination (เหมือนเดิม)
+        const farms = await this.rubberFarmService.getRubberFarmsByFarmerId(
+          farmerId
+        );
+        return NextResponse.json(farms, { status: 200 });
+      }
     } catch (error) {
       return this.handleControllerError(error);
     }
