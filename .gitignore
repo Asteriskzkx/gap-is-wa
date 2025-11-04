@@ -1,5 +1,18 @@
 /node_modules/
 /.env
+/.env.local
+/.env.production
 /.next/
 /next-env.d.ts
 .DS_Store
+
+# SSL Certificates (DO NOT commit to version control)
+ssl/*.crt
+ssl/*.key
+ssl/*.pem
+ssl/*.p12
+ssl/*.pfx
+
+# Azure deployment logs
+.azure/
+azure-deploy.log

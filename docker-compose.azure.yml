@@ -1,0 +1,102 @@
+# Docker Compose for Azure-like environment (local testing)
+# This simulates Azure Container Apps environment for testing before deployment
+
+version: '3.8'
+
+services:
+  # Database Service (same as production)
+  postgres:
+    image: postgres:15-alpine
+    container_name: gap-is-wa-db-azure
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-gapuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gappassword}
+      POSTGRES_DB: ${POSTGRES_DB:-gapdb}
+    volumes:
+      - postgres_data_azure:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+    ports:
+      - "${POSTGRES_PORT:-5434}:5432"
+    networks:
+      - gap-is-wa-azure-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gapuser} -d ${POSTGRES_DB:-gapdb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Main Application (Azure-like setup)
+  gap-is-wa:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gap-is-wa-app-azure
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_TELEMETRY_DISABLED=1
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-gapuser}:${POSTGRES_PASSWORD:-gappassword}@postgres:5432/${POSTGRES_DB:-gapdb}?schema=public
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - NEXTAUTH_URL=http://localhost:8080
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - gap-is-wa-azure-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Nginx (simulating Azure Gateway with HTTP only)
+  nginx:
+    image: nginx:alpine
+    container_name: gap-is-wa-nginx-azure
+    restart: unless-stopped
+    ports:
+      - "8080:80"  # HTTP only (simulating Azure)
+    volumes:
+      - ./nginx.azure.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - gap-is-wa
+    networks:
+      - gap-is-wa-azure-network
+    environment:
+      # Simulate Azure headers
+      - X_FORWARDED_PROTO=https
+      - X_FORWARDED_HOST=localhost
+      - X_FORWARDED_PORT=443
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # Database Migration Service
+  prisma-migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile.migrate
+    container_name: gap-is-wa-migrate-azure
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-gapuser}:${POSTGRES_PASSWORD:-gappassword}@postgres:5432/${POSTGRES_DB:-gapdb}?schema=public
+    networks:
+      - gap-is-wa-azure-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+volumes:
+  postgres_data_azure:
+
+networks:
+  gap-is-wa-azure-network:
+    driver: bridge
