@@ -644,7 +644,11 @@ export default function AuditorInspectionsPage() {
       header: "วันที่ตรวจ",
       sortable: true,
       body: (rowData: Inspection) =>
-        new Date(rowData.inspectionDateAndTime).toLocaleDateString("th-TH"),
+        new Date(rowData.inspectionDateAndTime).toLocaleDateString("th-TH", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        }),
       headerAlign: "center" as const,
       bodyAlign: "left" as const,
     },
