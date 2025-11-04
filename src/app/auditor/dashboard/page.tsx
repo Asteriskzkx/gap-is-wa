@@ -109,14 +109,15 @@ export default function AuditorDashboardPage() {
       // ดึงรายการตรวจประเมินที่เกี่ยวข้องกับ Auditor คนนี้โดยตรง (filter ที่ server)
       // API จะ filter ทั้งกรณีเป็นหัวหน้าผู้ตรวจ (auditorChiefId) และเป็นผู้ตรวจในทีม (AuditorInspection)
       const inspectionsResponse = await fetch(
-        `/api/v1/inspections?auditorId=${auditorId}`
+        `/api/v1/inspections?auditorId=${auditorId}&limit=1000&offset=0`
       );
 
       if (!inspectionsResponse.ok) {
         throw new Error("ไม่สามารถดึงรายการตรวจประเมินได้");
       }
 
-      const relevantInspections = await inspectionsResponse.json();
+      const data = await inspectionsResponse.json();
+      const relevantInspections = data.results || [];
 
       // เรียกใช้ฟังก์ชันดึงข้อมูลเพิ่มเติมและประมวลผล
       await processInspectionData(relevantInspections);

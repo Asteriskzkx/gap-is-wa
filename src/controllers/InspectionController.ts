@@ -173,13 +173,53 @@ export class InspectionController extends BaseController<InspectionModel> {
         return NextResponse.json({ message: error.message }, { status: 400 });
       }
 
-      const inspections =
-        await this.inspectionService.getInspectionsByAuditorId(auditorId);
-      const inspectionsJson = inspections.map((inspection) =>
-        inspection.toJSON()
+      // Pagination parameters
+      const limit = Number.parseInt(searchParams.get("limit") || "10", 10);
+      const offset = Number.parseInt(searchParams.get("offset") || "0", 10);
+
+      // Filter parameters
+      const inspectionNo = searchParams.get("inspectionNo") || undefined;
+      const inspectionStatus =
+        searchParams.get("inspectionStatus") || undefined;
+      const inspectionResult =
+        searchParams.get("inspectionResult") || undefined;
+      const province = searchParams.get("province") || undefined;
+      const district = searchParams.get("district") || undefined;
+      const subDistrict = searchParams.get("subDistrict") || undefined;
+
+      // Sort parameters
+      const sortField = searchParams.get("sortField") || undefined;
+      const sortOrder = searchParams.get("sortOrder") || undefined;
+      const multiSortMeta = searchParams.get("multiSortMeta") || undefined;
+
+      const result = await this.inspectionService.getInspectionsByAuditorId(
+        auditorId,
+        {
+          inspectionNo,
+          inspectionStatus,
+          inspectionResult,
+          province,
+          district,
+          subDistrict,
+          sortField,
+          sortOrder: sortOrder as "asc" | "desc" | undefined,
+          multiSortMeta: multiSortMeta ? JSON.parse(multiSortMeta) : undefined,
+          limit,
+          offset,
+        }
       );
 
-      return NextResponse.json(inspectionsJson, { status: 200 });
+      return NextResponse.json(
+        {
+          results: result.data,
+          paginator: {
+            limit,
+            offset,
+            total: result.total,
+          },
+        },
+        { status: 200 }
+      );
     } catch (error: any) {
       return this.handleControllerError(error);
     }
