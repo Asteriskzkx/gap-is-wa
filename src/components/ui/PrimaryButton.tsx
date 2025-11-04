@@ -4,6 +4,8 @@ import React from "react";
 interface PrimaryButtonProps extends Omit<ButtonProps, "severity" | "size"> {
   readonly children?: React.ReactNode;
   readonly label?: string;
+  readonly icon?: string; // PrimeIcons class name (e.g., "pi pi-check")
+  readonly iconPos?: "left" | "right" | "top" | "bottom";
   readonly loading?: boolean;
   readonly fullWidth?: boolean;
   readonly variant?: "solid" | "outlined" | "text";
@@ -21,12 +23,17 @@ interface PrimaryButtonProps extends Omit<ButtonProps, "severity" | "size"> {
  * // ปุ่มแบบ outlined
  * <PrimaryButton label="ยกเลิก" variant="outlined" color="secondary" />
  *
- * // ปุ่มสีแดง
- * <PrimaryButton label="ลบ" color="danger" />
+ * // ปุ่มพร้อม icon
+ * <PrimaryButton label="บันทึก" icon="pi pi-check" color="success" />
+ *
+ * // ปุ่ม icon อย่างเดียว
+ * <PrimaryButton icon="pi pi-trash" color="danger" />
  */
 export default function PrimaryButton({
   children,
   label,
+  icon,
+  iconPos = "left",
   loading = false,
   fullWidth = false,
   variant = "solid",
@@ -58,6 +65,8 @@ export default function PrimaryButton({
   return (
     <Button
       label={label || (typeof children === "string" ? children : undefined)}
+      icon={icon}
+      iconPos={iconPos}
       loading={loading}
       disabled={disabled || loading}
       severity={getSeverity()}

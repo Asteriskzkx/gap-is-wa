@@ -1,6 +1,7 @@
 import React from "react";
-import { FaTimes, FaChevronLeft, FaChevronRight, FaSave } from "react-icons/fa";
+import { FaTimes } from "react-icons/fa";
 import { InspectionItemForm, type InspectionItem } from "./InspectionItemForm";
+import PrimaryButton from "@/components/ui/PrimaryButton";
 
 interface InspectionFormModalProps {
   show: boolean;
@@ -106,49 +107,44 @@ export const InspectionFormModal: React.FC<InspectionFormModalProps> = ({
         <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4">
           <div className="flex justify-between items-center">
             {/* Previous Button - Always enabled */}
-            <button
+            <PrimaryButton
+              label="ก่อนหน้า"
+              icon="pi pi-chevron-left"
               onClick={onPrevious}
-              className="flex items-center px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
-            >
-              <FaChevronLeft className="mr-2" />
-              ก่อนหน้า
-            </button>
+              color="secondary"
+            />
 
             {/* Middle Buttons */}
             <div className="flex space-x-3">
-              <button
+              <PrimaryButton
+                label={saving ? "กำลังบันทึก..." : "บันทึก"}
+                icon="pi pi-save"
                 onClick={onSave}
                 disabled={saving}
-                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
-              >
-                <FaSave className="mr-2" />
-                {saving ? "กำลังบันทึก..." : "บันทึก"}
-              </button>
+                loading={saving}
+                color="info"
+              />
 
               {isLastItem && (
-                <button
+                <PrimaryButton
+                  label="จบการตรวจประเมิน"
+                  icon="pi pi-check"
                   onClick={onComplete}
                   disabled={saving}
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50"
-                >
-                  จบการตรวจประเมิน
-                </button>
+                  color="success"
+                />
               )}
             </div>
 
             {/* Next Button */}
-            <button
+            <PrimaryButton
+              label="ถัดไป"
+              icon="pi pi-chevron-right"
+              iconPos="right"
               onClick={onNext}
               disabled={isLastItem}
-              className={`flex items-center px-4 py-2 rounded-md transition-colors ${
-                isLastItem
-                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-gray-600 text-white hover:bg-gray-700"
-              }`}
-            >
-              ถัดไป
-              <FaChevronRight className="ml-2" />
-            </button>
+              color="secondary"
+            />
           </div>
         </div>
       </div>

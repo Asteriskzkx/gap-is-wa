@@ -20,7 +20,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { DataTablePageEvent, DataTableSortEvent } from "primereact/datatable";
 import React, { useCallback, useEffect, useState } from "react";
-import { FaEye, FaFileAlt, FaSearch } from "react-icons/fa";
+import { FaEye, FaFileAlt } from "react-icons/fa";
 
 interface Inspection {
   inspectionId: number;
@@ -745,20 +745,19 @@ export default function AuditorInspectionsPage() {
             </div>
           </div>
 
-          <div className="mt-4 flex gap-2">
+          <div className="mt-4 flex gap-2 justify-center items-center">
             <PrimaryButton
+              label="ค้นหา"
+              icon="pi pi-search"
               onClick={handleSearch}
               color="success"
-              className="flex items-center"
-            >
-              <FaSearch className="mr-2" />
-              ค้นหา
-            </PrimaryButton>
+            />
             <PrimaryButton
               label="รีเซ็ต"
+              icon="pi pi-refresh"
               onClick={handleResetSearch}
               color="secondary"
-              variant="outlined"
+              // variant="outlined"
             />
           </div>
         </div>

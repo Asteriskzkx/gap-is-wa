@@ -1,6 +1,7 @@
 @import "leaflet/dist/leaflet.css";
 @import "leaflet-draw/dist/leaflet.draw.css";
 @import "leaflet-geosearch/dist/geosearch.css";
+@import "primeicons/primeicons.css";
 
 /* Tailwind imports */
 @tailwind base;
@@ -156,6 +157,44 @@ button {
   border-color: #16a34a !important;
 }
 
+/* Secondary Button - Gray (solid) */
+.p-button.p-button-secondary:not(.p-button-outlined):not(.p-button-text) {
+  background: #6b7280 !important;
+  border-color: #6b7280 !important;
+  color: #ffffff !important;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.p-button.p-button-secondary:not(.p-button-outlined):not(
+    .p-button-text
+  ):enabled:hover {
+  background: #4b5563 !important;
+  border-color: #4b5563 !important;
+}
+
+.p-button.p-button-secondary:not(.p-button-outlined):not(
+    .p-button-text
+  ):enabled:focus {
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #6b7280, 0 1px 2px 0 black !important;
+}
+
+.p-button.p-button-secondary:not(.p-button-outlined):not(
+    .p-button-text
+  ):enabled:active {
+  background: #374151 !important;
+  border-color: #374151 !important;
+}
+
+.p-button.p-button-secondary:not(.p-button-outlined):not(
+    .p-button-text
+  ):disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  background: #6b7280 !important;
+  border-color: #6b7280 !important;
+}
+
 /* Secondary Button - Gray outline */
 .p-button.p-button-secondary.p-button-outlined {
   background: transparent !important;
@@ -167,6 +206,42 @@ button {
   background: #f9fafb !important;
   border-color: #9ca3af !important;
   color: #111827 !important;
+}
+
+/* Info Button - Blue */
+.p-button.p-button-info:not(.p-button-outlined):not(.p-button-text) {
+  background: #2563eb !important;
+  border-color: #2563eb !important;
+  color: #ffffff !important;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.p-button.p-button-info:not(.p-button-outlined):not(
+    .p-button-text
+  ):enabled:hover {
+  background: #1d4ed8 !important;
+  border-color: #1d4ed8 !important;
+}
+
+.p-button.p-button-info:not(.p-button-outlined):not(
+    .p-button-text
+  ):enabled:focus {
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #2563eb, 0 1px 2px 0 black !important;
+}
+
+.p-button.p-button-info:not(.p-button-outlined):not(
+    .p-button-text
+  ):enabled:active {
+  background: #1e40af !important;
+  border-color: #1e40af !important;
+}
+
+.p-button.p-button-info:not(.p-button-outlined):not(.p-button-text):disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  background: #2563eb !important;
+  border-color: #2563eb !important;
 }
 
 /* Danger Button - Red */
