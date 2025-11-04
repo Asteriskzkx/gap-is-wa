@@ -1069,7 +1069,8 @@ export default function RubberFarmEditForm() {
                 `RF${rowData.rubberFarmId.toString().padStart(5, "0")}`,
               sortable: true,
               headerAlign: "center" as const,
-              bodyAlign: "left" as const,
+              bodyAlign: "center" as const,
+              style: { width: "10%" },
             },
             {
               field: "location",
@@ -1080,6 +1081,7 @@ export default function RubberFarmEditForm() {
               sortable: true,
               headerAlign: "center" as const,
               bodyAlign: "left" as const,
+              style: { width: "30%" },
             },
             {
               field: "province",
@@ -1088,6 +1090,7 @@ export default function RubberFarmEditForm() {
               sortable: true,
               headerAlign: "center" as const,
               bodyAlign: "left" as const,
+              style: { width: "20%" },
             },
             {
               field: "district",
@@ -1096,6 +1099,7 @@ export default function RubberFarmEditForm() {
               sortable: true,
               headerAlign: "center" as const,
               bodyAlign: "left" as const,
+              style: { width: "20%" },
             },
             {
               field: "subDistrict",
@@ -1104,6 +1108,7 @@ export default function RubberFarmEditForm() {
               sortable: true,
               headerAlign: "center" as const,
               bodyAlign: "left" as const,
+              style: { width: "20%" },
             },
           ]}
           loading={isLoading}

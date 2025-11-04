@@ -385,7 +385,7 @@ export default function FarmerApplicationsPage() {
                       : "-",
                   sortable: true,
                   headerAlign: "center" as const,
-                  bodyAlign: "left" as const,
+                  bodyAlign: "center" as const,
                   style: { width: "20%" },
                 },
                 {
@@ -420,15 +420,6 @@ export default function FarmerApplicationsPage() {
               emptyMessage="ไม่พบข้อมูลสวนยางพารา"
             />
           )}
-        </div>
-
-        <div className="mt-6 flex justify-center">
-          <Link
-            href="/farmer/applications/new"
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700"
-          >
-            ยื่นขอใบรับรองใหม่
-          </Link>
         </div>
       </div>
     </FarmerLayout>
