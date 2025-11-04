@@ -1020,3 +1020,45 @@ input.p-inputtext:disabled {
     font-size: 0.875rem;
   }
 }
+
+/* PrimeReact RadioButton Styles */
+.p-radiobutton {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.p-radiobutton .p-radiobutton-box {
+  border: 2px solid #d1d5db;
+  background: #ffffff;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.p-radiobutton .p-radiobutton-box:not(.p-disabled):hover {
+  border-color: #16a34a;
+}
+
+.p-radiobutton .p-radiobutton-box.p-highlight {
+  border-color: #16a34a;
+  background: #16a34a;
+}
+
+.p-radiobutton .p-radiobutton-box.p-highlight .p-radiobutton-icon {
+  background-color: #ffffff;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+}
+
+.p-radiobutton:not(.p-radiobutton-disabled) .p-radiobutton-box:focus {
+  outline: 0 none;
+  outline-offset: 0;
+  box-shadow: 0 0 0 0.2rem rgba(22, 163, 74, 0.2);
+  border-color: #16a34a;
+}
+
+.p-radiobutton.p-invalid .p-radiobutton-box {
+  border-color: #ef4444;
+}

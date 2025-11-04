@@ -44,6 +44,7 @@ interface PrimaryDataTableProps {
     order: 1 | -1 | 0 | null;
   }>;
   readonly onSort?: (event: DataTableSortEvent) => void;
+  readonly first?: number;
 }
 
 const CurrentPageReport = (options: any) => {
@@ -96,8 +97,14 @@ export default function PrimaryDataTable({
   sortOrder,
   multiSortMeta,
   onSort,
+  first: propFirst = 0,
 }: PrimaryDataTableProps) {
-  const [first, setFirst] = useState(0);
+  const [first, setFirst] = useState(propFirst);
+
+  // Update first when propFirst changes
+  React.useEffect(() => {
+    setFirst(propFirst);
+  }, [propFirst]);
 
   const handlePageChange = (event: DataTablePageEvent) => {
     setFirst(event.first);
