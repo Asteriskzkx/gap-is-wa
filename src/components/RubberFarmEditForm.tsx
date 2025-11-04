@@ -8,12 +8,14 @@ import DynamicMapSelector from "./maps/DynamicMap";
 import { parseISO } from "date-fns";
 import thaiProvinceData from "@/data/thai-provinces.json";
 import { toast } from "react-hot-toast";
+import { DataTablePageEvent, DataTableSortEvent } from "primereact/datatable";
 import {
   PrimaryAutoComplete,
   PrimaryDropdown,
   PrimaryInputText,
   PrimaryInputNumber,
   PrimaryCalendar,
+  PrimaryDataTable,
 } from "./ui";
 
 // Interfaces for the component
@@ -83,6 +85,23 @@ export default function RubberFarmEditForm() {
   const [farmerId, setFarmerId] = useState<number | null>(null);
   const [farms, setFarms] = useState<RubberFarm[]>([]);
   const [selectedFarmId, setSelectedFarmId] = useState<number | null>(null);
+
+  // Pagination state
+  const [farmsPagination, setFarmsPagination] = useState({
+    first: 0,
+    rows: 10,
+    totalRecords: 0,
+  });
+
+  // Sort state
+  const [sortField, setSortField] = useState<string | undefined>(undefined);
+  const [sortOrder, setSortOrder] = useState<1 | -1 | 0 | null>(null);
+  const [multiSortMeta, setMultiSortMeta] = useState<
+    Array<{
+      field: string;
+      order: 1 | -1 | 0 | null;
+    }>
+  >([]);
 
   // State for form data
   const [rubberFarm, setRubberFarm] = useState<RubberFarm>({
@@ -161,25 +180,79 @@ export default function RubberFarmEditForm() {
     loadProvinceData();
   }, [status, session, router]);
 
-  // Fetch farms belonging to the farmer
-  const fetchFarmerFarms = async (farmerId: number) => {
+  // Fetch farms belonging to the farmer with pagination
+  const fetchFarmerFarms = async (
+    farmerId: number,
+    offset = 0,
+    limit = 10,
+    sorting?: {
+      sortField?: string;
+      sortOrder?: string;
+      multiSortMeta?: Array<{
+        field: string;
+        order: number;
+      }>;
+    }
+  ) => {
     try {
+      setIsLoading(true);
+
+      // สร้าง query parameters
+      const params = new URLSearchParams({
+        farmerId: farmerId.toString(),
+        limit: limit.toString(),
+        offset: offset.toString(),
+      });
+
+      // เพิ่ม sort parameters
+      if (sorting?.sortField) params.append("sortField", sorting.sortField);
+      if (sorting?.sortOrder) params.append("sortOrder", sorting.sortOrder);
+      if (sorting?.multiSortMeta) {
+        const validSortMeta = sorting.multiSortMeta.filter(
+          (item) => item.order === 1 || item.order === -1
+        );
+        if (validSortMeta.length > 0) {
+          params.append("multiSortMeta", JSON.stringify(validSortMeta));
+        }
+      }
+
       const response = await fetch(
-        `/api/v1/rubber-farms?farmerId=${farmerId}`,
+        `/api/v1/rubber-farms?${params.toString()}`,
         {
           credentials: "include",
         }
       );
 
       if (response.ok) {
-        const data = await response.json();
-        setFarms(data);
+        const result = await response.json();
+
+        // Handle paginated response
+        if (result.results && result.paginator) {
+          setFarms(result.results);
+          setFarmsPagination({
+            first: result.paginator.offset,
+            rows: result.paginator.limit,
+            totalRecords: result.paginator.total,
+          });
+        } else {
+          // Fallback for non-paginated response
+          setFarms(result);
+          setFarmsPagination({
+            first: 0,
+            rows: 10,
+            totalRecords: result.length || 0,
+          });
+        }
       } else {
         throw new Error("ไม่สามารถดึงข้อมูลสวนยางได้");
       }
     } catch (error) {
       console.error("Error fetching rubber farms:", error);
       setError("ไม่สามารถดึงข้อมูลสวนยางได้");
+      setFarms([]);
+      setFarmsPagination({ first: 0, rows: 10, totalRecords: 0 });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -886,6 +959,58 @@ export default function RubberFarmEditForm() {
     }
   };
 
+  // Handle page change for DataTable
+  const onPageChange = (event: DataTablePageEvent) => {
+    if (farmerId) {
+      fetchFarmerFarms(farmerId, event.first, event.rows, {
+        sortField,
+        sortOrder:
+          sortOrder === 1 ? "asc" : sortOrder === -1 ? "desc" : undefined,
+        multiSortMeta: multiSortMeta.filter(
+          (item) => item.order === 1 || item.order === -1
+        ) as Array<{ field: string; order: number }>,
+      });
+    }
+  };
+
+  // Handle sort change
+  const onSortChange = (event: DataTableSortEvent) => {
+    if (event.multiSortMeta) {
+      const validMultiSort = event.multiSortMeta.filter(
+        (item) => item.order !== undefined
+      ) as Array<{ field: string; order: 1 | -1 | 0 | null }>;
+      setMultiSortMeta(validMultiSort);
+      const validSortMeta = validMultiSort.filter(
+        (item) => item.order === 1 || item.order === -1
+      ) as Array<{ field: string; order: number }>;
+      if (farmerId) {
+        fetchFarmerFarms(
+          farmerId,
+          farmsPagination.first,
+          farmsPagination.rows,
+          {
+            multiSortMeta: validSortMeta,
+          }
+        );
+      }
+    } else {
+      setSortField(event.sortField);
+      const validOrder = event.sortOrder !== undefined ? event.sortOrder : null;
+      setSortOrder(validOrder);
+      if (farmerId) {
+        fetchFarmerFarms(
+          farmerId,
+          farmsPagination.first,
+          farmsPagination.rows,
+          {
+            sortField: event.sortField,
+            sortOrder: event.sortOrder === 1 ? "asc" : "desc",
+          }
+        );
+      }
+    }
+  };
+
   // Move to next step
   const nextStep = () => {
     if (step === 1 && !selectedFarmId) {
@@ -916,7 +1041,11 @@ export default function RubberFarmEditForm() {
         เลือกสวนยางที่ต้องการแก้ไข
       </h2>
 
-      {farms.length === 0 ? (
+      {isLoading && farms.length === 0 ? (
+        <div className="flex justify-center items-center py-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-900"></div>
+        </div>
+      ) : farms.length === 0 && farmsPagination.totalRecords === 0 ? (
         <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-4">
           <p className="text-yellow-700">
             คุณยังไม่มีสวนยางในระบบ กรุณาลงทะเบียนสวนยางก่อน
@@ -929,30 +1058,72 @@ export default function RubberFarmEditForm() {
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4">
-          {farms.map((farm) => (
-            <div
-              key={farm.rubberFarmId}
-              className={`border rounded-lg p-4 cursor-pointer transition-all ${
-                selectedFarmId === farm.rubberFarmId
-                  ? "border-green-500 bg-green-50"
-                  : "border-gray-300 hover:border-green-300 hover:bg-green-50/30"
-              }`}
-              onClick={() => setSelectedFarmId(farm.rubberFarmId)}
-            >
-              <h3 className="font-medium text-gray-900">
-                สวนยางพารา ตำบล{farm.subDistrict} อำเภอ{farm.district} จังหวัด
-                {farm.province}
-              </h3>
-              <p className="text-gray-600 text-sm mt-1">
-                หมู่บ้าน {farm.villageName} หมู่ {farm.moo}
-              </p>
-              {/* <p className="text-gray-600 text-sm mt-1">
-                จำนวนแปลง: {farm.plantingDetails?.length || 0} แปลง
-              </p> */}
-            </div>
-          ))}
-        </div>
+        <PrimaryDataTable
+          value={farms}
+          columns={[
+            {
+              field: "farmId",
+              header: "รหัสสวน",
+              body: (rowData: any) =>
+                rowData.farmId ||
+                `RF${rowData.rubberFarmId.toString().padStart(5, "0")}`,
+              sortable: true,
+              headerAlign: "center" as const,
+              bodyAlign: "left" as const,
+            },
+            {
+              field: "location",
+              header: "สถานที่",
+              body: (rowData: any) =>
+                rowData.location ||
+                `${rowData.villageName} หมู่ ${rowData.moo}`,
+              sortable: true,
+              headerAlign: "center" as const,
+              bodyAlign: "left" as const,
+            },
+            {
+              field: "province",
+              header: "จังหวัด",
+              body: (rowData: any) => rowData.province,
+              sortable: true,
+              headerAlign: "center" as const,
+              bodyAlign: "left" as const,
+            },
+            {
+              field: "district",
+              header: "อำเภอ",
+              body: (rowData: any) => rowData.district,
+              sortable: true,
+              headerAlign: "center" as const,
+              bodyAlign: "left" as const,
+            },
+            {
+              field: "subDistrict",
+              header: "ตำบล",
+              body: (rowData: any) => rowData.subDistrict,
+              sortable: true,
+              headerAlign: "center" as const,
+              bodyAlign: "left" as const,
+            },
+          ]}
+          loading={isLoading}
+          paginator
+          rows={farmsPagination.rows}
+          totalRecords={farmsPagination.totalRecords}
+          first={farmsPagination.first}
+          lazy
+          onPage={onPageChange}
+          sortMode="multiple"
+          multiSortMeta={multiSortMeta}
+          onSort={onSortChange}
+          emptyMessage="ไม่พบข้อมูลสวนยางพารา"
+          selectionMode="single"
+          selection={farms.find((f) => f.rubberFarmId === selectedFarmId)}
+          onSelectionChange={(e) =>
+            setSelectedFarmId(e.value?.rubberFarmId || null)
+          }
+          dataKey="rubberFarmId"
+        />
       )}
 
       {selectedFarmId && (

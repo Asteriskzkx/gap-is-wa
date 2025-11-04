@@ -110,6 +110,129 @@ export class RubberFarmService extends BaseService<RubberFarmModel> {
     }
   }
 
+  /**
+   * ดึงรายการ rubber farm ของเกษตรกร พร้อมรองรับ pagination และ sorting
+   */
+  async getRubberFarmsByFarmerIdWithPagination(options: {
+    farmerId: number;
+    province?: string;
+    district?: string;
+    subDistrict?: string;
+    sortField?: string;
+    sortOrder?: "asc" | "desc";
+    multiSortMeta?: Array<{ field: string; order: 1 | -1 }>;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ data: any[]; total: number }> {
+    try {
+      const {
+        farmerId,
+        province,
+        district,
+        subDistrict,
+        sortField,
+        sortOrder,
+        multiSortMeta,
+        limit = 10,
+        offset = 0,
+      } = options;
+
+      // ดึงข้อมูลทั้งหมดของเกษตรกรคนนี้
+      const allFarms = await this.rubberFarmRepository.findByFarmerId(farmerId);
+
+      // Filter ตามเงื่อนไข
+      let filteredFarms = allFarms.filter((farm) => {
+        if (province && farm.province !== province) return false;
+        if (district && farm.district !== district) return false;
+        if (subDistrict && farm.subDistrict !== subDistrict) return false;
+        return true;
+      });
+
+      // Sorting
+      if (multiSortMeta && multiSortMeta.length > 0) {
+        filteredFarms.sort((a, b) => {
+          for (const sortMeta of multiSortMeta) {
+            let aValue: any;
+            let bValue: any;
+
+            // Handle special fields
+            if (sortMeta.field === "farmId") {
+              aValue = a.rubberFarmId;
+              bValue = b.rubberFarmId;
+            } else if (sortMeta.field === "location") {
+              aValue = `${a.villageName} หมู่ ${a.moo}`;
+              bValue = `${b.villageName} หมู่ ${b.moo}`;
+            } else {
+              aValue = this.getNestedValue(a, sortMeta.field);
+              bValue = this.getNestedValue(b, sortMeta.field);
+            }
+
+            if (aValue !== bValue) {
+              if (aValue < bValue) return sortMeta.order === 1 ? -1 : 1;
+              if (aValue > bValue) return sortMeta.order === 1 ? 1 : -1;
+            }
+          }
+          return 0;
+        });
+      } else if (sortField && sortOrder) {
+        filteredFarms.sort((a, b) => {
+          let aValue: any;
+          let bValue: any;
+
+          // Handle special fields
+          if (sortField === "farmId") {
+            aValue = a.rubberFarmId;
+            bValue = b.rubberFarmId;
+          } else if (sortField === "location") {
+            aValue = `${a.villageName} หมู่ ${a.moo}`;
+            bValue = `${b.villageName} หมู่ ${b.moo}`;
+          } else {
+            aValue = this.getNestedValue(a, sortField);
+            bValue = this.getNestedValue(b, sortField);
+          }
+
+          if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
+          if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
+          return 0;
+        });
+      }
+
+      const total = filteredFarms.length;
+
+      // Pagination
+      const paginatedFarms = filteredFarms.slice(offset, offset + limit);
+
+      // แปลงข้อมูลเป็น format ที่ใช้ในตาราง
+      const formattedFarms = paginatedFarms.map((farm) => ({
+        rubberFarmId: farm.rubberFarmId,
+        farmId: `RF${farm.rubberFarmId.toString().padStart(5, "0")}`,
+        villageName: farm.villageName,
+        moo: farm.moo,
+        location: `${farm.villageName} หมู่ ${farm.moo}`,
+        province: farm.province,
+        district: farm.district,
+        subDistrict: farm.subDistrict,
+        createdAt: farm.createdAt,
+        version: farm.version,
+      }));
+
+      return {
+        data: formattedFarms,
+        total,
+      };
+    } catch (error) {
+      this.handleServiceError(error);
+      return { data: [], total: 0 };
+    }
+  }
+
+  /**
+   * Helper function เพื่อดึงค่าจาก nested object
+   */
+  private getNestedValue(obj: any, path: string): any {
+    return path.split(".").reduce((acc, part) => acc?.[part], obj);
+  }
+
   async getRubberFarmWithDetails(
     rubberFarmId: number
   ): Promise<RubberFarmModel | null> {
