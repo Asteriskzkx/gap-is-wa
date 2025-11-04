@@ -8,11 +8,13 @@ interface PrimaryRadioButtonProps extends Omit<RadioButtonProps, "pt"> {
 }
 
 /**
- * PrimaryRadioButton - Radio button หลักที่ใช้ในระบบ GAP
+ * PrimaryRadioButton - Radio button หลักที่ใช้ในระบบ GAP (ใช้ PrimeReact RadioButton)
  *
  * @example
  * <PrimaryRadioButton
  *   value="option1"
+ *   name="radioGroup"
+ *   inputId="radio1"
  *   checked={selectedValue === "option1"}
  *   onChange={(e) => setSelectedValue(e.value)}
  *   label="ตัวเลือก 1"
@@ -26,23 +28,27 @@ export default function PrimaryRadioButton({
   ...props
 }: PrimaryRadioButtonProps) {
   return (
-    <div className="flex flex-col">
-      <div className="flex items-center">
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-2 group">
         <RadioButton
           {...props}
-          className={`${className} ${error ? "p-invalid" : ""}`}
+          className={`
+            primary-radio
+            ${error ? "p-invalid" : ""}
+            ${className}
+          `}
         />
         {label && (
           <label
             htmlFor={props.inputId}
-            className="ml-2 text-sm text-gray-700 cursor-pointer"
+            className="text-sm font-medium text-gray-700 cursor-pointer select-none group-hover:text-green-700 transition-colors"
           >
             {label}
           </label>
         )}
       </div>
       {error && errorMessage && (
-        <small className="text-red-600 mt-1">{errorMessage}</small>
+        <small className="text-red-600 text-xs ml-6">{errorMessage}</small>
       )}
     </div>
   );

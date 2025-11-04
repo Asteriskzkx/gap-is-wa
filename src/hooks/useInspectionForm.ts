@@ -49,6 +49,7 @@ interface UseInspectionFormReturn {
   ) => void;
   validateCurrentItem: () => boolean;
   saveCurrentItem: (inspectionId: number) => Promise<boolean>;
+  saveAllItems: (inspectionId: number) => Promise<boolean>;
   completeInspection: (inspectionId: number) => Promise<boolean>;
 }
 
@@ -115,17 +116,46 @@ export function useInspectionForm(): UseInspectionFormReturn {
 
   const saveCurrentItem = useCallback(
     async (inspectionId: number): Promise<boolean> => {
-      if (!validateCurrentItem()) return false;
+      console.log("saveCurrentItem called:", {
+        inspectionId,
+        currentItemIndex,
+      });
 
-      const item = inspectionItems[currentItemIndex];
-      if (!item) return false;
+      // ใช้ state ล่าสุดแทนการใช้ closure
+      const currentItem = inspectionItems[currentItemIndex];
+      if (!currentItem) {
+        console.error("Current item not found at index:", currentItemIndex);
+        return false;
+      }
+
+      console.log("Current item to save:", {
+        inspectionItemId: currentItem.inspectionItemId,
+        itemNo: currentItem.inspectionItemMaster?.itemNo,
+        otherConditions: currentItem.otherConditions,
+      });
+
+      // Validate
+      if (currentItem.requirements) {
+        for (const req of currentItem.requirements) {
+          if (!req.evaluationResult || !req.evaluationMethod) {
+            alert(
+              `กรุณากรอกข้อมูลให้ครบถ้วน: ${
+                req.requirementMaster?.requirementName || "ข้อกำหนด"
+              }`
+            );
+            return false;
+          }
+        }
+      }
 
       setSaving(true);
       try {
         // Save requirements using evaluation endpoint และ update version
-        if (item.requirements) {
-          for (let i = 0; i < item.requirements.length; i++) {
-            const req = item.requirements[i];
+        if (currentItem.requirements) {
+          for (let i = 0; i < currentItem.requirements.length; i++) {
+            const req = currentItem.requirements[i];
+            console.log(`Saving requirement ${i + 1}:`, req.requirementId);
+
             const response = await fetch(
               `/api/v1/requirements/${req.requirementId}/evaluation`,
               {
@@ -158,15 +188,16 @@ export function useInspectionForm(): UseInspectionFormReturn {
         }
 
         // Save inspection item
+        console.log(`Saving inspection item:`, currentItem.inspectionItemId);
         const itemResponse = await fetch(
-          `/api/v1/inspection-items/${item.inspectionItemId}`,
+          `/api/v1/inspection-items/${currentItem.inspectionItemId}`,
           {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              otherConditions: item.otherConditions,
-              inspectionItemResult: determineItemResult(item),
-              version: item.version,
+              otherConditions: currentItem.otherConditions,
+              inspectionItemResult: determineItemResult(currentItem),
+              version: currentItem.version,
             }),
           }
         );
@@ -185,6 +216,7 @@ export function useInspectionForm(): UseInspectionFormReturn {
           return updated;
         });
 
+        console.log("Save completed successfully");
         return true;
       } catch (error) {
         console.error("Error saving item:", error);
@@ -194,7 +226,7 @@ export function useInspectionForm(): UseInspectionFormReturn {
         setSaving(false);
       }
     },
-    [inspectionItems, currentItemIndex, validateCurrentItem, setInspectionItems]
+    [inspectionItems, currentItemIndex]
   );
 
   const completeInspection = useCallback(
@@ -225,6 +257,151 @@ export function useInspectionForm(): UseInspectionFormReturn {
     []
   );
 
+  // ฟังก์ชันบันทึกทุกรายการที่มีการแก้ไข
+  const saveAllItems = useCallback(
+    async (inspectionId: number): Promise<boolean> => {
+      console.log("saveAllItems called for all items");
+      setSaving(true);
+
+      try {
+        let savedCount = 0;
+        let errorCount = 0;
+
+        // วนลูปบันทึกทุกรายการตรวจ
+        for (
+          let itemIndex = 0;
+          itemIndex < inspectionItems.length;
+          itemIndex++
+        ) {
+          const item = inspectionItems[itemIndex];
+
+          console.log(
+            `Processing item ${itemIndex + 1}/${inspectionItems.length}:`,
+            {
+              inspectionItemId: item.inspectionItemId,
+              itemNo: item.inspectionItemMaster?.itemNo,
+            }
+          );
+
+          // Validate requirements
+          if (item.requirements) {
+            let hasIncompleteReq = false;
+            for (const req of item.requirements) {
+              if (!req.evaluationResult || !req.evaluationMethod) {
+                console.warn(
+                  `Item ${
+                    itemIndex + 1
+                  } has incomplete requirements, skipping...`
+                );
+                hasIncompleteReq = true;
+                break;
+              }
+            }
+            if (hasIncompleteReq) continue;
+          }
+
+          try {
+            // Save requirements
+            if (item.requirements) {
+              for (let i = 0; i < item.requirements.length; i++) {
+                const req = item.requirements[i];
+
+                const response = await fetch(
+                  `/api/v1/requirements/${req.requirementId}/evaluation`,
+                  {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      evaluationResult: req.evaluationResult,
+                      evaluationMethod: req.evaluationMethod,
+                      note: req.note || "",
+                      version: req.version || 0,
+                    }),
+                  }
+                );
+
+                if (!response.ok) {
+                  throw new Error(
+                    `บันทึกข้อกำหนดไม่สำเร็จ (item ${itemIndex + 1})`
+                  );
+                }
+
+                const updatedReq = await response.json();
+                setInspectionItems((prev) => {
+                  const updated = [...prev];
+                  if (updated[itemIndex]?.requirements?.[i]) {
+                    updated[itemIndex].requirements![i].version =
+                      updatedReq.version;
+                  }
+                  return updated;
+                });
+              }
+            }
+
+            // Save inspection item
+            const itemResponse = await fetch(
+              `/api/v1/inspection-items/${item.inspectionItemId}`,
+              {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  otherConditions: item.otherConditions,
+                  inspectionItemResult: determineItemResult(item),
+                  version: item.version,
+                }),
+              }
+            );
+
+            if (!itemResponse.ok) {
+              throw new Error(
+                `บันทึกรายการตรวจไม่สำเร็จ (item ${itemIndex + 1})`
+              );
+            }
+
+            const updatedItem = await itemResponse.json();
+            setInspectionItems((prev) => {
+              const updated = [...prev];
+              if (updated[itemIndex]) {
+                updated[itemIndex].version = updatedItem.version;
+              }
+              return updated;
+            });
+
+            savedCount++;
+            console.log(`✓ Item ${itemIndex + 1} saved successfully`);
+          } catch (error) {
+            console.error(`✗ Error saving item ${itemIndex + 1}:`, error);
+            errorCount++;
+          }
+        }
+
+        console.log(`Save summary: ${savedCount} saved, ${errorCount} errors`);
+
+        if (savedCount === 0) {
+          alert("ไม่มีรายการที่สามารถบันทึกได้ กรุณากรอกข้อมูลให้ครบถ้วน");
+          return false;
+        }
+
+        if (errorCount > 0) {
+          alert(
+            `บันทึกสำเร็จ ${savedCount} รายการ, มีข้อผิดพลาด ${errorCount} รายการ`
+          );
+        } else {
+          alert(`บันทึกสำเร็จทั้งหมด ${savedCount} รายการ`);
+        }
+
+        return true;
+      } catch (error) {
+        console.error("Error in saveAllItems:", error);
+        alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+        return false;
+      } finally {
+        setSaving(false);
+      }
+    },
+    [inspectionItems]
+  );
+
   return {
     inspectionItems,
     setInspectionItems,
@@ -236,6 +413,7 @@ export function useInspectionForm(): UseInspectionFormReturn {
     updateOtherConditions,
     validateCurrentItem,
     saveCurrentItem,
+    saveAllItems,
     completeInspection,
   };
 }

@@ -12,6 +12,7 @@ interface InspectionFormModalProps {
   onPrevious: () => void;
   onNext: () => void;
   onSave: () => Promise<void>;
+  onSaveAll: () => Promise<void>;
   onComplete: () => Promise<void>;
   updateRequirementEvaluation: (
     itemIndex: number,
@@ -36,6 +37,7 @@ export const InspectionFormModal: React.FC<InspectionFormModalProps> = ({
   onPrevious,
   onNext,
   onSave,
+  onSaveAll,
   onComplete,
   updateRequirementEvaluation,
   updateOtherConditions,
@@ -117,12 +119,24 @@ export const InspectionFormModal: React.FC<InspectionFormModalProps> = ({
             {/* Middle Buttons */}
             <div className="flex space-x-3">
               <PrimaryButton
-                label={saving ? "กำลังบันทึก..." : "บันทึก"}
+                label={saving ? "กำลังบันทึก..." : "บันทึกหน้านี้"}
                 icon="pi pi-save"
                 onClick={onSave}
                 disabled={saving}
                 loading={saving}
                 color="info"
+                tooltip="บันทึกเฉพาะรายการตรวจหน้านี้"
+              />
+
+              <PrimaryButton
+                label={saving ? "กำลังบันทึก..." : "บันทึกทั้งหมด"}
+                icon="pi pi-check-circle"
+                onClick={onSaveAll}
+                disabled={saving}
+                loading={saving}
+                color="success"
+                variant="outlined"
+                tooltip="บันทึกทุกรายการตรวจที่กรอกข้อมูลแล้ว"
               />
 
               {isLastItem && (

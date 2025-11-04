@@ -10,7 +10,7 @@ import PrimaryAutoComplete from "@/components/ui/PrimaryAutoComplete";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import PrimaryDataTable from "@/components/ui/PrimaryDataTable";
 import PrimaryInputText from "@/components/ui/PrimaryInputText";
-import PrimaryRadioButton from "@/components/ui/PrimaryRadioButton";
+import PrimaryMultiSelect from "@/components/ui/PrimaryMultiSelect";
 import thaiProvinceData from "@/data/thai-provinces.json";
 import {
   useInspectionForm,
@@ -125,6 +125,7 @@ export default function AuditorInspectionsPage() {
     updateRequirementEvaluation,
     updateOtherConditions,
     saveCurrentItem,
+    saveAllItems,
     completeInspection,
   } = useInspectionForm();
 
@@ -476,47 +477,40 @@ export default function AuditorInspectionsPage() {
       );
     }
 
-    // For inspection item 2: Land condition radio buttons
+    // For inspection item 2: Land condition - MultiSelect
     if (itemNo === 2) {
+      const currentLandConditions = otherConditions.landConditions || [];
+      console.log(
+        "Rendering land condition, current values:",
+        currentLandConditions
+      );
+      console.log("Full otherConditions:", otherConditions);
+
       return (
         <div className="mt-6 border-t pt-4">
           <h4 className="text-sm font-semibold text-gray-700 mb-4">
             ลักษณะพื้นที่ปลูก
           </h4>
-          <div className="space-y-2">
-            <PrimaryRadioButton
-              label="พื้นที่ราบ"
-              value="flat"
-              checked={otherConditions.landCondition === "flat"}
-              onChange={() =>
-                updateOtherConditions(itemIndex, "landCondition", "flat")
-              }
-            />
-            <PrimaryRadioButton
-              label="พื้นที่ลาดเอียง"
-              value="slope"
-              checked={otherConditions.landCondition === "slope"}
-              onChange={() =>
-                updateOtherConditions(itemIndex, "landCondition", "slope")
-              }
-            />
-            <PrimaryRadioButton
-              label="พื้นที่เนินเขา"
-              value="hill"
-              checked={otherConditions.landCondition === "hill"}
-              onChange={() =>
-                updateOtherConditions(itemIndex, "landCondition", "hill")
-              }
-            />
-            <PrimaryRadioButton
-              label="พื้นที่ภูเขา"
-              value="mountain"
-              checked={otherConditions.landCondition === "mountain"}
-              onChange={() =>
-                updateOtherConditions(itemIndex, "landCondition", "mountain")
-              }
-            />
-          </div>
+          <PrimaryMultiSelect
+            id={`landConditions-${itemIndex}`}
+            value={currentLandConditions}
+            options={[
+              { label: "ที่ราบ", value: "flat" },
+              { label: "ที่ราบลุ่ม", value: "lowland" },
+              { label: "ที่ดอน", value: "upland" },
+              { label: "ยกร่อง", value: "raised-bed" },
+              { label: "ยกร่องน้ำขัง", value: "raised-bed-waterlogged" },
+              { label: "อื่นๆ", value: "other" },
+            ]}
+            onChange={(values) => {
+              console.log("MultiSelect changed, values:", values);
+              updateOtherConditions(itemIndex, "landConditions", values);
+            }}
+            placeholder="เลือกลักษณะพื้นที่ปลูก (เลือกได้หลายอัน)"
+            display="chip"
+            maxSelectedLabels={3}
+            selectAll={true}
+          />
         </div>
       );
     }
@@ -535,6 +529,20 @@ export default function AuditorInspectionsPage() {
           currentItemIndex.toString()
         );
         alert("บันทึกข้อมูลสำเร็จ");
+      }
+    }
+  };
+
+  // Handle save all items
+  const handleSaveAll = async () => {
+    if (selectedInspection) {
+      const success = await saveAllItems(selectedInspection.inspectionId);
+      if (success) {
+        // Keep current position
+        localStorage.setItem(
+          `inspection_${selectedInspection.inspectionId}_position`,
+          currentItemIndex.toString()
+        );
       }
     }
   };
@@ -807,6 +815,7 @@ export default function AuditorInspectionsPage() {
           onPrevious={handlePrevious}
           onNext={handleNext}
           onSave={handleSave}
+          onSaveAll={handleSaveAll}
           onComplete={handleComplete}
           updateRequirementEvaluation={updateRequirementEvaluation}
           updateOtherConditions={updateOtherConditions}
