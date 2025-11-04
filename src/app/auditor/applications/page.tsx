@@ -9,6 +9,7 @@ import {
   PrimaryDataTable,
   PrimaryAutoComplete,
   PrimaryCalendar,
+  PrimaryButton,
 } from "@/components/ui";
 import thaiProvinceData from "@/data/thai-provinces.json";
 
@@ -741,19 +742,19 @@ export default function AuditorScheduleInspectionPage() {
                   />
                 </div>
               </div>
-              <div className="mt-4 flex gap-2">
-                <button
+              <div className="mt-4 flex gap-2 justify-center">
+                <PrimaryButton
+                  label="ค้นหา"
+                  icon="pi pi-search"
+                  color="success"
                   onClick={handleSearch}
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm font-medium"
-                >
-                  ค้นหา
-                </button>
-                <button
+                ></PrimaryButton>
+                <PrimaryButton
+                  label="ล้างค่า"
+                  icon="pi pi-refresh"
+                  color="secondary"
                   onClick={handleResetSearch}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 text-sm font-medium"
-                >
-                  ล้างค่า
-                </button>
+                ></PrimaryButton>
               </div>
             </div>
 
@@ -765,52 +766,76 @@ export default function AuditorScheduleInspectionPage() {
                   header: "รหัสสวน",
                   body: (rowData: RubberFarm) =>
                     `RF${rowData.id.toString().padStart(5, "0")}`,
-                  style: { minWidth: "100px" },
+                  style: { width: "15%" },
                   sortable: true,
+                  headerAlign: "center" as const,
+                  bodyAlign: "left" as const,
                 },
                 {
                   field: "province",
                   header: "จังหวัด",
-                  style: { minWidth: "120px" },
+                  body: (rowData: RubberFarm) => rowData.province,
+                  style: { width: "15%" },
                   sortable: true,
+                  headerAlign: "center" as const,
+                  bodyAlign: "left" as const,
                 },
                 {
                   field: "district",
                   header: "อำเภอ/เขต",
-                  style: { minWidth: "120px" },
+                  body: (rowData: RubberFarm) => rowData.district,
+                  style: { width: "15%" },
                   sortable: true,
+                  headerAlign: "center" as const,
+                  bodyAlign: "left" as const,
                 },
                 {
                   field: "subDistrict",
                   header: "ตำบล/แขวง",
-                  style: { minWidth: "120px" },
+                  body: (rowData: RubberFarm) => rowData.subDistrict,
+                  style: { width: "15%" },
                   sortable: true,
+                  headerAlign: "center" as const,
+                  bodyAlign: "left" as const,
                 },
                 {
                   field: "farmerName",
                   header: "เกษตรกร",
-                  style: { minWidth: "150px" },
+                  body: (rowData: RubberFarm) => rowData.farmerName,
+                  style: { width: "15%" },
                   sortable: true,
+                  headerAlign: "center" as const,
+                  bodyAlign: "left" as const,
                 },
                 {
                   field: "farmerEmail",
                   header: "อีเมล",
-                  style: { minWidth: "200px" },
+                  body: (rowData: RubberFarm) => rowData.farmerEmail,
+                  style: { width: "20%" },
                   sortable: true,
+                  headerAlign: "center" as const,
+                  bodyAlign: "left" as const,
                 },
                 {
                   field: "actions",
-                  header: "การดำเนินการ",
+                  header: "",
                   body: (rowData: RubberFarm) => (
-                    <button
-                      onClick={() => fetchFarmDetails(rowData.id)}
-                      disabled={loadingFarmDetails}
-                      className="text-blue-600 hover:text-blue-900 text-sm font-medium disabled:text-gray-400 whitespace-nowrap"
-                    >
-                      ดูข้อมูล
-                    </button>
+                    <div className="flex justify-center">
+                      <PrimaryButton
+                        icon="pi pi-eye"
+                        color="info"
+                        onClick={() => fetchFarmDetails(rowData.id)}
+                        disabled={loadingFarmDetails}
+                        rounded
+                        text
+                        tooltip="ดูข้อมูลสวนยางพารา"
+                        tooltipOptions={{ position: "left" }}
+                      ></PrimaryButton>
+                    </div>
                   ),
-                  style: { width: "120px" },
+                  style: { width: "5%" },
+                  headerAlign: "center" as const,
+                  bodyAlign: "center" as const,
                 },
               ]}
               loading={loading}

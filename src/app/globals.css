@@ -936,6 +936,8 @@ input.p-inputtext:disabled {
   font-size: 0.75rem;
   letter-spacing: 0.05em;
   border-bottom: 1px solid #e5e7eb;
+  white-space: normal;
+  word-break: break-word;
 }
 
 /* Header alignment using flexbox */
@@ -976,6 +978,12 @@ input.p-inputtext:disabled {
 
 .primary-datatable-wrapper .p-datatable-tbody > tr.p-highlight {
   background-color: #f0fdf4;
+}
+
+/* Allow text wrapping in table cells */
+.primary-datatable-wrapper .p-datatable-tbody > tr > td {
+  white-space: normal;
+  word-break: break-word;
 }
 
 /* ทำให้ radio button และ input คลิกได้ */
