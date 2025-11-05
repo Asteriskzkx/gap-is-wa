@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { FaTimes } from "react-icons/fa";
 import { InspectionItemForm, type InspectionItem } from "./InspectionItemForm";
 import PrimaryButton from "@/components/ui/PrimaryButton";
@@ -45,6 +45,21 @@ export const InspectionFormModal: React.FC<InspectionFormModalProps> = ({
   renderAdditionalFields,
   allRequiredFieldsFilled,
 }) => {
+  // Prevent background scrolling when modal is open
+  useEffect(() => {
+    if (show) {
+      // Save current overflow value
+      const originalOverflow = document.body.style.overflow;
+      // Prevent scrolling
+      document.body.style.overflow = "hidden";
+
+      // Restore on cleanup
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [show]);
+
   if (!show) return null;
 
   const currentItem = inspectionItems[currentItemIndex];
