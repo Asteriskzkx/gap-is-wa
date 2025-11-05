@@ -536,7 +536,7 @@ export default function AuditorDashboardPage() {
                     field: "inspectionNo",
                     header: "เลขที่",
                     headerAlign: "center",
-                    bodyAlign: "left",
+                    bodyAlign: "center",
                   },
                   {
                     field: "farmerName",

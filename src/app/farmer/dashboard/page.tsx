@@ -112,15 +112,12 @@ const getStatusInfo = (application: ApplicationItem) => {
   };
 };
 
-const renderFarmId = (rowData: ApplicationItem) => (
-  <span className="font-medium text-gray-900">
-    {rowData.rubberFarm.rubberFarmId}
-  </span>
-);
+const renderFarmId = (rowData: ApplicationItem) =>
+  `RF${rowData.rubberFarm.rubberFarmId.toString().padStart(5, "0")}`;
 
 const renderLocation = (rowData: ApplicationItem) => (
   <div>
-    <p className="text-sm text-gray-900">
+    <p>
       {rowData.rubberFarm.villageName} หมู่ {rowData.rubberFarm.moo}
     </p>
     <p className="text-sm text-gray-500">
@@ -129,11 +126,8 @@ const renderLocation = (rowData: ApplicationItem) => (
   </div>
 );
 
-const renderInspectionDate = (rowData: ApplicationItem) => (
-  <span className="text-sm text-gray-700">
-    {formatThaiDate(rowData.inspection?.inspectionDateAndTime)}
-  </span>
-);
+const renderInspectionDate = (rowData: ApplicationItem) =>
+  formatThaiDate(rowData.inspection?.inspectionDateAndTime);
 
 const renderStatus = (rowData: ApplicationItem) => {
   const statusInfo = getStatusInfo(rowData);
@@ -325,7 +319,7 @@ export default function FarmerDashboardPage() {
                       field: "rubberFarmId",
                       header: "รหัสสวน",
                       headerAlign: "center",
-                      bodyAlign: "left",
+                      bodyAlign: "center",
                       body: renderFarmId,
                     },
                     {
