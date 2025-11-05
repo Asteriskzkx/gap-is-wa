@@ -392,6 +392,15 @@ export default function AuditorInspectionsPage() {
         return itemNoA - itemNoB;
       });
 
+      // เรียงลำดับ requirements ภายในแต่ละรายการตรวจตาม requirementNo
+      sortedItems.forEach((item) => {
+        if (item.requirements && item.requirements.length > 0) {
+          item.requirements.sort((a, b) => {
+            return (a.requirementNo || 0) - (b.requirementNo || 0);
+          });
+        }
+      });
+
       setInspectionItems(sortedItems);
 
       // Load saved position

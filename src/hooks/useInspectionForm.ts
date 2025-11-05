@@ -54,9 +54,37 @@ interface UseInspectionFormReturn {
 }
 
 export function useInspectionForm(): UseInspectionFormReturn {
-  const [inspectionItems, setInspectionItems] = useState<InspectionItem[]>([]);
+  const [inspectionItems, setInspectionItemsRaw] = useState<InspectionItem[]>(
+    []
+  );
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
   const [saving, setSaving] = useState(false);
+
+  // Helper function to sort requirements
+  const sortRequirements = useCallback(
+    (items: InspectionItem[]): InspectionItem[] => {
+      return items.map((item) => ({
+        ...item,
+        requirements: item.requirements
+          ? [...item.requirements].sort(
+              (a, b) => (a.requirementNo || 0) - (b.requirementNo || 0)
+            )
+          : item.requirements,
+      }));
+    },
+    []
+  );
+
+  // Wrapper function to ensure requirements are always sorted
+  const setInspectionItems = useCallback(
+    (value: React.SetStateAction<InspectionItem[]>) => {
+      setInspectionItemsRaw((prev) => {
+        const newItems = typeof value === "function" ? value(prev) : value;
+        return sortRequirements(newItems);
+      });
+    },
+    [sortRequirements]
+  );
 
   const updateRequirementEvaluation = useCallback(
     (
@@ -79,7 +107,7 @@ export function useInspectionForm(): UseInspectionFormReturn {
         return updated;
       });
     },
-    []
+    [setInspectionItems]
   );
 
   const updateOtherConditions = useCallback(
@@ -93,7 +121,7 @@ export function useInspectionForm(): UseInspectionFormReturn {
         return updated;
       });
     },
-    []
+    [setInspectionItems]
   );
 
   const validateCurrentItem = useCallback((): boolean => {
@@ -226,7 +254,7 @@ export function useInspectionForm(): UseInspectionFormReturn {
         setSaving(false);
       }
     },
-    [inspectionItems, currentItemIndex]
+    [inspectionItems, currentItemIndex, setInspectionItems]
   );
 
   const completeInspection = useCallback(
@@ -399,7 +427,7 @@ export function useInspectionForm(): UseInspectionFormReturn {
         setSaving(false);
       }
     },
-    [inspectionItems]
+    [inspectionItems, setInspectionItems]
   );
 
   return {
