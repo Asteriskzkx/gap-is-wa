@@ -459,7 +459,7 @@ function determineItemResult(item: InspectionItem): string {
 
   // ถ้ามีข้อกำหนดหลักที่ไม่ผ่าน = ไม่ผ่าน
   const hasFailedMain = mainRequirements.some(
-    (req) => req.evaluationResult === "ไม่ผ่าน"
+    (req) => req.evaluationResult === "ไม่ใช่"
   );
 
   return hasFailedMain ? "ไม่ผ่าน" : "ผ่าน";
