@@ -3,10 +3,37 @@
 @import "leaflet-geosearch/dist/geosearch.css";
 @import "primeicons/primeicons.css";
 
+/* PrimeReact Theme - Choose one theme */
+@import "primereact/resources/themes/lara-light-blue/theme.css";
+/* Alternative themes:
+@import "primereact/resources/themes/lara-light-green/theme.css";
+@import "primereact/resources/themes/lara-dark-blue/theme.css";
+*/
+
+/* Layout Component Styles */
+@import "../components/layout/Header.module.css";
+@import "../components/layout/Sidebar.module.css";
+@import "../components/layout/Footer.module.css";
+
 /* Tailwind imports */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Custom PrimeReact Component Overrides */
+.p-sidebar {
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+.p-sidebar .p-sidebar-header {
+  padding: 0;
+  border: none;
+}
+
+.p-sidebar .p-sidebar-content {
+  padding: 0;
+  height: 100%;
+}
 
 :root {
   --foreground-rgb: 0, 0, 0;

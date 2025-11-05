@@ -1,0 +1,79 @@
+/* Footer Component Styles */
+.footer {
+  background-color: white;
+  padding: 1.5rem 0;
+  border-top: 1px solid #e5e7eb;
+  margin-top: auto;
+}
+
+.footerContainer {
+  width: 100%;
+  /* margin: 0 auto; */
+  padding: 0.75rem 1rem; /* Mobile: py-3 px-4 (12px 16px) */
+}
+
+.footerContent {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+}
+
+@media (min-width: 768px) {
+  .footerContent {
+    flex-direction: row;
+  }
+}
+
+/* Tablet (sm): px-6 */
+@media (min-width: 640px) {
+  .footerContainer {
+    padding-left: 1.5rem; /* 24px */
+    padding-right: 1.5rem; /* 24px */
+  }
+}
+
+/* Desktop (lg): px-8 */
+@media (min-width: 1024px) {
+  .footerContainer {
+    padding-left: 2rem; /* 32px */
+    padding-right: 2rem; /* 32px */
+  }
+}
+
+.leftSection {
+  display: flex;
+  align-items: center;
+}
+
+.copyright {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.rightSection {
+  margin-top: 1rem;
+}
+
+@media (min-width: 768px) {
+  .rightSection {
+    margin-top: 0;
+  }
+}
+
+.linkList {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.footerLink {
+  font-size: 0.875rem;
+  color: #6b7280;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footerLink:hover {
+  color: #111827;
+}
