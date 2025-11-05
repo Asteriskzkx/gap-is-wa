@@ -1052,7 +1052,7 @@ export default function RubberFarmEditForm() {
           </p>
           <PrimaryButton
             label="ลงทะเบียนสวนยาง"
-            color="secondary"
+            color="warning"
             onClick={() => router.push("/farmer/applications/new")}
             type="button"
           />

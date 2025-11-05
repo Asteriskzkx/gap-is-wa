@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { DataTablePageEvent, DataTableSortEvent } from "primereact/datatable";
 import FarmerLayout from "@/components/layout/FarmerLayout";
-import { PrimaryDataTable } from "@/components/ui";
+import { PrimaryDataTable, PrimaryButton } from "@/components/ui";
+import { DangerIcon } from "@/components/icons";
 
 interface RubberFarm {
   rubberFarmId: number;
@@ -285,9 +285,10 @@ export default function FarmerApplicationsPage() {
           {error && <div className="p-8 text-center text-red-600">{error}</div>}
 
           {!error && applications.length === 0 && !loading && (
-            <div className="p-8 text-center">
-              <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-4 inline-flex items-start">
-                <div className="text-left">
+            <div className="p-6">
+              <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-6 flex items-start">
+                <DangerIcon className="h-6 w-6 text-yellow-500 mr-4 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
                   <h3 className="text-base font-medium text-yellow-800">
                     ยังไม่มีข้อมูลสวนยาง
                   </h3>
@@ -295,12 +296,12 @@ export default function FarmerApplicationsPage() {
                     คุณยังไม่ได้ลงทะเบียนสวนยางพารา
                     กรุณาลงทะเบียนสวนยางเพื่อยื่นขอรับรอง
                   </p>
-                  <Link
-                    href="/farmer/applications/new"
-                    className="inline-flex items-center mt-3 px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-yellow-600 hover:bg-yellow-700"
-                  >
-                    ลงทะเบียนสวนยาง
-                  </Link>
+                  <PrimaryButton
+                    label="ลงทะเบียนสวนยาง"
+                    color="warning"
+                    className="mt-3"
+                    onClick={() => router.push("/farmer/applications/new")}
+                  />
                 </div>
               </div>
             </div>
