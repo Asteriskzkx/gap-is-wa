@@ -1,9 +1,5 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import Link from "next/link";
-import { useSession } from "next-auth/react";
-import FarmerLayout from "@/components/layout/FarmerLayout";
 import {
   ChevronRightIcon,
   DangerIcon,
@@ -12,6 +8,10 @@ import {
   TextClipboardIcon,
   TrashIcon,
 } from "@/components/icons";
+import FarmerLayout from "@/components/layout/FarmerLayout";
+import { useSession } from "next-auth/react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
 interface RubberFarm {
   rubberFarmId: number;
@@ -94,82 +94,41 @@ export default function FarmerDashboardPage() {
 
     const fetchApplications = async (farmerId: number) => {
       try {
-        // ดึงรายการสวนยางที่เป็นของเกษตรกรคนนี้โดยตรง (filter ที่ server)
+        // ดึงรายการสวนยาง 5 อันล่าสุด พร้อมข้อมูล inspection
+        // เพิ่ม priorityStatus=รอการตรวจประเมิน เพื่อให้แสดงสถานะนี้ก่อน
         const allFarmsResponse = await fetch(
-          `/api/v1/rubber-farms?farmerId=${farmerId}`
+          `/api/v1/rubber-farms?farmerId=${farmerId}&includeInspections=true&limit=5&offset=0&sortField=createdAt&sortOrder=desc&priorityStatus=รอการตรวจประเมิน`
         );
 
         if (allFarmsResponse.ok) {
-          const farms = await allFarmsResponse.json();
-          await processRubberFarms(farms);
-        } else {
-          setApplicationsLoading(false);
+          const result = await allFarmsResponse.json();
+
+          // Handle paginated response
+          const farms = result.results || result;
+
+          // แปลงข้อมูลเป็น ApplicationItem format
+          const applicationItems: ApplicationItem[] = farms.map(
+            (farm: any) => ({
+              rubberFarm: {
+                rubberFarmId: farm.rubberFarmId,
+                villageName: farm.villageName,
+                moo: farm.moo,
+                district: farm.district,
+                province: farm.province,
+                createdAt: farm.createdAt,
+              },
+              inspection: farm.inspection || undefined,
+            })
+          );
+
+          setApplications(applicationItems);
         }
+
+        setApplicationsLoading(false);
       } catch (error) {
         console.error("Error fetching applications:", error);
         setApplicationsLoading(false);
       }
-    };
-
-    const processRubberFarms = async (farms: RubberFarm[]) => {
-      if (!farms) {
-        setApplicationsLoading(false);
-        return;
-      }
-
-      const allApplicationItems: ApplicationItem[] = [];
-
-      for (const farm of farms) {
-        try {
-          const inspectionsResponse = await fetch(
-            `/api/v1/inspections?rubberFarmId=${farm.rubberFarmId}`
-          );
-
-          if (inspectionsResponse.ok) {
-            const inspections = await inspectionsResponse.json();
-
-            if (inspections.length > 0) {
-              // Sort inspections by date (newest first)
-              const sortedInspections = inspections.sort(
-                (a: Inspection, b: Inspection) =>
-                  new Date(b.inspectionDateAndTime).getTime() -
-                  new Date(a.inspectionDateAndTime).getTime()
-              );
-
-              // Add each inspection as a separate application item
-              sortedInspections.forEach((inspection: Inspection) => {
-                allApplicationItems.push({
-                  rubberFarm: farm,
-                  inspection: inspection,
-                });
-              });
-            } else {
-              // If no inspections, add just the farm
-              allApplicationItems.push({ rubberFarm: farm });
-            }
-          } else {
-            // If error fetching inspections, add just the farm
-            allApplicationItems.push({ rubberFarm: farm });
-          }
-        } catch (error) {
-          console.error(
-            `Error fetching inspections for farm ${farm.rubberFarmId}:`,
-            error
-          );
-          allApplicationItems.push({ rubberFarm: farm });
-        }
-      }
-
-      // Sort all application items by createdAt date (newest first)
-      const sortedApplications = allApplicationItems.sort(
-        (a, b) =>
-          new Date(b.rubberFarm.createdAt).getTime() -
-          new Date(a.rubberFarm.createdAt).getTime()
-      );
-
-      // Take only the 5 most recent applications
-      setApplications(sortedApplications.slice(0, 5));
-      setApplicationsLoading(false);
     };
 
     fetchApplicationsData();

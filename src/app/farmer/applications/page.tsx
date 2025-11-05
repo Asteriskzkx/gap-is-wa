@@ -95,6 +95,7 @@ export default function FarmerApplicationsPage() {
         farmerId: farmerId.toString(),
         limit: limit.toString(),
         offset: offset.toString(),
+        includeInspections: "true", // เพิ่ม flag เพื่อดึงข้อมูล inspection มาด้วย
       });
 
       // เพิ่ม sort parameters
@@ -140,45 +141,22 @@ export default function FarmerApplicationsPage() {
         });
       }
 
-      // Process farms with inspections
-      const allApplicationItems: ApplicationItem[] = [];
-
-      for (const farm of farms) {
-        try {
-          const inspectionsResponse = await fetch(
-            `/api/v1/inspections?rubberFarmId=${farm.rubberFarmId}`
-          );
-
-          if (inspectionsResponse.ok) {
-            const inspections = await inspectionsResponse.json();
-
-            if (inspections.length > 0) {
-              // Sort inspections by date (newest first)
-              const sortedInspections = inspections.sort(
-                (a: Inspection, b: Inspection) =>
-                  new Date(b.inspectionDateAndTime).getTime() -
-                  new Date(a.inspectionDateAndTime).getTime()
-              );
-
-              // Add most recent inspection
-              allApplicationItems.push({
-                rubberFarm: farm,
-                inspection: sortedInspections[0],
-              });
-            } else {
-              allApplicationItems.push({ rubberFarm: farm });
-            }
-          } else {
-            allApplicationItems.push({ rubberFarm: farm });
-          }
-        } catch (err) {
-          console.error(
-            `Error fetching inspections for farm ${farm.rubberFarmId}:`,
-            err
-          );
-          allApplicationItems.push({ rubberFarm: farm });
-        }
-      }
+      // แปลงข้อมูลเป็น ApplicationItem format
+      // ตอนนี้ inspection data มากับ farm แล้ว ไม่ต้องไปดึงแยกอีก
+      const allApplicationItems: ApplicationItem[] = farms.map((farm: any) => ({
+        rubberFarm: {
+          rubberFarmId: farm.rubberFarmId,
+          farmId: farm.farmId,
+          villageName: farm.villageName,
+          moo: farm.moo,
+          location: farm.location,
+          district: farm.district,
+          province: farm.province,
+          subDistrict: farm.subDistrict,
+          createdAt: farm.createdAt,
+        },
+        inspection: farm.inspection || undefined,
+      }));
 
       setApplications(allApplicationItems);
     } catch (err) {
