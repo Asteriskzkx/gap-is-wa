@@ -1,17 +1,22 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { DataTablePageEvent, DataTableSortEvent } from "primereact/datatable";
 import FarmerLayout from "@/components/layout/FarmerLayout";
+import { PrimaryDataTable, PrimaryButton } from "@/components/ui";
+import { DangerIcon } from "@/components/icons";
 
 interface RubberFarm {
   rubberFarmId: number;
+  farmId?: string;
   villageName: string;
   moo: number;
+  location?: string;
   district: string;
   province: string;
+  subDistrict: string;
   createdAt: string;
 }
 
@@ -36,80 +41,188 @@ export default function FarmerApplicationsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // Pagination state
+  const [farmsPagination, setFarmsPagination] = useState({
+    first: 0,
+    rows: 10,
+    totalRecords: 0,
+  });
+
+  // Sort state
+  const [sortField, setSortField] = useState<string | undefined>(undefined);
+  const [sortOrder, setSortOrder] = useState<1 | -1 | 0 | null>(null);
+  const [multiSortMeta, setMultiSortMeta] = useState<
+    Array<{
+      field: string;
+      order: 1 | -1 | 0 | null;
+    }>
+  >([]);
+
   useEffect(() => {
-    const fetchApplicationsData = async () => {
-      try {
-        // ตรวจสอบว่า session พร้อมใช้งาน
-        if (status === "loading") {
-          return;
-        }
+    if (status === "authenticated" && session?.user?.roleData?.farmerId) {
+      fetchApplicationsWithPagination(session.user.roleData.farmerId, 0, 10, {
+        sortField,
+        sortOrder:
+          sortOrder === 1 ? "asc" : sortOrder === -1 ? "desc" : undefined,
+        multiSortMeta: multiSortMeta.filter(
+          (item) => item.order === 1 || item.order === -1
+        ) as Array<{ field: string; order: number }>,
+      });
+    } else if (status === "unauthenticated") {
+      router.push("/");
+    }
+  }, [status, session, router]); // eslint-disable-line react-hooks/exhaustive-deps
 
-        if (status === "unauthenticated" || !session) {
-          router.push("/");
-          return;
-        }
+  // Fetch applications with pagination
+  const fetchApplicationsWithPagination = async (
+    farmerId: number,
+    offset = 0,
+    limit = 10,
+    sorting?: {
+      sortField?: string;
+      sortOrder?: string;
+      multiSortMeta?: Array<{
+        field: string;
+        order: number;
+      }>;
+    }
+  ) => {
+    try {
+      setLoading(true);
 
-        // ดึง farmerId จาก session
-        const farmerId = session.user.roleData?.farmerId;
-        if (!farmerId) {
-          setError("ไม่พบข้อมูลเกษตรกร");
-          setLoading(false);
-          return;
-        }
+      // สร้าง query parameters
+      const params = new URLSearchParams({
+        farmerId: farmerId.toString(),
+        limit: limit.toString(),
+        offset: offset.toString(),
+        includeInspections: "true", // เพิ่ม flag เพื่อดึงข้อมูล inspection มาด้วย
+      });
 
-        // ดึงรายการสวนยางที่เป็นของเกษตรกรคนนี้โดยตรง (filter ที่ server)
-        const farmsResponse = await fetch(
-          `/api/v1/rubber-farms?farmerId=${farmerId}`
+      // เพิ่ม sort parameters
+      if (sorting?.sortField) params.append("sortField", sorting.sortField);
+      if (sorting?.sortOrder) params.append("sortOrder", sorting.sortOrder);
+      if (sorting?.multiSortMeta) {
+        const validSortMeta = sorting.multiSortMeta.filter(
+          (item) => item.order === 1 || item.order === -1
         );
-
-        if (!farmsResponse.ok) {
-          setError("ไม่สามารถดึงข้อมูลได้ กรุณาลองใหม่อีกครั้ง");
-          setLoading(false);
-          return;
+        if (validSortMeta.length > 0) {
+          params.append("multiSortMeta", JSON.stringify(validSortMeta));
         }
-
-        const farms = await farmsResponse.json();
-
-        const allApplicationItems: ApplicationItem[] = [];
-
-        for (const farm of farms) {
-          try {
-            const inspectionsResponse = await fetch(
-              `/api/v1/inspections?rubberFarmId=${farm.rubberFarmId}`
-            );
-
-            if (inspectionsResponse.ok) {
-              const inspections = await inspectionsResponse.json();
-              if (inspections.length > 0) {
-                const sortedInspections = inspections.sort(
-                  (a: Inspection, b: Inspection) =>
-                    new Date(b.inspectionDateAndTime).getTime() -
-                    new Date(a.inspectionDateAndTime).getTime()
-                );
-                sortedInspections.forEach((inspection: Inspection) => {
-                  allApplicationItems.push({ rubberFarm: farm, inspection });
-                });
-              } else {
-                allApplicationItems.push({ rubberFarm: farm });
-              }
-            } else {
-              allApplicationItems.push({ rubberFarm: farm });
-            }
-          } catch (error) {
-            allApplicationItems.push({ rubberFarm: farm });
-          }
-        }
-
-        setApplications(allApplicationItems);
-      } catch (error) {
-        setError("เกิดข้อผิดพลาดในการดึงข้อมูล");
-      } finally {
-        setLoading(false);
       }
-    };
 
-    fetchApplicationsData();
-  }, [router, session, status]);
+      const farmsResponse = await fetch(
+        `/api/v1/rubber-farms?${params.toString()}`
+      );
+
+      if (!farmsResponse.ok) {
+        setError("ไม่สามารถดึงข้อมูลได้ กรุณาลองใหม่อีกครั้ง");
+        setLoading(false);
+        return;
+      }
+
+      const result = await farmsResponse.json();
+      let farms = [];
+
+      // Handle paginated response
+      if (result.results && result.paginator) {
+        farms = result.results;
+        setFarmsPagination({
+          first: result.paginator.offset,
+          rows: result.paginator.limit,
+          totalRecords: result.paginator.total,
+        });
+      } else {
+        // Fallback for non-paginated response
+        farms = result;
+        setFarmsPagination({
+          first: 0,
+          rows: 10,
+          totalRecords: result.length || 0,
+        });
+      }
+
+      // แปลงข้อมูลเป็น ApplicationItem format
+      // ตอนนี้ inspection data มากับ farm แล้ว ไม่ต้องไปดึงแยกอีก
+      const allApplicationItems: ApplicationItem[] = farms.map((farm: any) => ({
+        rubberFarm: {
+          rubberFarmId: farm.rubberFarmId,
+          farmId: farm.farmId,
+          villageName: farm.villageName,
+          moo: farm.moo,
+          location: farm.location,
+          district: farm.district,
+          province: farm.province,
+          subDistrict: farm.subDistrict,
+          createdAt: farm.createdAt,
+        },
+        inspection: farm.inspection || undefined,
+      }));
+
+      setApplications(allApplicationItems);
+    } catch (err) {
+      console.error("Error fetching applications:", err);
+      setError("เกิดข้อผิดพลาดในการดึงข้อมูล");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle page change for DataTable
+  const onPageChange = (event: DataTablePageEvent) => {
+    if (session?.user?.roleData?.farmerId) {
+      fetchApplicationsWithPagination(
+        session.user.roleData.farmerId,
+        event.first,
+        event.rows,
+        {
+          sortField,
+          sortOrder:
+            sortOrder === 1 ? "asc" : sortOrder === -1 ? "desc" : undefined,
+          multiSortMeta: multiSortMeta.filter(
+            (item) => item.order === 1 || item.order === -1
+          ) as Array<{ field: string; order: number }>,
+        }
+      );
+    }
+  };
+
+  // Handle sort change
+  const onSortChange = (event: DataTableSortEvent) => {
+    if (event.multiSortMeta) {
+      const validMultiSort = event.multiSortMeta.filter(
+        (item) => item.order !== undefined
+      ) as Array<{ field: string; order: 1 | -1 | 0 | null }>;
+      setMultiSortMeta(validMultiSort);
+      const validSortMeta = validMultiSort.filter(
+        (item) => item.order === 1 || item.order === -1
+      ) as Array<{ field: string; order: number }>;
+      if (session?.user?.roleData?.farmerId) {
+        fetchApplicationsWithPagination(
+          session.user.roleData.farmerId,
+          farmsPagination.first,
+          farmsPagination.rows,
+          {
+            multiSortMeta: validSortMeta,
+          }
+        );
+      }
+    } else {
+      setSortField(event.sortField);
+      const validOrder = event.sortOrder !== undefined ? event.sortOrder : null;
+      setSortOrder(validOrder);
+      if (session?.user?.roleData?.farmerId) {
+        fetchApplicationsWithPagination(
+          session.user.roleData.farmerId,
+          farmsPagination.first,
+          farmsPagination.rows,
+          {
+            sortField: event.sortField,
+            sortOrder: event.sortOrder === 1 ? "asc" : "desc",
+          }
+        );
+      }
+    }
+  };
 
   const formatThaiDate = (dateString?: string) => {
     if (!dateString) return "-";
@@ -117,8 +230,6 @@ export default function FarmerApplicationsPage() {
       year: "numeric",
       month: "long",
       day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
     });
   };
 
@@ -171,173 +282,122 @@ export default function FarmerApplicationsPage() {
         </div>
 
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          {loading ? (
-            <div className="p-8 flex justify-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
-            </div>
-          ) : error ? (
-            <div className="p-8 text-center text-red-600">{error}</div>
-          ) : applications.length === 0 ? (
-            <div className="p-8 text-center">
-              <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-4 inline-flex items-start">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-yellow-500 mr-3 mt-0.5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                  />
-                </svg>
-                <div>
+          {error && <div className="p-8 text-center text-red-600">{error}</div>}
+
+          {!error && applications.length === 0 && !loading && (
+            <div className="p-6">
+              <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-6 flex items-start">
+                <DangerIcon className="h-6 w-6 text-yellow-500 mr-4 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
                   <h3 className="text-base font-medium text-yellow-800">
-                    ยังไม่มีการยื่นขอรับรอง
+                    ยังไม่มีข้อมูลสวนยาง
                   </h3>
                   <p className="text-sm text-yellow-700 mt-1">
-                    คุณยังไม่ได้ยื่นขอรับรองมาตรฐาน GAP
-                    กรุณายื่นคำขอรับรองเพื่อเริ่มกระบวนการรับรองแหล่งผลิต
+                    คุณยังไม่ได้ลงทะเบียนสวนยางพารา
+                    กรุณาลงทะเบียนสวนยางเพื่อยื่นขอรับรอง
                   </p>
-                  <Link
-                    href="/farmer/applications/new"
-                    className="inline-flex items-center mt-3 px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
-                  >
-                    ยื่นขอใบรับรองตอนนี้
-                  </Link>
+                  <PrimaryButton
+                    label="ลงทะเบียนสวนยาง"
+                    color="warning"
+                    className="mt-3"
+                    onClick={() => router.push("/farmer/applications/new")}
+                  />
                 </div>
               </div>
             </div>
-          ) : (
-            <>
-              <div className="hidden md:block overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        รหัสสวน
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        ที่ตั้ง
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        วันที่ยื่นคำขอ
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        กำหนดวันตรวจประเมิน
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        สถานะ
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {applications.map((application) => {
-                      const statusInfo = getStatusInfo(application);
-                      const { rubberFarm, inspection } = application;
+          )}
 
-                      return (
-                        <tr
-                          key={
-                            inspection
-                              ? `${rubberFarm.rubberFarmId}-${inspection.inspectionId}`
-                              : rubberFarm.rubberFarmId
-                          }
-                          className="hover:bg-gray-50"
-                        >
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            RF
-                            {rubberFarm.rubberFarmId
-                              .toString()
-                              .padStart(5, "0")}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {rubberFarm.villageName}, หมู่ {rubberFarm.moo},{" "}
-                            {rubberFarm.district}, {rubberFarm.province}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {formatThaiDate(rubberFarm.createdAt)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {inspection && inspection.inspectionDateAndTime
-                              ? formatThaiDate(inspection.inspectionDateAndTime)
-                              : "-"}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span
-                              className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${statusInfo.color}`}
-                            >
-                              {statusInfo.text}
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="md:hidden divide-y divide-gray-200">
-                {applications.map((application) => {
-                  const statusInfo = getStatusInfo(application);
-                  const { rubberFarm, inspection } = application;
-
-                  return (
-                    <div
-                      key={
-                        inspection
-                          ? `${rubberFarm.rubberFarmId}-${inspection.inspectionId}`
-                          : rubberFarm.rubberFarmId
-                      }
-                      className="p-4 hover:bg-gray-50"
-                    >
-                      <div className="flex items-start justify-between">
-                        <h3 className="font-medium text-gray-900">
-                          RF
-                          {rubberFarm.rubberFarmId.toString().padStart(5, "0")}
-                        </h3>
-                        <span
-                          className={`px-2 py-1 text-xs leading-5 font-semibold rounded-full ${statusInfo.color}`}
-                        >
-                          {statusInfo.text}
-                        </span>
-                      </div>
-
-                      <div className="mt-2 space-y-2">
-                        <div className="flex flex-col">
-                          <span className="text-xs text-gray-500">ที่ตั้ง</span>
-                          <span className="text-sm text-gray-700">
-                            {rubberFarm.villageName}, หมู่ {rubberFarm.moo},{" "}
-                            {rubberFarm.district}, {rubberFarm.province}
-                          </span>
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-xs text-gray-500">
-                            วันที่ยื่นคำขอ
-                          </span>
-                          <span className="text-sm text-gray-700">
-                            {formatThaiDate(rubberFarm.createdAt)}
-                          </span>
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-xs text-gray-500">
-                            กำหนดวันตรวจประเมิน
-                          </span>
-                          <span className="text-sm text-gray-700">
-                            {inspection && inspection.inspectionDateAndTime
-                              ? formatThaiDate(inspection.inspectionDateAndTime)
-                              : "-"}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </>
+          {!error && (applications.length > 0 || loading) && (
+            <PrimaryDataTable
+              value={applications}
+              columns={[
+                {
+                  field: "location",
+                  header: "สถานที่",
+                  body: (rowData: ApplicationItem) => {
+                    const farm = rowData.rubberFarm;
+                    return (
+                      farm.location || `${farm.villageName} หมู่ ${farm.moo}`
+                    );
+                  },
+                  sortable: true,
+                  headerAlign: "center" as const,
+                  bodyAlign: "left" as const,
+                  style: { width: "20%" },
+                },
+                {
+                  field: "province",
+                  header: "จังหวัด",
+                  body: (rowData: ApplicationItem) =>
+                    rowData.rubberFarm.province,
+                  sortable: true,
+                  headerAlign: "center" as const,
+                  bodyAlign: "left" as const,
+                  style: { width: "15%" },
+                },
+                {
+                  field: "district",
+                  header: "อำเภอ",
+                  body: (rowData: ApplicationItem) =>
+                    rowData.rubberFarm.district,
+                  sortable: true,
+                  headerAlign: "center" as const,
+                  bodyAlign: "left" as const,
+                  style: { width: "15%" },
+                },
+                {
+                  field: "subDistrict",
+                  header: "ตำบล",
+                  body: (rowData: ApplicationItem) =>
+                    rowData.rubberFarm.subDistrict,
+                  sortable: true,
+                  headerAlign: "center" as const,
+                  bodyAlign: "left" as const,
+                  style: { width: "15%" },
+                },
+                {
+                  field: "inspectionDateAndTime",
+                  header: "กำหนดตรวจประเมิน",
+                  body: (rowData: ApplicationItem) =>
+                    rowData.inspection?.inspectionDateAndTime
+                      ? formatThaiDate(rowData.inspection.inspectionDateAndTime)
+                      : "-",
+                  sortable: true,
+                  headerAlign: "center" as const,
+                  bodyAlign: "center" as const,
+                  style: { width: "15%" },
+                },
+                {
+                  field: "status",
+                  header: "สถานะ",
+                  body: (rowData: ApplicationItem) => {
+                    const statusInfo = getStatusInfo(rowData);
+                    return (
+                      <span
+                        className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${statusInfo.color}`}
+                      >
+                        {statusInfo.text}
+                      </span>
+                    );
+                  },
+                  sortable: false,
+                  headerAlign: "center" as const,
+                  bodyAlign: "center" as const,
+                  style: { width: "20%" },
+                },
+              ]}
+              loading={loading}
+              paginator
+              rows={farmsPagination.rows}
+              totalRecords={farmsPagination.totalRecords}
+              first={farmsPagination.first}
+              lazy
+              onPage={onPageChange}
+              sortMode="multiple"
+              multiSortMeta={multiSortMeta}
+              onSort={onSortChange}
+              emptyMessage="ไม่พบข้อมูลสวนยางพารา"
+            />
           )}
         </div>
       </div>

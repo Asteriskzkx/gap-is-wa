@@ -1,9 +1,15 @@
 "use client";
 
 import React, { useState } from "react";
-import { DataTable, DataTablePageEvent } from "primereact/datatable";
+import {
+  DataTable,
+  DataTablePageEvent,
+  DataTableSortEvent,
+} from "primereact/datatable";
 import { Column } from "primereact/column";
 import { PaginatorTemplate } from "primereact/paginator";
+
+type TextAlign = "left" | "center" | "right";
 
 interface PrimaryDataTableColumn {
   readonly field: string;
@@ -13,6 +19,8 @@ interface PrimaryDataTableColumn {
   readonly style?: React.CSSProperties;
   readonly headerStyle?: React.CSSProperties;
   readonly className?: string;
+  readonly headerAlign?: TextAlign;
+  readonly bodyAlign?: TextAlign;
 }
 
 interface PrimaryDataTableProps {
@@ -32,6 +40,15 @@ interface PrimaryDataTableProps {
   readonly selection?: any;
   readonly onSelectionChange?: (e: any) => void;
   readonly dataKey?: string;
+  readonly sortMode?: "single" | "multiple";
+  readonly sortField?: string;
+  readonly sortOrder?: 1 | -1 | 0 | null;
+  readonly multiSortMeta?: Array<{
+    field: string;
+    order: 1 | -1 | 0 | null;
+  }>;
+  readonly onSort?: (event: DataTableSortEvent) => void;
+  readonly first?: number;
 }
 
 const CurrentPageReport = (options: any) => {
@@ -44,20 +61,22 @@ const CurrentPageReport = (options: any) => {
 
 /**
  * PrimaryDataTable - ตารางข้อมูลหลักที่ใช้ในระบบ GAP
- * รองรับ pagination และ lazy loading
+ * รองรับ pagination, lazy loading, sorting และ multi-sorting
  *
  * @example
  * <PrimaryDataTable
  *   value={data}
  *   columns={[
- *     { field: 'id', header: 'รหัส' },
- *     { field: 'name', header: 'ชื่อ', body: (rowData) => <span>{rowData.name}</span> }
+ *     { field: 'id', header: 'รหัส', sortable: true },
+ *     { field: 'name', header: 'ชื่อ', body: (rowData) => <span>{rowData.name}</span>, sortable: true }
  *   ]}
  *   paginator
  *   rows={10}
  *   totalRecords={100}
  *   lazy
  *   onPage={handlePageChange}
+ *   sortMode="multiple"
+ *   onSort={handleSort}
  * />
  */
 export default function PrimaryDataTable({
@@ -77,8 +96,19 @@ export default function PrimaryDataTable({
   selection,
   onSelectionChange,
   dataKey = "id",
+  sortMode = "single",
+  sortField,
+  sortOrder,
+  multiSortMeta,
+  onSort,
+  first: propFirst = 0,
 }: PrimaryDataTableProps) {
-  const [first, setFirst] = useState(0);
+  const [first, setFirst] = useState(propFirst);
+
+  // Update first when propFirst changes
+  React.useEffect(() => {
+    setFirst(propFirst);
+  }, [propFirst]);
 
   const handlePageChange = (event: DataTablePageEvent) => {
     setFirst(event.first);
@@ -117,6 +147,12 @@ export default function PrimaryDataTable({
         selection={selection}
         onSelectionChange={onSelectionChange}
         dataKey={dataKey}
+        sortMode={sortMode}
+        sortField={sortField}
+        sortOrder={sortOrder}
+        multiSortMeta={multiSortMeta}
+        onSort={onSort}
+        removableSort
         className="w-full"
         pt={{
           table: { className: "w-full" },
@@ -126,27 +162,58 @@ export default function PrimaryDataTable({
           bodyRow: { className: "border-b border-gray-200" },
         }}
       >
-        {columns.map((col) => (
-          <Column
-            key={col.field}
-            field={col.field}
-            header={col.header}
-            body={col.body}
-            sortable={col.sortable}
-            style={col.style}
-            headerStyle={col.headerStyle}
-            className={col.className}
-            pt={{
-              headerCell: {
-                className:
-                  "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider",
-              },
-              bodyCell: {
-                className: "px-6 py-4 text-sm text-gray-900",
-              },
-            }}
-          />
-        ))}
+        {columns.map((col) => {
+          // สร้าง className สำหรับ text alignment
+          const getBodyAlignmentClass = (align?: TextAlign) => {
+            switch (align) {
+              case "center":
+                return "text-center";
+              case "right":
+                return "text-right";
+              case "left":
+              default:
+                return "text-left";
+            }
+          };
+
+          const getHeaderAlignmentClass = (align?: TextAlign) => {
+            switch (align) {
+              case "center":
+                return "header-align-center";
+              case "right":
+                return "header-align-right";
+              case "left":
+              default:
+                return "header-align-left";
+            }
+          };
+
+          const headerAlignClass = getHeaderAlignmentClass(
+            col.headerAlign || "left"
+          );
+          const bodyAlignClass = getBodyAlignmentClass(col.bodyAlign || "left");
+
+          return (
+            <Column
+              key={col.field}
+              field={col.field}
+              header={col.header}
+              body={col.body}
+              sortable={col.sortable}
+              style={col.style}
+              headerStyle={col.headerStyle}
+              className={col.className}
+              pt={{
+                headerCell: {
+                  className: `px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider ${headerAlignClass}`,
+                },
+                bodyCell: {
+                  className: `px-6 py-4 text-sm text-gray-900 ${bodyAlignClass}`,
+                },
+              }}
+            />
+          );
+        })}
       </DataTable>
     </div>
   );

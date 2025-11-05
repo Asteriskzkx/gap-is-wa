@@ -1,10 +1,20 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import thaiProvinceData from "@/data/thai-provinces.json";
+
+// Import reusable components
+import PrimaryInputText from "@/components/ui/PrimaryInputText";
+import PrimaryPassword from "@/components/ui/PrimaryPassword";
+import PrimaryButton from "@/components/ui/PrimaryButton";
+import PrimaryDropdown from "@/components/ui/PrimaryDropdown";
+import PrimaryInputMask from "@/components/ui/PrimaryInputMask";
+import PrimaryCalendar from "@/components/ui/PrimaryCalendar";
+import PrimaryAutoComplete from "@/components/ui/PrimaryAutoComplete";
+import { RadioButton } from "primereact/radiobutton";
 
 // ประเภทข้อมูลสำหรับโครงสร้าง API จังหวัด อำเภอ ตำบล
 interface Tambon {
@@ -33,7 +43,6 @@ export default function FarmerRegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [step, setStep] = useState(1);
-  const [showPassword, setShowPassword] = useState(false);
 
   // ข้อมูลจังหวัด อำเภอ ตำบล
   const [provinces, setProvinces] = useState<Province[]>([]);
@@ -53,7 +62,7 @@ export default function FarmerRegisterPage() {
     firstName: "",
     lastName: "",
     identificationNumber: "",
-    birthDate: "",
+    birthDate: null as Date | null,
     gender: "ชาย",
 
     // ข้อมูลที่อยู่
@@ -75,41 +84,100 @@ export default function FarmerRegisterPage() {
     mobilePhoneNumber: "",
   });
 
-  // ใน useEffect สำหรับการโหลดข้อมูล
+  // Form validation errors
+  const [errors, setErrors] = useState({
+    email: "",
+    password: "",
+    confirmPassword: "",
+    namePrefix: "",
+    firstName: "",
+    lastName: "",
+    identificationNumber: "",
+    birthDate: "",
+    houseNo: "",
+    moo: "",
+    provinceId: "",
+    amphureId: "",
+    tambonId: "",
+    mobilePhoneNumber: "",
+  });
+
+  // Memoized options for dropdowns
+  const namePrefixOptions = useMemo(
+    () => [
+      { label: "นาย", value: "นาย" },
+      { label: "นาง", value: "นาง" },
+      { label: "นางสาว", value: "นางสาว" },
+    ],
+    []
+  );
+
+  const provinceOptions = useMemo(
+    () =>
+      provinces.map((province) => ({
+        label: province.name_th,
+        value: province.id,
+      })),
+    [provinces]
+  );
+
+  const amphureOptions = useMemo(
+    () =>
+      amphures.map((amphure) => ({
+        label: amphure.name_th,
+        value: amphure.id,
+      })),
+    [amphures]
+  );
+
+  const tambonOptions = useMemo(
+    () =>
+      tambons.map((tambon) => ({
+        label: tambon.name_th,
+        value: tambon.id,
+      })),
+    [tambons]
+  );
+
+  // Load provinces data
   useEffect(() => {
-    try {
-      setIsLoadingProvinces(true);
+    const loadData = async () => {
+      try {
+        setIsLoadingProvinces(true);
 
-      // แปลงโครงสร้างข้อมูลให้ตรงกับ interface ที่กำหนดไว้
-      const formattedProvinces = thaiProvinceData.map((province) => ({
-        id: province.id,
-        name_th: province.name_th,
-        name_en: province.name_en,
-        // แปลง amphure เป็น amphures
-        amphures: province.amphure.map((amp) => ({
-          id: amp.id,
-          name_th: amp.name_th,
-          name_en: amp.name_en,
-          // แปลง tambon เป็น tambons
-          tambons: amp.tambon.map((tam) => ({
-            id: tam.id,
-            name_th: tam.name_th,
-            name_en: tam.name_en,
-            zip_code: tam.zip_code,
+        // Simulate async loading (even though data is imported)
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
+        const formattedProvinces = thaiProvinceData.map((province) => ({
+          id: province.id,
+          name_th: province.name_th,
+          name_en: province.name_en,
+          amphures: province.amphure.map((amp) => ({
+            id: amp.id,
+            name_th: amp.name_th,
+            name_en: amp.name_en,
+            tambons: amp.tambon.map((tam) => ({
+              id: tam.id,
+              name_th: tam.name_th,
+              name_en: tam.name_en,
+              zip_code: tam.zip_code,
+            })),
           })),
-        })),
-      }));
+        }));
 
-      setProvinces(formattedProvinces);
-    } catch (err) {
-      console.error("Error loading provinces:", err);
-      setError("ไม่สามารถโหลดข้อมูลจังหวัดได้");
-    } finally {
-      setIsLoadingProvinces(false);
-    }
+        setProvinces(formattedProvinces);
+      } catch (err) {
+        console.error("Error loading provinces:", err);
+        setError("ไม่สามารถโหลดข้อมูลจังหวัดได้");
+      } finally {
+        setIsLoadingProvinces(false);
+      }
+    };
+
+    loadData();
   }, []);
 
-  // อัปเดตอำเภอเมื่อเลือกจังหวัด
+  // Update amphures when province changes
   useEffect(() => {
     if (formData.provinceId > 0) {
       const selectedProvince = provinces.find(
@@ -133,7 +201,7 @@ export default function FarmerRegisterPage() {
     }
   }, [formData.provinceId, provinces]);
 
-  // อัปเดตตำบลเมื่อเลือกอำเภอ
+  // Update tambons when amphure changes
   useEffect(() => {
     if (formData.amphureId > 0) {
       const selectedAmphure = amphures.find(
@@ -154,7 +222,7 @@ export default function FarmerRegisterPage() {
     }
   }, [formData.amphureId, amphures]);
 
-  // อัปเดตรหัสไปรษณีย์เมื่อเลือกตำบล
+  // Update zipcode when tambon changes
   useEffect(() => {
     if (formData.tambonId > 0) {
       const selectedTambon = tambons.find(
@@ -170,91 +238,57 @@ export default function FarmerRegisterPage() {
     }
   }, [formData.tambonId, tambons]);
 
-  const handleBirthDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { value } = e.target;
-
-    // ถ้าค่าว่างให้ผ่าน
-    if (!value) {
-      setFormData((prev) => ({ ...prev, birthDate: value }));
-      return;
-    }
-
-    // ตรวจสอบรูปแบบ YYYY-MM-DD
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!dateRegex.test(value)) {
-      return; // ไม่อัปเดตถ้ารูปแบบไม่ถูกต้อง
-    }
-
-    const inputDate = new Date(value);
-    const today = new Date();
-    const minDate = new Date("1900-01-01");
-    const maxDate = new Date();
-
-    // ตั้งเวลาเป็น 00:00:00 เพื่อเปรียบเทียบเฉพาะวันที่
-    maxDate.setHours(23, 59, 59, 999);
-
-    // ตรวจสอบว่าเป็นวันที่ที่ถูกต้อง
-    if (isNaN(inputDate.getTime())) {
-      return; // ไม่อัปเดตถ้าวันที่ไม่ถูกต้อง
-    }
-
-    // ตรวจสอบปี (1900-ปีปัจจุบัน)
-    const year = inputDate.getFullYear();
-    if (year < 1900 || year > today.getFullYear()) {
-      return; // ไม่อัปเดตถ้าปีไม่อยู่ในช่วงที่กำหนด
-    }
-
-    // ตรวจสอบว่าไม่เกินวันปัจจุบัน
-    if (inputDate > maxDate) {
-      return; // ไม่อัปเดตถ้าเป็นวันในอนาคต
-    }
-
-    // ตรวจสอบว่าไม่น้อยกว่าวันที่ขั้นต่ำ
-    if (inputDate < minDate) {
-      return; // ไม่อัปเดตถ้าน้อยกว่า 1900
-    }
-
-    // ถ้าผ่านการตรวจสอบทั้งหมดให้อัปเดต
-    setFormData((prev) => ({ ...prev, birthDate: value }));
+  // Validation functions
+  const validateEmail = (email: string) => {
+    if (!email) return "กรุณากรอกอีเมล";
+    if (!email.includes("@")) return "รูปแบบอีเมลไม่ถูกต้อง";
+    return "";
   };
 
-  const updateFormData = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  const validatePassword = (password: string) => {
+    if (!password) return "กรุณากรอกรหัสผ่าน";
+    if (password.length < 8) return "รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร";
+    return "";
+  };
+
+  const validateConfirmPassword = (
+    password: string,
+    confirmPassword: string
   ) => {
-    const { name, value } = e.target;
+    if (!confirmPassword) return "กรุณายืนยันรหัสผ่าน";
+    if (password !== confirmPassword) return "รหัสผ่านไม่ตรงกัน";
+    return "";
+  };
 
-    // ตรวจสอบเฉพาะตัวอักษร
-    if (name === "firstName") {
-      const regex = /^[a-zA-Zก-ฮะ-์\s]*$/; // รองรับตัวอักษรภาษาไทย, ภาษาอังกฤษ, สระ, วรรณยุกต์ และช่องว่าง
-      if (!regex.test(value)) {
-        return; // ถ้าไม่ตรงกับ RegEx จะไม่อัปเดตค่า
-      }
+  const validateIdentificationNumber = (idNumber: string) => {
+    if (!idNumber) return "กรุณากรอกเลขบัตรประชาชน";
+
+    // Remove dashes for validation
+    const cleanedNumber = idNumber.replaceAll("-", "");
+
+    if (cleanedNumber.length !== 13 || !/^\d+$/.test(cleanedNumber)) {
+      return "เลขบัตรประชาชนไม่ถูกต้อง ต้องเป็นตัวเลข 13 หลัก";
     }
-
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    return "";
   };
 
   const validateStep1 = () => {
-    if (!formData.email || !formData.password || !formData.confirmPassword) {
-      setError("กรุณากรอกข้อมูลให้ครบทุกช่อง");
-      return false;
-    }
+    const emailError = validateEmail(formData.email);
+    const passwordError = validatePassword(formData.password);
+    const confirmPasswordError = validateConfirmPassword(
+      formData.password,
+      formData.confirmPassword
+    );
 
-    if (!formData.email.includes("@")) {
-      setError("กรุณากรอกอีเมลให้ถูกต้อง");
-      return false;
-    }
+    setErrors((prev) => ({
+      ...prev,
+      email: emailError,
+      password: passwordError,
+      confirmPassword: confirmPasswordError,
+    }));
 
-    if (formData.password.length < 8) {
-      setError("รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร");
-      return false;
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      setError("รหัสผ่านและยืนยันรหัสผ่านไม่ตรงกัน");
+    if (emailError || passwordError || confirmPasswordError) {
+      setError("กรุณาแก้ไขข้อมูลที่ไม่ถูกต้อง");
       return false;
     }
 
@@ -263,23 +297,21 @@ export default function FarmerRegisterPage() {
   };
 
   const validateStep2 = () => {
-    if (
-      !formData.namePrefix ||
-      !formData.firstName ||
-      !formData.lastName ||
-      !formData.identificationNumber ||
-      !formData.birthDate
-    ) {
-      setError("กรุณากรอกข้อมูลให้ครบทุกช่อง");
-      return false;
-    }
+    const newErrors = {
+      namePrefix: !formData.namePrefix ? "กรุณาเลือกคำนำหน้า" : "",
+      firstName: !formData.firstName ? "กรุณากรอกชื่อ" : "",
+      lastName: !formData.lastName ? "กรุณากรอกนามสกุล" : "",
+      identificationNumber: validateIdentificationNumber(
+        formData.identificationNumber
+      ),
+      birthDate: !formData.birthDate ? "กรุณาเลือกวันเกิด" : "",
+    };
 
-    // ตรวจสอบเลขบัตรประชาชน (ตัวอย่างเท่านั้น)
-    if (
-      formData.identificationNumber.length !== 13 ||
-      !/^\d+$/.test(formData.identificationNumber)
-    ) {
-      setError("เลขบัตรประชาชนไม่ถูกต้อง ต้องเป็นตัวเลข 13 หลัก");
+    setErrors((prev) => ({ ...prev, ...newErrors }));
+
+    const hasError = Object.values(newErrors).some((err) => err !== "");
+    if (hasError) {
+      setError("กรุณาแก้ไขข้อมูลที่ไม่ถูกต้อง");
       return false;
     }
 
@@ -288,20 +320,19 @@ export default function FarmerRegisterPage() {
   };
 
   const validateStep3 = () => {
-    if (
-      !formData.houseNo ||
-      !formData.moo ||
-      !formData.subDistrict ||
-      !formData.district ||
-      !formData.provinceName ||
-      !formData.zipCode
-    ) {
-      setError("กรุณากรอกข้อมูลให้ครบทุกช่อง");
-      return false;
-    }
+    const newErrors = {
+      houseNo: !formData.houseNo ? "กรุณากรอกบ้านเลขที่" : "",
+      moo: !formData.moo ? "กรุณากรอกหมู่ที่" : "",
+      provinceId: !formData.provinceId ? "กรุณาเลือกจังหวัด" : "",
+      amphureId: !formData.amphureId ? "กรุณาเลือกอำเภอ/เขต" : "",
+      tambonId: !formData.tambonId ? "กรุณาเลือกตำบล/แขวง" : "",
+    };
 
-    if (!/^\d{5}$/.test(formData.zipCode)) {
-      setError("รหัสไปรษณีย์ไม่ถูกต้อง ต้องเป็นตัวเลข 5 หลัก");
+    setErrors((prev) => ({ ...prev, ...newErrors }));
+
+    const hasError = Object.values(newErrors).some((err) => err !== "");
+    if (hasError) {
+      setError("กรุณาแก้ไขข้อมูลที่ไม่ถูกต้อง");
       return false;
     }
 
@@ -309,6 +340,30 @@ export default function FarmerRegisterPage() {
     return true;
   };
 
+  const validateStep4 = () => {
+    if (!formData.mobilePhoneNumber) {
+      const mobileError = "กรุณากรอกเบอร์โทรศัพท์มือถือ";
+      setErrors((prev) => ({ ...prev, mobilePhoneNumber: mobileError }));
+      setError(mobileError);
+      return false;
+    }
+
+    // Remove dashes for validation
+    const cleanedMobile = formData.mobilePhoneNumber.replaceAll("-", "");
+
+    if (cleanedMobile.length !== 10) {
+      const mobileError = "เบอร์โทรศัพท์มือถือต้องเป็นตัวเลข 10 หลัก";
+      setErrors((prev) => ({ ...prev, mobilePhoneNumber: mobileError }));
+      setError(mobileError);
+      return false;
+    }
+
+    setErrors((prev) => ({ ...prev, mobilePhoneNumber: "" }));
+    setError("");
+    return true;
+  };
+
+  // Navigation between steps
   const nextStep = () => {
     if (step === 1 && !validateStep1()) return;
     if (step === 2 && !validateStep2()) return;
@@ -323,19 +378,21 @@ export default function FarmerRegisterPage() {
     setError("");
   };
 
+  // Form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // ตรวจสอบข้อมูลขั้นสุดท้าย
-    if (!formData.mobilePhoneNumber) {
-      setError("กรุณากรอกเบอร์โทรศัพท์มือถือ");
-      return;
-    }
+    if (!validateStep4()) return;
 
     setIsLoading(true);
     setError("");
 
     try {
+      // Convert Date to YYYY-MM-DD format
+      const birthDateString = formData.birthDate
+        ? formData.birthDate.toISOString().split("T")[0]
+        : "";
+
       const response = await fetch("/api/v1/farmers/register", {
         method: "POST",
         headers: {
@@ -347,20 +404,23 @@ export default function FarmerRegisterPage() {
           namePrefix: formData.namePrefix,
           firstName: formData.firstName,
           lastName: formData.lastName,
-          identificationNumber: formData.identificationNumber,
-          birthDate: formData.birthDate,
+          identificationNumber: formData.identificationNumber.replaceAll(
+            "-",
+            ""
+          ),
+          birthDate: birthDateString,
           gender: formData.gender,
           houseNo: formData.houseNo,
           villageName: formData.villageName,
-          moo: parseInt(formData.moo, 10) || 0,
+          moo: Number.parseInt(formData.moo, 10) || 0,
           road: formData.road,
           alley: formData.alley,
           subDistrict: formData.subDistrict,
           district: formData.district,
           provinceName: formData.provinceName,
           zipCode: formData.zipCode,
-          phoneNumber: formData.phoneNumber,
-          mobilePhoneNumber: formData.mobilePhoneNumber,
+          phoneNumber: formData.phoneNumber.replaceAll("-", ""),
+          mobilePhoneNumber: formData.mobilePhoneNumber.replaceAll("-", ""),
         }),
       });
 
@@ -370,7 +430,6 @@ export default function FarmerRegisterPage() {
         throw new Error(data.message || "การลงทะเบียนล้มเหลว");
       }
 
-      // ลงทะเบียนสำเร็จ
       router.push("/register/success");
     } catch (err: any) {
       setError(err.message || "เกิดข้อผิดพลาดในการลงทะเบียน");
@@ -382,7 +441,7 @@ export default function FarmerRegisterPage() {
   return (
     <div className="min-h-screen w-screen overflow-x-hidden bg-gradient-to-b from-green-50 to-white py-10 px-4 sm:px-6 lg:px-8">
       {" "}
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <div className="text-center mb-8">
           <Link href="/" className="inline-block">
             <Image
@@ -556,16 +615,19 @@ export default function FarmerRegisterPage() {
                   >
                     อีเมล <span className="text-red-500">*</span>
                   </label>
-                  <input
+                  <PrimaryInputText
                     id="email"
                     name="email"
                     type="email"
-                    autoComplete="email"
-                    required
                     value={formData.email}
-                    onChange={updateFormData}
-                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
+                    onChange={(value) =>
+                      setFormData((prev) => ({ ...prev, email: value }))
+                    }
                     placeholder="email@example.com"
+                    required
+                    autoComplete="email"
+                    invalid={!!errors.email}
+                    errorMessage={errors.email}
                   />
                 </div>
 
@@ -576,61 +638,21 @@ export default function FarmerRegisterPage() {
                   >
                     รหัสผ่าน <span className="text-red-500">*</span>
                   </label>
-                  <div className="relative">
-                    <input
-                      id="password"
-                      name="password"
-                      type={showPassword ? "text" : "password"}
-                      autoComplete="new-password"
-                      required
-                      value={formData.password}
-                      onChange={updateFormData}
-                      className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
-                      placeholder="รหัสผ่านอย่างน้อย 8 ตัวอักษร"
-                    />
-                    <button
-                      type="button"
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          strokeWidth={1.5}
-                          stroke="currentColor"
-                          className="w-5 h-5"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88"
-                          />
-                        </svg>
-                      ) : (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          strokeWidth={1.5}
-                          stroke="currentColor"
-                          className="w-5 h-5"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"
-                          />
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
-                          />
-                        </svg>
-                      )}
-                    </button>
-                  </div>
+                  <PrimaryPassword
+                    id="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={(value) =>
+                      setFormData((prev) => ({ ...prev, password: value }))
+                    }
+                    placeholder="รหัสผ่านอย่างน้อย 8 ตัวอักษร"
+                    required
+                    autoComplete="new-password"
+                    feedback={false}
+                    toggleMask
+                    invalid={!!errors.password}
+                    errorMessage={errors.password}
+                  />
                   <p className="mt-1 text-xs text-gray-500">
                     รหัสผ่านควรมีความยาวอย่างน้อย 8 ตัวอักษร
                   </p>
@@ -643,19 +665,24 @@ export default function FarmerRegisterPage() {
                   >
                     ยืนยันรหัสผ่าน <span className="text-red-500">*</span>
                   </label>
-                  <div className="relative">
-                    <input
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      type={showPassword ? "text" : "password"}
-                      autoComplete="new-password"
-                      required
-                      value={formData.confirmPassword}
-                      onChange={updateFormData}
-                      className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
-                      placeholder="ยืนยันรหัสผ่านอีกครั้ง"
-                    />
-                  </div>
+                  <PrimaryPassword
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={(value) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        confirmPassword: value,
+                      }))
+                    }
+                    placeholder="ยืนยันรหัสผ่านอีกครั้ง"
+                    required
+                    autoComplete="new-password"
+                    feedback={false}
+                    toggleMask
+                    invalid={!!errors.confirmPassword}
+                    errorMessage={errors.confirmPassword}
+                  />
                 </div>
               </div>
             )}
@@ -675,19 +702,19 @@ export default function FarmerRegisterPage() {
                     >
                       คำนำหน้า <span className="text-red-500">*</span>
                     </label>
-                    <select
+                    <PrimaryDropdown
                       id="namePrefix"
                       name="namePrefix"
-                      required
                       value={formData.namePrefix}
-                      onChange={updateFormData}
-                      className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
-                    >
-                      <option value="">-- เลือกคำนำหน้า --</option>
-                      <option value="นาย">นาย</option>
-                      <option value="นาง">นาง</option>
-                      <option value="นางสาว">นางสาว</option>
-                    </select>
+                      options={namePrefixOptions}
+                      onChange={(value) =>
+                        setFormData((prev) => ({ ...prev, namePrefix: value }))
+                      }
+                      placeholder="เลือกคำนำหน้า"
+                      required
+                      invalid={!!errors.namePrefix}
+                      errorMessage={errors.namePrefix}
+                    />
                   </div>
 
                   <div className="sm:col-span-2">
@@ -697,15 +724,24 @@ export default function FarmerRegisterPage() {
                     >
                       ชื่อ <span className="text-red-500">*</span>
                     </label>
-                    <input
+                    <PrimaryInputText
                       id="firstName"
                       name="firstName"
-                      type="text"
+                      value={formData.firstName}
+                      onChange={(value) => {
+                        const regex = /^[a-zA-Zก-ฮะ-์\s]*$/;
+                        if (regex.test(value)) {
+                          setFormData((prev) => ({
+                            ...prev,
+                            firstName: value,
+                          }));
+                        }
+                      }}
+                      placeholder="ชื่อ"
                       maxLength={100}
                       required
-                      value={formData.firstName}
-                      onChange={updateFormData}
-                      className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
+                      invalid={!!errors.firstName}
+                      errorMessage={errors.firstName}
                     />
                   </div>
                 </div>
@@ -717,15 +753,21 @@ export default function FarmerRegisterPage() {
                   >
                     นามสกุล <span className="text-red-500">*</span>
                   </label>
-                  <input
+                  <PrimaryInputText
                     id="lastName"
                     name="lastName"
-                    type="text"
+                    value={formData.lastName}
+                    onChange={(value) => {
+                      const regex = /^[a-zA-Zก-ฮะ-์\s]*$/;
+                      if (regex.test(value)) {
+                        setFormData((prev) => ({ ...prev, lastName: value }));
+                      }
+                    }}
+                    placeholder="นามสกุล"
                     maxLength={100}
                     required
-                    value={formData.lastName}
-                    onChange={updateFormData}
-                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
+                    invalid={!!errors.lastName}
+                    errorMessage={errors.lastName}
                   />
                 </div>
 
@@ -737,16 +779,21 @@ export default function FarmerRegisterPage() {
                     เลขบัตรประจำตัวประชาชน{" "}
                     <span className="text-red-500">*</span>
                   </label>
-                  <input
+                  <PrimaryInputMask
                     id="identificationNumber"
                     name="identificationNumber"
-                    type="text"
-                    required
-                    maxLength={13}
                     value={formData.identificationNumber}
-                    onChange={updateFormData}
-                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
-                    placeholder="เลขบัตรประชาชน 13 หลัก"
+                    onChange={(value) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        identificationNumber: value,
+                      }))
+                    }
+                    mask="9-9999-99999-99-9"
+                    placeholder="X-XXXX-XXXXX-XX-X"
+                    required
+                    invalid={!!errors.identificationNumber}
+                    errorMessage={errors.identificationNumber}
                   />
                 </div>
 
@@ -757,57 +804,65 @@ export default function FarmerRegisterPage() {
                   >
                     วันเดือนปีเกิด <span className="text-red-500">*</span>
                   </label>
-                  <input
+                  <PrimaryCalendar
                     id="birthDate"
                     name="birthDate"
-                    type="date"
-                    required
-                    min="1900-01-01"
-                    max={new Date().toISOString().split("T")[0]}
                     value={formData.birthDate}
-                    onChange={handleBirthDateChange}
-                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
+                    onChange={(value) =>
+                      setFormData((prev) => ({ ...prev, birthDate: value }))
+                    }
+                    placeholder="เลือกวันเกิด"
+                    dateFormat="dd/mm/yy"
+                    showIcon
+                    minDate={new Date("1900-01-01")}
+                    maxDate={new Date()}
+                    required
+                    invalid={!!errors.birthDate}
+                    errorMessage={errors.birthDate}
                   />
                 </div>
 
                 <div>
-                  <label
-                    htmlFor="gender"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
                     เพศ <span className="text-red-500">*</span>
                   </label>
-                  <div className="flex space-x-6">
+                  <div className="flex gap-6">
                     <div className="flex items-center">
-                      <input
-                        id="gender-male"
+                      <RadioButton
+                        inputId="gender-male"
                         name="gender"
-                        type="radio"
                         value="ชาย"
                         checked={formData.gender === "ชาย"}
-                        onChange={updateFormData}
-                        className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            gender: e.value,
+                          }))
+                        }
                       />
                       <label
                         htmlFor="gender-male"
-                        className="ml-2 block text-sm text-gray-700"
+                        className="ml-2 text-sm text-gray-700 cursor-pointer"
                       >
                         ชาย
                       </label>
                     </div>
                     <div className="flex items-center">
-                      <input
-                        id="gender-female"
+                      <RadioButton
+                        inputId="gender-female"
                         name="gender"
-                        type="radio"
                         value="หญิง"
                         checked={formData.gender === "หญิง"}
-                        onChange={updateFormData}
-                        className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            gender: e.value,
+                          }))
+                        }
                       />
                       <label
                         htmlFor="gender-female"
-                        className="ml-2 block text-sm text-gray-700"
+                        className="ml-2 text-sm text-gray-700 cursor-pointer"
                       >
                         หญิง
                       </label>
@@ -832,15 +887,18 @@ export default function FarmerRegisterPage() {
                     >
                       บ้านเลขที่ <span className="text-red-500">*</span>
                     </label>
-                    <input
+                    <PrimaryInputText
                       id="houseNo"
                       name="houseNo"
-                      type="text"
+                      value={formData.houseNo}
+                      onChange={(value) =>
+                        setFormData((prev) => ({ ...prev, houseNo: value }))
+                      }
+                      placeholder="บ้านเลขที่"
                       maxLength={10}
                       required
-                      value={formData.houseNo}
-                      onChange={updateFormData}
-                      className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
+                      invalid={!!errors.houseNo}
+                      errorMessage={errors.houseNo}
                     />
                   </div>
 
@@ -849,17 +907,17 @@ export default function FarmerRegisterPage() {
                       htmlFor="villageName"
                       className="block text-sm font-medium text-gray-700 mb-1"
                     >
-                      หมู่บ้าน <span className="text-red-500">*</span>
+                      หมู่บ้าน
                     </label>
-                    <input
+                    <PrimaryInputText
                       id="villageName"
                       name="villageName"
-                      type="text"
-                      maxLength={255}
-                      required
                       value={formData.villageName}
-                      onChange={updateFormData}
-                      className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
+                      onChange={(value) =>
+                        setFormData((prev) => ({ ...prev, villageName: value }))
+                      }
+                      placeholder="ชื่อหมู่บ้าน"
+                      maxLength={255}
                     />
                   </div>
                 </div>
@@ -872,24 +930,26 @@ export default function FarmerRegisterPage() {
                     >
                       หมู่ที่ <span className="text-red-500">*</span>
                     </label>
-                    <input
+                    <PrimaryInputText
                       id="moo"
                       name="moo"
                       type="number"
-                      required
-                      min={0}
-                      max={1000}
                       value={formData.moo}
-                      onChange={(e) => {
-                        const value = parseInt(e.target.value, 10);
+                      onChange={(value) => {
+                        const numValue = Number.parseInt(value, 10);
                         if (
-                          e.target.value === "" ||
-                          (value >= 0 && value <= 1000)
+                          value === "" ||
+                          (!Number.isNaN(numValue) &&
+                            numValue >= 0 &&
+                            numValue <= 1000)
                         ) {
-                          updateFormData(e); // อัปเดตค่าเฉพาะเมื่ออยู่ในช่วงที่กำหนดหรือค่าว่าง
+                          setFormData((prev) => ({ ...prev, moo: value }));
                         }
                       }}
-                      className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
+                      placeholder="หมู่ที่"
+                      required
+                      invalid={!!errors.moo}
+                      errorMessage={errors.moo}
                     />
                   </div>
 
@@ -898,17 +958,17 @@ export default function FarmerRegisterPage() {
                       htmlFor="road"
                       className="block text-sm font-medium text-gray-700 mb-1"
                     >
-                      ถนน <span className="text-red-500">*</span>
+                      ถนน
                     </label>
-                    <input
+                    <PrimaryInputText
                       id="road"
                       name="road"
-                      type="text"
-                      maxLength={100}
-                      required
                       value={formData.road}
-                      onChange={updateFormData}
-                      className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
+                      onChange={(value) =>
+                        setFormData((prev) => ({ ...prev, road: value }))
+                      }
+                      placeholder="ชื่อถนน"
+                      maxLength={100}
                     />
                   </div>
                 </div>
@@ -918,22 +978,21 @@ export default function FarmerRegisterPage() {
                     htmlFor="alley"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    ซอย <span className="text-red-500">*</span>
+                    ซอย
                   </label>
-                  <input
+                  <PrimaryInputText
                     id="alley"
                     name="alley"
-                    type="text"
-                    maxLength={100}
-                    required
                     value={formData.alley}
-                    onChange={updateFormData}
-                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
+                    onChange={(value) =>
+                      setFormData((prev) => ({ ...prev, alley: value }))
+                    }
+                    placeholder="ชื่อซอย"
+                    maxLength={100}
                   />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {/* Dropdown จังหวัด */}
                   <div>
                     <label
                       htmlFor="provinceId"
@@ -941,29 +1000,33 @@ export default function FarmerRegisterPage() {
                     >
                       จังหวัด <span className="text-red-500">*</span>
                     </label>
-                    <select
-                      id="provinceId"
-                      name="provinceId"
-                      required
-                      value={formData.provinceId}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          provinceId: parseInt(e.target.value, 10),
-                        }))
-                      }
-                      className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
-                    >
-                      <option value="">-- เลือกจังหวัด --</option>
-                      {provinces.map((province) => (
-                        <option key={province.id} value={province.id}>
-                          {province.name_th}
-                        </option>
-                      ))}
-                    </select>
+                    {isLoadingProvinces ? (
+                      <div className="flex items-center justify-center h-12 border border-gray-300 rounded-md bg-gray-50">
+                        <i className="pi pi-spin pi-spinner text-green-600 mr-2"></i>
+                        <span className="text-sm text-gray-600">
+                          กำลังโหลดข้อมูล...
+                        </span>
+                      </div>
+                    ) : (
+                      <PrimaryAutoComplete
+                        id="provinceId"
+                        name="provinceId"
+                        value={formData.provinceId}
+                        options={provinceOptions}
+                        onChange={(value) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            provinceId: value,
+                          }))
+                        }
+                        placeholder="เลือกหรือพิมพ์ค้นหาจังหวัด"
+                        required
+                        invalid={!!errors.provinceId}
+                        errorMessage={errors.provinceId}
+                      />
+                    )}
                   </div>
 
-                  {/* Dropdown อำเภอ/เขต */}
                   <div>
                     <label
                       htmlFor="amphureId"
@@ -971,32 +1034,24 @@ export default function FarmerRegisterPage() {
                     >
                       อำเภอ/เขต <span className="text-red-500">*</span>
                     </label>
-                    <select
+                    <PrimaryAutoComplete
                       id="amphureId"
                       name="amphureId"
-                      required
                       value={formData.amphureId}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          amphureId: parseInt(e.target.value, 10),
-                        }))
+                      options={amphureOptions}
+                      onChange={(value) =>
+                        setFormData((prev) => ({ ...prev, amphureId: value }))
                       }
-                      className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
-                      disabled={amphures.length === 0}
-                    >
-                      <option value="">-- เลือกอำเภอ/เขต --</option>
-                      {amphures.map((amphure) => (
-                        <option key={amphure.id} value={amphure.id}>
-                          {amphure.name_th}
-                        </option>
-                      ))}
-                    </select>
+                      placeholder="เลือกหรือพิมพ์ค้นหาอำเภอ/เขต"
+                      disabled={amphures.length === 0 || isLoadingProvinces}
+                      required
+                      invalid={!!errors.amphureId}
+                      errorMessage={errors.amphureId}
+                    />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {/* Dropdown ตำบล/แขวง */}
                   <div>
                     <label
                       htmlFor="tambonId"
@@ -1004,30 +1059,22 @@ export default function FarmerRegisterPage() {
                     >
                       ตำบล/แขวง <span className="text-red-500">*</span>
                     </label>
-                    <select
+                    <PrimaryAutoComplete
                       id="tambonId"
                       name="tambonId"
-                      required
                       value={formData.tambonId}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          tambonId: parseInt(e.target.value, 10),
-                        }))
+                      options={tambonOptions}
+                      onChange={(value) =>
+                        setFormData((prev) => ({ ...prev, tambonId: value }))
                       }
-                      className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
+                      placeholder="เลือกหรือพิมพ์ค้นหาตำบล/แขวง"
                       disabled={tambons.length === 0}
-                    >
-                      <option value="">-- เลือกตำบล/แขวง --</option>
-                      {tambons.map((tambon) => (
-                        <option key={tambon.id} value={tambon.id}>
-                          {tambon.name_th}
-                        </option>
-                      ))}
-                    </select>
+                      required
+                      invalid={!!errors.tambonId}
+                      errorMessage={errors.tambonId}
+                    />
                   </div>
 
-                  {/* รหัสไปรษณีย์ */}
                   <div>
                     <label
                       htmlFor="zipCode"
@@ -1035,13 +1082,16 @@ export default function FarmerRegisterPage() {
                     >
                       รหัสไปรษณีย์ <span className="text-red-500">*</span>
                     </label>
-                    <input
+                    <PrimaryInputText
                       id="zipCode"
                       name="zipCode"
-                      type="text"
-                      readOnly
                       value={formData.zipCode}
-                      className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 bg-gray-100"
+                      onChange={(value) =>
+                        setFormData((prev) => ({ ...prev, zipCode: value }))
+                      }
+                      placeholder="รหัสไปรษณีย์"
+                      disabled
+                      className="bg-gray-100"
                     />
                   </div>
                 </div>
@@ -1062,21 +1112,15 @@ export default function FarmerRegisterPage() {
                   >
                     เบอร์โทรศัพท์บ้าน
                   </label>
-                  <input
+                  <PrimaryInputMask
                     id="phoneNumber"
                     name="phoneNumber"
-                    type="tel"
-                    maxLength={9}
                     value={formData.phoneNumber}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, ""); // เอาเฉพาะตัวเลข
-                      setFormData((prev) => ({
-                        ...prev,
-                        phoneNumber: value,
-                      }));
-                    }}
-                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
-                    placeholder="0XXXXXXXX"
+                    onChange={(value) =>
+                      setFormData((prev) => ({ ...prev, phoneNumber: value }))
+                    }
+                    mask="99-999-9999"
+                    placeholder="0X-XXX-XXXX"
                   />
                 </div>
 
@@ -1087,22 +1131,21 @@ export default function FarmerRegisterPage() {
                   >
                     เบอร์โทรศัพท์มือถือ <span className="text-red-500">*</span>
                   </label>
-                  <input
+                  <PrimaryInputMask
                     id="mobilePhoneNumber"
                     name="mobilePhoneNumber"
-                    type="tel"
-                    required
-                    maxLength={10}
                     value={formData.mobilePhoneNumber}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, ""); // เอาเฉพาะตัวเลข
+                    onChange={(value) =>
                       setFormData((prev) => ({
                         ...prev,
                         mobilePhoneNumber: value,
-                      }));
-                    }}
-                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
-                    placeholder="0XXXXXXXXX"
+                      }))
+                    }
+                    mask="999-999-9999"
+                    placeholder="0XX-XXX-XXXX"
+                    required
+                    invalid={!!errors.mobilePhoneNumber}
+                    errorMessage={errors.mobilePhoneNumber}
                   />
                 </div>
 
@@ -1120,7 +1163,6 @@ export default function FarmerRegisterPage() {
                         );
                       }}
                       onChange={(e) => {
-                        // ล้างข้อความ error เมื่อมีการเปลี่ยนแปลง
                         e.target.setCustomValidity("");
                       }}
                     />
@@ -1129,12 +1171,16 @@ export default function FarmerRegisterPage() {
                       className="ml-2 block text-sm text-gray-700"
                     >
                       ข้าพเจ้ายอมรับ{" "}
-                      <a
-                        href="#"
-                        className="text-green-600 hover:text-green-500"
+                      <button
+                        type="button"
+                        className="text-green-600 hover:text-green-500 underline"
+                        onClick={() => {
+                          // Open terms and conditions (to be implemented)
+                          console.log("Open terms and conditions");
+                        }}
                       >
                         เงื่อนไขและข้อตกลงการใช้งาน
-                      </a>{" "}
+                      </button>{" "}
                       ของระบบสารสนเทศสำหรับการจัดการข้อมูลทางการเกษตรผลผลิตยางพาราตามมาตรฐานจีเอพี
                       การยางแห่งประเทศไทย
                     </label>
@@ -1145,102 +1191,43 @@ export default function FarmerRegisterPage() {
 
             <div className="mt-8 flex justify-between">
               {step > 1 ? (
-                <button
+                <PrimaryButton
                   type="button"
                   onClick={prevStep}
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="-ml-1 mr-2 h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 19l-7-7 7-7"
-                    />
-                  </svg>
-                  ย้อนกลับ
-                </button>
+                  variant="outlined"
+                  color="secondary"
+                  icon="pi pi-chevron-left"
+                  label="ย้อนกลับ"
+                />
               ) : (
-                <Link
-                  href="/"
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="-ml-1 mr-2 h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                    />
-                  </svg>
-                  กลับไปหน้าเข้าสู่ระบบ
+                <Link href="/">
+                  <PrimaryButton
+                    type="button"
+                    variant="outlined"
+                    color="secondary"
+                    icon="pi pi-arrow-left"
+                    label="กลับไปหน้าเข้าสู่ระบบ"
+                  />
                 </Link>
               )}
 
               {step < 4 ? (
-                <button
+                <PrimaryButton
                   type="button"
                   onClick={nextStep}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                >
-                  ถัดไป
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="ml-2 -mr-1 h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </button>
+                  icon="pi pi-chevron-right"
+                  iconPos="right"
+                  label="ถัดไป"
+                  color="success"
+                />
               ) : (
-                <button
+                <PrimaryButton
                   type="submit"
-                  disabled={isLoading}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isLoading ? (
-                    <svg
-                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                  ) : null}
-                  ลงทะเบียน
-                </button>
+                  loading={isLoading}
+                  icon="pi pi-check"
+                  label="ลงทะเบียน"
+                  color="success"
+                />
               )}
             </div>
           </form>

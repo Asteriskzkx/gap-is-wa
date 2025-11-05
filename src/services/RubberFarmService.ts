@@ -4,6 +4,7 @@ import { PlantingDetailModel } from "../models/PlantingDetailModel";
 import { RubberFarmRepository } from "../repositories/RubberFarmRepository";
 import { PlantingDetailRepository } from "../repositories/PlantingDetailRepository";
 import { OptimisticLockError } from "../errors/OptimisticLockError";
+import { prisma } from "../utils/db";
 
 // ประกาศ interface สำหรับข้อมูลที่ใช้ในการอัปเดต PlantingDetail
 interface PlantingDetailUpdateData {
@@ -108,6 +109,237 @@ export class RubberFarmService extends BaseService<RubberFarmModel> {
       this.handleServiceError(error);
       return [];
     }
+  }
+
+  /**
+   * ดึงรายการ rubber farm ของเกษตรกร พร้อมรองรับ pagination และ sorting
+   */
+  async getRubberFarmsByFarmerIdWithPagination(options: {
+    farmerId: number;
+    province?: string;
+    district?: string;
+    subDistrict?: string;
+    sortField?: string;
+    sortOrder?: "asc" | "desc";
+    multiSortMeta?: Array<{ field: string; order: 1 | -1 }>;
+    limit?: number;
+    offset?: number;
+    includeInspections?: boolean;
+    priorityStatus?: string; // เพิ่ม parameter สำหรับกำหนดสถานะที่ต้องการให้แสดงก่อน
+  }): Promise<{ data: any[]; total: number }> {
+    try {
+      const {
+        farmerId,
+        province,
+        district,
+        subDistrict,
+        sortField,
+        sortOrder,
+        multiSortMeta,
+        limit = 10,
+        offset = 0,
+        includeInspections = false,
+        priorityStatus, // รับค่า priorityStatus
+      } = options;
+
+      // ดึงข้อมูลทั้งหมดของเกษตรกรคนนี้
+      const allFarms = await this.rubberFarmRepository.findByFarmerId(farmerId);
+
+      // ถ้าต้องการข้อมูล inspections ด้วย ให้ดึงมาทั้งหมด
+      let farmsWithInspections: any[] = [];
+      if (includeInspections) {
+        const farmsData = await prisma.rubberFarm.findMany({
+          where: { farmerId },
+          include: {
+            inspections: {
+              orderBy: {
+                inspectionDateAndTime: "desc",
+              },
+              take: 1, // เอาเฉพาะการตรวจล่าสุด
+            },
+          },
+        });
+
+        farmsWithInspections = farmsData.map((farm: any) => ({
+          ...farm,
+          latestInspection: farm.inspections[0] || null,
+        }));
+      }
+
+      // ใช้ข้อมูลที่มี inspection ถ้า includeInspections = true
+      const farmsToProcess = includeInspections
+        ? farmsWithInspections
+        : allFarms;
+
+      // Filter ตามเงื่อนไข
+      let filteredFarms = farmsToProcess.filter((farm) => {
+        if (province && farm.province !== province) return false;
+        if (district && farm.district !== district) return false;
+        if (subDistrict && farm.subDistrict !== subDistrict) return false;
+        return true;
+      });
+
+      // Sorting
+      if (multiSortMeta && multiSortMeta.length > 0) {
+        filteredFarms.sort((a, b) => {
+          for (const sortMeta of multiSortMeta) {
+            let aValue: any;
+            let bValue: any;
+
+            // Handle special fields
+            if (sortMeta.field === "farmId") {
+              aValue = a.rubberFarmId;
+              bValue = b.rubberFarmId;
+            } else if (sortMeta.field === "location") {
+              aValue = `${a.villageName} หมู่ ${a.moo}`;
+              bValue = `${b.villageName} หมู่ ${b.moo}`;
+            } else if (
+              sortMeta.field === "inspectionDateAndTime" &&
+              includeInspections
+            ) {
+              // Sort by inspection date
+              aValue = a.latestInspection?.inspectionDateAndTime
+                ? new Date(a.latestInspection.inspectionDateAndTime).getTime()
+                : 0;
+              bValue = b.latestInspection?.inspectionDateAndTime
+                ? new Date(b.latestInspection.inspectionDateAndTime).getTime()
+                : 0;
+            } else if (
+              sortMeta.field.startsWith("inspection.") &&
+              includeInspections
+            ) {
+              // Sort by other inspection fields
+              const inspectionField = sortMeta.field.replace("inspection.", "");
+              aValue = a.latestInspection?.[inspectionField] || "";
+              bValue = b.latestInspection?.[inspectionField] || "";
+            } else {
+              aValue = this.getNestedValue(a, sortMeta.field);
+              bValue = this.getNestedValue(b, sortMeta.field);
+            }
+
+            if (aValue !== bValue) {
+              if (aValue < bValue) return sortMeta.order === 1 ? -1 : 1;
+              if (aValue > bValue) return sortMeta.order === 1 ? 1 : -1;
+            }
+          }
+          return 0;
+        });
+      } else if (sortField && sortOrder) {
+        filteredFarms.sort((a, b) => {
+          let aValue: any;
+          let bValue: any;
+
+          // Handle special fields
+          if (sortField === "farmId") {
+            aValue = a.rubberFarmId;
+            bValue = b.rubberFarmId;
+          } else if (sortField === "location") {
+            aValue = `${a.villageName} หมู่ ${a.moo}`;
+            bValue = `${b.villageName} หมู่ ${b.moo}`;
+          } else if (
+            sortField === "inspectionDateAndTime" &&
+            includeInspections
+          ) {
+            // Sort by inspection date
+            aValue = a.latestInspection?.inspectionDateAndTime
+              ? new Date(a.latestInspection.inspectionDateAndTime).getTime()
+              : 0;
+            bValue = b.latestInspection?.inspectionDateAndTime
+              ? new Date(b.latestInspection.inspectionDateAndTime).getTime()
+              : 0;
+          } else if (
+            sortField.startsWith("inspection.") &&
+            includeInspections
+          ) {
+            // Sort by other inspection fields
+            const inspectionField = sortField.replace("inspection.", "");
+            aValue = a.latestInspection?.[inspectionField] || "";
+            bValue = b.latestInspection?.[inspectionField] || "";
+          } else {
+            aValue = this.getNestedValue(a, sortField);
+            bValue = this.getNestedValue(b, sortField);
+          }
+
+          if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
+          if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
+          return 0;
+        });
+      }
+
+      // เรียงลำดับตาม priorityStatus ถ้ามีการระบุ (แสดงสถานะที่ต้องการก่อน)
+      if (priorityStatus && includeInspections) {
+        filteredFarms.sort((a, b) => {
+          const statusA = a.latestInspection?.inspectionStatus || "";
+          const statusB = b.latestInspection?.inspectionStatus || "";
+
+          // ถ้า a มีสถานะตรงกับ priorityStatus ให้ a อยู่ก่อน
+          if (statusA === priorityStatus && statusB !== priorityStatus) {
+            return -1;
+          }
+          // ถ้า b มีสถานะตรงกับ priorityStatus ให้ b อยู่ก่อน
+          if (statusA !== priorityStatus && statusB === priorityStatus) {
+            return 1;
+          }
+          // ถ้าทั้งคู่มีหรือไม่มีสถานะ priorityStatus ให้เรียงตาม createdAt (ล่าสุดก่อน)
+          return (
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+        });
+      }
+
+      const total = filteredFarms.length;
+
+      // Pagination
+      const paginatedFarms = filteredFarms.slice(offset, offset + limit);
+
+      // แปลงข้อมูลเป็น format ที่ใช้ในตาราง
+      const formattedFarms = paginatedFarms.map((farm) => {
+        const baseData = {
+          rubberFarmId: farm.rubberFarmId,
+          farmId: `RF${farm.rubberFarmId.toString().padStart(5, "0")}`,
+          villageName: farm.villageName,
+          moo: farm.moo,
+          location: `${farm.villageName} หมู่ ${farm.moo}`,
+          province: farm.province,
+          district: farm.district,
+          subDistrict: farm.subDistrict,
+          createdAt: farm.createdAt,
+          version: farm.version,
+        };
+
+        // ถ้ามี inspection ให้เพิ่มข้อมูล inspection ด้วย
+        if (includeInspections && farm.latestInspection) {
+          return {
+            ...baseData,
+            inspection: {
+              inspectionId: farm.latestInspection.inspectionId,
+              inspectionNo: farm.latestInspection.inspectionNo,
+              inspectionDateAndTime:
+                farm.latestInspection.inspectionDateAndTime,
+              inspectionStatus: farm.latestInspection.inspectionStatus,
+              inspectionResult: farm.latestInspection.inspectionResult,
+            },
+          };
+        }
+
+        return baseData;
+      });
+
+      return {
+        data: formattedFarms,
+        total,
+      };
+    } catch (error) {
+      this.handleServiceError(error);
+      return { data: [], total: 0 };
+    }
+  }
+
+  /**
+   * Helper function เพื่อดึงค่าจาก nested object
+   */
+  private getNestedValue(obj: any, path: string): any {
+    return path.split(".").reduce((acc, part) => acc?.[part], obj);
   }
 
   async getRubberFarmWithDetails(

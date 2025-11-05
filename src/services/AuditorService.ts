@@ -8,12 +8,12 @@ import { FarmerService } from "./FarmerService";
 import { UserService } from "./UserService";
 
 export class AuditorService extends BaseService<AuditorModel> {
-  private auditorRepository: AuditorRepository;
-  private userService: UserService;
-  private farmerService: FarmerService;
-  private rubberFarmRepository: RubberFarmRepository;
-  private inspectionTypeMasterRepository: InspectionTypeMasterRepository;
-  private inspectionRepository: InspectionRepository;
+  private readonly auditorRepository: AuditorRepository;
+  private readonly userService: UserService;
+  private readonly farmerService: FarmerService;
+  private readonly rubberFarmRepository: RubberFarmRepository;
+  private readonly inspectionTypeMasterRepository: InspectionTypeMasterRepository;
+  private readonly inspectionRepository: InspectionRepository;
 
   constructor(
     auditorRepository: AuditorRepository,
@@ -159,8 +159,18 @@ export class AuditorService extends BaseService<AuditorModel> {
 
   /**
    * ดึงรายการ rubber farm ที่พร้อมใช้งาน (ไม่มี inspection ที่รอการตรวจประเมิน)
+   * พร้อมรองรับการค้นหาและเรียงลำดับ
    */
-  async getAvailableRubberFarms(): Promise<any[]> {
+  async getAvailableRubberFarms(options?: {
+    province?: string;
+    district?: string;
+    subDistrict?: string;
+    sortField?: string;
+    sortOrder?: "asc" | "desc";
+    multiSortMeta?: Array<{ field: string; order: 1 | -1 }>;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ data: any[]; total: number }> {
     try {
       // ดึงข้อมูล rubber farm ทั้งหมดพร้อมรายละเอียดเกษตรกร
       const allRubberFarmsWithFarmers =
@@ -178,12 +188,12 @@ export class AuditorService extends BaseService<AuditorModel> {
       );
 
       // กรองเฉพาะ rubber farm ที่ไม่มี inspection รอการตรวจประเมิน
-      const availableFarms = allRubberFarmsWithFarmers.filter(
+      let availableFarms = allRubberFarmsWithFarmers.filter(
         (farm) => !pendingFarmIds.has(farm.rubberFarmId)
       );
 
       // แปลงข้อมูลให้เหมาะสมกับการแสดงผล
-      return availableFarms.map((farm) => ({
+      let transformedFarms = availableFarms.map((farm) => ({
         id: farm.rubberFarmId,
         farmerId: farm.farmerId,
         location: `${farm.villageName}, หมู่ ${farm.moo}, ${farm.subDistrict}, ${farm.district}, ${farm.province}`,
@@ -196,16 +206,81 @@ export class AuditorService extends BaseService<AuditorModel> {
           district: farm.district,
           province: farm.province,
         },
+        province: farm.province,
+        district: farm.district,
+        subDistrict: farm.subDistrict,
         farmerName: farm.farmerDetails
           ? farm.farmerDetails.fullName
           : "Unknown",
         farmerEmail: farm.farmerDetails ? farm.farmerDetails.email : "N/A",
-        isAvailable: true, // เพิ่มฟิลด์เพื่อระบุว่าพร้อมใช้งาน
+        isAvailable: true,
       }));
+
+      // กรองตามเงื่อนไขการค้นหา
+      if (options?.province) {
+        transformedFarms = transformedFarms.filter((farm) =>
+          farm.province.includes(options.province!)
+        );
+      }
+      if (options?.district) {
+        transformedFarms = transformedFarms.filter((farm) =>
+          farm.district.includes(options.district!)
+        );
+      }
+      if (options?.subDistrict) {
+        transformedFarms = transformedFarms.filter((farm) =>
+          farm.subDistrict.includes(options.subDistrict!)
+        );
+      }
+
+      // เรียงลำดับข้อมูล
+      if (options?.multiSortMeta && options.multiSortMeta.length > 0) {
+        // Multi-sort
+        transformedFarms.sort((a: any, b: any) => {
+          for (const sortMeta of options.multiSortMeta!) {
+            const field = sortMeta.field;
+            const order = sortMeta.order;
+            const aVal = this.getNestedValue(a, field);
+            const bVal = this.getNestedValue(b, field);
+
+            if (aVal < bVal) return -1 * order;
+            if (aVal > bVal) return 1 * order;
+          }
+          return 0;
+        });
+      } else if (options?.sortField && options?.sortOrder) {
+        // Single sort
+        transformedFarms.sort((a: any, b: any) => {
+          const aVal = this.getNestedValue(a, options.sortField!);
+          const bVal = this.getNestedValue(b, options.sortField!);
+
+          if (aVal < bVal) return options.sortOrder === "asc" ? -1 : 1;
+          if (aVal > bVal) return options.sortOrder === "asc" ? 1 : -1;
+          return 0;
+        });
+      }
+
+      // คำนวณ pagination
+      const total = transformedFarms.length;
+      const offset = options?.offset ?? 0;
+      const limit = options?.limit ?? 10;
+      const paginatedFarms = transformedFarms.slice(offset, offset + limit);
+
+      return {
+        data: paginatedFarms,
+        total,
+      };
     } catch (error) {
       this.handleServiceError(error);
-      return [];
+      return { data: [], total: 0 };
     }
+  }
+
+  /**
+   * Helper function เพื่อดึงค่าจาก nested object
+   */
+  private getNestedValue(obj: any, path: string): any {
+    return path.split(".").reduce((acc, part) => acc?.[part], obj);
   }
 
   /**
@@ -241,24 +316,91 @@ export class AuditorService extends BaseService<AuditorModel> {
     }
   }
 
-  async getAuditorListExcept(exceptAuditorId: number): Promise<any[]> {
+  async getAuditorListExcept(
+    exceptAuditorId: number,
+    options?: {
+      limit?: number;
+      offset?: number;
+      search?: string;
+      sortField?: string;
+      sortOrder?: "asc" | "desc";
+      multiSortMeta?: Array<{ field: string; order: 1 | -1 }>;
+    }
+  ): Promise<{ data: any[]; total: number }> {
     try {
       // ดึงรายชื่อ auditor ทั้งหมดยกเว้น auditor ที่ระบุผ่าน Repository
       const allAuditors = await this.auditorRepository.findAll();
 
       // กรองเฉพาะ auditor ที่ไม่ตรงกับ exceptAuditorId
-      const filteredAuditors = allAuditors.filter(
+      let filteredAuditors = allAuditors.filter(
         (auditor) => auditor.auditorId !== exceptAuditorId
       );
 
-      return filteredAuditors.map((auditor) => ({
+      // แปลงข้อมูลให้อยู่ในรูปแบบที่ใช้งาน
+      let transformedAuditors = filteredAuditors.map((auditor) => ({
         id: auditor.auditorId,
         name: `${auditor.namePrefix}${auditor.firstName} ${auditor.lastName}`,
         email: auditor.email || "N/A",
+        namePrefix: auditor.namePrefix,
+        firstName: auditor.firstName,
+        lastName: auditor.lastName,
       }));
+
+      // กรองตามการค้นหา
+      if (options?.search) {
+        const searchLower = options.search.toLowerCase();
+        transformedAuditors = transformedAuditors.filter(
+          (auditor) =>
+            auditor.name.toLowerCase().includes(searchLower) ||
+            auditor.email.toLowerCase().includes(searchLower) ||
+            auditor.firstName.toLowerCase().includes(searchLower) ||
+            auditor.lastName.toLowerCase().includes(searchLower)
+        );
+      }
+
+      // เรียงลำดับข้อมูล
+      if (options?.multiSortMeta && options.multiSortMeta.length > 0) {
+        // Multi-sort
+        transformedAuditors.sort((a: any, b: any) => {
+          for (const sortMeta of options.multiSortMeta!) {
+            const field = sortMeta.field;
+            const order = sortMeta.order;
+            const aVal = this.getNestedValue(a, field);
+            const bVal = this.getNestedValue(b, field);
+
+            if (aVal < bVal) return -1 * order;
+            if (aVal > bVal) return 1 * order;
+          }
+          return 0;
+        });
+      } else if (options?.sortField && options?.sortOrder) {
+        // Single sort
+        transformedAuditors.sort((a: any, b: any) => {
+          const aVal = this.getNestedValue(a, options.sortField!);
+          const bVal = this.getNestedValue(b, options.sortField!);
+
+          if (aVal < bVal) return options.sortOrder === "asc" ? -1 : 1;
+          if (aVal > bVal) return options.sortOrder === "asc" ? 1 : -1;
+          return 0;
+        });
+      }
+
+      // คำนวณ pagination
+      const total = transformedAuditors.length;
+      const offset = options?.offset ?? 0;
+      const limit = options?.limit ?? 10;
+      const paginatedAuditors = transformedAuditors.slice(
+        offset,
+        offset + limit
+      );
+
+      return {
+        data: paginatedAuditors,
+        total,
+      };
     } catch (error) {
       this.handleServiceError(error);
-      return [];
+      return { data: [], total: 0 };
     }
   }
 }

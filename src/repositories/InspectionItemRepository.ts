@@ -90,6 +90,12 @@ export class InspectionItemRepository extends BaseRepository<InspectionItemModel
     data: Partial<InspectionItemModel>
   ): Promise<InspectionItemModel | null> {
     try {
+      // Get current entity to increment version
+      const current = await this.prisma.inspectionItem.findUnique({
+        where: { inspectionItemId: id },
+        select: { version: true },
+      });
+
       const updatedInspectionItem = await this.prisma.inspectionItem.update({
         where: { inspectionItemId: id },
         data: {
@@ -97,6 +103,7 @@ export class InspectionItemRepository extends BaseRepository<InspectionItemModel
           inspectionItemNo: data.inspectionItemNo,
           inspectionItemResult: data.inspectionItemResult,
           otherConditions: data.otherConditions,
+          version: current ? current.version + 1 : 1, // Increment version
           updatedAt: new Date(),
         },
         include: {

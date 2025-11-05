@@ -1,11 +1,25 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
-import { toast } from "react-hot-toast";
+import { InspectionFormModal } from "@/components/auditor/inspections/InspectionFormModal";
+import {
+  RubberFarmDetailsModal,
+  type RubberFarmDetails,
+} from "@/components/auditor/inspections/RubberFarmDetailsModal";
 import AuditorLayout from "@/components/layout/AuditorLayout";
+import PrimaryAutoComplete from "@/components/ui/PrimaryAutoComplete";
+import PrimaryButton from "@/components/ui/PrimaryButton";
+import PrimaryDataTable from "@/components/ui/PrimaryDataTable";
+import PrimaryInputText from "@/components/ui/PrimaryInputText";
+import PrimaryMultiSelect from "@/components/ui/PrimaryMultiSelect";
+import thaiProvinceData from "@/data/thai-provinces.json";
+import {
+  useInspectionForm,
+  type InspectionItem,
+} from "@/hooks/useInspectionForm";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { DataTablePageEvent, DataTableSortEvent } from "primereact/datatable";
+import React, { useCallback, useEffect, useState } from "react";
 
 interface Inspection {
   inspectionId: number;
@@ -16,7 +30,7 @@ interface Inspection {
   inspectionResult: string;
   auditorChiefId: number;
   rubberFarmId: number;
-  version?: number; // เพิ่ม version field
+  version?: number;
   inspectionType?: {
     typeName: string;
   };
@@ -32,1179 +46,515 @@ interface Inspection {
   };
 }
 
-interface InspectionItem {
-  inspectionItemId: number;
-  inspectionId: number;
-  inspectionItemMasterId: number;
-  inspectionItemNo: number;
-  inspectionItemResult: string;
-  otherConditions: any;
-  version?: number; // เพิ่ม version field
-  inspectionItemMaster?: {
-    itemNo: number;
-    itemName: string;
+interface Province {
+  id: number;
+  name_th: string;
+  name_en: string;
+}
+
+interface District {
+  id: number;
+  name_th: string;
+  name_en: string;
+  province_id: number;
+}
+
+interface SubDistrict {
+  id: number;
+  name_th: string;
+  name_en: string;
+  amphure_id: number;
+}
+
+// Helper function to get status badge class
+const getStatusBadgeClass = (status: string): string => {
+  if (status === "รอการตรวจประเมิน") return "bg-yellow-100 text-yellow-800";
+  if (status === "ตรวจประเมินแล้ว") return "bg-green-100 text-green-800";
+  return "bg-gray-100 text-gray-800";
+};
+
+// Status badge component
+const StatusBadge: React.FC<{ status: string }> = ({ status }) => (
+  <span
+    className={`px-2 py-1 text-xs rounded-full ${getStatusBadgeClass(status)}`}
+  >
+    {status}
+  </span>
+);
+
+// Helper types
+type SortOrder = 1 | -1 | 0 | null;
+
+interface LazyParams {
+  first: number;
+  rows: number;
+  page: number;
+  sortField?: string;
+  sortOrder: SortOrder;
+  multiSortMeta: Array<{ field: string; order: SortOrder }>;
+  filters: {
+    province: string;
+    district: string;
+    subDistrict: string;
+    inspectionStatus: string;
   };
-  requirements?: Requirement[];
-}
-
-interface Requirement {
-  requirementId: number;
-  requirementNo: number;
-  evaluationResult: string;
-  evaluationMethod: string;
-  note: string;
-  version?: number; // เพิ่ม version field
-  requirementMaster?: {
-    requirementName: string;
-    requirementLevel: string;
-    requirementLevelNo: string;
-  };
-}
-
-interface RubberFarmDetails {
-  rubberFarmId: number;
-  villageName: string;
-  moo: number;
-  road: string;
-  alley: string;
-  subDistrict: string;
-  district: string;
-  province: string;
-  location: any;
-  plantingDetails: PlantingDetail[];
-}
-
-interface PlantingDetail {
-  plantingDetailId: number;
-  specie: string;
-  areaOfPlot: number;
-  numberOfRubber: number;
-  numberOfTapping: number;
-  ageOfRubber: number;
-  yearOfTapping: string;
-  monthOfTapping: string;
-  totalProduction: number;
 }
 
 export default function AuditorInspectionsPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
+
+  // States
   const [inspections, setInspections] = useState<Inspection[]>([]);
   const [selectedInspection, setSelectedInspection] =
     useState<Inspection | null>(null);
-  const [inspectionItems, setInspectionItems] = useState<InspectionItem[]>([]);
-  const [currentItemIndex, setCurrentItemIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [showFarmDetails, setShowFarmDetails] = useState(false);
   const [selectedFarmDetails, setSelectedFarmDetails] =
     useState<RubberFarmDetails | null>(null);
   const [loadingFarmDetails, setLoadingFarmDetails] = useState(false);
+  const [showInspectionForm, setShowInspectionForm] = useState(false);
 
-  // Add state for search and pagination
-  const [inspectionSearchTerm, setInspectionSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
+  // Use inspection form hook
+  const {
+    inspectionItems,
+    setInspectionItems,
+    currentItemIndex,
+    setCurrentItemIndex,
+    saving,
+    updateRequirementEvaluation,
+    updateOtherConditions,
+    saveCurrentItem,
+    saveAllItems,
+    completeInspection,
+  } = useInspectionForm();
 
-  // ดึงรายการตรวจประเมินที่รอดำเนินการ
+  // Pagination & Filters
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [lazyParams, setLazyParams] = useState<LazyParams>({
+    first: 0,
+    rows: 10,
+    page: 0,
+    sortField: undefined,
+    sortOrder: null,
+    multiSortMeta: [],
+    filters: {
+      province: "",
+      district: "",
+      subDistrict: "",
+      inspectionStatus: "",
+    },
+  });
+
+  // AutoComplete states
+  const [provinces] = useState<Province[]>(
+    thaiProvinceData.map((p: any) => ({
+      id: p.id,
+      name_th: p.name_th,
+      name_en: p.name_en,
+    }))
+  );
+  const [districts, setDistricts] = useState<District[]>([]);
+  const [subDistricts, setSubDistricts] = useState<SubDistrict[]>([]);
+
+  const [selectedProvinceId, setSelectedProvinceId] = useState<number | null>(
+    null
+  );
+  const [selectedDistrictId, setSelectedDistrictId] = useState<number | null>(
+    null
+  );
+  const [selectedSubDistrictId, setSelectedSubDistrictId] = useState<
+    number | null
+  >(null);
+
+  // Load inspections function
+  const loadInspections = useCallback(
+    async (auditorId: number) => {
+      try {
+        setLoading(true);
+
+        const { first, rows, sortField, sortOrder, multiSortMeta, filters } =
+          lazyParams;
+
+        // Build query params
+        const params = new URLSearchParams({
+          auditorId: auditorId.toString(),
+          limit: rows.toString(),
+          offset: first.toString(),
+        });
+
+        // Add filters
+        if (filters.province) params.append("province", filters.province);
+        if (filters.district) params.append("district", filters.district);
+        if (filters.subDistrict)
+          params.append("subDistrict", filters.subDistrict);
+        if (filters.inspectionStatus)
+          params.append("inspectionStatus", filters.inspectionStatus);
+
+        // Add sorting
+        if (multiSortMeta && multiSortMeta.length > 0) {
+          params.append("multiSortMeta", JSON.stringify(multiSortMeta));
+        } else if (sortField) {
+          params.append("sortField", sortField);
+          params.append("sortOrder", sortOrder === 1 ? "asc" : "desc");
+        }
+
+        const response = await fetch(
+          `/api/v1/inspections?${params.toString()}`
+        );
+
+        if (!response.ok) {
+          throw new Error("ไม่สามารถดึงรายการตรวจประเมินได้");
+        }
+
+        const data = await response.json();
+
+        setInspections(data.results || []);
+        setTotalRecords(data.paginator?.total || 0);
+      } catch (error) {
+        console.error("Error fetching inspections:", error);
+        setInspections([]);
+        setTotalRecords(0);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [lazyParams]
+  );
+
+  // Fetch inspections on mount and when session changes
   useEffect(() => {
-    fetchPendingInspections();
-  }, [session, status]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (status === "unauthenticated") {
+      router.push("/");
+      return;
+    }
 
-  const fetchPendingInspections = async () => {
-    try {
-      // ตรวจสอบว่า session พร้อมใช้งาน
-      if (status === "loading") {
-        return;
-      }
-
-      if (status === "unauthenticated" || !session) {
-        router.push("/");
-        return;
-      }
-
-      setLoading(true);
-
-      // ดึง auditorId จาก session
+    if (status === "authenticated" && session?.user) {
       const auditorId = session.user.roleData?.auditorId;
-      if (!auditorId) {
-        throw new Error("ไม่พบข้อมูล Auditor");
+      if (auditorId) {
+        loadInspections(auditorId);
       }
+    }
+  }, [status, session, router, loadInspections]);
 
-      // ดึงรายการตรวจประเมินที่เกี่ยวข้องกับ Auditor คนนี้โดยตรง (filter ที่ server)
-      // API จะ filter ทั้งกรณีเป็นหัวหน้าผู้ตรวจ (auditorChiefId) และเป็นผู้ตรวจในทีม (AuditorInspection)
-      const inspectionsResponse = await fetch(
-        `/api/v1/inspections?auditorId=${auditorId}`
+  // Reload when lazyParams change
+  useEffect(() => {
+    if (session?.user?.roleData?.auditorId) {
+      loadInspections(session.user.roleData.auditorId);
+    }
+  }, [lazyParams, session, loadInspections]);
+
+  // Handle pagination
+  const onPage = (event: DataTablePageEvent) => {
+    setLazyParams((prev) => ({
+      ...prev,
+      first: event.first,
+      rows: event.rows,
+      page: event.page || 0,
+    }));
+  };
+
+  // Handle sorting
+  const onSort = (event: DataTableSortEvent) => {
+    const validMultiSortMeta = (event.multiSortMeta || []).map((item) => ({
+      field: item.field,
+      order: (item.order ?? null) as SortOrder,
+    }));
+
+    setLazyParams((prev) => ({
+      ...prev,
+      sortField: event.sortField as string | undefined,
+      sortOrder: (event.sortOrder ?? null) as SortOrder,
+      multiSortMeta: validMultiSortMeta,
+    }));
+  };
+
+  // Handle province change
+  const handleProvinceChange = (value: number | null) => {
+    setSelectedProvinceId(value);
+    setSelectedDistrictId(null);
+    setSelectedSubDistrictId(null);
+
+    if (value) {
+      const provinceData: any = thaiProvinceData.find(
+        (p: any) => p.id === value
       );
-
-      if (!inspectionsResponse.ok) {
-        throw new Error("ไม่สามารถดึงรายการตรวจประเมินได้");
+      if (provinceData?.amphure) {
+        setDistricts(provinceData.amphure);
+      } else {
+        setDistricts([]);
       }
-
-      const allInspections = await inspectionsResponse.json();
-
-      // กรองเฉพาะรายการที่รอการตรวจประเมิน
-      const assignedInspections = allInspections.filter(
-        (inspection: Inspection) =>
-          inspection.inspectionStatus === "รอการตรวจประเมิน"
-      );
-
-      setInspections(assignedInspections);
-    } catch (error) {
-      console.error("Error fetching assigned inspections:", error);
-      toast.error("ไม่สามารถดึงข้อมูลรายการตรวจประเมินที่มอบหมายได้");
-      setInspections([]);
-    } finally {
-      setLoading(false);
+      setSubDistricts([]);
+    } else {
+      setDistricts([]);
+      setSubDistricts([]);
     }
   };
 
-  // ฟังก์ชันสำหรับแสดง dialog ให้เลือกตำแหน่งเริ่มตรวจประเมิน
-  const showStartPositionDialog = (incompleteIndex: number) => {
-    return new Promise<number>((resolve) => {
-      // สร้าง dialog element
-      const dialogOverlay = document.createElement("div");
-      dialogOverlay.className =
-        "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50";
+  // Handle district change
+  const handleDistrictChange = (value: number | null) => {
+    setSelectedDistrictId(value);
+    setSelectedSubDistrictId(null);
 
-      const dialogContent = document.createElement("div");
-      dialogContent.className =
-        "bg-white rounded-lg p-6 max-w-md w-full shadow-xl";
-      dialogContent.innerHTML = `
-      <h3 class="text-lg font-semibold text-gray-900 mb-4">เลือกตำแหน่งเริ่มตรวจประเมิน</h3>
-      <p class="text-sm text-gray-600 mb-6">พบรายการตรวจที่ยังไม่สมบูรณ์ คุณต้องการเริ่มตรวจจากจุดใด?</p>
-      <div class="flex justify-end space-x-4">
-        <button id="start-first" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">เริ่มจากรายการแรก</button>
-        <button id="start-incomplete" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">เริ่มจากรายการที่ ${
-          incompleteIndex + 1
-        }</button>
-      </div>
-    `;
-
-      dialogOverlay.appendChild(dialogContent);
-      document.body.appendChild(dialogOverlay);
-
-      // เพิ่ม event listeners
-      document.getElementById("start-first")?.addEventListener("click", () => {
-        document.body.removeChild(dialogOverlay);
-        resolve(0);
-      });
-
-      document
-        .getElementById("start-incomplete")
-        ?.addEventListener("click", () => {
-          document.body.removeChild(dialogOverlay);
-          resolve(incompleteIndex);
-        });
-    });
+    if (value) {
+      const district = districts.find((d) => d.id === value);
+      if (district) {
+        const districtData: any = district;
+        if (districtData.tambon) {
+          setSubDistricts(districtData.tambon);
+        } else {
+          setSubDistricts([]);
+        }
+      }
+    } else {
+      setSubDistricts([]);
+    }
   };
 
-  // ดึงรายการตรวจของ inspection ที่เลือก
+  // Handle search
+  const handleSearch = () => {
+    const selectedProvince = provinces.find((p) => p.id === selectedProvinceId);
+    const selectedDistrict = districts.find((d) => d.id === selectedDistrictId);
+    const selectedSubDistrict = subDistricts.find(
+      (s) => s.id === selectedSubDistrictId
+    );
+
+    setLazyParams((prev) => ({
+      ...prev,
+      first: 0,
+      page: 0,
+      filters: {
+        ...prev.filters,
+        province: selectedProvince?.name_th || "",
+        district: selectedDistrict?.name_th || "",
+        subDistrict: selectedSubDistrict?.name_th || "",
+      },
+    }));
+  };
+
+  // Handle reset search
+  const handleResetSearch = () => {
+    setSelectedProvinceId(null);
+    setSelectedDistrictId(null);
+    setSelectedSubDistrictId(null);
+    setLazyParams((prev) => ({
+      ...prev,
+      first: 0,
+      page: 0,
+      filters: {
+        province: "",
+        district: "",
+        subDistrict: "",
+        inspectionStatus: "",
+      },
+    }));
+  };
+
+  // Fetch farm details
+  const fetchFarmDetails = async (farmId: number) => {
+    setLoadingFarmDetails(true);
+    try {
+      const response = await fetch(`/api/v1/rubber-farms/${farmId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setSelectedFarmDetails(data);
+      }
+    } catch (error) {
+      console.error("Error fetching farm details:", error);
+    } finally {
+      setLoadingFarmDetails(false);
+    }
+  };
+
+  // View farm details
+  const viewFarmDetails = (farmId: number) => {
+    setShowFarmDetails(true);
+    fetchFarmDetails(farmId);
+  };
+
+  // Fetch inspection items
   const fetchInspectionItems = async (inspectionId: number) => {
     try {
       const response = await fetch(
         `/api/v1/inspection-items?inspectionId=${inspectionId}`
       );
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log("Fetched inspection items:", data);
+      if (!response.ok) {
+        throw new Error("ไม่สามารถดึงรายการตรวจได้");
+      }
 
-        // แก้ไขการเรียงลำดับใหม่
-        const sortedData = [...data].sort((a, b) => {
-          // ดึงเลขหัวข้อ (เช่น "1.1", "1.2") จากชื่อหรือ itemNo
-          const aItemNo = String(a.inspectionItemMaster?.itemNo || "");
-          const bItemNo = String(b.inspectionItemMaster?.itemNo || "");
+      const items: InspectionItem[] = await response.json();
 
-          // ถ้ามีรูปแบบ x.y (เช่น 1.1, 1.2, 2.1)
-          const aMatch = aItemNo.match(/^(\d+)\.(\d+)$/);
-          const bMatch = bItemNo.match(/^(\d+)\.(\d+)$/);
+      // เรียงลำดับตาม inspectionItemMaster.itemNo
+      const sortedItems = [...items].sort((a, b) => {
+        const itemNoA = a.inspectionItemMaster?.itemNo || 0;
+        const itemNoB = b.inspectionItemMaster?.itemNo || 0;
+        return itemNoA - itemNoB;
+      });
 
-          if (aMatch && bMatch) {
-            // เรียงตามตัวเลขหลักแรกก่อน (เช่น "1" ในเลข "1.1")
-            const aMajor = parseInt(aMatch[1]);
-            const bMajor = parseInt(bMatch[1]);
-            if (aMajor !== bMajor) return aMajor - bMajor;
+      setInspectionItems(sortedItems);
 
-            // จากนั้นเรียงตามตัวเลขหลักที่สอง (เช่น "1" ในเลข "1.1")
-            const aMinor = parseInt(aMatch[2]);
-            const bMinor = parseInt(bMatch[2]);
-            return aMinor - bMinor;
-          }
-
-          // หากรูปแบบไม่ตรงกับ x.y ให้ใช้การเรียงแบบเดิม
-          return a.inspectionItemNo - b.inspectionItemNo;
-        });
-
-        // เรียงรายการ requirements ภายในแต่ละ item ด้วย
-        sortedData.forEach((item) => {
-          if (item.requirements && item.requirements.length > 0) {
-            item.requirements.sort((a: Requirement, b: Requirement) => {
-              // เรียงตาม requirementNo ถ้าเป็นตัวเลข
-              const aNum = parseInt(String(a.requirementNo));
-              const bNum = parseInt(String(b.requirementNo));
-
-              if (!isNaN(aNum) && !isNaN(bNum)) {
-                return aNum - bNum;
-              }
-
-              // ถ้าไม่ใช่ตัวเลขให้เรียงตามข้อความ
-              return String(a.requirementNo).localeCompare(
-                String(b.requirementNo)
-              );
-            });
-          }
-        });
-
-        setInspectionItems(sortedData);
-
-        // หากมีรายการที่บันทึกไว้ในคุกกี้ ให้ใช้รายการนั้น
-        const savedPosition = localStorage.getItem(
-          `inspectionPosition-${inspectionId}`
-        );
-        if (savedPosition) {
-          const position = parseInt(savedPosition, 10);
-          // ตรวจสอบว่าตำแหน่งที่บันทึกไว้อยู่ในช่วงถูกต้องหรือไม่
-          if (position >= 0 && position < sortedData.length) {
-            // แสดงข้อความแจ้งเตือนว่ากำลังดำเนินการต่อจากครั้งที่แล้ว
-            alert(`กำลังดำเนินการต่อจากรายการตรวจที่ ${position + 1}`);
-            setCurrentItemIndex(position);
-            return;
-          }
-        }
-
-        // กรณีไม่มีตำแหน่งที่บันทึกไว้ หรือตำแหน่งไม่ถูกต้อง
-        // ค้นหารายการแรกที่ยังไม่สมบูรณ์
-        let incompleteIndex = 0;
-        for (let i = 0; i < sortedData.length; i++) {
-          const item = sortedData[i];
-
-          // ตรวจสอบว่ารายการนี้สมบูรณ์หรือไม่
-          const isComplete =
-            item.inspectionItemResult === "ผ่าน" ||
-            item.inspectionItemResult === "ไม่ผ่าน";
-
-          // ตรวจสอบว่า requirements ทั้งหมดสมบูรณ์หรือไม่
-          const allRequirementsComplete = item.requirements
-            ? item.requirements.every(
-                (req: Requirement) =>
-                  req.evaluationResult &&
-                  req.evaluationResult !== "NOT_EVALUATED" &&
-                  req.evaluationMethod &&
-                  req.evaluationMethod !== "PENDING"
-              )
-            : true;
-
-          // ถ้าพบรายการที่ไม่สมบูรณ์
-          if (!isComplete || !allRequirementsComplete) {
-            incompleteIndex = i;
-
-            // ถ้าเป็นรายการแรกที่ไม่สมบูรณ์ ให้เริ่มที่รายการนั้นเลย
-            setCurrentItemIndex(incompleteIndex);
-            return;
-          }
-        }
-
-        // ถ้าทุกรายการสมบูรณ์หมดแล้ว ให้เริ่มที่รายการแรก
+      // Load saved position
+      const savedPosition = localStorage.getItem(
+        `inspection_${inspectionId}_position`
+      );
+      if (savedPosition) {
+        const position = Number.parseInt(savedPosition, 10);
+        setCurrentItemIndex(position);
+      } else {
         setCurrentItemIndex(0);
       }
     } catch (error) {
       console.error("Error fetching inspection items:", error);
-      setCurrentItemIndex(0);
     }
   };
 
-  // บันทึกตำแหน่งปัจจุบันเมื่อเปลี่ยนรายการหรือบันทึกข้อมูล
-  const saveCurrentPosition = () => {
-    if (selectedInspection) {
-      localStorage.setItem(
-        `inspectionPosition-${selectedInspection.inspectionId}`,
-        currentItemIndex.toString()
-      );
-    }
-  };
-
-  // ดึงข้อมูล farm details
-  const fetchFarmDetails = async (farmId: number) => {
-    setLoadingFarmDetails(true);
-    try {
-      const response = await fetch(`/api/v1/rubber-farms/${farmId}`);
-
-      if (response.ok) {
-        const data = await response.json();
-        setSelectedFarmDetails(data);
-        setShowFarmDetails(true);
-      }
-    } catch (error) {
-      console.error("Error fetching farm details:", error);
-      alert("ไม่สามารถดึงข้อมูลสวนยางได้");
-    } finally {
-      setLoadingFarmDetails(false);
-    }
-  };
-
-  // Filter inspections based on search term
-  const filteredInspections = inspections.filter((inspection) => {
-    const inspectionNo =
-      inspection.inspectionNo?.toString().toLowerCase() || "";
-    const farmerName = inspection.rubberFarm?.farmer
-      ? `${inspection.rubberFarm.farmer.namePrefix}${inspection.rubberFarm.farmer.firstName} ${inspection.rubberFarm.farmer.lastName}`.toLowerCase()
-      : "";
-    const location = [
-      inspection.rubberFarm?.villageName || "",
-      inspection.rubberFarm?.district || "",
-      inspection.rubberFarm?.province || "",
-    ]
-      .join(" ")
-      .toLowerCase();
-    const date = new Date(inspection.inspectionDateAndTime)
-      .toLocaleDateString("th-TH")
-      .toLowerCase();
-    const typeName = inspection.inspectionType?.typeName?.toLowerCase() || "";
-
-    const searchLower = inspectionSearchTerm.toLowerCase();
-
-    return (
-      inspectionNo.includes(searchLower) ||
-      farmerName.includes(searchLower) ||
-      location.includes(searchLower) ||
-      date.includes(searchLower) ||
-      typeName.includes(searchLower)
-    );
-  });
-
-  // Pagination logic
-  const indexOfLastInspection = currentPage * itemsPerPage;
-  const indexOfFirstInspection = indexOfLastInspection - itemsPerPage;
-  const currentInspections = filteredInspections.slice(
-    indexOfFirstInspection,
-    indexOfLastInspection
-  );
-  const totalPages = Math.ceil(filteredInspections.length / itemsPerPage);
-
-  // เลือก inspection เพื่อเริ่มตรวจ
+  // Select inspection for evaluation
   const selectInspection = async (inspection: Inspection) => {
     setSelectedInspection(inspection);
     await fetchInspectionItems(inspection.inspectionId);
-    // ไม่กำหนด setCurrentItemIndex(0) อีกต่อไป เพราะจะให้ fetchInspectionItems กำหนดแทน
+    setShowInspectionForm(true);
   };
 
-  // ตรวจสอบความสมบูรณ์ของข้อมูล
-  const validateCurrentItem = (): boolean => {
-    const item = inspectionItems[currentItemIndex];
-    if (!item || !item.requirements) return false;
-
-    // ตรวจสอบว่าทุก requirement มีผลการประเมิน
-    for (const req of item.requirements) {
-      if (!req.evaluationResult || req.evaluationResult === "NOT_EVALUATED") {
-        alert("กรุณาเลือกผลการตรวจประเมินให้ครบทุกข้อกำหนด");
-        return false;
-      }
-
-      if (!req.evaluationMethod || req.evaluationMethod === "PENDING") {
-        alert("กรุณาเลือกวิธีการตรวจประเมินให้ครบทุกข้อกำหนด");
-        return false;
-      }
-    }
-
-    return true;
-  };
-
-  // อัปเดตผลการประเมินข้อกำหนด
-  const updateRequirementEvaluation = (
-    itemIndex: number,
-    requirementIndex: number,
-    field: string,
-    value: string
-  ) => {
-    const updatedItems = [...inspectionItems];
-    const item = updatedItems[itemIndex];
-
-    if (item.requirements && item.requirements[requirementIndex]) {
-      // Debug: แสดงการอัพเดท
-      console.log(
-        `Updating requirement ${requirementIndex} - ${field}: ${value}`
-      );
-
-      // สร้าง object ใหม่เพื่อให้ React detect การเปลี่ยนแปลง
-      item.requirements[requirementIndex] = {
-        ...item.requirements[requirementIndex],
-        [field]: value,
-      };
-
-      // อัพเดท state
-      setInspectionItems(updatedItems);
-
-      // Debug: ตรวจสอบหลังอัพเดท
-      console.log("Updated requirements:", item.requirements);
-    } else {
-      console.error(`Cannot find requirement at index ${requirementIndex}`);
-    }
-  };
-
-  // อัปเดตข้อมูลเพิ่มเติม
-  const updateOtherConditions = (
-    itemIndex: number,
-    field: string,
-    value: string
-  ) => {
-    const updatedItems = [...inspectionItems];
-    updatedItems[itemIndex].otherConditions = {
-      ...updatedItems[itemIndex].otherConditions,
-      [field]: value,
-    };
-    setInspectionItems(updatedItems);
-  };
-
-  // ฟังก์ชันสำหรับแสดงข้อมูลเพิ่มเติมตามประเภทรายการตรวจ
+  // Render additional fields (simplified - extend as needed)
   const renderAdditionalFields = (itemIndex: number) => {
     const item = inspectionItems[itemIndex];
-    const itemName = item?.inspectionItemMaster?.itemName || "";
+    if (!item || !item.inspectionItemMaster) return null;
 
-    switch (itemName) {
-      case "น้ำ":
-        return (
-          <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-            <h3 className="text-md font-semibold text-gray-800 mb-3">
-              ข้อมูลเพิ่มเติม
-            </h3>
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  แหล่งน้ำที่ใช้ในแปลงปลูก
-                </label>
-                <input
-                  type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
-                  placeholder="เช่น น้ำฝน, น้ำบาดาล, คลองชลประทาน"
-                  value={item?.otherConditions?.waterSource || ""}
-                  onChange={(e) =>
-                    updateOtherConditions(
-                      itemIndex,
-                      "waterSource",
-                      e.target.value
-                    )
-                  }
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  น้ำที่ใช้ในกระบวนการหลังการเก็บเกี่ยว
-                </label>
-                <input
-                  type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
-                  placeholder="ระบุแหล่งน้ำที่ใช้ในกระบวนการหลังการเก็บเกี่ยว"
-                  value={item?.otherConditions?.postHarvestWaterSource || ""}
-                  onChange={(e) =>
-                    updateOtherConditions(
-                      itemIndex,
-                      "postHarvestWaterSource",
-                      e.target.value
-                    )
-                  }
-                />
-              </div>
-            </div>
-          </div>
-        );
+    const itemNo = item.inspectionItemMaster.itemNo;
+    const otherConditions = item.otherConditions || {};
 
-      case "พื้นที่ปลูก":
-        return (
-          <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-            <h3 className="text-md font-semibold text-gray-800 mb-3">
-              ข้อมูลเพิ่มเติม
-            </h3>
+    // For inspection item 1: Water source fields
+    if (itemNo === 1) {
+      return (
+        <div className="mt-6 border-t pt-4">
+          <h4 className="text-sm font-semibold text-gray-700 mb-4">
+            ข้อมูลเพิ่มเติม
+          </h4>
+          <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                สภาพพื้นที่ปลูก
+              <label
+                htmlFor="waterSourceInPlantation"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                แหล่งน้ำที่ใช้ในแปลงปลูก
               </label>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                <div className="flex items-center">
-                  <input
-                    id="terrain-flat"
-                    type="radio"
-                    name="terrain-type"
-                    value="ที่ราบ"
-                    checked={item?.otherConditions?.topography === "ที่ราบ"}
-                    onChange={(e) =>
-                      updateOtherConditions(
-                        itemIndex,
-                        "topography",
-                        e.target.value
-                      )
-                    }
-                    className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
-                  />
-                  <label
-                    htmlFor="terrain-flat"
-                    className="ml-2 block text-sm text-gray-700"
-                  >
-                    2.1 ที่ราบ
-                  </label>
-                </div>
-                <div className="flex items-center">
-                  <input
-                    id="terrain-lowland"
-                    type="radio"
-                    name="terrain-type"
-                    value="ที่ราบลุ่ม"
-                    checked={item?.otherConditions?.topography === "ที่ราบลุ่ม"}
-                    onChange={(e) =>
-                      updateOtherConditions(
-                        itemIndex,
-                        "topography",
-                        e.target.value
-                      )
-                    }
-                    className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
-                  />
-                  <label
-                    htmlFor="terrain-lowland"
-                    className="ml-2 block text-sm text-gray-700"
-                  >
-                    2.2 ที่ราบลุ่ม
-                  </label>
-                </div>
-                <div className="flex items-center">
-                  <input
-                    id="terrain-upland"
-                    type="radio"
-                    name="terrain-type"
-                    value="ที่ดอน"
-                    checked={item?.otherConditions?.topography === "ที่ดอน"}
-                    onChange={(e) =>
-                      updateOtherConditions(
-                        itemIndex,
-                        "topography",
-                        e.target.value
-                      )
-                    }
-                    className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
-                  />
-                  <label
-                    htmlFor="terrain-upland"
-                    className="ml-2 block text-sm text-gray-700"
-                  >
-                    2.3 ที่ดอน
-                  </label>
-                </div>
-                <div className="flex items-center">
-                  <input
-                    id="terrain-ridges"
-                    type="radio"
-                    name="terrain-type"
-                    value="ยกร่อง"
-                    checked={item?.otherConditions?.topography === "ยกร่อง"}
-                    onChange={(e) =>
-                      updateOtherConditions(
-                        itemIndex,
-                        "topography",
-                        e.target.value
-                      )
-                    }
-                    className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
-                  />
-                  <label
-                    htmlFor="terrain-ridges"
-                    className="ml-2 block text-sm text-gray-700"
-                  >
-                    2.4 ยกร่อง
-                  </label>
-                </div>
-                <div className="flex items-center">
-                  <input
-                    id="terrain-ridges-water"
-                    type="radio"
-                    name="terrain-type"
-                    value="ยกร่องน้ำขึ้นถึง"
-                    checked={
-                      item?.otherConditions?.topography === "ยกร่องน้ำขึ้นถึง"
-                    }
-                    onChange={(e) =>
-                      updateOtherConditions(
-                        itemIndex,
-                        "topography",
-                        e.target.value
-                      )
-                    }
-                    className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
-                  />
-                  <label
-                    htmlFor="terrain-ridges-water"
-                    className="ml-2 block text-sm text-gray-700"
-                  >
-                    2.5 ยกร่องน้ำขึ้งถึง
-                  </label>
-                </div>
-                <div className="flex items-center">
-                  <input
-                    id="terrain-other"
-                    type="radio"
-                    name="terrain-type"
-                    value="อื่นๆ"
-                    checked={
-                      item?.otherConditions?.topography === "อื่นๆ" ||
-                      (item?.otherConditions?.topography &&
-                        ![
-                          "ที่ราบ",
-                          "ที่ราบลุ่ม",
-                          "ที่ดอน",
-                          "ยกร่อง",
-                          "ยกร่องน้ำขึ้นถึง",
-                        ].includes(item?.otherConditions?.topography))
-                    }
-                    onChange={(e) =>
-                      updateOtherConditions(
-                        itemIndex,
-                        "topography",
-                        e.target.value
-                      )
-                    }
-                    className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
-                  />
-                  <label
-                    htmlFor="terrain-other"
-                    className="ml-2 block text-sm text-gray-700"
-                  >
-                    2.6 อื่น ๆ ระบุ...
-                  </label>
-                </div>
-              </div>
-
-              {item?.otherConditions?.topography === "อื่นๆ" && (
-                <div className="mt-3">
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
-                    placeholder="ระบุสภาพพื้นที่ปลูกอื่นๆ"
-                    value={item?.otherConditions?.topographyOther || ""}
-                    onChange={(e) =>
-                      updateOtherConditions(
-                        itemIndex,
-                        "topographyOther",
-                        e.target.value
-                      )
-                    }
-                  />
-                </div>
-              )}
+              <PrimaryInputText
+                id="waterSourceInPlantation"
+                value={otherConditions.waterSourceInPlantation || ""}
+                onChange={(value) =>
+                  updateOtherConditions(
+                    itemIndex,
+                    "waterSourceInPlantation",
+                    value
+                  )
+                }
+                placeholder="ระบุแหล่งน้ำที่ใช้ในแปลงปลูก"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="waterSourcePostHarvest"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                น้ำที่ใช้ในกระบวนการหลังการเก็บเกี่ยว
+              </label>
+              <PrimaryInputText
+                id="waterSourcePostHarvest"
+                value={otherConditions.waterSourcePostHarvest || ""}
+                onChange={(value) =>
+                  updateOtherConditions(
+                    itemIndex,
+                    "waterSourcePostHarvest",
+                    value
+                  )
+                }
+                placeholder="ระบุน้ำที่ใช้ในกระบวนการหลังการเก็บเกี่ยว"
+              />
             </div>
           </div>
+        </div>
+      );
+    }
 
-          //   <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-          //   <h3 className="text-md font-semibold text-gray-800 mb-3">
-          //     ข้อมูลเพิ่มเติม
-          //   </h3>
-          //   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          //     <div>
-          //       <label className="block text-sm font-medium text-gray-700 mb-1">
-          //         ลักษณะภูมิประเทศ
-          //       </label>
-          //       <select
-          //         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
-          //         value={item?.otherConditions?.topography || ""}
-          //         onChange={(e) =>
-          //           updateOtherConditions(
-          //             itemIndex,
-          //             "topography",
-          //             e.target.value
-          //           )
-          //         }
-          //       >
-          //         <option value="">เลือกลักษณะภูมิประเทศ</option>
-          //         <option value="พื้นที่ราบ">พื้นที่ราบ</option>
-          //         <option value="พื้นที่ลาดชัน">พื้นที่ลาดชัน</option>
-          //         <option value="พื้นที่ที่ราบสูง">พื้นที่ที่ราบสูง</option>
-          //       </select>
-          //     </div>
-          //     <div>
-          //       <label className="block text-sm font-medium text-gray-700 mb-1">
-          //         ประวัติการใช้ที่ดิน
-          //       </label>
-          //       <textarea
-          //         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
-          //         rows={2}
-          //         placeholder="ระบุประวัติการใช้ที่ดินย้อนหลัง 2 ปี"
-          //         value={item?.otherConditions?.landHistory || ""}
-          //         onChange={(e) =>
-          //           updateOtherConditions(
-          //             itemIndex,
-          //             "landHistory",
-          //             e.target.value
-          //           )
-          //         }
-          //       />
-          //     </div>
-          //   </div>
-          // </div>
-        );
+    // For inspection item 2: Land condition - MultiSelect
+    if (itemNo === 2) {
+      const currentLandConditions = otherConditions.landConditions || [];
+      const hasOtherSelected = currentLandConditions.includes("other");
 
-      case "วัตถุอันตรายทางการเกษตร":
-        return (
-          <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-            <h3 className="text-md font-semibold text-gray-800 mb-3">
-              ข้อมูลเพิ่มเติม
-            </h3>
-            <div className="mb-4">
-              <div className="flex items-center">
-                <input
-                  id="no-hazardous-materials"
-                  type="checkbox"
-                  className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
-                  checked={
-                    item?.otherConditions?.noHazardousMaterials === "true"
-                  }
-                  onChange={(e) =>
+      return (
+        <div className="mt-6 border-t pt-4">
+          <h4 className="text-sm font-semibold text-gray-700 mb-4">
+            ลักษณะพื้นที่ปลูก
+          </h4>
+          <div className="space-y-4">
+            <PrimaryMultiSelect
+              id={`landConditions-${itemIndex}`}
+              value={currentLandConditions}
+              options={[
+                { label: "ที่ราบ", value: "flat" },
+                { label: "ที่ราบลุ่ม", value: "lowland" },
+                { label: "ที่ดอน", value: "upland" },
+                { label: "ยกร่อง", value: "raised-bed" },
+                { label: "ยกร่องน้ำขัง", value: "raised-bed-waterlogged" },
+                { label: "อื่นๆ", value: "other" },
+              ]}
+              onChange={(values) => {
+                updateOtherConditions(itemIndex, "landConditions", values);
+              }}
+              placeholder="เลือกลักษณะพื้นที่ปลูก (เลือกได้หลายอัน)"
+              display="chip"
+              maxSelectedLabels={6}
+              selectAll={true}
+            />
+
+            {hasOtherSelected && (
+              <div>
+                <label
+                  htmlFor={`landConditionsOther-${itemIndex}`}
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  ระบุลักษณะพื้นที่อื่นๆ
+                </label>
+                <PrimaryInputText
+                  id={`landConditionsOther-${itemIndex}`}
+                  value={otherConditions.landConditionsOther || ""}
+                  onChange={(value) =>
                     updateOtherConditions(
                       itemIndex,
-                      "noHazardousMaterials",
-                      e.target.checked ? "true" : "false"
+                      "landConditionsOther",
+                      value
                     )
                   }
+                  placeholder="ระบุลักษณะพื้นที่อื่นๆ"
                 />
-                <label
-                  htmlFor="no-hazardous-materials"
-                  className="ml-2 block text-sm text-gray-900"
-                >
-                  ไม่ได้ใช้วัตถุอันตรายทางการเกษตรในการผลิต
-                </label>
               </div>
-            </div>
+            )}
           </div>
-        );
-
-      // case "การจัดการคุณภาพในกระบวนการผลิตก่อนการเปิดกรีด":
-      // case "การจัดการคุณภาพในกระบวนการผลิตหลังการเปิดกรีด":
-      //   return (
-      //     <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-      //       <h3 className="text-md font-semibold text-gray-800 mb-3">
-      //         ข้อมูลเพิ่มเติม
-      //       </h3>
-      //       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      //         <div>
-      //           <label className="block text-sm font-medium text-gray-700 mb-1">
-      //             พันธุ์ยางที่ปลูก
-      //           </label>
-      //           <input
-      //             type="text"
-      //             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
-      //             placeholder="ระบุพันธุ์ยาง"
-      //             value={item?.otherConditions?.rubberVariety || ""}
-      //             onChange={(e) =>
-      //               updateOtherConditions(
-      //                 itemIndex,
-      //                 "rubberVariety",
-      //                 e.target.value
-      //               )
-      //             }
-      //           />
-      //         </div>
-      //         <div>
-      //           <label className="block text-sm font-medium text-gray-700 mb-1">
-      //             การจัดการปุ๋ย
-      //           </label>
-      //           <textarea
-      //             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
-      //             rows={2}
-      //             placeholder="ระบุชนิดและปริมาณปุ๋ยที่ใช้"
-      //             value={item?.otherConditions?.fertilizerManagement || ""}
-      //             onChange={(e) =>
-      //               updateOtherConditions(
-      //                 itemIndex,
-      //                 "fertilizerManagement",
-      //                 e.target.value
-      //               )
-      //             }
-      //           />
-      //         </div>
-      //       </div>
-      //     </div>
-      //   );
-
-      // case "การเก็บเกี่ยวและการปฏิบัติหลังการเก็บเกี่ยว สำหรับผลิตน้ำยางสด":
-      // case "การผลิตวัตถุดิบคุณภาพดีและการขนส่งสำหรับผลิตน้ำยางสด":
-      //   return (
-      //     <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-      //       <h3 className="text-md font-semibold text-gray-800 mb-3">
-      //         ข้อมูลเพิ่มเติม - การผลิตน้ำยางสด
-      //       </h3>
-      //       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      //         <div>
-      //           <label className="block text-sm font-medium text-gray-700 mb-1">
-      //             เวลาเริ่มกรีด
-      //           </label>
-      //           <input
-      //             type="time"
-      //             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
-      //             value={item?.otherConditions?.tappingStartTime || ""}
-      //             onChange={(e) =>
-      //               updateOtherConditions(
-      //                 itemIndex,
-      //                 "tappingStartTime",
-      //                 e.target.value
-      //               )
-      //             }
-      //           />
-      //         </div>
-      //         <div>
-      //           <label className="block text-sm font-medium text-gray-700 mb-1">
-      //             เวลาเก็บน้ำยาง
-      //           </label>
-      //           <input
-      //             type="time"
-      //             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
-      //             value={item?.otherConditions?.collectionTime || ""}
-      //             onChange={(e) =>
-      //               updateOtherConditions(
-      //                 itemIndex,
-      //                 "collectionTime",
-      //                 e.target.value
-      //               )
-      //             }
-      //           />
-      //         </div>
-      //       </div>
-      //     </div>
-      //   );
-
-      // case "การเก็บเกี่ยวและการปฏิบัติหลังการเก็บเกี่ยว สำหรับผลิตยางก้อนถ้วย":
-      // case "การผลิตวัตถุดิบคุณภาพดีและการขนส่งสำหรับผลิตยางก้อนถ้วย":
-      //   return (
-      //     <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-      //       <h3 className="text-md font-semibold text-gray-800 mb-3">
-      //         ข้อมูลเพิ่มเติม - การผลิตยางก้อนถ้วย
-      //       </h3>
-      //       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      //         <div>
-      //           <label className="block text-sm font-medium text-gray-700 mb-1">
-      //             ความเข้มข้นกรดฟอร์มิค (%)
-      //           </label>
-      //           <select
-      //             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
-      //             value={item?.otherConditions?.acidConcentration || ""}
-      //             onChange={(e) =>
-      //               updateOtherConditions(
-      //                 itemIndex,
-      //                 "acidConcentration",
-      //                 e.target.value
-      //               )
-      //             }
-      //           >
-      //             <option value="">เลือกความเข้มข้น</option>
-      //             <option value="3">3%</option>
-      //             <option value="4">4%</option>
-      //             <option value="5">5%</option>
-      //           </select>
-      //         </div>
-      //         <div>
-      //           <label className="block text-sm font-medium text-gray-700 mb-1">
-      //             จำนวนมีดกรีด
-      //           </label>
-      //           <input
-      //             type="number"
-      //             min="1"
-      //             max="6"
-      //             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
-      //             placeholder="ไม่เกิน 6 มีด"
-      //             value={item?.otherConditions?.numberOfTaps || ""}
-      //             onChange={(e) =>
-      //               updateOtherConditions(
-      //                 itemIndex,
-      //                 "numberOfTaps",
-      //                 e.target.value
-      //               )
-      //             }
-      //           />
-      //         </div>
-      //       </div>
-      //     </div>
-      //   );
-
-      // case "สุขลักษณะส่วนบุคคล":
-      //   return (
-      //     <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-      //       <h3 className="text-md font-semibold text-gray-800 mb-3">
-      //         ข้อมูลเพิ่มเติม
-      //       </h3>
-      //       <div className="space-y-3">
-      //         <div>
-      //           <label className="block text-sm font-medium text-gray-700 mb-1">
-      //             อุปกรณ์ป้องกันส่วนบุคคลที่มี
-      //           </label>
-      //           <textarea
-      //             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
-      //             rows={2}
-      //             placeholder="ระบุอุปกรณ์ป้องกันที่มี เช่น หน้ากาก ถุงมือ รองเท้า"
-      //             value={item?.otherConditions?.ppe || ""}
-      //             onChange={(e) =>
-      //               updateOtherConditions(itemIndex, "ppe", e.target.value)
-      //             }
-      //           />
-      //         </div>
-      //       </div>
-      //     </div>
-      //   );
-
-      // case "การบันทึกและการจัดเก็บข้อมูล":
-      //   return (
-      //     <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-      //       <h3 className="text-md font-semibold text-gray-800 mb-3">
-      //         ข้อมูลเพิ่มเติม
-      //       </h3>
-      //       <div className="space-y-3">
-      //         <div>
-      //           <label className="block text-sm font-medium text-gray-700 mb-1">
-      //             ระบบการบันทึกข้อมูลที่ใช้
-      //           </label>
-      //           <select
-      //             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
-      //             value={item?.otherConditions?.recordSystem || ""}
-      //             onChange={(e) =>
-      //               updateOtherConditions(
-      //                 itemIndex,
-      //                 "recordSystem",
-      //                 e.target.value
-      //               )
-      //             }
-      //           >
-      //             <option value="">เลือกระบบการบันทึก</option>
-      //             <option value="สมุดบันทึก">สมุดบันทึก</option>
-      //             <option value="คอมพิวเตอร์">คอมพิวเตอร์</option>
-      //             <option value="ระบบออนไลน์">ระบบออนไลน์</option>
-      //           </select>
-      //         </div>
-      //       </div>
-      //     </div>
-      //   );
-
-      default:
-        return null;
-    }
-  };
-
-  // บันทึกผลการตรวจรายการปัจจุบัน
-  // Add an options parameter to control alert and navigation behavior
-  const saveCurrentItem = async (options?: {
-    showAlert?: boolean;
-    skipNavigation?: boolean;
-  }) => {
-    if (!validateCurrentItem()) return false;
-    if (!selectedInspection || !inspectionItems[currentItemIndex]) return false;
-
-    setSaving(true);
-    try {
-      const currentItem = inspectionItems[currentItemIndex];
-
-      // Debug: ตรวจสอบข้อมูล requirements ก่อนส่ง
-      console.log("Current item requirements:", currentItem.requirements);
-      console.log(
-        "Total requirements to save:",
-        currentItem.requirements?.length || 0
+        </div>
       );
-
-      // อัปเดต inspection item with version
-      const itemResponse = await fetch(
-        `/api/v1/inspection-items/${currentItem.inspectionItemId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            inspectionItemResult: determineItemResult(currentItem),
-            otherConditions: currentItem.otherConditions || {},
-            version: currentItem.version, // ส่ง version
-          }),
-        }
-      );
-
-      if (!itemResponse.ok) {
-        // Handle 409 Conflict
-        if (itemResponse.status === 409) {
-          const errorData = await itemResponse.json();
-          toast.error(
-            errorData.userMessage ||
-              "ข้อมูลถูกแก้ไขโดยผู้ใช้อื่นแล้ว กรุณาโหลดข้อมูลใหม่และลองอีกครั้ง",
-            { duration: 5000 }
-          );
-          // Refresh inspection items
-          await fetchInspectionItems(selectedInspection!.inspectionId);
-          return false;
-        }
-
-        const errorData = await itemResponse.json();
-        throw new Error(errorData.message || "Failed to save inspection item");
-      }
-
-      // อัพเดต version จาก response
-      const updatedItemData = await itemResponse.json();
-      const updatedItems = [...inspectionItems];
-      updatedItems[currentItemIndex] = {
-        ...updatedItems[currentItemIndex],
-        inspectionItemResult: determineItemResult(currentItem),
-        version: updatedItemData.version, // อัพเดต version
-      };
-
-      // อัปเดต requirements แบบ Promise.all เพื่อให้แน่ใจว่าทุกตัวถูกบันทึก
-      if (currentItem.requirements && currentItem.requirements.length > 0) {
-        const requirementPromises = currentItem.requirements.map(
-          async (requirement, index) => {
-            // Debug: แสดงข้อมูลแต่ละ requirement
-            console.log(`Saving requirement ${index + 1}:`, {
-              requirementId: requirement.requirementId,
-              evaluationResult: requirement.evaluationResult,
-              evaluationMethod: requirement.evaluationMethod,
-              note: requirement.note,
-            });
-
-            // ข้ามถ้ายังไม่ได้ประเมิน
-            if (
-              !requirement.evaluationResult ||
-              requirement.evaluationResult === "NOT_EVALUATED"
-            ) {
-              console.log(
-                `Skipping requirement ${requirement.requirementId} - not evaluated`
-              );
-              return null;
-            }
-
-            try {
-              const reqResponse = await fetch(
-                `/api/v1/requirements/${requirement.requirementId}/evaluation`,
-                {
-                  method: "PUT",
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({
-                    evaluationResult: requirement.evaluationResult,
-                    evaluationMethod: requirement.evaluationMethod || "PENDING",
-                    note: requirement.note || "",
-                    version: requirement.version, // ส่ง version
-                  }),
-                }
-              );
-
-              if (!reqResponse.ok) {
-                // Handle 409 Conflict
-                if (reqResponse.status === 409) {
-                  const errorData = await reqResponse.json();
-                  toast.error(
-                    errorData.userMessage ||
-                      "ข้อมูลถูกแก้ไขโดยผู้ใช้อื่นแล้ว กรุณาโหลดข้อมูลใหม่และลองอีกครั้ง",
-                    { duration: 5000 }
-                  );
-                  // Refresh inspection items
-                  await fetchInspectionItems(selectedInspection!.inspectionId);
-                  throw new Error("Optimistic lock conflict");
-                }
-
-                const errorData = await reqResponse.json();
-                console.error(
-                  `Failed to save requirement ${requirement.requirementId}:`,
-                  errorData
-                );
-                throw new Error(
-                  `Failed to save requirement ${requirement.requirementId}: ${errorData.message}`
-                );
-              }
-
-              const savedData = await reqResponse.json();
-              console.log(
-                `Successfully saved requirement ${requirement.requirementId}:`,
-                savedData
-              );
-              // อัพเดต version ใน local state
-              requirement.version = savedData.version;
-              return savedData;
-            } catch (error) {
-              console.error(
-                `Error saving requirement ${requirement.requirementId}:`,
-                error
-              );
-              throw error;
-            }
-          }
-        );
-
-        // รอให้ทุก requirement ถูกบันทึก
-        const results = await Promise.all(requirementPromises);
-        const successCount = results.filter((r) => r !== null).length;
-        console.log(`Successfully saved ${successCount} requirements`);
-
-        if (successCount === 0) {
-          throw new Error("ไม่สามารถบันทึกข้อกำหนดได้เลย");
-        }
-      }
-
-      setInspectionItems(updatedItems);
-
-      saveCurrentPosition();
-
-      // แสดงข้อความแจ้งเตือนเฉพาะเมื่อเรียกใช้โดยไม่ใช่จากฟังก์ชัน completeInspection
-      if (!options || options.showAlert !== false) {
-        alert("บันทึกผลการตรวจรายการนี้เรียบร้อยแล้ว");
-      }
-
-      // ไปรายการถัดไป (เฉพาะกรณีที่ไม่ได้เรียกจาก completeInspection)
-      if (
-        (!options || !options.skipNavigation) &&
-        currentItemIndex < inspectionItems.length - 1
-      ) {
-        setCurrentItemIndex(currentItemIndex + 1);
-      }
-
-      return true;
-    } catch (error) {
-      console.error("Error saving inspection item:", error);
-      alert("เกิดข้อผิดพลาดในการบันทึก: " + (error as Error).message);
-      return false;
-    } finally {
-      setSaving(false);
     }
+
+    return null;
   };
 
-  // กำหนดผลการตรวจของรายการตรวจ
-  const determineItemResult = (item: InspectionItem): string => {
-    if (!item.requirements || item.requirements.length === 0) {
-      return "ผ่าน";
-    }
-
-    const mainRequirements = item.requirements.filter(
-      (req) => req.requirementMaster?.requirementLevel === "ข้อกำหนดหลัก"
-    );
-
-    const hasFailedMain = mainRequirements.some(
-      (req) => req.evaluationResult === "ไม่ใช่"
-    );
-
-    return hasFailedMain ? "ไม่ผ่าน" : "ผ่าน";
-  };
-
-  // ฟังก์ชันสำหรับตรวจสอบว่าตรวจประเมินครบทุกรายการหรือยัง
-  const checkAllItemsCompleted = () => {
-    // ตรวจสอบว่ามีรายการตรวจหรือไม่
-    if (!inspectionItems || inspectionItems.length === 0) {
-      return false;
-    }
-
-    // ตรวจสอบแต่ละรายการว่าได้ประเมินแล้วหรือไม่
+  // Check if all required fields are filled for all items
+  const areAllRequiredFieldsFilled = (): boolean => {
+    // ตรวจสอบทุก item
     for (const item of inspectionItems) {
-      // ตรวจสอบว่ารายการนี้มีผลการประเมินหรือไม่
-      if (!item.inspectionItemResult || item.inspectionItemResult === "") {
-        return false;
-      }
-
-      // ตรวจสอบว่า requirements ทั้งหมดได้รับการประเมินหรือไม่
+      // ตรวจสอบว่าทุก requirement มีการกรอก evaluationResult และ evaluationMethod
       if (item.requirements && item.requirements.length > 0) {
         for (const req of item.requirements) {
+          // ตรวจสอบว่ามีการเลือก evaluationResult หรือไม่ (ต้องไม่เป็น NOT_EVALUATED, empty, null, undefined)
           if (
             !req.evaluationResult ||
-            req.evaluationResult === "NOT_EVALUATED" ||
-            !req.evaluationMethod ||
-            req.evaluationMethod === "PENDING"
+            req.evaluationResult === "NOT_EVALUATED"
           ) {
+            return false;
+          }
+
+          // ตรวจสอบว่ามีการเลือก evaluationMethod หรือไม่ (ต้องไม่เป็น PENDING, empty, null, undefined)
+          if (!req.evaluationMethod || req.evaluationMethod === "PENDING") {
             return false;
           }
         }
@@ -1214,81 +564,172 @@ export default function AuditorInspectionsPage() {
     return true;
   };
 
-  // จบการตรวจประเมิน
-  const completeInspection = async () => {
-    if (!selectedInspection) return;
-
-    // ตรวจสอบความครบถ้วนของการตรวจประเมิน
-    if (!checkAllItemsCompleted()) {
-      toast.error(
-        "ไม่สามารถจบการตรวจประเมินได้ เนื่องจากยังมีรายการที่ยังไม่ได้ตรวจประเมิน",
-        { duration: 5000 }
-      );
-      return;
-    }
-
-    try {
-      // บันทึกข้อมูลของรายการสุดท้ายก่อน โดยไม่แสดง alert และไม่ให้เปลี่ยนรายการ
-      const saveSuccess = await saveCurrentItem({
-        showAlert: false,
-        skipNavigation: true,
-      });
-
-      // ถ้าบันทึกไม่สำเร็จ ให้หยุดการทำงาน
-      if (!saveSuccess) {
-        toast.error("ไม่สามารถบันทึกข้อมูลรายการสุดท้ายได้");
-        return;
+  // Handle save
+  const handleSave = async () => {
+    if (selectedInspection) {
+      const success = await saveCurrentItem(selectedInspection.inspectionId);
+      if (success) {
+        // Save position
+        localStorage.setItem(
+          `inspection_${selectedInspection.inspectionId}_position`,
+          currentItemIndex.toString()
+        );
+        alert("บันทึกข้อมูลสำเร็จ");
       }
-
-      // ทำการอัพเดตสถานะการตรวจประเมิน with version
-      const response = await fetch(
-        `/api/v1/inspections/${selectedInspection.inspectionId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            inspectionStatus: "ตรวจประเมินแล้ว",
-            inspectionResult: "รอผลการตรวจประเมิน",
-            version: selectedInspection.version, // ส่ง version
-          }),
-        }
-      );
-
-      if (response.ok) {
-        toast.success(
-          "การตรวจประเมินเสร็จสิ้น กรุณาไปที่หน้าสรุปผลเพื่อพิจารณาผลการประเมิน",
-          { duration: 5000 }
-        );
-
-        router.push(
-          `/auditor/inspection-summary/${selectedInspection.inspectionId}`
-        );
-      } else if (response.status === 409) {
-        // Handle optimistic lock conflict
-        const errorData = await response.json();
-        toast.error(
-          errorData.userMessage ||
-            "ข้อมูลถูกแก้ไขโดยผู้ใช้อื่นแล้ว กรุณาโหลดข้อมูลใหม่และลองอีกครั้ง",
-          { duration: 5000 }
-        );
-        // Refresh inspections
-        await fetchPendingInspections();
-      } else {
-        toast.error("ไม่สามารถอัปเดตสถานะการตรวจประเมินได้");
-      }
-    } catch (error) {
-      console.error("Error completing inspection:", error);
-      toast.error("เกิดข้อผิดพลาดในการจบการตรวจประเมิน");
     }
   };
 
-  if (loading) {
+  // Handle save all items
+  const handleSaveAll = async () => {
+    if (selectedInspection) {
+      const success = await saveAllItems(selectedInspection.inspectionId);
+      if (success) {
+        // Keep current position
+        localStorage.setItem(
+          `inspection_${selectedInspection.inspectionId}_position`,
+          currentItemIndex.toString()
+        );
+      }
+    }
+  };
+
+  // Handle complete
+  const handleComplete = async () => {
+    if (selectedInspection) {
+      const success = await completeInspection(selectedInspection.inspectionId);
+      if (success) {
+        // Clear saved position
+        localStorage.removeItem(
+          `inspection_${selectedInspection.inspectionId}_position`
+        );
+        alert("จบการตรวจประเมินสำเร็จ");
+        setShowInspectionForm(false);
+        // Reload inspections
+        if (session?.user?.roleData?.auditorId) {
+          loadInspections(session.user.roleData.auditorId);
+        }
+      }
+    }
+  };
+
+  // Handle previous/next - ไม่บันทึก เฉพาะเปลี่ยนรายการ
+  const handlePrevious = () => {
+    if (currentItemIndex > 0) {
+      setCurrentItemIndex(currentItemIndex - 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (currentItemIndex < inspectionItems.length - 1) {
+      // ไม่บันทึก เพียงแค่ไปรายการถัดไป
+      setCurrentItemIndex(currentItemIndex + 1);
+    } else {
+      // ถ้าอยู่รายการสุดท้าย วนกลับไปรายการแรก (ไม่บันทึก)
+      setCurrentItemIndex(0);
+    }
+  };
+
+  // DataTable columns
+  const columns = [
+    {
+      field: "inspectionNo",
+      header: "รหัสการตรวจ",
+      sortable: true,
+      body: (rowData: Inspection) => rowData.inspectionNo,
+      headerAlign: "center" as const,
+      bodyAlign: "left" as const,
+    },
+    {
+      field: "inspectionDateAndTime",
+      header: "วันที่ตรวจ",
+      sortable: true,
+      body: (rowData: Inspection) =>
+        new Date(rowData.inspectionDateAndTime).toLocaleDateString("th-TH", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        }),
+      headerAlign: "center" as const,
+      bodyAlign: "left" as const,
+    },
+    {
+      field: "inspectionType.typeName",
+      header: "ประเภท",
+      sortable: true,
+      body: (rowData: Inspection) =>
+        rowData.inspectionType?.typeName || "ไม่ระบุ",
+      headerAlign: "center" as const,
+      bodyAlign: "left" as const,
+    },
+    {
+      field: "rubberFarm.farmer",
+      header: "เกษตรกร",
+      sortable: true,
+      body: (rowData: Inspection) => {
+        const farmer = rowData.rubberFarm?.farmer;
+        return farmer
+          ? `${farmer.namePrefix}${farmer.firstName} ${farmer.lastName}`
+          : "ไม่ระบุ";
+      },
+      headerAlign: "center" as const,
+      bodyAlign: "left" as const,
+    },
+    {
+      field: "rubberFarm.province",
+      header: "จังหวัด",
+      sortable: true,
+      body: (rowData: Inspection) => rowData.rubberFarm?.province || "ไม่ระบุ",
+      headerAlign: "center" as const,
+      bodyAlign: "left" as const,
+    },
+    {
+      field: "inspectionStatus",
+      header: "สถานะ",
+      sortable: true,
+      body: (rowData: Inspection) => (
+        <StatusBadge status={rowData.inspectionStatus} />
+      ),
+      headerAlign: "center" as const,
+      bodyAlign: "left" as const,
+    },
+    {
+      field: "actions",
+      header: "",
+      body: (rowData: Inspection) => (
+        <div className="flex justify-center gap-2">
+          <PrimaryButton
+            icon="pi pi-eye"
+            onClick={() => viewFarmDetails(rowData.rubberFarmId)}
+            color="info"
+            rounded
+            text
+            tooltip="ดูรายละเอียดสวน"
+            tooltipOptions={{ position: "left" }}
+          />
+          <PrimaryButton
+            icon="pi pi-file-edit"
+            onClick={() => selectInspection(rowData)}
+            color="success"
+            rounded
+            text
+            tooltip="เริ่มตรวจประเมิน"
+            tooltipOptions={{
+              position: "left",
+            }}
+          />
+        </div>
+      ),
+      headerAlign: "center" as const,
+      bodyAlign: "center" as const,
+      // style: { width: "5%" },
+    },
+  ];
+
+  if (loading && inspections.length === 0) {
     return (
       <AuditorLayout>
-        <div className="flex justify-center items-center min-h-[60vh]">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+        <div className="flex items-center justify-center h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-900"></div>
         </div>
       </AuditorLayout>
     );
@@ -1297,836 +738,140 @@ export default function AuditorInspectionsPage() {
   return (
     <AuditorLayout>
       <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
-        {!selectedInspection ? (
-          // แสดงรายการตรวจประเมินที่รอดำเนินการ
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-6">
-              รายการตรวจประเมินที่รอดำเนินการ
-            </h1>
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-900">
+            ตรวจประเมินสวนยางพารา
+          </h1>
+          <p className="mt-1 text-sm text-gray-500">
+            รายการตรวจประเมินที่รอดำเนินการ
+          </p>
+        </div>
 
-            {inspections.length === 0 ? (
-              <div className="bg-white rounded-lg shadow p-6 text-center">
-                <p className="text-gray-500 mb-4">
-                  ไม่พบรายการตรวจประเมินที่รอดำเนินการ
-                </p>
-                <Link
-                  href="/auditor/dashboard"
-                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                >
-                  กลับสู่หน้าหลัก
-                </Link>
-              </div>
-            ) : (
-              <>
-                {/* Search Bar */}
-                <div className="mb-4">
-                  <input
-                    type="text"
-                    placeholder="ค้นหาการตรวจประเมิน (รหัสการตรวจ, พื้นที่, เกษตรกร, วันที่, ประเภทการตรวจ)..."
-                    value={inspectionSearchTerm}
-                    onChange={(e) => {
-                      setInspectionSearchTerm(e.target.value);
-                      setCurrentPage(1); // Reset to first page on new search
-                    }}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                  />
-                </div>
-
-                <div className="hidden md:block w-full overflow-auto bg-white rounded-lg shadow">
-                  <div className="min-w-full overflow-hidden overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th
-                            scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
-                          >
-                            รหัสการตรวจ
-                          </th>
-                          <th
-                            scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
-                          >
-                            วันที่นัดหมาย
-                          </th>
-                          <th
-                            scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
-                          >
-                            ประเภทการตรวจ
-                          </th>
-                          <th
-                            scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
-                          >
-                            พื้นที่
-                          </th>
-                          <th
-                            scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
-                          >
-                            เกษตรกร
-                          </th>
-                          <th
-                            scope="col"
-                            className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
-                          >
-                            การดำเนินการ
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {loading ? (
-                          <tr>
-                            <td colSpan={6} className="text-center py-4">
-                              <div className="flex justify-center">
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
-                              </div>
-                            </td>
-                          </tr>
-                        ) : currentInspections.length === 0 ? (
-                          <tr>
-                            <td
-                              colSpan={6}
-                              className="text-center py-4 text-gray-500"
-                            >
-                              ไม่พบข้อมูลที่ตรงกับการค้นหา
-                            </td>
-                          </tr>
-                        ) : (
-                          currentInspections.map((inspection) => (
-                            <tr key={inspection.inspectionId}>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {inspection.inspectionNo}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {new Date(
-                                  inspection.inspectionDateAndTime
-                                ).toLocaleDateString("th-TH", {
-                                  year: "numeric",
-                                  month: "long",
-                                  day: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {inspection.inspectionType?.typeName || "-"}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {inspection.rubberFarm?.villageName || "-"},{" "}
-                                {inspection.rubberFarm?.district || "-"},{" "}
-                                {inspection.rubberFarm?.province || "-"}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {inspection.rubberFarm?.farmer
-                                  ? `${inspection.rubberFarm.farmer.namePrefix}${inspection.rubberFarm.farmer.firstName} ${inspection.rubberFarm.farmer.lastName}`
-                                  : "-"}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-center">
-                                <div className="flex justify-center space-x-2">
-                                  <button
-                                    onClick={() => {
-                                      if (inspection.rubberFarmId) {
-                                        fetchFarmDetails(
-                                          inspection.rubberFarmId
-                                        );
-                                      }
-                                    }}
-                                    className="bg-blue-600 text-white px-3 py-1.5 rounded-md hover:bg-blue-700 text-sm"
-                                  >
-                                    ดูข้อมูล
-                                  </button>
-                                  <button
-                                    onClick={() => selectInspection(inspection)}
-                                    className="bg-green-600 text-white px-3 py-1.5 rounded-md hover:bg-green-700 text-sm"
-                                  >
-                                    เริ่มตรวจประเมิน
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                <div className="md:hidden space-y-4">
-                  {currentInspections.length === 0 ? (
-                    <div className="bg-white rounded-lg p-4 text-center text-gray-500">
-                      ไม่พบข้อมูลที่ตรงกับการค้นหา
-                    </div>
-                  ) : (
-                    currentInspections.map((inspection) => (
-                      <div
-                        key={inspection.inspectionId}
-                        className="bg-white rounded-lg shadow p-4"
-                      >
-                        <div className="mb-3">
-                          <h3 className="font-semibold text-gray-900">
-                            เลขที่: {inspection.inspectionNo}
-                          </h3>
-                          <p className="text-sm text-gray-600 mt-1">
-                            {inspection.inspectionType?.typeName || "N/A"}
-                          </p>
-                        </div>
-
-                        <div className="space-y-2 text-sm">
-                          <div>
-                            <span className="font-medium text-gray-700">
-                              เกษตรกร:{" "}
-                            </span>
-                            {inspection.rubberFarm?.farmer ? (
-                              <span>
-                                {inspection.rubberFarm.farmer.namePrefix}
-                                {inspection.rubberFarm.farmer.firstName}{" "}
-                                {inspection.rubberFarm.farmer.lastName}
-                              </span>
-                            ) : (
-                              "N/A"
-                            )}
-                          </div>
-
-                          <div>
-                            <span className="font-medium text-gray-700">
-                              สถานที่:{" "}
-                            </span>
-                            {inspection.rubberFarm
-                              ? `${inspection.rubberFarm.villageName}, ${inspection.rubberFarm.district}`
-                              : "N/A"}
-                          </div>
-
-                          <div>
-                            <span className="font-medium text-gray-700">
-                              วันที่:{" "}
-                            </span>
-                            {new Date(
-                              inspection.inspectionDateAndTime
-                            ).toLocaleDateString("th-TH")}
-                          </div>
-                        </div>
-
-                        <div className="mt-4 flex gap-2">
-                          <button
-                            onClick={() =>
-                              fetchFarmDetails(inspection.rubberFarmId)
-                            }
-                            className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-                            disabled={loadingFarmDetails}
-                          >
-                            ดูข้อมูล
-                          </button>
-                          <button
-                            onClick={() => selectInspection(inspection)}
-                            className="flex-1 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
-                          >
-                            เริ่มตรวจ
-                          </button>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="mt-4 flex justify-between items-center">
-                    <p className="text-sm text-gray-700">
-                      แสดง {indexOfFirstInspection + 1} ถึง{" "}
-                      {Math.min(
-                        indexOfLastInspection,
-                        filteredInspections.length
-                      )}{" "}
-                      จาก {filteredInspections.length} รายการ
-                    </p>
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => setCurrentPage(currentPage - 1)}
-                        disabled={currentPage === 1}
-                        className="px-3 py-1 border rounded-md disabled:opacity-50"
-                      >
-                        ก่อนหน้า
-                      </button>
-                      <button
-                        onClick={() => setCurrentPage(currentPage + 1)}
-                        disabled={currentPage === totalPages}
-                        className="px-3 py-1 border rounded-md disabled:opacity-50"
-                      >
-                        ถัดไป
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {showFarmDetails && selectedFarmDetails && (
-                  <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-                    <div className="relative top-20 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
-                      <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-lg font-bold text-gray-900">
-                          ข้อมูลสวนยางพารา
-                        </h3>
-                        <button
-                          onClick={() => setShowFarmDetails(false)}
-                          className="text-gray-400 hover:text-gray-600"
-                        >
-                          <svg
-                            className="h-6 w-6"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M6 18L18 6M6 6l12 12"
-                            />
-                          </svg>
-                        </button>
-                      </div>
-
-                      <div className="mt-4 space-y-4 max-h-[70vh] overflow-y-auto">
-                        {/* ข้อมูลที่ตั้งสวน */}
-                        <div className="bg-gray-50 p-4 rounded-lg">
-                          <h4 className="font-semibold text-gray-800 mb-2">
-                            ที่ตั้งสวนยาง
-                          </h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                            <div>
-                              <span className="font-medium text-gray-600">
-                                หมู่บ้าน:
-                              </span>{" "}
-                              {selectedFarmDetails.villageName}
-                            </div>
-                            <div>
-                              <span className="font-medium text-gray-600">
-                                หมู่ที่:
-                              </span>{" "}
-                              {selectedFarmDetails.moo}
-                            </div>
-                            <div>
-                              <span className="font-medium text-gray-600">
-                                ถนน:
-                              </span>{" "}
-                              {selectedFarmDetails.road || "-"}
-                            </div>
-                            <div>
-                              <span className="font-medium text-gray-600">
-                                ซอย:
-                              </span>{" "}
-                              {selectedFarmDetails.alley || "-"}
-                            </div>
-                            <div>
-                              <span className="font-medium text-gray-600">
-                                ตำบล:
-                              </span>{" "}
-                              {selectedFarmDetails.subDistrict}
-                            </div>
-                            <div>
-                              <span className="font-medium text-gray-600">
-                                อำเภอ:
-                              </span>{" "}
-                              {selectedFarmDetails.district}
-                            </div>
-                            <div className="md:col-span-2">
-                              <span className="font-medium text-gray-600">
-                                จังหวัด:
-                              </span>{" "}
-                              {selectedFarmDetails.province}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* ข้อมูลแปลงปลูก */}
-                        <div className="bg-gray-50 p-4 rounded-lg">
-                          <h4 className="font-semibold text-gray-800 mb-2">
-                            รายละเอียดแปลงปลูก
-                          </h4>
-                          {selectedFarmDetails.plantingDetails &&
-                          selectedFarmDetails.plantingDetails.length > 0 ? (
-                            <div className="overflow-x-auto">
-                              <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-100">
-                                  <tr>
-                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                                      พันธุ์ยาง
-                                    </th>
-                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                                      พื้นที่ (ไร่)
-                                    </th>
-                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                                      จำนวนต้น
-                                    </th>
-                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                                      จำนวนต้นที่กรีด
-                                    </th>
-                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                                      อายุ (ปี)
-                                    </th>
-                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                                      ผลผลิต (กก.)
-                                    </th>
-                                  </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
-                                  {selectedFarmDetails.plantingDetails.map(
-                                    (detail, index) => (
-                                      <tr key={index}>
-                                        <td className="px-3 py-2 text-sm text-gray-900">
-                                          {detail.specie}
-                                        </td>
-                                        <td className="px-3 py-2 text-sm text-gray-900">
-                                          {detail.areaOfPlot}
-                                        </td>
-                                        <td className="px-3 py-2 text-sm text-gray-900">
-                                          {detail.numberOfRubber}
-                                        </td>
-                                        <td className="px-3 py-2 text-sm text-gray-900">
-                                          {detail.numberOfTapping}
-                                        </td>
-                                        <td className="px-3 py-2 text-sm text-gray-900">
-                                          {detail.ageOfRubber}
-                                        </td>
-                                        <td className="px-3 py-2 text-sm text-gray-900">
-                                          {detail.totalProduction}
-                                        </td>
-                                      </tr>
-                                    )
-                                  )}
-                                </tbody>
-                              </table>
-                            </div>
-                          ) : (
-                            <p className="text-sm text-gray-500">
-                              ไม่มีข้อมูลแปลงปลูก
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="mt-6 flex justify-end">
-                        <button
-                          onClick={() => setShowFarmDetails(false)}
-                          className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400"
-                        >
-                          ปิด
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        ) : (
-          // แสดงฟอร์มการตรวจประเมิน
-          <div>
-            <div className="mb-6">
-              <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold text-gray-900">
-                  ตรวจประเมินสวนยางพารา
-                </h1>
-                <button
-                  onClick={() => setSelectedInspection(null)}
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="-ml-1 mr-2 h-5 w-5 text-gray-500"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M11 17l-5-5m0 0l5-5m-5 5h12"
-                    />
-                  </svg>
-                  กลับไปหน้ารายการตรวจ
-                </button>
-              </div>
-              <div className="mt-4 bg-white rounded-lg shadow overflow-hidden">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-                  <div>
-                    <h2 className="text-sm font-medium text-gray-500">
-                      รหัสการตรวจประเมิน
-                    </h2>
-                    <p className="mt-1 text-lg font-medium text-gray-900">
-                      {selectedInspection.inspectionNo}
-                    </p>
-                  </div>
-                  <div>
-                    <h2 className="text-sm font-medium text-gray-500">
-                      วันที่นัดหมาย
-                    </h2>
-                    <p className="mt-1 text-lg font-medium text-gray-900">
-                      {new Date(
-                        selectedInspection.inspectionDateAndTime
-                      ).toLocaleDateString("th-TH", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </p>
-                  </div>
-                  <div>
-                    <h2 className="text-sm font-medium text-gray-500">
-                      ประเภทการตรวจ
-                    </h2>
-                    <p className="mt-1 text-lg font-medium text-gray-900">
-                      {selectedInspection.inspectionType?.typeName || "-"}
-                    </p>
-                  </div>
-                  <div className="sm:col-span-2 lg:col-span-3">
-                    <h2 className="text-sm font-medium text-gray-500">
-                      พื้นที่สวนยาง
-                    </h2>
-                    <p className="mt-1 text-lg font-medium text-gray-900">
-                      {selectedInspection.rubberFarm?.villageName || "-"},{" "}
-                      {selectedInspection.rubberFarm?.district || "-"},{" "}
-                      {selectedInspection.rubberFarm?.province || "-"}
-                    </p>
-                  </div>
-                </div>
-              </div>
+        {/* Search Filters */}
+        <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label
+                className="block text-sm font-medium text-gray-700 mb-1"
+                htmlFor="province-search"
+              >
+                จังหวัด
+              </label>
+              <PrimaryAutoComplete
+                id="province-search"
+                value={selectedProvinceId || ""}
+                options={provinces.map((province) => ({
+                  label: province.name_th,
+                  value: province.id,
+                }))}
+                onChange={(value) => handleProvinceChange(value as number)}
+                placeholder="เลือกจังหวัด"
+              />
             </div>
 
-            {inspectionItems.length > 0 && (
-              <div className="bg-white rounded-lg shadow p-6">
-                <div className="mb-6">
-                  <h2 className="text-xl font-semibold text-gray-900">
-                    รายการตรวจที่ {currentItemIndex + 1} จาก{" "}
-                    {inspectionItems.length} :{" "}
-                    {inspectionItems[currentItemIndex]?.inspectionItemMaster
-                      ?.itemName || ""}
-                  </h2>
-                  {/* เพิ่มปุ่มสำหรับรีเซ็ตตำแหน่ง */}
-                  <button
-                    onClick={() => {
-                      if (
-                        selectedInspection &&
-                        confirm("ต้องการเริ่มต้นจากรายการแรกใหม่หรือไม่?")
-                      ) {
-                        localStorage.removeItem(
-                          `inspectionPosition-${selectedInspection.inspectionId}`
-                        );
-                        setCurrentItemIndex(0);
-                        alert("เริ่มต้นจากรายการแรกเรียบร้อยแล้ว");
-                      }
-                    }}
-                    className="text-sm px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-gray-700"
-                  >
-                    เริ่มใหม่
-                  </button>
-                  <div className="mt-3 relative">
-                    <div className="w-full bg-gray-200 rounded-full h-2.5">
-                      <div
-                        className="bg-green-600 h-2.5 rounded-full"
-                        style={{
-                          width: `${
-                            ((currentItemIndex + 1) / inspectionItems.length) *
-                            100
-                          }%`,
-                        }}
-                      ></div>
-                    </div>
+            <div>
+              <label
+                className="block text-sm font-medium text-gray-700 mb-1"
+                htmlFor="district-search"
+              >
+                อำเภอ
+              </label>
+              <PrimaryAutoComplete
+                id="district-search"
+                value={selectedDistrictId || ""}
+                options={districts.map((district) => ({
+                  label: district.name_th,
+                  value: district.id,
+                }))}
+                onChange={(value) => handleDistrictChange(value as number)}
+                placeholder="เลือกอำเภอ"
+                disabled={!selectedProvinceId}
+              />
+            </div>
 
-                    {/* แสดงสถานะรายการตรวจ */}
-                    <div className="flex mt-2 overflow-x-auto py-1">
-                      {inspectionItems.map((item, index) => (
-                        <div
-                          key={item.inspectionItemId}
-                          className={`flex-shrink-0 px-2 py-1 mx-1 rounded-md text-xs font-medium cursor-pointer
-                ${
-                  index === currentItemIndex
-                    ? "bg-blue-100 text-blue-800 border border-blue-300"
-                    : item.inspectionItemResult === "ผ่าน"
-                    ? "bg-green-100 text-green-800"
-                    : item.inspectionItemResult === "ไม่ผ่าน"
-                    ? "bg-red-100 text-red-800"
-                    : "bg-gray-100 text-gray-800"
-                }`}
-                          onClick={() => {
-                            // ถามผู้ใช้ก่อนเปลี่ยนหน้า ถ้ากำลังแก้ไขรายการปัจจุบันอยู่
-                            if (index !== currentItemIndex) {
-                              if (
-                                window.confirm(
-                                  "ต้องการเปลี่ยนไปรายการตรวจอื่นหรือไม่? ข้อมูลที่ยังไม่ได้บันทึกจะหายไป"
-                                )
-                              ) {
-                                setCurrentItemIndex(index);
-                              }
-                            }
-                          }}
-                        >
-                          {index + 1}{" "}
-                          {item.inspectionItemResult === "ผ่าน"
-                            ? "✓"
-                            : item.inspectionItemResult === "ไม่ผ่าน"
-                            ? "✗"
-                            : ""}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    {/* {inspectionItems[currentItemIndex]?.inspectionItemMaster
-                        ?.itemNo || ""}{" "} */}
-                    {inspectionItems[currentItemIndex]?.inspectionItemMaster
-                      ?.itemName || ""}
-                  </h3>
-                </div>
-
-                {/* Requirements section */}
-                {inspectionItems[currentItemIndex] &&
-                inspectionItems[currentItemIndex].requirements &&
-                inspectionItems[currentItemIndex].requirements.length > 0 ? (
-                  <div className="mb-6 space-y-4">
-                    {inspectionItems[currentItemIndex].requirements?.map(
-                      (requirement, requirementIndex) => (
-                        <div
-                          key={requirement.requirementId}
-                          className="p-4 border rounded-md bg-gray-50"
-                        >
-                          <div className="mb-2">
-                            <div className="flex items-start">
-                              <div className="flex-shrink-0">
-                                <span
-                                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                    requirement.requirementMaster
-                                      ?.requirementLevel === "ข้อกำหนดหลัก"
-                                      ? "bg-red-100 text-red-800"
-                                      : "bg-blue-100 text-blue-800"
-                                  }`}
-                                >
-                                  {requirement.requirementMaster
-                                    ?.requirementLevel || ""}
-                                  {requirement.requirementMaster
-                                    ?.requirementLevelNo
-                                    ? ` ${requirement.requirementMaster.requirementLevelNo}`
-                                    : ""}
-                                </span>
-                              </div>
-                              <h4 className="ml-2 text-md font-medium text-gray-900">
-                                {requirement.requirementNo}.{" "}
-                                {requirement.requirementMaster
-                                  ?.requirementName || ""}
-                              </h4>
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                            {/* ผลการตรวจประเมิน */}
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                ผลการตรวจประเมิน
-                              </label>
-                              <select
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
-                                value={requirement.evaluationResult || ""}
-                                onChange={(e) =>
-                                  updateRequirementEvaluation(
-                                    currentItemIndex,
-                                    requirementIndex,
-                                    "evaluationResult",
-                                    e.target.value
-                                  )
-                                }
-                              >
-                                <option value="NOT_EVALUATED">
-                                  -- เลือกผลการตรวจ --
-                                </option>
-                                <option value="ใช่">ใช่ (ผ่าน)</option>
-                                <option value="ไม่ใช่">ไม่ใช่ (ไม่ผ่าน)</option>
-                                <option value="NA">ไม่เกี่ยวข้อง (NA)</option>
-                              </select>
-                            </div>
-
-                            {/* วิธีการตรวจประเมิน */}
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                วิธีการตรวจประเมิน
-                              </label>
-                              <select
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
-                                value={requirement.evaluationMethod || ""}
-                                onChange={(e) =>
-                                  updateRequirementEvaluation(
-                                    currentItemIndex,
-                                    requirementIndex,
-                                    "evaluationMethod",
-                                    e.target.value
-                                  )
-                                }
-                              >
-                                <option value="PENDING">
-                                  -- เลือกวิธีการตรวจ --
-                                </option>
-                                <option value="พินิจ">พินิจ</option>
-                                <option value="สัมภาษณ์">สัมภาษณ์</option>
-                              </select>
-                            </div>
-
-                            {/* บันทึกเพิ่มเติม */}
-                            <div className="md:col-span-2">
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                บันทึกเพิ่มเติม (ถ้ามี)
-                              </label>
-                              <textarea
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"
-                                rows={3}
-                                value={requirement.note || ""}
-                                onChange={(e) =>
-                                  updateRequirementEvaluation(
-                                    currentItemIndex,
-                                    requirementIndex,
-                                    "note",
-                                    e.target.value
-                                  )
-                                }
-                                placeholder="บันทึกข้อมูลเพิ่มเติมเกี่ยวกับการตรวจประเมินข้อนี้"
-                              ></textarea>
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-gray-500">
-                    ไม่พบข้อกำหนดสำหรับรายการตรวจนี้
-                  </p>
-                )}
-
-                {/* Additional fields section */}
-                {renderAdditionalFields(currentItemIndex)}
-
-                {/* Navigation buttons */}
-                <div className="flex justify-between items-center mt-8">
-                  <button
-                    onClick={() => {
-                      if (currentItemIndex > 0) {
-                        setCurrentItemIndex(currentItemIndex - 1);
-                      }
-                    }}
-                    disabled={currentItemIndex === 0}
-                    className={`px-4 py-2 rounded-md font-medium ${
-                      currentItemIndex === 0
-                        ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                        : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
-                    }`}
-                  >
-                    <span className="flex items-center">
-                      <svg
-                        className="w-5 h-5 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                        />
-                      </svg>
-                      ย้อนกลับ
-                    </span>
-                  </button>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => saveCurrentItem()}
-                      disabled={saving}
-                      className="px-4 py-2 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                    >
-                      {saving ? (
-                        <span className="flex items-center">
-                          <svg
-                            className="animate-spin -ml-1 mr-2 h-5 w-5 text-white"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                          >
-                            <circle
-                              className="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                            ></circle>
-                            <path
-                              className="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            ></path>
-                          </svg>
-                          กำลังบันทึก...
-                        </span>
-                      ) : (
-                        "บันทึก"
-                      )}
-                    </button>
-                    {currentItemIndex < inspectionItems.length - 1 ? (
-                      <button
-                        onClick={() => {
-                          if (validateCurrentItem()) {
-                            saveCurrentItem();
-                          }
-                        }}
-                        disabled={saving}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                      >
-                        ถัดไป
-                        <svg
-                          className="w-5 h-5 ml-2 inline-block"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M14 5l7 7m0 0l-7 7m7-7H3"
-                          />
-                        </svg>
-                      </button>
-                    ) : (
-                      <button
-                        onClick={completeInspection}
-                        disabled={!checkAllItemsCompleted()}
-                        className={`px-4 py-2 ${
-                          checkAllItemsCompleted()
-                            ? "bg-purple-600 hover:bg-purple-700"
-                            : "bg-gray-400 cursor-not-allowed"
-                        } text-white rounded-md font-medium`}
-                        title={
-                          checkAllItemsCompleted()
-                            ? ""
-                            : "ต้องตรวจประเมินให้ครบทุกรายการก่อน"
-                        }
-                      >
-                        {checkAllItemsCompleted()
-                          ? "จบการตรวจประเมิน"
-                          : "รอการประเมินให้ครบถ้วน"}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
+            <div>
+              <label
+                className="block text-sm font-medium text-gray-700 mb-1"
+                htmlFor="subdistrict-search"
+              >
+                ตำบล
+              </label>
+              <PrimaryAutoComplete
+                id="subdistrict-search"
+                value={selectedSubDistrictId || ""}
+                options={subDistricts.map((subDistrict) => ({
+                  label: subDistrict.name_th,
+                  value: subDistrict.id,
+                }))}
+                onChange={(value) => setSelectedSubDistrictId(value as number)}
+                placeholder="เลือกตำบล"
+                disabled={!selectedDistrictId}
+              />
+            </div>
           </div>
+
+          <div className="mt-4 flex gap-2 justify-center items-center">
+            <PrimaryButton
+              label="ค้นหา"
+              icon="pi pi-search"
+              onClick={handleSearch}
+              color="success"
+            />
+            <PrimaryButton
+              label="ล้างค่า"
+              icon="pi pi-refresh"
+              onClick={handleResetSearch}
+              color="secondary"
+            />
+          </div>
+        </div>
+
+        {/* Data Table */}
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+          <PrimaryDataTable
+            value={inspections}
+            columns={columns}
+            loading={loading}
+            paginator
+            rows={lazyParams.rows}
+            totalRecords={totalRecords}
+            lazy
+            onPage={onPage}
+            first={lazyParams.first}
+            sortMode="multiple"
+            multiSortMeta={lazyParams.multiSortMeta}
+            onSort={onSort}
+            emptyMessage="ไม่พบรายการตรวจประเมินที่รอดำเนินการ"
+            dataKey="inspectionId"
+          />
+        </div>
+
+        {/* Farm Details Modal */}
+        {showFarmDetails && (
+          <RubberFarmDetailsModal
+            farmDetails={selectedFarmDetails}
+            loading={loadingFarmDetails}
+            onClose={() => setShowFarmDetails(false)}
+          />
         )}
+
+        {/* Inspection Form Modal */}
+        <InspectionFormModal
+          show={showInspectionForm}
+          onClose={() => setShowInspectionForm(false)}
+          inspectionItems={inspectionItems}
+          currentItemIndex={currentItemIndex}
+          saving={saving}
+          onPrevious={handlePrevious}
+          onNext={handleNext}
+          onSave={handleSave}
+          onSaveAll={handleSaveAll}
+          onComplete={handleComplete}
+          updateRequirementEvaluation={updateRequirementEvaluation}
+          updateOtherConditions={updateOtherConditions}
+          renderAdditionalFields={renderAdditionalFields}
+          allRequiredFieldsFilled={areAllRequiredFieldsFilled()}
+        />
       </div>
     </AuditorLayout>
   );

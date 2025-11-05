@@ -70,7 +70,6 @@ export default function AuditorInspectionSummaryPage() {
   const [loading, setLoading] = useState(true);
   const [savingResult, setSavingResult] = useState(false);
   const [selectedResult, setSelectedResult] = useState<string>("");
-  const [comments, setComments] = useState<string>("");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -235,15 +234,14 @@ export default function AuditorInspectionSummaryPage() {
       setSavingResult(true);
 
       const response = await fetch(
-        `/api/v1/inspections/${inspection.inspectionId}`,
+        `/api/v1/inspections/${inspection.inspectionId}/result`,
         {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            inspectionResult: selectedResult,
-            summaryComments: comments,
+            result: selectedResult, // เปลี่ยนจาก inspectionResult เป็น result
             version: inspection.version, // ส่ง version
           }),
         }
@@ -615,21 +613,6 @@ export default function AuditorInspectionSummaryPage() {
                     </div>
                   );
                 })()}
-              </div>
-
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    ความเห็นเพิ่มเติม
-                  </label>
-                  <textarea
-                    className="form-textarea mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-3 px-4 focus:outline-none focus:ring-green-500 focus:border-green-500"
-                    rows={4}
-                    placeholder="กรุณาใส่ความเห็นหรือข้อเสนอแนะเพิ่มเติม (ถ้ามี)"
-                    value={comments}
-                    onChange={(e) => setComments(e.target.value)}
-                  ></textarea>
-                </div>
               </div>
             </div>
 

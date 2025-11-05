@@ -1,23 +1,23 @@
 "use client";
 
-import React, { useState, useEffect, ReactNode } from "react";
-import Image from "next/image";
-import Link from "next/link";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import Footer from "@/components/layout/Footer";
+import FooterNew from "./FooterNew";
+import HeaderNew from "./HeaderNew";
+import SidebarComponent from "./SidebarNew";
+
+// Icons
 import {
-  MenuIcon,
   EditIcon,
   HomeIcon,
   PlusIcon,
   TextClipboardIcon,
   TrashIcon,
-  XIcon,
 } from "@/components/icons";
 
 interface FarmerLayoutProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
 export default function FarmerLayout({ children }: FarmerLayoutProps) {
@@ -28,6 +28,7 @@ export default function FarmerLayout({ children }: FarmerLayoutProps) {
     firstName: "",
     lastName: "",
     isLoading: true,
+    role: "FARMER",
   });
 
   // State for sidebar visibility
@@ -36,10 +37,6 @@ export default function FarmerLayout({ children }: FarmerLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   // State to track screen size for responsive behavior
   const [isMobile, setIsMobile] = useState(false);
-  // State for user dropdown menu
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  // Get current path for navigation highlighting
-  const [selectedPath, setSelectedPath] = useState<string>("");
 
   // Navigation menu items
   const navItems = [
@@ -71,39 +68,21 @@ export default function FarmerLayout({ children }: FarmerLayoutProps) {
   ];
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      setSelectedPath(window.location.pathname);
-    }
-
     // ใช้ข้อมูลจาก NextAuth session แทน localStorage
     if (status === "authenticated" && session?.user) {
       const roleData = session.user.roleData;
-      if (roleData) {
-        setFarmer({
-          namePrefix: roleData.namePrefix || "",
-          firstName: roleData.firstName || "",
-          lastName: roleData.lastName || "",
-          isLoading: false,
-        });
-      } else {
-        setFarmer({
-          namePrefix: "",
-          firstName: session.user.name || "ไม่ทราบชื่อ",
-          lastName: "",
-          isLoading: false,
-        });
-      }
+      setFarmer({
+        namePrefix: roleData?.namePrefix || "",
+        firstName: roleData?.firstName || session.user.name || "",
+        lastName: roleData?.lastName || "",
+        isLoading: false,
+        role: "FARMER",
+      });
+    } else if (status === "loading") {
+      setFarmer((prev) => ({ ...prev, isLoading: true }));
     } else if (status === "unauthenticated") {
       // ถ้ายังไม่ login ให้ redirect ไปหน้า login
       router.push("/");
-    } else {
-      // กำลังโหลด session
-      setFarmer({
-        namePrefix: "",
-        firstName: "กำลังโหลด...",
-        lastName: "",
-        isLoading: true,
-      });
     }
 
     // Check if the screen is mobile size
@@ -129,7 +108,7 @@ export default function FarmerLayout({ children }: FarmerLayoutProps) {
 
     // Cleanup
     return () => window.removeEventListener("resize", checkMobile);
-  }, [session, status, router]);
+  }, [status, session, router]);
 
   // Toggle sidebar collapsed state (for desktop)
   const toggleSidebarCollapse = () => {
@@ -139,10 +118,6 @@ export default function FarmerLayout({ children }: FarmerLayoutProps) {
   // Toggle sidebar visibility (for mobile)
   const toggleSidebarVisibility = () => {
     setSidebarVisible(!sidebarVisible);
-    // When we show the sidebar on mobile, also close any open dropdown
-    if (!sidebarVisible) {
-      setDropdownOpen(false);
-    }
   };
 
   // Handle navigation click on mobile
@@ -159,226 +134,48 @@ export default function FarmerLayout({ children }: FarmerLayoutProps) {
     await signOut({ callbackUrl: "/", redirect: true });
   };
 
+  // Calculate margin left for main content
+  const getMainContentMargin = () => {
+    if (sidebarVisible && !isMobile) {
+      return sidebarCollapsed ? "ml-14" : "ml-64";
+    }
+    return "ml-0";
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-secondary">
-      {/* Mobile Overlay - only visible when sidebar is shown on mobile */}
-      {isMobile && sidebarVisible && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-20"
-          onClick={toggleSidebarVisibility}
-        ></div>
-      )}
+      {/* Sidebar */}
+      <SidebarComponent
+        isMobile={isMobile}
+        user={farmer}
+        handleLogout={handleLogout}
+        visible={sidebarVisible}
+        collapsed={sidebarCollapsed}
+        navItems={navItems}
+        onNavItemClick={handleNavClick}
+        onToggleCollapse={toggleSidebarCollapse}
+        onVisibilityChange={setSidebarVisible}
+        avatarColor="green"
+      />
 
-      {/* Sidebar - shown/hidden based on state */}
-      {sidebarVisible && (
-        <div
-          className={`bg-white shadow-md transition-all duration-300 h-screen fixed z-30 ${
-            sidebarCollapsed ? "w-14" : "w-64"
-          } ${isMobile ? "left-0" : ""} flex flex-col`}
-        >
-          {/* Toggle button at top */}
-          <div className="p-3 flex justify-end border-b border-gray-200">
-            <button
-              onClick={
-                isMobile ? toggleSidebarVisibility : toggleSidebarCollapse
-              }
-              className="p-1 rounded-md hover:bg-gray-100"
-              aria-label={
-                isMobile
-                  ? "Close sidebar"
-                  : sidebarCollapsed
-                  ? "Expand sidebar"
-                  : "Collapse sidebar"
-              }
-            >
-              {isMobile ? (
-                <XIcon className="h-6 w-6 text-gray-500" />
-              ) : (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-gray-500"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                </svg>
-              )}
-            </button>
-          </div>
-
-          {/* Navigation Links */}
-          <nav className="flex-1 py-4">
-            <ul className="space-y-6">
-              {navItems.map((item, index) => (
-                <li key={index}>
-                  <Link
-                    href={item.href}
-                    className={`flex items-center ${
-                      sidebarCollapsed ? "justify-center px-3" : "px-4"
-                    } py-2 text-gray-700 hover:text-gray-900 ${
-                      item.href === selectedPath
-                        ? "bg-green-50 text-green-600"
-                        : ""
-                    }`}
-                    onClick={handleNavClick}
-                  >
-                    <div
-                      className={`${
-                        item.href === selectedPath
-                          ? "text-green-600"
-                          : "text-gray-500"
-                      }`}
-                    >
-                      {item.icon}
-                    </div>
-                    {!sidebarCollapsed && (
-                      <span className="ml-3 text-sm font-medium">
-                        {item.title}
-                      </span>
-                    )}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-
-          {/* User section at bottom (optional) */}
-          {!sidebarCollapsed && (
-            <div className="p-4 border-t">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-medium">
-                    {farmer.firstName.charAt(0)}
-                  </div>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-700">
-                    {farmer.namePrefix}
-                    {farmer.firstName} {farmer.lastName}
-                  </p>
-                  <button
-                    onClick={handleLogout}
-                    className="text-xs text-red-500 hover:text-red-700"
-                  >
-                    ออกจากระบบ
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Main Content - ใช้ flex และ flex-col เพื่อให้ footer อยู่ด้านล่างเสมอ */}
+      {/* Main Content */}
       <div
-        className={`flex-1 flex flex-col ${
-          sidebarVisible && !isMobile
-            ? sidebarCollapsed
-              ? "ml-14"
-              : "ml-64"
-            : "ml-0"
-        } transition-all duration-300`}
+        className={`flex-1 flex flex-col ${getMainContentMargin()} transition-all duration-300`}
       >
         {/* Header */}
-        <header className="bg-white shadow-sm sticky top-0 z-10 border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-            <div className="flex items-center">
-              {/* Mobile menu toggle button */}
-              {isMobile && (
-                <button
-                  onClick={toggleSidebarVisibility}
-                  className="mr-2 p-1 rounded-md hover:bg-gray-100"
-                  aria-label="Toggle sidebar"
-                >
-                  <MenuIcon className="h-6 w-6 text-gray-500" />
-                </button>
-              )}
-              <Image
-                src="/logo_header.png"
-                alt="Rubber Authority of Thailand Logo"
-                width={180}
-                height={180}
-                className="mr-2"
-              />
-            </div>
-            <div className="flex items-center">
-              {/* User profile dropdown */}
-              <div className="relative">
-                <button
-                  className="flex items-center space-x-3 focus:outline-none"
-                  onClick={() => setDropdownOpen(!dropdownOpen)}
-                >
-                  {/* ชื่อผู้ใช้ */}
-                  <span className="hidden sm:block text-sm font-medium text-gray-700">
-                    {farmer.isLoading ? (
-                      <div className="animate-pulse h-5 w-24 bg-gray-200 rounded"></div>
-                    ) : (
-                      <>
-                        {farmer.namePrefix}
-                        {farmer.firstName} {farmer.lastName}
-                      </>
-                    )}
-                  </span>
-                  <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-medium">
-                    {!farmer.isLoading && farmer.firstName.charAt(0)}
-                  </div>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className={`h-5 w-5 text-gray-400 transition-transform ${
-                      dropdownOpen ? "rotate-180" : ""
-                    }`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </button>
+        <HeaderNew
+          isMobile={isMobile}
+          user={farmer}
+          toggleSidebarVisibility={toggleSidebarVisibility}
+          handleLogout={handleLogout}
+          avatarColor="green"
+        />
 
-                {/* Dropdown menu */}
-                {dropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 ring-1 ring-black ring-opacity-5">
-                    <Link
-                      href="/farmer/profile"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      ข้อมูลโปรไฟล์
-                    </Link>
-                    <Link
-                      href="/farmer/settings"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      ตั้งค่า
-                    </Link>
-                    <button
-                      onClick={handleLogout}
-                      className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                    >
-                      ออกจากระบบ
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </header>
-
-        {/* Main Content Area - ใช้ flex-grow เพื่อขยายพื้นที่ให้เต็ม */}
+        {/* Main Content Area */}
         <main className="flex-grow">{children}</main>
 
-        {/* Footer - เพิ่ม mt-auto เพื่อให้อยู่ด้านล่างสุดเสมอ */}
-        <Footer />
+        {/* Footer */}
+        <FooterNew />
       </div>
     </div>
   );

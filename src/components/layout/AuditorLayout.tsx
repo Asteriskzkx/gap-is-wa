@@ -1,19 +1,21 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import Image from "next/image";
-import Link from "next/link";
+import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useSession, signOut } from "next-auth/react";
-import Footer from "@/components/layout/Footer";
+import { useEffect, useState } from "react";
+import FooterNew from "./FooterNew";
+import HeaderNew from "./HeaderNew";
+import SidebarComponent from "./SidebarNew";
 
 // Icons
-import HomeIcon from "@/components/icons/HomeIcon";
-import TextClipboardIcon from "@/components/icons/TextClipboardIcon";
-import CalendarIcon from "@/components/icons/CalendarIcon";
-import FileIcon from "@/components/icons/FileIcon";
-import LandFrameIcon from "@/components/icons/LandFrameIcon";
-import ChatBubbleIcon from "@/components/icons/ChatBubbleIcon";
+import {
+  CalendarIcon,
+  ChatBubbleIcon,
+  FileIcon,
+  HomeIcon,
+  LandFrameIcon,
+  TextClipboardIcon,
+} from "../icons";
 
 interface AuditorLayoutProps {
   children: React.ReactNode;
@@ -29,6 +31,7 @@ export default function AuditorLayout({ children }: AuditorLayoutProps) {
     lastName: "",
     isLoading: true,
     id: 0,
+    role: "AUDITOR",
   });
 
   // State for sidebar visibility
@@ -37,50 +40,42 @@ export default function AuditorLayout({ children }: AuditorLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   // State to track screen size for responsive behavior
   const [isMobile, setIsMobile] = useState(false);
-  // State for user dropdown menu
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-
-  const [selectedPath, setSelectedPath] = useState("");
 
   // Navigation menu items
   const navItems = [
     {
       title: "หน้าหลัก",
       href: "/auditor/dashboard",
-      icon: HomeIcon(),
+      icon: <HomeIcon className="h-6 w-6" />,
     },
     {
       title: "ตรวจประเมินสวนยางพารา",
       href: "/auditor/inspections",
-      icon: TextClipboardIcon(),
+      icon: <TextClipboardIcon className="h-6 w-6" />,
     },
     {
       title: "แจ้งกำหนดการวันที่ตรวจประเมิน",
       href: "/auditor/applications",
-      icon: CalendarIcon(),
+      icon: <CalendarIcon className="h-6 w-6" />,
     },
     {
       title: "สรุปผลการตรวจประเมิน",
       href: "/auditor/reports",
-      icon: FileIcon(),
+      icon: <FileIcon className="h-6 w-6" />,
     },
     {
       title: "บันทึกข้อมูลประจำสวนยาง",
       href: "/auditor/garden-data",
-      icon: LandFrameIcon(),
+      icon: <LandFrameIcon className="h-6 w-6" />,
     },
     {
       title: "บันทึกการให้คำปรึกษาและข้อบกพร่อง",
       href: "/auditor/consultations",
-      icon: ChatBubbleIcon(),
+      icon: <ChatBubbleIcon className="h-6 w-6" />,
     },
   ];
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      setSelectedPath(window.location.pathname);
-    }
-
     // ใช้ข้อมูลจาก NextAuth session แทน localStorage
     if (status === "authenticated" && session?.user) {
       const roleData = session.user.roleData;
@@ -90,6 +85,7 @@ export default function AuditorLayout({ children }: AuditorLayoutProps) {
         lastName: roleData?.lastName || "",
         isLoading: false,
         id: roleData?.auditorId || 0,
+        role: "AUDITOR",
       });
     } else if (status === "loading") {
       setAuditor((prev) => ({ ...prev, isLoading: true }));
@@ -131,10 +127,6 @@ export default function AuditorLayout({ children }: AuditorLayoutProps) {
   // Toggle sidebar visibility (for mobile)
   const toggleSidebarVisibility = () => {
     setSidebarVisible(!sidebarVisible);
-    // When we show the sidebar on mobile, also close any open dropdown
-    if (!sidebarVisible) {
-      setDropdownOpen(false);
-    }
   };
 
   // Handle navigation click on mobile
@@ -151,240 +143,48 @@ export default function AuditorLayout({ children }: AuditorLayoutProps) {
     await signOut({ callbackUrl: "/", redirect: true });
   };
 
+  // Calculate margin left for main content
+  const getMainContentMargin = () => {
+    if (sidebarVisible && !isMobile) {
+      return sidebarCollapsed ? "ml-14" : "ml-64";
+    }
+    return "ml-0";
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-[#EBFFF3]">
-      {/* Mobile Overlay - only visible when sidebar is shown on mobile */}
-      {isMobile && sidebarVisible && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-20"
-          onClick={toggleSidebarVisibility}
-        ></div>
-      )}
-
-      {/* Sidebar - shown/hidden based on state */}
-      {sidebarVisible && (
-        <div
-          className={`bg-white shadow-md transition-all duration-300 h-screen fixed z-30 ${
-            sidebarCollapsed ? "w-14" : "w-64"
-          } ${isMobile ? "left-0" : ""} flex flex-col`}
-        >
-          {/* Toggle button at top */}
-          <div className="p-3 flex justify-end border-b border-gray-200">
-            <button
-              onClick={
-                isMobile ? toggleSidebarVisibility : toggleSidebarCollapse
-              }
-              className="p-1 rounded-md hover:bg-gray-100"
-              aria-label={
-                isMobile
-                  ? "Close sidebar"
-                  : sidebarCollapsed
-                  ? "Expand sidebar"
-                  : "Collapse sidebar"
-              }
-            >
-              {isMobile ? (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-gray-500"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              ) : (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-gray-500"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                </svg>
-              )}
-            </button>
-          </div>
-
-          {/* Navigation Links */}
-          <nav className="flex-1 py-4">
-            <ul className="space-y-6">
-              {navItems.map((item, index) => (
-                <li key={index}>
-                  <Link
-                    href={item.href}
-                    className={`flex items-center ${
-                      sidebarCollapsed ? "justify-center px-3" : "px-4"
-                    } py-2 text-gray-700 hover:text-gray-900`}
-                    onClick={handleNavClick}
-                  >
-                    <div className="text-gray-500">{item.icon}</div>
-                    {!sidebarCollapsed && (
-                      <span className="ml-3 text-sm font-medium">
-                        {item.title}
-                      </span>
-                    )}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-
-          {/* User section at bottom (optional) */}
-          {!sidebarCollapsed && (
-            <div className="p-4 border-t">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-medium">
-                    {auditor.firstName.charAt(0)}
-                  </div>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-700">
-                    {auditor.namePrefix}
-                    {auditor.firstName} {auditor.lastName}
-                  </p>
-                  <button
-                    onClick={handleLogout}
-                    className="text-xs text-red-500 hover:text-red-700"
-                  >
-                    ออกจากระบบ
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+      {/* Sidebar */}
+      <SidebarComponent
+        isMobile={isMobile}
+        user={auditor}
+        handleLogout={handleLogout}
+        visible={sidebarVisible}
+        collapsed={sidebarCollapsed}
+        navItems={navItems}
+        onNavItemClick={handleNavClick}
+        onToggleCollapse={toggleSidebarCollapse}
+        onVisibilityChange={setSidebarVisible}
+        avatarColor="blue"
+      />
 
       {/* Main Content */}
       <div
-        className={`flex-1 flex flex-col ${
-          sidebarVisible && !isMobile
-            ? sidebarCollapsed
-              ? "ml-14"
-              : "ml-64"
-            : "ml-0"
-        } transition-all duration-300`}
+        className={`flex-1 flex flex-col ${getMainContentMargin()} transition-all duration-300`}
       >
         {/* Header */}
-        <header className="bg-white shadow-sm sticky top-0 z-10 border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-            <div className="flex items-center">
-              {/* Mobile menu toggle button */}
-              {isMobile && (
-                <button
-                  onClick={toggleSidebarVisibility}
-                  className="mr-2 p-1 rounded-md hover:bg-gray-100"
-                  aria-label="Toggle sidebar"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-6 w-6 text-gray-500"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M4 6h16M4 12h16M4 18h16"
-                    />
-                  </svg>
-                </button>
-              )}
-              <Image
-                src="/logo_header.png"
-                alt="Rubber Authority of Thailand Logo"
-                width={180}
-                height={180}
-                className="mr-2"
-              />
-            </div>
-            <div className="flex items-center">
-              {/* User profile dropdown */}
-              <div className="relative">
-                <button
-                  className="flex items-center space-x-3 focus:outline-none"
-                  onClick={() => setDropdownOpen(!dropdownOpen)}
-                >
-                  {/* ชื่อผู้ใช้ */}
-                  <span className="hidden sm:block text-sm font-medium text-gray-700">
-                    {auditor.isLoading ? (
-                      <div className="animate-pulse h-5 w-24 bg-gray-200 rounded"></div>
-                    ) : (
-                      <>
-                        {auditor.namePrefix}
-                        {auditor.firstName} {auditor.lastName}
-                      </>
-                    )}
-                  </span>
-                  <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-medium">
-                    {!auditor.isLoading && auditor.firstName.charAt(0)}
-                  </div>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className={`h-5 w-5 text-gray-400 transition-transform ${
-                      dropdownOpen ? "rotate-180" : ""
-                    }`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </button>
-
-                {/* Dropdown menu */}
-                {dropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 ring-1 ring-black ring-opacity-5">
-                    <Link
-                      href="/auditor/profile"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      ข้อมูลโปรไฟล์
-                    </Link>
-                    <Link
-                      href="/auditor/settings"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      ตั้งค่า
-                    </Link>
-                    <button
-                      onClick={handleLogout}
-                      className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                    >
-                      ออกจากระบบ
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </header>
+        <HeaderNew
+          isMobile={isMobile}
+          user={auditor}
+          toggleSidebarVisibility={toggleSidebarVisibility}
+          handleLogout={handleLogout}
+          avatarColor="blue"
+        />
 
         {/* Main Content Area */}
         <main className="flex-grow">{children}</main>
 
         {/* Footer */}
-        <Footer />
+        <FooterNew />
       </div>
     </div>
   );

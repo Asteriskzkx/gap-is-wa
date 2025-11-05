@@ -1,0 +1,2 @@
+# This file ensures the ssl/ directory is tracked by Git
+# SSL certificate files (*.crt, *.key, *.pem) are excluded in .gitignore
