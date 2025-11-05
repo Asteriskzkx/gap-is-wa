@@ -13,3 +13,4 @@ export { default as PrimaryCalendar } from "./PrimaryCalendar";
 export { default as PrimaryPassword } from "./PrimaryPassword";
 export { default as PrimaryInputMask } from "./PrimaryInputMask";
 export { default as PrimaryDataTable } from "./PrimaryDataTable";
+export { PrimaryCard } from "./PrimaryCard";

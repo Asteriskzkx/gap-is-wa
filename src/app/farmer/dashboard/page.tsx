@@ -1,14 +1,18 @@
 "use client";
 
 import {
-  ChevronRightIcon,
-  DangerIcon,
   EditIcon,
   PlusIcon,
   TextClipboardIcon,
   TrashIcon,
+  ChevronRightIcon,
 } from "@/components/icons";
 import FarmerLayout from "@/components/layout/FarmerLayout";
+import { ActionCard } from "@/components/farmer/ActionCard";
+import { EmptyApplicationsState } from "@/components/farmer/EmptyApplicationsState";
+import { ApplicationTableRow } from "@/components/farmer/ApplicationTableRow";
+import { ApplicationMobileCard } from "@/components/farmer/ApplicationMobileCard";
+import { PrimaryCard } from "@/components/ui/PrimaryCard";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -40,6 +44,23 @@ export default function FarmerDashboardPage() {
   const { data: session, status } = useSession();
   const [applications, setApplications] = useState<ApplicationItem[]>([]);
   const [applicationsLoading, setApplicationsLoading] = useState(true);
+
+  // Helper function สำหรับกำหนด color class
+  const getActionCardColorClass = (index: number): string => {
+    if (index === 0) return "bg-green-100 text-green-600";
+    if (index === 1) return "bg-orange-100 text-orange-600";
+    if (index === 2) return "bg-blue-100 text-blue-600";
+    return "bg-red-100 text-red-600";
+  };
+
+  // Helper function สำหรับกำหนด description
+  const getActionCardDescription = (index: number): string => {
+    if (index === 0) return "ยื่นคำขอรับรองแหล่งผลิตยางพาราตามมาตรฐาน GAP";
+    if (index === 1) return "ตรวจสอบสถานะคำขอและผลการรับรองแหล่งผลิต";
+    if (index === 2)
+      return "ขอแก้ไขข้อมูลใบรับรองแหล่งผลิตที่ได้รับการอนุมัติแล้ว";
+    return "ขอยกเลิกใบรับรองแหล่งผลิตที่ไม่ต้องการใช้งาน";
+  };
 
   // Navigation menu items for action cards
   const navItems = [
@@ -80,7 +101,7 @@ export default function FarmerDashboardPage() {
 
         // ดึง farmerId จาก session
         const roleData = session.user.roleData;
-        if (roleData && roleData.farmerId) {
+        if (roleData?.farmerId) {
           await fetchApplications(roleData.farmerId);
         } else {
           console.error("No farmer data found in session");
@@ -210,49 +231,19 @@ export default function FarmerDashboardPage() {
         {/* Action Cards Row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {navItems.map((item, index) => (
-            <div
-              key={index}
-              className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-6"
-            >
-              <Link href={item.href} className="block">
-                <div className="flex flex-col h-full">
-                  <div
-                    className={`p-3 rounded-full mb-4 w-12 h-12 flex items-center justify-center ${
-                      index === 0
-                        ? "bg-green-100 text-green-600"
-                        : index === 1
-                        ? "bg-orange-100 text-orange-600"
-                        : index === 2
-                        ? "bg-blue-100 text-blue-600"
-                        : "bg-red-100 text-red-600"
-                    }`}
-                  >
-                    {item.icon}
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    {item.title}
-                  </h3>
-                  <p className="text-sm text-gray-500 flex-grow">
-                    {index === 0
-                      ? "ยื่นคำขอรับรองแหล่งผลิตยางพาราตามมาตรฐาน GAP"
-                      : index === 1
-                      ? "ตรวจสอบสถานะคำขอและผลการรับรองแหล่งผลิต"
-                      : index === 2
-                      ? "ขอแก้ไขข้อมูลใบรับรองแหล่งผลิตที่ได้รับการอนุมัติแล้ว"
-                      : "ขอยกเลิกใบรับรองแหล่งผลิตที่ไม่ต้องการใช้งาน"}
-                  </p>
-                  <div className="mt-4 flex items-center text-green-600 font-medium text-sm">
-                    <span>เข้าสู่เมนู</span>
-                    <ChevronRightIcon className="h-4 w-4 ml-1" />
-                  </div>
-                </div>
-              </Link>
-            </div>
+            <ActionCard
+              key={`action-${item.href}`}
+              title={item.title}
+              description={getActionCardDescription(index)}
+              href={item.href}
+              icon={item.icon}
+              colorClass={getActionCardColorClass(index)}
+            />
           ))}
         </div>
 
         {/* Status Section */}
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
+        <PrimaryCard className="mb-8">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-semibold text-gray-900">
               สถานะการรับรองล่าสุด
@@ -266,30 +257,17 @@ export default function FarmerDashboardPage() {
             </Link>
           </div>
 
-          {applicationsLoading ? (
+          {applicationsLoading && (
             <div className="flex justify-center py-4">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
             </div>
-          ) : applications.length === 0 ? (
-            <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-4 flex items-start">
-              <DangerIcon className="h-6 w-6 text-yellow-500 mr-3 mt-0.5 flex-shrink-0" />
-              <div>
-                <h3 className="text-base font-medium text-yellow-800">
-                  ยังไม่มีการยื่นขอรับรอง
-                </h3>
-                <p className="text-sm text-yellow-700 mt-1">
-                  คุณยังไม่ได้ยื่นขอรับรองมาตรฐาน GAP
-                  กรุณายื่นคำขอรับรองเพื่อเริ่มกระบวนการรับรองแหล่งผลิต
-                </p>
-                <Link
-                  href="/farmer/applications/new"
-                  className="inline-flex items-center mt-3 px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
-                >
-                  ยื่นขอใบรับรองตอนนี้
-                </Link>
-              </div>
-            </div>
-          ) : (
+          )}
+
+          {!applicationsLoading && applications.length === 0 && (
+            <EmptyApplicationsState />
+          )}
+
+          {!applicationsLoading && applications.length > 0 && (
             <>
               {/* Desktop view - Table layout */}
               <div className="hidden md:block overflow-hidden rounded-lg border border-gray-200">
@@ -329,39 +307,17 @@ export default function FarmerDashboardPage() {
                         const { rubberFarm, inspection } = application;
 
                         return (
-                          <tr
+                          <ApplicationTableRow
                             key={
                               inspection
                                 ? `${rubberFarm.rubberFarmId}-${inspection.inspectionId}`
                                 : rubberFarm.rubberFarmId
                             }
-                            className="hover:bg-gray-50"
-                          >
-                            <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                              RF
-                              {rubberFarm.rubberFarmId
-                                .toString()
-                                .padStart(5, "0")}
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                              {rubberFarm.villageName}, หมู่ {rubberFarm.moo},{" "}
-                              {rubberFarm.district}
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                              {inspection && inspection.inspectionDateAndTime
-                                ? formatThaiDate(
-                                    inspection.inspectionDateAndTime
-                                  )
-                                : "-"}
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap">
-                              <span
-                                className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${statusInfo.color}`}
-                              >
-                                {statusInfo.text}
-                              </span>
-                            </td>
-                          </tr>
+                            rubberFarm={rubberFarm}
+                            inspection={inspection}
+                            statusInfo={statusInfo}
+                            formatThaiDate={formatThaiDate}
+                          />
                         );
                       })}
                     </tbody>
@@ -376,104 +332,23 @@ export default function FarmerDashboardPage() {
                   const { rubberFarm, inspection } = application;
 
                   return (
-                    <div
+                    <ApplicationMobileCard
                       key={
                         inspection
                           ? `${rubberFarm.rubberFarmId}-${inspection.inspectionId}`
                           : rubberFarm.rubberFarmId
                       }
-                      className="border border-gray-200 rounded-lg p-4 bg-white hover:bg-gray-50"
-                    >
-                      <div className="flex justify-between items-start">
-                        <h3 className="font-medium text-gray-900">
-                          RF
-                          {rubberFarm.rubberFarmId.toString().padStart(5, "0")}
-                        </h3>
-                        <span
-                          className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${statusInfo.color}`}
-                        >
-                          {statusInfo.text}
-                        </span>
-                      </div>
-
-                      <div className="mt-2 text-sm text-gray-600">
-                        <div className="flex items-start">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-4 w-4 mt-0.5 mr-1.5 text-gray-500 flex-shrink-0"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                            />
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                            />
-                          </svg>
-                          <span>
-                            {rubberFarm.villageName}, หมู่ {rubberFarm.moo},{" "}
-                            {rubberFarm.district}, {rubberFarm.province}
-                          </span>
-                        </div>
-
-                        {inspection && inspection.inspectionDateAndTime && (
-                          <div className="flex items-start mt-1">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-4 w-4 mt-0.5 mr-1.5 text-gray-500 flex-shrink-0"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                              />
-                            </svg>
-                            <span>
-                              กำหนดตรวจประเมิน:{" "}
-                              {formatThaiDate(inspection.inspectionDateAndTime)}
-                            </span>
-                          </div>
-                        )}
-
-                        {inspection && inspection.inspectionNo && (
-                          <div className="flex items-start mt-1">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-4 w-4 mt-0.5 mr-1.5 text-gray-500 flex-shrink-0"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                              />
-                            </svg>
-                            <span>เลขที่: {inspection.inspectionNo}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                      rubberFarm={rubberFarm}
+                      inspection={inspection}
+                      statusInfo={statusInfo}
+                      formatThaiDate={formatThaiDate}
+                    />
                   );
                 })}
               </div>
             </>
           )}
-        </div>
+        </PrimaryCard>
       </div>
     </FarmerLayout>
   );
