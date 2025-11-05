@@ -98,6 +98,10 @@ export class RubberFarmController extends BaseController<RubberFarmModel> {
           | "asc"
           | "desc"
           | undefined;
+        const includeInspections =
+          url.searchParams.get("includeInspections") === "true";
+        const priorityStatus =
+          url.searchParams.get("priorityStatus") || undefined;
 
         // Handle multi-sort
         let multiSortMeta: Array<{ field: string; order: 1 | -1 }> | undefined;
@@ -121,6 +125,8 @@ export class RubberFarmController extends BaseController<RubberFarmModel> {
             multiSortMeta,
             limit,
             offset,
+            includeInspections,
+            priorityStatus,
           });
 
         return NextResponse.json(

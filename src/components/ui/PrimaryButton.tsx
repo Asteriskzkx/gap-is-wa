@@ -9,7 +9,13 @@ interface PrimaryButtonProps extends Omit<ButtonProps, "severity" | "size"> {
   readonly loading?: boolean;
   readonly fullWidth?: boolean;
   readonly variant?: "solid" | "outlined" | "text";
-  readonly color?: "success" | "danger" | "secondary" | "info";
+  readonly color?:
+    | "success"
+    | "danger"
+    | "secondary"
+    | "info"
+    | "warning"
+    | "help";
   readonly size?: "small" | "normal" | "large";
   readonly rounded?: boolean; // Rounded button (icon only)
   readonly text?: boolean; // Text button (no background)

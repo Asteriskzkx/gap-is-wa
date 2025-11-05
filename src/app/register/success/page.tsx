@@ -1,8 +1,7 @@
 "use client";
 
-import React from "react";
+import PrimaryButton from "@/components/ui/PrimaryButton";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function RegisterSuccessPage() {
@@ -49,19 +48,21 @@ export default function RegisterSuccessPage() {
         </p>
 
         <div className="space-y-4">
-          <Link
-            href="/"
-            className="block w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+          <PrimaryButton
+            onClick={() => router.push("/")}
+            color="success"
+            fullWidth
           >
             เข้าสู่ระบบ
-          </Link>
+          </PrimaryButton>
 
-          <button
+          <PrimaryButton
+            label="กลับสู่หน้าหลัก"
+            variant="outlined"
+            color="secondary"
             onClick={() => router.push("/")}
-            className="block w-full px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 font-medium rounded-md shadow-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
-          >
-            กลับสู่หน้าหลัก
-          </button>
+            fullWidth
+          ></PrimaryButton>
         </div>
       </div>
 

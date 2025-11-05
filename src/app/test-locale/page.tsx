@@ -12,11 +12,13 @@ import { Button } from "primereact/button";
 import { Dialog } from "primereact/dialog";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
+import { Checkbox } from "primereact/checkbox";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 
 export default function LocaleTestPage() {
   const [date, setDate] = useState<Date | null>(null);
   const [visible, setVisible] = useState(false);
+  const [checked, setChecked] = useState(false);
 
   const sampleData = [
     { id: 1, name: "สมชาย ใจดี", email: "somchai@example.com" },
@@ -197,6 +199,22 @@ export default function LocaleTestPage() {
               <li>Dialog แสดงข้อความภาษาไทย</li>
               <li>DataTable แสดงการแบ่งหน้าเป็นภาษาไทย</li>
             </ul>
+          </div>
+
+          {/* Checkbox Test */}
+          <div className="mt-8">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">
+              5. Checkbox (กล่องเลือก)
+            </h2>
+            <div className="flex items-center gap-4">
+              <label className="text-sm font-medium text-gray-700">
+                เลือกรายการนี้
+              </label>
+              <Checkbox
+                onChange={(e) => setChecked(e.checked ?? false)}
+                checked={checked}
+              ></Checkbox>
+            </div>
           </div>
         </div>
       </div>

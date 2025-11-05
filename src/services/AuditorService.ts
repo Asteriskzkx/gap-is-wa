@@ -8,12 +8,12 @@ import { FarmerService } from "./FarmerService";
 import { UserService } from "./UserService";
 
 export class AuditorService extends BaseService<AuditorModel> {
-  private auditorRepository: AuditorRepository;
-  private userService: UserService;
-  private farmerService: FarmerService;
-  private rubberFarmRepository: RubberFarmRepository;
-  private inspectionTypeMasterRepository: InspectionTypeMasterRepository;
-  private inspectionRepository: InspectionRepository;
+  private readonly auditorRepository: AuditorRepository;
+  private readonly userService: UserService;
+  private readonly farmerService: FarmerService;
+  private readonly rubberFarmRepository: RubberFarmRepository;
+  private readonly inspectionTypeMasterRepository: InspectionTypeMasterRepository;
+  private readonly inspectionRepository: InspectionRepository;
 
   constructor(
     auditorRepository: AuditorRepository,
@@ -316,24 +316,91 @@ export class AuditorService extends BaseService<AuditorModel> {
     }
   }
 
-  async getAuditorListExcept(exceptAuditorId: number): Promise<any[]> {
+  async getAuditorListExcept(
+    exceptAuditorId: number,
+    options?: {
+      limit?: number;
+      offset?: number;
+      search?: string;
+      sortField?: string;
+      sortOrder?: "asc" | "desc";
+      multiSortMeta?: Array<{ field: string; order: 1 | -1 }>;
+    }
+  ): Promise<{ data: any[]; total: number }> {
     try {
       // ดึงรายชื่อ auditor ทั้งหมดยกเว้น auditor ที่ระบุผ่าน Repository
       const allAuditors = await this.auditorRepository.findAll();
 
       // กรองเฉพาะ auditor ที่ไม่ตรงกับ exceptAuditorId
-      const filteredAuditors = allAuditors.filter(
+      let filteredAuditors = allAuditors.filter(
         (auditor) => auditor.auditorId !== exceptAuditorId
       );
 
-      return filteredAuditors.map((auditor) => ({
+      // แปลงข้อมูลให้อยู่ในรูปแบบที่ใช้งาน
+      let transformedAuditors = filteredAuditors.map((auditor) => ({
         id: auditor.auditorId,
         name: `${auditor.namePrefix}${auditor.firstName} ${auditor.lastName}`,
         email: auditor.email || "N/A",
+        namePrefix: auditor.namePrefix,
+        firstName: auditor.firstName,
+        lastName: auditor.lastName,
       }));
+
+      // กรองตามการค้นหา
+      if (options?.search) {
+        const searchLower = options.search.toLowerCase();
+        transformedAuditors = transformedAuditors.filter(
+          (auditor) =>
+            auditor.name.toLowerCase().includes(searchLower) ||
+            auditor.email.toLowerCase().includes(searchLower) ||
+            auditor.firstName.toLowerCase().includes(searchLower) ||
+            auditor.lastName.toLowerCase().includes(searchLower)
+        );
+      }
+
+      // เรียงลำดับข้อมูล
+      if (options?.multiSortMeta && options.multiSortMeta.length > 0) {
+        // Multi-sort
+        transformedAuditors.sort((a: any, b: any) => {
+          for (const sortMeta of options.multiSortMeta!) {
+            const field = sortMeta.field;
+            const order = sortMeta.order;
+            const aVal = this.getNestedValue(a, field);
+            const bVal = this.getNestedValue(b, field);
+
+            if (aVal < bVal) return -1 * order;
+            if (aVal > bVal) return 1 * order;
+          }
+          return 0;
+        });
+      } else if (options?.sortField && options?.sortOrder) {
+        // Single sort
+        transformedAuditors.sort((a: any, b: any) => {
+          const aVal = this.getNestedValue(a, options.sortField!);
+          const bVal = this.getNestedValue(b, options.sortField!);
+
+          if (aVal < bVal) return options.sortOrder === "asc" ? -1 : 1;
+          if (aVal > bVal) return options.sortOrder === "asc" ? 1 : -1;
+          return 0;
+        });
+      }
+
+      // คำนวณ pagination
+      const total = transformedAuditors.length;
+      const offset = options?.offset ?? 0;
+      const limit = options?.limit ?? 10;
+      const paginatedAuditors = transformedAuditors.slice(
+        offset,
+        offset + limit
+      );
+
+      return {
+        data: paginatedAuditors,
+        total,
+      };
     } catch (error) {
       this.handleServiceError(error);
-      return [];
+      return { data: [], total: 0 };
     }
   }
 }
