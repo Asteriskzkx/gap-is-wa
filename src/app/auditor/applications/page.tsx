@@ -1,18 +1,19 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
-import { DataTablePageEvent, DataTableSortEvent } from "primereact/datatable";
 import AuditorLayout from "@/components/layout/AuditorLayout";
 import {
-  PrimaryDataTable,
   PrimaryAutoComplete,
-  PrimaryCalendar,
   PrimaryButton,
+  PrimaryCalendar,
+  PrimaryDataTable,
   PrimaryInputText,
+  PrimaryCheckbox,
 } from "@/components/ui";
 import thaiProvinceData from "@/data/thai-provinces.json";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { DataTablePageEvent, DataTableSortEvent } from "primereact/datatable";
+import React, { useEffect, useState } from "react";
 
 // Interface สำหรับข้อมูลจังหวัด อำเภอ ตำบล
 interface Tambon {
@@ -1097,13 +1098,12 @@ export default function AuditorScheduleInspectionPage() {
                   field: "selected",
                   header: "เลือก",
                   body: (rowData: Auditor) => (
-                    <input
-                      type="checkbox"
+                    <PrimaryCheckbox
+                      id={`auditor-${rowData.id}`}
                       checked={selectedAuditors.some(
                         (a) => a.id === rowData.id
                       )}
                       onChange={() => handleAuditorToggle(rowData)}
-                      className="h-4 w-4 text-green-600 focus:ring-green-500 rounded"
                     />
                   ),
                   style: { width: "10%" },
