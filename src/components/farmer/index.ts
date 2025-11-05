@@ -5,7 +5,5 @@
  */
 
 export { ActionCard } from "./ActionCard";
-export { EmptyApplicationsState } from "./EmptyApplicationsState";
-export { ApplicationTableRow } from "./ApplicationTableRow";
 export { ApplicationMobileCard } from "./ApplicationMobileCard";
-export { StatusBadge } from "./StatusBadge";
+export { EmptyApplicationsState } from "./EmptyApplicationsState";

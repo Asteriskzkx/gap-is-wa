@@ -1,21 +1,30 @@
 "use client";
 
+import { useSession } from "next-auth/react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+
+// Icons
 import {
+  ChevronRightIcon,
   EditIcon,
   PlusIcon,
   TextClipboardIcon,
   TrashIcon,
-  ChevronRightIcon,
 } from "@/components/icons";
+
+// Layout
 import FarmerLayout from "@/components/layout/FarmerLayout";
-import { ActionCard } from "@/components/farmer/ActionCard";
-import { EmptyApplicationsState } from "@/components/farmer/EmptyApplicationsState";
-import { ApplicationTableRow } from "@/components/farmer/ApplicationTableRow";
-import { ApplicationMobileCard } from "@/components/farmer/ApplicationMobileCard";
+
+// Components
+import {
+  ActionCard,
+  ApplicationMobileCard,
+  EmptyApplicationsState,
+} from "@/components/farmer";
+
 import { PrimaryCard } from "@/components/ui/PrimaryCard";
-import { useSession } from "next-auth/react";
-import Link from "next/link";
-import { useEffect, useState } from "react";
+import PrimaryDataTable from "@/components/ui/PrimaryDataTable";
 
 interface RubberFarm {
   rubberFarmId: number;
@@ -39,6 +48,103 @@ interface ApplicationItem {
   rubberFarm: RubberFarm;
   inspection?: Inspection;
 }
+
+// Helper functions for table rendering
+const formatThaiDate = (dateString?: string) => {
+  if (!dateString) return "-";
+  return new Date(dateString).toLocaleDateString("th-TH", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+};
+
+const getStatusInfo = (application: ApplicationItem) => {
+  if (!application.inspection) {
+    return {
+      text: "รอกำหนดวันตรวจประเมิน",
+      color: "bg-yellow-100 text-yellow-800",
+    };
+  }
+
+  const inspection = application.inspection;
+  const hasInspectionDate =
+    inspection.inspectionDateAndTime &&
+    new Date(inspection.inspectionDateAndTime) > new Date(0);
+  const inspectionDateInFuture =
+    hasInspectionDate &&
+    new Date(inspection.inspectionDateAndTime) > new Date();
+
+  const status = inspection.inspectionStatus;
+  const result = inspection.inspectionResult;
+
+  if (
+    status === "รอการตรวจประเมิน" &&
+    hasInspectionDate &&
+    inspectionDateInFuture
+  ) {
+    return {
+      text: "รอการตรวจประเมิน",
+      color: "bg-blue-100 text-blue-800",
+    };
+  } else if (status === "ตรวจประเมินแล้ว") {
+    if (result === "รอผลการตรวจประเมิน") {
+      return {
+        text: "ตรวจประเมินแล้ว รอสรุปผล",
+        color: "bg-purple-100 text-purple-800",
+      };
+    } else if (result === "ผ่าน") {
+      return {
+        text: "ผ่านการรับรอง",
+        color: "bg-green-100 text-green-800",
+      };
+    } else if (result === "ไม่ผ่าน") {
+      return {
+        text: "ไม่ผ่านการรับรอง",
+        color: "bg-red-100 text-red-800",
+      };
+    }
+  }
+
+  return {
+    text: status || "ไม่ทราบสถานะ",
+    color: "bg-gray-100 text-gray-800",
+  };
+};
+
+const renderFarmId = (rowData: ApplicationItem) => (
+  <span className="font-medium text-gray-900">
+    {rowData.rubberFarm.rubberFarmId}
+  </span>
+);
+
+const renderLocation = (rowData: ApplicationItem) => (
+  <div>
+    <p className="text-sm text-gray-900">
+      {rowData.rubberFarm.villageName} หมู่ {rowData.rubberFarm.moo}
+    </p>
+    <p className="text-sm text-gray-500">
+      {rowData.rubberFarm.district}, {rowData.rubberFarm.province}
+    </p>
+  </div>
+);
+
+const renderInspectionDate = (rowData: ApplicationItem) => (
+  <span className="text-sm text-gray-700">
+    {formatThaiDate(rowData.inspection?.inspectionDateAndTime)}
+  </span>
+);
+
+const renderStatus = (rowData: ApplicationItem) => {
+  const statusInfo = getStatusInfo(rowData);
+  return (
+    <span
+      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusInfo.color}`}
+    >
+      {statusInfo.text}
+    </span>
+  );
+};
 
 export default function FarmerDashboardPage() {
   const { data: session, status } = useSession();
@@ -155,68 +261,6 @@ export default function FarmerDashboardPage() {
     fetchApplicationsData();
   }, [session, status]);
 
-  const formatThaiDate = (dateString?: string) => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleDateString("th-TH", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
-  const getStatusInfo = (application: ApplicationItem) => {
-    if (!application.inspection) {
-      return {
-        text: "รอกำหนดวันตรวจประเมิน",
-        color: "bg-yellow-100 text-yellow-800",
-      };
-    }
-
-    const inspection = application.inspection;
-    const hasInspectionDate =
-      inspection.inspectionDateAndTime &&
-      new Date(inspection.inspectionDateAndTime) > new Date(0);
-    const inspectionDateInFuture =
-      hasInspectionDate &&
-      new Date(inspection.inspectionDateAndTime) > new Date();
-
-    const status = inspection.inspectionStatus;
-    const result = inspection.inspectionResult;
-
-    if (
-      status === "รอการตรวจประเมิน" &&
-      hasInspectionDate &&
-      inspectionDateInFuture
-    ) {
-      return {
-        text: "รอการตรวจประเมิน",
-        color: "bg-blue-100 text-blue-800",
-      };
-    } else if (status === "ตรวจประเมินแล้ว") {
-      if (result === "รอผลการตรวจประเมิน") {
-        return {
-          text: "ตรวจประเมินแล้ว รอสรุปผล",
-          color: "bg-purple-100 text-purple-800",
-        };
-      } else if (result === "ผ่าน") {
-        return {
-          text: "ผ่านการรับรอง",
-          color: "bg-green-100 text-green-800",
-        };
-      } else if (result === "ไม่ผ่าน") {
-        return {
-          text: "ไม่ผ่านการรับรอง",
-          color: "bg-red-100 text-red-800",
-        };
-      }
-    }
-
-    return {
-      text: status || "ไม่ทราบสถานะ",
-      color: "bg-gray-100 text-gray-800",
-    };
-  };
-
   return (
     <FarmerLayout>
       <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
@@ -269,60 +313,44 @@ export default function FarmerDashboardPage() {
 
           {!applicationsLoading && applications.length > 0 && (
             <>
-              {/* Desktop view - Table layout */}
-              <div className="hidden md:block overflow-hidden rounded-lg border border-gray-200">
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th
-                          scope="col"
-                          className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        >
-                          รหัสสวน
-                        </th>
-                        <th
-                          scope="col"
-                          className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        >
-                          ที่ตั้ง
-                        </th>
-                        <th
-                          scope="col"
-                          className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        >
-                          กำหนดตรวจประเมิน
-                        </th>
-                        <th
-                          scope="col"
-                          className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        >
-                          สถานะ
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {applications.map((application) => {
-                        const statusInfo = getStatusInfo(application);
-                        const { rubberFarm, inspection } = application;
-
-                        return (
-                          <ApplicationTableRow
-                            key={
-                              inspection
-                                ? `${rubberFarm.rubberFarmId}-${inspection.inspectionId}`
-                                : rubberFarm.rubberFarmId
-                            }
-                            rubberFarm={rubberFarm}
-                            inspection={inspection}
-                            statusInfo={statusInfo}
-                            formatThaiDate={formatThaiDate}
-                          />
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+              {/* Desktop view - PrimaryDataTable */}
+              <div className="hidden md:block">
+                <PrimaryDataTable
+                  value={applications}
+                  loading={applicationsLoading}
+                  emptyMessage="ไม่มีข้อมูลการยื่นขอรับรอง"
+                  dataKey="rubberFarm.rubberFarmId"
+                  columns={[
+                    {
+                      field: "rubberFarmId",
+                      header: "รหัสสวน",
+                      headerAlign: "center",
+                      bodyAlign: "left",
+                      body: renderFarmId,
+                    },
+                    {
+                      field: "location",
+                      header: "ที่ตั้ง",
+                      headerAlign: "center",
+                      bodyAlign: "left",
+                      body: renderLocation,
+                    },
+                    {
+                      field: "inspectionDate",
+                      header: "กำหนดตรวจประเมิน",
+                      headerAlign: "center",
+                      bodyAlign: "center",
+                      body: renderInspectionDate,
+                    },
+                    {
+                      field: "status",
+                      header: "สถานะ",
+                      headerAlign: "center",
+                      bodyAlign: "center",
+                      body: renderStatus,
+                    },
+                  ]}
+                />
               </div>
 
               {/* Mobile view - Card layout */}
