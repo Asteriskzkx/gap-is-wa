@@ -4,13 +4,15 @@ import { formStyles } from "@/styles/formStyles";
 interface StepIndicatorProps {
   currentStep: number;
   maxSteps: number;
+  stepLabels?: string[]; // Optional custom labels
 }
 
-const stepLabels = ["ข้อมูลสวนยาง", "รายละเอียดการปลูก", "ยืนยันข้อมูล"];
+const defaultStepLabels = ["ข้อมูลสวนยาง", "รายละเอียดการปลูก", "ยืนยันข้อมูล"];
 
 export const StepIndicator: React.FC<StepIndicatorProps> = ({
   currentStep,
   maxSteps,
+  stepLabels = defaultStepLabels, // Use default if not provided
 }) => {
   const getStepCircleClass = (step: number) => {
     const base = formStyles.stepIndicator.stepCircle.base;
@@ -44,7 +46,7 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({
       {/* Desktop Version */}
       <div className={formStyles.stepIndicator.desktopWrapper}>
         <div className={formStyles.stepIndicator.stepContainer}>
-          {[1, 2, 3].map((s, index) => (
+          {Array.from({ length: maxSteps }, (_, i) => i + 1).map((s, index) => (
             <React.Fragment key={s}>
               <div className="flex flex-col items-center flex-shrink-0">
                 <div className={getStepCircleClass(s)}>
@@ -59,7 +61,7 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({
                 </div>
               </div>
 
-              {index < 2 && (
+              {index < maxSteps - 1 && (
                 <div className={formStyles.stepIndicator.progressLine.base}>
                   <div
                     className={`${formStyles.stepIndicator.progressLine.bar} ${
@@ -79,22 +81,29 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({
       <div className={formStyles.stepIndicator.mobileWrapper}>
         <div className="flex items-center justify-center mb-4">
           <div className="flex items-center space-x-2">
-            {[1, 2, 3].map((s, index) => (
-              <React.Fragment key={s}>
-                <div className={getMobileStepCircleClass(s)}>
-                  {s < currentStep ? <i className="pi pi-check text-xs" /> : s}
-                </div>
-                {index < 2 && (
-                  <div
-                    className={
-                      s < currentStep
-                        ? formStyles.stepIndicator.mobileProgressLine.completed
-                        : formStyles.stepIndicator.mobileProgressLine.inactive
-                    }
-                  />
-                )}
-              </React.Fragment>
-            ))}
+            {Array.from({ length: maxSteps }, (_, i) => i + 1).map(
+              (s, index) => (
+                <React.Fragment key={s}>
+                  <div className={getMobileStepCircleClass(s)}>
+                    {s < currentStep ? (
+                      <i className="pi pi-check text-xs" />
+                    ) : (
+                      s
+                    )}
+                  </div>
+                  {index < maxSteps - 1 && (
+                    <div
+                      className={
+                        s < currentStep
+                          ? formStyles.stepIndicator.mobileProgressLine
+                              .completed
+                          : formStyles.stepIndicator.mobileProgressLine.inactive
+                      }
+                    />
+                  )}
+                </React.Fragment>
+              )
+            )}
           </div>
         </div>
 
