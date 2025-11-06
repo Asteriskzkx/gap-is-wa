@@ -1265,7 +1265,7 @@ input.p-inputtext:disabled {
     flex-direction: column;
     border: 1px solid #e5e7eb;
     border-radius: 0.5rem;
-    margin-bottom: 1rem;
+    /* margin-bottom: 1rem; */
     padding: 0.75rem;
     background: white;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
