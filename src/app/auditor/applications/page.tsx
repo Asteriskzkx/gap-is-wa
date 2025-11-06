@@ -1100,17 +1100,21 @@ export default function AuditorScheduleInspectionPage() {
                   field: "selected",
                   header: "เลือก",
                   body: (rowData: Auditor) => (
-                    <PrimaryCheckbox
-                      id={`auditor-${rowData.id}`}
-                      checked={selectedAuditors.some(
-                        (a) => a.id === rowData.id
-                      )}
-                      onChange={() => handleAuditorToggle(rowData)}
-                    />
+                    <div className="inline-flex justify-center w-full">
+                      <PrimaryCheckbox
+                        id={`auditor-${rowData.id}`}
+                        checked={selectedAuditors.some(
+                          (a) => a.id === rowData.id
+                        )}
+                        onChange={() => handleAuditorToggle(rowData)}
+                      />
+                    </div>
                   ),
                   style: { width: "10%" },
                   headerAlign: "center" as const,
                   bodyAlign: "center" as const,
+                  mobileAlign: "right" as const,
+                  mobileHideLabel: false,
                 },
                 {
                   field: "id",
