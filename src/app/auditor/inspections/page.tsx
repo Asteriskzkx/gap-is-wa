@@ -646,7 +646,7 @@ export default function AuditorInspectionsPage() {
       sortable: true,
       body: (rowData: Inspection) => rowData.inspectionNo,
       headerAlign: "center" as const,
-      bodyAlign: "left" as const,
+      bodyAlign: "center" as const,
     },
     {
       field: "inspectionDateAndTime",
@@ -659,7 +659,7 @@ export default function AuditorInspectionsPage() {
           day: "numeric",
         }),
       headerAlign: "center" as const,
-      bodyAlign: "left" as const,
+      bodyAlign: "center" as const,
     },
     {
       field: "inspectionType.typeName",
@@ -699,7 +699,7 @@ export default function AuditorInspectionsPage() {
         <StatusBadge status={rowData.inspectionStatus} />
       ),
       headerAlign: "center" as const,
-      bodyAlign: "left" as const,
+      bodyAlign: "center" as const,
     },
     {
       field: "actions",
@@ -712,8 +712,8 @@ export default function AuditorInspectionsPage() {
             color="info"
             rounded
             text
-            tooltip="ดูรายละเอียดสวน"
-            tooltipOptions={{ position: "left" }}
+            // tooltip="ดูรายละเอียดสวน"
+            // tooltipOptions={{ position: "left" }}
           />
           <PrimaryButton
             icon="pi pi-file-edit"
@@ -721,16 +721,17 @@ export default function AuditorInspectionsPage() {
             color="success"
             rounded
             text
-            tooltip="เริ่มตรวจประเมิน"
-            tooltipOptions={{
-              position: "left",
-            }}
+            // tooltip="เริ่มตรวจประเมิน"
+            // tooltipOptions={{
+            //   position: "left",
+            // }}
           />
         </div>
       ),
       headerAlign: "center" as const,
       bodyAlign: "center" as const,
-      // style: { width: "5%" },
+      mobileAlign: "right" as const,
+      mobileHideLabel: true,
     },
   ];
 

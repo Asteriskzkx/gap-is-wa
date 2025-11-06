@@ -565,6 +565,8 @@ export default function AuditorDashboardPage() {
                     headerAlign: "center",
                     bodyAlign: "center",
                     body: renderActionLink,
+                    mobileAlign: "right",
+                    mobileHideLabel: true,
                   },
                 ]}
               />

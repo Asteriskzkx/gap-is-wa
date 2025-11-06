@@ -925,7 +925,7 @@ export default function AuditorScheduleInspectionPage() {
                   style: { width: "15%" },
                   sortable: true,
                   headerAlign: "center" as const,
-                  bodyAlign: "left" as const,
+                  bodyAlign: "center" as const,
                 },
                 {
                   field: "province",
@@ -984,14 +984,16 @@ export default function AuditorScheduleInspectionPage() {
                         disabled={loadingFarmDetails}
                         rounded
                         text
-                        tooltip="ดูข้อมูลสวนยางพารา"
-                        tooltipOptions={{ position: "left" }}
+                        // tooltip="ดูข้อมูลสวนยางพารา"
+                        // tooltipOptions={{ position: "left" }}
                       ></PrimaryButton>
                     </div>
                   ),
                   style: { width: "5%" },
                   headerAlign: "center" as const,
                   bodyAlign: "center" as const,
+                  mobileAlign: "right" as const,
+                  mobileHideLabel: true, // ซ่อน label ใน mobile
                 },
               ]}
               loading={loading}

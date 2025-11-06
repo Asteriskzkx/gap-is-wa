@@ -1256,42 +1256,102 @@ input.p-inputtext:disabled {
 }
 
 @media screen and (max-width: 768px) {
+  /* ซ่อน header */
   .primary-datatable-wrapper .p-datatable-thead {
-    display: none;
+    display: none !important;
   }
 
+  /* Card style สำหรับแต่ละ row */
   .primary-datatable-wrapper .p-datatable-tbody > tr {
-    display: flex;
-    flex-direction: column;
-    border: 1px solid #e5e7eb;
-    border-radius: 0.5rem;
-    /* margin-bottom: 1rem; */
-    padding: 0.75rem;
-    background: white;
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    display: flex !important;
+    flex-direction: column !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 0.5rem !important;
+    padding: 0.75rem !important;
+    background: white !important;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1) !important;
+    margin-bottom: 0 !important;
   }
 
+  /* แต่ละ cell เป็น flex row */
   .primary-datatable-wrapper .p-datatable-tbody > tr > td {
-    display: flex;
-    align-items: flex-start;
-    border: none;
-    padding: 0.5rem 0;
-    text-align: left;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    border: none !important;
+    padding: 0.5rem 0 !important;
+    width: 100% !important;
+    text-align: left !important;
+    box-sizing: border-box !important;
   }
 
-  .primary-datatable-wrapper .p-datatable-tbody > tr > td .p-column-title {
-    display: inline-block;
-    min-width: 30%;
-    font-weight: 600;
-    color: #6b7280;
-    font-size: 0.875rem;
-    padding-right: 1rem;
+  /* Label (header) - Bold, ซ้าย */
+  .primary-datatable-wrapper .p-datatable-tbody > tr > td::before {
+    content: attr(data-label);
+    font-weight: 700 !important;
+    color: #374151 !important;
+    font-size: 0.875rem !important;
+    padding-right: 1rem !important;
+    flex-shrink: 0 !important;
+    min-width: 35% !important;
   }
 
+  /* Content ของ cell - ขวา */
+  .primary-datatable-wrapper .p-datatable-tbody > tr > td > * {
+    text-align: right !important;
+    flex-grow: 1 !important;
+    width: auto !important;
+  }
+
+  /* Force flex container ใน action columns เพื่อจัดปุ่มไปทางขวา */
+  .primary-datatable-wrapper
+    .p-datatable-tbody
+    > tr
+    > td.mobile-align-right
+    > div,
+  .primary-datatable-wrapper
+    .p-datatable-tbody
+    > tr
+    > td.mobile-align-right
+    > span {
+    display: flex !important;
+    justify-content: flex-end !important;
+    gap: 0.5rem !important;
+  }
+
+  /* สำหรับ action column ที่มี class mobile-align-right */
+  .primary-datatable-wrapper .p-datatable-tbody > tr > td.mobile-align-right {
+    justify-content: flex-end !important;
+  }
+
+  /* ซ่อน label สำหรับ column ที่มี mobile-hide-label */
+  .primary-datatable-wrapper
+    .p-datatable-tbody
+    > tr
+    > td.mobile-hide-label::before {
+    content: none !important;
+    display: none !important;
+  }
+
+  /* ซ่อน label สำหรับ action column (backward compatibility) */
+  .primary-datatable-wrapper
+    .p-datatable-tbody
+    > tr
+    > td.mobile-align-right::before {
+    content: none !important;
+    display: none !important;
+  }
+
+  /* Border ระหว่าง cell */
   .primary-datatable-wrapper .p-datatable-tbody > tr > td:not(:last-child) {
-    border-bottom: 1px solid #f3f4f6;
-    padding-bottom: 0.5rem;
-    margin-bottom: 0.5rem;
+    border-bottom: 1px solid #f3f4f6 !important;
+    padding-bottom: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  /* Override PrimeReact inline styles */
+  .primary-datatable-wrapper .p-datatable-tbody > tr > td[style] {
+    width: 100% !important;
   }
 }
 

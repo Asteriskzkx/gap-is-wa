@@ -312,6 +312,22 @@ export default function FarmerApplicationsPage() {
               value={applications}
               columns={[
                 {
+                  field: "rubberFarmId",
+                  header: "รหัสสวน",
+                  body: (rowData: ApplicationItem) => {
+                    return (
+                      rowData.rubberFarm.farmId ||
+                      `RF${rowData.rubberFarm.rubberFarmId
+                        .toString()
+                        .padStart(5, "0")}`
+                    );
+                  },
+                  sortable: true,
+                  headerAlign: "center" as const,
+                  bodyAlign: "center" as const,
+                  style: { width: "10%" },
+                },
+                {
                   field: "location",
                   header: "สถานที่",
                   body: (rowData: ApplicationItem) => {
@@ -333,7 +349,7 @@ export default function FarmerApplicationsPage() {
                   sortable: true,
                   headerAlign: "center" as const,
                   bodyAlign: "left" as const,
-                  style: { width: "15%" },
+                  style: { width: "10%" },
                 },
                 {
                   field: "district",
@@ -343,7 +359,7 @@ export default function FarmerApplicationsPage() {
                   sortable: true,
                   headerAlign: "center" as const,
                   bodyAlign: "left" as const,
-                  style: { width: "15%" },
+                  style: { width: "10%" },
                 },
                 {
                   field: "subDistrict",
@@ -353,7 +369,7 @@ export default function FarmerApplicationsPage() {
                   sortable: true,
                   headerAlign: "center" as const,
                   bodyAlign: "left" as const,
-                  style: { width: "15%" },
+                  style: { width: "10%" },
                 },
                 {
                   field: "inspectionDateAndTime",
@@ -365,7 +381,7 @@ export default function FarmerApplicationsPage() {
                   sortable: true,
                   headerAlign: "center" as const,
                   bodyAlign: "center" as const,
-                  style: { width: "15%" },
+                  style: { width: "20%" },
                 },
                 {
                   field: "status",
