@@ -13,6 +13,7 @@ import {
   requirementMapper,
   rubberFarmMapper,
   userMapper,
+  certificateMapper,
 } from "../mappers";
 
 import { AdminRepository } from "@/repositories/AdminRepository";
@@ -25,6 +26,7 @@ import { FarmerRepository } from "@/repositories/FarmerRepository";
 import { InspectionItemRepository } from "@/repositories/InspectionItemRepository";
 import { InspectionRepository } from "@/repositories/InspectionRepository";
 import { InspectionTypeMasterRepository } from "@/repositories/InspectionTypeMasterRepository";
+import { CertificateRepository } from "@/repositories/CertificateRepository";
 import { PlantingDetailRepository } from "@/repositories/PlantingDetailRepository";
 import { RequirementRepository } from "@/repositories/RequirementRepository";
 import { RubberFarmRepository } from "@/repositories/RubberFarmRepository";
@@ -40,6 +42,7 @@ import { FarmerService } from "@/services/FarmerService";
 import { InspectionItemService } from "@/services/InspectionItemService";
 import { InspectionService } from "@/services/InspectionService";
 import { PlantingDetailService } from "@/services/PlantingDetailService";
+import { CertificateService } from "@/services/CertificateService";
 import { RequirementService } from "@/services/RequirementService";
 import { RubberFarmService } from "@/services/RubberFarmService";
 import { UserService } from "@/services/UserService";
@@ -54,6 +57,7 @@ import { FarmerController } from "@/controllers/FarmerController";
 import { InspectionController } from "@/controllers/InspectionController";
 import { InspectionItemController } from "@/controllers/InspectionItemController";
 import { PlantingDetailController } from "@/controllers/PlantingDetailController";
+import { CertificateController } from "@/controllers/CertificateController";
 import { RequirementController } from "@/controllers/RequirementController";
 import { RubberFarmController } from "@/controllers/RubberFarmController";
 import { UserController } from "@/controllers/UserController";
@@ -83,6 +87,7 @@ const adviceAndDefectRepository = new AdviceAndDefectRepository(
 const inspectionTypeMasterRepository = new InspectionTypeMasterRepository(
   inspectionTypeMasterMapper
 );
+const certificateRepository = new CertificateRepository(certificateMapper);
 
 // Services
 const userService = new UserService(userRepository);
@@ -127,6 +132,7 @@ const dataRecordService = new DataRecordService(dataRecordRepository);
 const adviceAndDefectService = new AdviceAndDefectService(
   adviceAndDefectRepository
 );
+const certificateService = new CertificateService(certificateRepository);
 
 // Controllers
 const userController = new UserController(userService);
@@ -150,6 +156,7 @@ const dataRecordController = new DataRecordController(dataRecordService);
 const adviceAndDefectController = new AdviceAndDefectController(
   adviceAndDefectService
 );
+const certificateController = new CertificateController(certificateService);
 
 // Export all instances
 export {
@@ -190,6 +197,9 @@ export {
   rubberFarmController,
   rubberFarmRepository,
   rubberFarmService,
+  certificateController,
+  certificateRepository,
+  certificateService,
   // Controllers
   userController,
   // Repositories
