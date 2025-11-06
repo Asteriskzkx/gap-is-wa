@@ -179,15 +179,15 @@ export const useRubberFarmForm = () => {
     }
 
     if (!detail.numberOfRubber || detail.numberOfRubber <= 0) {
-      return `รายการที่ ${itemNumber}: กรุณากรอกจำนวนต้นยาง`;
+      return `รายการที่ ${itemNumber}: กรุณากรอกจำนวนต้นยางทั้งหมด`;
     }
 
     if (!detail.numberOfTapping || detail.numberOfTapping <= 0) {
-      return `รายการที่ ${itemNumber}: กรุณากรอกจำนวนต้นกรีด`;
+      return `รายการที่ ${itemNumber}: กรุณากรอกจำนวนต้นกรีดที่กรีดได้`;
     }
 
     if (!detail.ageOfRubber || detail.ageOfRubber <= 0) {
-      return `รายการที่ ${itemNumber}: กรุณากรอกอายุยาง`;
+      return `รายการที่ ${itemNumber}: กรุณากรอกอายุต้นยาง`;
     }
 
     if (!detail.yearOfTapping || detail.yearOfTapping === "") {

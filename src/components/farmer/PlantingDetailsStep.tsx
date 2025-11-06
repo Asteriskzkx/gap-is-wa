@@ -118,6 +118,7 @@ export const PlantingDetailsStep: React.FC<PlantingDetailsStepProps> = ({
                     updatePlantingDetail(index, "areaOfPlot", value || 0)
                   }
                   min={0}
+                  max={100000}
                   maxFractionDigits={2}
                 />
               </div>
@@ -140,6 +141,7 @@ export const PlantingDetailsStep: React.FC<PlantingDetailsStepProps> = ({
                     updatePlantingDetail(index, "numberOfRubber", value || 0)
                   }
                   min={0}
+                  max={100000}
                   maxFractionDigits={0}
                 />
               </div>
@@ -160,6 +162,7 @@ export const PlantingDetailsStep: React.FC<PlantingDetailsStepProps> = ({
                     updatePlantingDetail(index, "numberOfTapping", value || 0)
                   }
                   min={0}
+                  max={100000}
                   maxFractionDigits={0}
                 />
               </div>
@@ -180,6 +183,7 @@ export const PlantingDetailsStep: React.FC<PlantingDetailsStepProps> = ({
                     updatePlantingDetail(index, "ageOfRubber", value || 0)
                   }
                   min={0}
+                  max={100000}
                   maxFractionDigits={0}
                 />
               </div>
@@ -253,6 +257,7 @@ export const PlantingDetailsStep: React.FC<PlantingDetailsStepProps> = ({
                     updatePlantingDetail(index, "totalProduction", value || 0)
                   }
                   min={0}
+                  max={100000}
                   maxFractionDigits={2}
                 />
               </div>
