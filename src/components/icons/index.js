@@ -15,3 +15,5 @@ export { default as TextClipboardIcon } from "./TextClipboardIcon";
 export { default as TrashIcon } from "./TrashIcon";
 export { default as XIcon } from "./XIcon";
 export { default as ManageAccountIcon } from "./ManageAccountIcon";
+export { default as InspectIcon } from "./InspectIcon";
+export { default as FindInPageIcon } from "./FindInPageIcon";
