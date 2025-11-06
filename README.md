@@ -683,31 +683,6 @@ openssl rand -base64 32
 - ใช้แค่วันทำงาน: ~4-5 เดือน
 - Scale to zero: ~5-6 เดือน
 
-## 🏗️ โครงสร้างโปรเจค
-
-```
-gap-is-wa/
-├── prisma/            # Prisma schema และ migration files
-├── src/               # Source code
-│   ├── app/           # Next.js App Router
-│   │   └── api/       # APIs
-│   ├── components/    # React components
-│   ├── controllers/   # Controller classes
-│   ├── data/          # Jsons
-│   ├── mappers/       # Mapper classes
-│   ├── middleware/    # Middleware class
-│   ├── models/        # Mapper classes
-│   ├── repositories/  # Repositorie classes
-│   ├── services/      # Service classes
-│   ├── types/         # Type classes
-│   └── utils/         # Utils classes
-├── public/            # Static files
-├── Dockerfile         # สำหรับสร้าง application image
-├── Dockerfile.migrate # สำหรับ database migration
-├── docker-compose.yml # การกำหนดค่า services
-└── migrate.sh         # Script สำหรับ migration
-```
-
 ## 📄 การอ้างอิง
 
 - [Next.js Documentation](https://nextjs.org/docs)
