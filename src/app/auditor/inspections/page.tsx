@@ -75,11 +75,15 @@ const getStatusBadgeClass = (status: string): string => {
 
 // Status badge component
 const StatusBadge: React.FC<{ status: string }> = ({ status }) => (
-  <span
-    className={`px-2 py-1 text-xs rounded-full ${getStatusBadgeClass(status)}`}
-  >
-    {status}
-  </span>
+  <div className="inline-flex justify-center w-full">
+    <span
+      className={`px-2 py-1 text-xs rounded-full ${getStatusBadgeClass(
+        status
+      )}`}
+    >
+      {status}
+    </span>
+  </div>
 );
 
 // Helper types
@@ -700,6 +704,8 @@ export default function AuditorInspectionsPage() {
       ),
       headerAlign: "center" as const,
       bodyAlign: "center" as const,
+      mobileAlign: "right" as const,
+      mobileHideLabel: false,
     },
     {
       field: "actions",
