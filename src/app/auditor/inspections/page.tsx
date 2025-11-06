@@ -75,11 +75,15 @@ const getStatusBadgeClass = (status: string): string => {
 
 // Status badge component
 const StatusBadge: React.FC<{ status: string }> = ({ status }) => (
-  <span
-    className={`px-2 py-1 text-xs rounded-full ${getStatusBadgeClass(status)}`}
-  >
-    {status}
-  </span>
+  <div className="inline-flex justify-center w-full">
+    <span
+      className={`px-2 py-1 text-xs rounded-full ${getStatusBadgeClass(
+        status
+      )}`}
+    >
+      {status}
+    </span>
+  </div>
 );
 
 // Helper types
@@ -646,7 +650,7 @@ export default function AuditorInspectionsPage() {
       sortable: true,
       body: (rowData: Inspection) => rowData.inspectionNo,
       headerAlign: "center" as const,
-      bodyAlign: "left" as const,
+      bodyAlign: "center" as const,
     },
     {
       field: "inspectionDateAndTime",
@@ -659,7 +663,7 @@ export default function AuditorInspectionsPage() {
           day: "numeric",
         }),
       headerAlign: "center" as const,
-      bodyAlign: "left" as const,
+      bodyAlign: "center" as const,
     },
     {
       field: "inspectionType.typeName",
@@ -699,7 +703,9 @@ export default function AuditorInspectionsPage() {
         <StatusBadge status={rowData.inspectionStatus} />
       ),
       headerAlign: "center" as const,
-      bodyAlign: "left" as const,
+      bodyAlign: "center" as const,
+      mobileAlign: "right" as const,
+      mobileHideLabel: false,
     },
     {
       field: "actions",
@@ -712,8 +718,8 @@ export default function AuditorInspectionsPage() {
             color="info"
             rounded
             text
-            tooltip="ดูรายละเอียดสวน"
-            tooltipOptions={{ position: "left" }}
+            // tooltip="ดูรายละเอียดสวน"
+            // tooltipOptions={{ position: "left" }}
           />
           <PrimaryButton
             icon="pi pi-file-edit"
@@ -721,16 +727,17 @@ export default function AuditorInspectionsPage() {
             color="success"
             rounded
             text
-            tooltip="เริ่มตรวจประเมิน"
-            tooltipOptions={{
-              position: "left",
-            }}
+            // tooltip="เริ่มตรวจประเมิน"
+            // tooltipOptions={{
+            //   position: "left",
+            // }}
           />
         </div>
       ),
       headerAlign: "center" as const,
       bodyAlign: "center" as const,
-      // style: { width: "5%" },
+      mobileAlign: "right" as const,
+      mobileHideLabel: true,
     },
   ];
 

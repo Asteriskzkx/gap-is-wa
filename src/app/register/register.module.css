@@ -1,0 +1,404 @@
+/* ==================== Register Page Container ==================== */
+.registerContainer {
+  min-height: 100vh;
+  width: 100vw;
+  overflow-x: hidden;
+  background: linear-gradient(to bottom, #f0fdf4, white);
+  padding: 2.5rem 1rem;
+}
+
+@media (min-width: 640px) {
+  .registerContainer {
+    padding: 2.5rem 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .registerContainer {
+    padding: 2.5rem 2rem;
+  }
+}
+
+.contentWrapper {
+  max-width: 80rem;
+  margin: 0 auto;
+}
+
+/* ==================== Header Section ==================== */
+.header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.logoLink {
+  display: inline-block;
+}
+
+.title {
+  margin-top: 1rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #166534;
+}
+
+@media (min-width: 768px) {
+  .title {
+    font-size: 1.875rem;
+  }
+}
+
+.subtitle {
+  margin-top: 0.5rem;
+  color: #4b5563;
+}
+
+/* ==================== Step Progress ==================== */
+.stepProgressWrapper {
+  margin-bottom: 2rem;
+}
+
+/* Desktop Step Progress */
+.stepProgressDesktop {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .stepProgressDesktop {
+    display: block;
+  }
+}
+
+.stepProgressContainer {
+  display: flex;
+  align-items: center;
+}
+
+.stepItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.stepCircle {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  transition: all 0.5s;
+  border: 2px solid;
+}
+
+.stepCircleActive {
+  background-color: #16a34a;
+  border-color: #16a34a;
+  color: #ffffff;
+  box-shadow: 0 4px 6px -1px rgba(22, 163, 74, 0.3);
+}
+
+.stepCircleCompleted {
+  background-color: #16a34a;
+  border-color: #16a34a;
+  color: #ffffff;
+}
+
+.stepCircleInactive {
+  background-color: white;
+  border-color: #d1d5db;
+  color: #9ca3af;
+}
+
+.checkIcon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.stepLabel {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-align: center;
+  transition: all 0.3s;
+}
+
+.stepLabelActive {
+  color: #16a34a;
+}
+
+.stepLabelCompleted {
+  color: #16a34a;
+}
+
+.stepLabelInactive {
+  color: #9ca3af;
+}
+
+.stepConnector {
+  flex: 1;
+  margin: 0 1rem 1.5rem 1rem;
+}
+
+.stepConnectorLine {
+  height: 0.25rem;
+  border-radius: 9999px;
+  transition: all 0.5s;
+}
+
+.stepConnectorActive {
+  background-color: #16a34a;
+}
+
+.stepConnectorInactive {
+  background-color: #d1d5db;
+}
+
+/* Mobile Step Progress */
+.stepProgressMobile {
+  display: block;
+}
+
+@media (min-width: 640px) {
+  .stepProgressMobile {
+    display: none;
+  }
+}
+
+.stepIndicators {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.stepIndicatorsContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.stepDotMobile {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.checkIconMobile {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.stepConnectorMobile {
+  width: 1.5rem;
+  height: 0.125rem;
+  transition: all 0.3s;
+}
+
+.stepInfo {
+  text-align: center;
+}
+
+.stepInfoTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.stepInfoSubtitle {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+/* ==================== Error Alert ==================== */
+.errorAlert {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  padding: 0.75rem 1rem;
+  border-radius: 0.375rem;
+  margin-bottom: 1.5rem;
+}
+
+/* ==================== Form Card ==================== */
+.formCard {
+  background-color: white;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.form {
+  width: 100%;
+}
+
+/* ==================== Form Sections ==================== */
+.formSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.sectionTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 0.5rem;
+}
+
+/* ==================== Form Groups ==================== */
+.formGroup {
+  display: block;
+}
+
+.label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.25rem;
+}
+
+.required {
+  color: #ef4444;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .formGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.formGrid3Cols {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .formGrid3Cols {
+    grid-template-columns: 1fr 2fr;
+  }
+}
+
+.colSpan2 {
+  grid-column: span 1;
+}
+
+@media (min-width: 640px) {
+  .colSpan2 {
+    grid-column: span 2;
+  }
+}
+
+.helpText {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.inputDisabled {
+  background-color: #f3f4f6;
+}
+
+/* ==================== Loading State ==================== */
+.loadingBox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 3rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  background-color: #f9fafb;
+}
+
+.loadingIcon {
+  margin-right: 0.5rem;
+}
+
+.loadingText {
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+/* ==================== Terms and Conditions ==================== */
+.termsSection {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 1rem;
+  margin-top: 1rem;
+}
+
+.termsWrapper {
+  display: flex;
+  align-items: flex-start;
+}
+
+.termsCheckbox {
+  height: 1rem;
+  width: 1rem;
+  color: #16a34a;
+  border-color: #d1d5db;
+  border-radius: 0.25rem;
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+.termsCheckbox:focus {
+  outline: 2px solid #16a34a;
+  outline-offset: 2px;
+}
+
+.termsLabel {
+  margin-left: 0.5rem;
+  display: block;
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.termsLink {
+  color: #16a34a;
+  text-decoration: underline;
+}
+
+.termsLink:hover {
+  color: #15803d;
+}
+
+/* ==================== Navigation Buttons ==================== */
+.navigationButtons {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* ==================== Footer ==================== */
+.footer {
+  text-align: center;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.footerLink {
+  font-weight: 500;
+  color: #16a34a;
+}
+
+.footerLink:hover {
+  color: #15803d;
+}

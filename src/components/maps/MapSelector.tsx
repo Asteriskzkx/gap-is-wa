@@ -313,17 +313,9 @@ const MapSelector: React.FC<MapSelectorProps> = ({
   };
 
   return (
-    <div
-      className="w-full max-w-full min-w-0"
-      style={{
-        width: "100%",
-        maxWidth: "100%",
-        minWidth: "0",
-        contain: "layout style size",
-      }}
-    >
+    <div className="w-full">
       {/* ส่วนควบคุม - Mobile responsive */}
-      <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 mb-3 p-2 bg-gray-50 rounded-md">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 p-3 bg-gray-50 border-b border-gray-300">
         <div className="flex items-center flex-wrap gap-2">
           <span className="text-sm font-medium whitespace-nowrap">
             รูปแบบพื้นที่:
@@ -331,7 +323,7 @@ const MapSelector: React.FC<MapSelectorProps> = ({
           <select
             value={shapeType}
             onChange={(e) => setShapeType(e.target.value)}
-            className="px-2 py-1 text-sm border rounded bg-white min-w-0 flex-shrink"
+            className="px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
           >
             <option value="Point">หมุดพิกัด</option>
             <option value="Circle">วงกลม</option>
@@ -355,14 +347,14 @@ const MapSelector: React.FC<MapSelectorProps> = ({
                 min="10"
                 max="10000"
                 step="10"
-                className="w-20 px-2 py-1 text-sm border rounded bg-white"
+                className="w-24 px-2 py-1.5 text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
               />
               <button
                 type="button"
                 onClick={() =>
                   handleCircleRadiusChange(Math.max(10, circleRadius - 10))
                 }
-                className="px-2 py-1 text-sm rounded bg-gray-200 hover:bg-gray-300"
+                className="px-2 py-1.5 text-sm rounded-md bg-gray-200 hover:bg-gray-300 transition-colors"
                 disabled={circleRadius <= 10}
               >
                 -
@@ -370,7 +362,7 @@ const MapSelector: React.FC<MapSelectorProps> = ({
               <button
                 type="button"
                 onClick={() => handleCircleRadiusChange(circleRadius + 10)}
-                className="px-2 py-1 text-sm rounded bg-gray-200 hover:bg-gray-300"
+                className="px-2 py-1.5 text-sm rounded-md bg-gray-200 hover:bg-gray-300 transition-colors"
               >
                 +
               </button>
@@ -378,36 +370,23 @@ const MapSelector: React.FC<MapSelectorProps> = ({
           </div>
         )}
 
-        <div className="flex items-center">
+        <div className="flex items-center ml-auto">
           <button
             type="button"
             onClick={resetShape}
-            className="px-3 py-1 text-sm rounded bg-red-500 text-white hover:bg-red-600 whitespace-nowrap"
+            className="px-3 py-1.5 text-sm rounded-md bg-red-500 text-white hover:bg-red-600 transition-colors whitespace-nowrap"
           >
             ล้างพื้นที่
           </button>
         </div>
       </div>
 
-      {/* แผนที่ - Constrained container */}
-      <div
-        className="w-full border rounded-lg overflow-hidden bg-gray-100"
-        style={{
-          width: "100%",
-          maxWidth: "100%",
-          minWidth: "0",
-          contain: "layout style",
-        }}
-      >
+      {/* แผนที่ */}
+      <div className="w-full bg-gray-100">
         <div
-          className="w-full"
           style={{
             height: height || "400px",
-            minHeight: "300px",
             width: "100%",
-            maxWidth: "100%",
-            minWidth: "0",
-            contain: "layout",
           }}
         >
           <MapContainer
@@ -488,16 +467,18 @@ const MapSelector: React.FC<MapSelectorProps> = ({
       </div>
 
       {/* คำแนะนำและข้อมูลพิกัด */}
-      <div className="mt-3 p-2 bg-gray-50 rounded-md">
-        <div className="text-sm text-gray-700 mb-2">
+      <div className="p-3 bg-gray-50 border-t border-gray-300">
+        <div className="flex items-center gap-2 text-sm text-gray-700 mb-2">
+          <i className="pi pi-info-circle text-blue-500"></i>
           <p className="font-medium">{getInstructions()}</p>
         </div>
 
         {/* ข้อมูลพิกัด */}
         {shapeType === "Point" && (
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-gray-600 flex items-center gap-2">
+            <i className="pi pi-map-marker text-green-600"></i>
             <p>
-              พิกัด: ละติจูด {pointPosition[0].toFixed(6)}, ลองจิจูด{" "}
+              พิกัด: {pointPosition[0].toFixed(6)},{" "}
               {pointPosition[1].toFixed(6)}
             </p>
           </div>
@@ -505,12 +486,16 @@ const MapSelector: React.FC<MapSelectorProps> = ({
 
         {shapeType === "Circle" && !isSettingCircle && (
           <div className="text-sm text-gray-600">
-            <p>
-              ศูนย์กลาง: ละติจูด {circleCenter[0].toFixed(6)}, ลองจิจูด{" "}
-              {circleCenter[1].toFixed(6)}
-              <br />
-              รัศมี: {circleRadius.toFixed(2)} เมตร
-            </p>
+            <div className="flex items-center gap-2 mb-1">
+              <i className="pi pi-circle text-blue-600"></i>
+              <p>
+                ศูนย์กลาง: {circleCenter[0].toFixed(6)},{" "}
+                {circleCenter[1].toFixed(6)}
+              </p>
+            </div>
+            <div className="flex items-center gap-2 ml-6">
+              <p>รัศมี: {circleRadius.toFixed(2)} เมตร</p>
+            </div>
           </div>
         )}
       </div>

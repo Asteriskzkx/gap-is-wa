@@ -925,7 +925,7 @@ export default function AuditorScheduleInspectionPage() {
                   style: { width: "15%" },
                   sortable: true,
                   headerAlign: "center" as const,
-                  bodyAlign: "left" as const,
+                  bodyAlign: "center" as const,
                 },
                 {
                   field: "province",
@@ -984,14 +984,16 @@ export default function AuditorScheduleInspectionPage() {
                         disabled={loadingFarmDetails}
                         rounded
                         text
-                        tooltip="ดูข้อมูลสวนยางพารา"
-                        tooltipOptions={{ position: "left" }}
+                        // tooltip="ดูข้อมูลสวนยางพารา"
+                        // tooltipOptions={{ position: "left" }}
                       ></PrimaryButton>
                     </div>
                   ),
                   style: { width: "5%" },
                   headerAlign: "center" as const,
                   bodyAlign: "center" as const,
+                  mobileAlign: "right" as const,
+                  mobileHideLabel: true, // ซ่อน label ใน mobile
                 },
               ]}
               loading={loading}
@@ -1098,17 +1100,21 @@ export default function AuditorScheduleInspectionPage() {
                   field: "selected",
                   header: "เลือก",
                   body: (rowData: Auditor) => (
-                    <PrimaryCheckbox
-                      id={`auditor-${rowData.id}`}
-                      checked={selectedAuditors.some(
-                        (a) => a.id === rowData.id
-                      )}
-                      onChange={() => handleAuditorToggle(rowData)}
-                    />
+                    <div className="inline-flex justify-center w-full">
+                      <PrimaryCheckbox
+                        id={`auditor-${rowData.id}`}
+                        checked={selectedAuditors.some(
+                          (a) => a.id === rowData.id
+                        )}
+                        onChange={() => handleAuditorToggle(rowData)}
+                      />
+                    </div>
                   ),
                   style: { width: "10%" },
                   headerAlign: "center" as const,
                   bodyAlign: "center" as const,
+                  mobileAlign: "right" as const,
+                  mobileHideLabel: false,
                 },
                 {
                   field: "id",

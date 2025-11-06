@@ -22,7 +22,6 @@ import AuditorLayout from "@/components/layout/AuditorLayout";
 import {
   AuditorActionCard,
   LoadingIndicator,
-  RecentInspectionCard,
   StatusCard,
 } from "@/components/auditor";
 import PrimaryDataTable from "@/components/ui/PrimaryDataTable";
@@ -64,7 +63,7 @@ const renderFarmerName = (rowData: Inspection) => {
 };
 
 const renderInspectionDate = (rowData: Inspection) => (
-  <span className="text-gray-500">
+  <span>
     {new Date(rowData.inspectionDateAndTime).toLocaleDateString("th-TH", {
       year: "numeric",
       month: "short",
@@ -89,13 +88,15 @@ const renderInspectionStatus = (rowData: Inspection) => {
   };
 
   return (
-    <span
-      className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getResultBadgeColor(
-        rowData.inspectionResult
-      )}`}
-    >
-      {getResultText(rowData.inspectionResult)}
-    </span>
+    <div className="inline-flex justify-center w-full">
+      <span
+        className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getResultBadgeColor(
+          rowData.inspectionResult
+        )}`}
+      >
+        {getResultText(rowData.inspectionResult)}
+      </span>
+    </div>
   );
 };
 
@@ -503,73 +504,52 @@ export default function AuditorDashboardPage() {
             </Link>
           </div>
 
-          <div>
-            {/* มุมมองแบบการ์ดสำหรับมือถือ */}
-            <div className="md:hidden space-y-4">
-              {loading && <LoadingIndicator />}
-              {!loading && recentInspections.length > 0 && (
-                <>
-                  {recentInspections.map((inspection) => (
-                    <RecentInspectionCard
-                      key={`mobile-${inspection.inspectionId}`}
-                      inspection={inspection}
-                    />
-                  ))}
-                </>
-              )}
-              {!loading && recentInspections.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
-                  ไม่มีการตรวจประเมินล่าสุด
-                </div>
-              )}
-            </div>
-
-            {/* มุมมองแบบตารางสำหรับหน้าจอขนาดกลางขึ้นไป */}
-            <div className="hidden md:block">
-              <PrimaryDataTable
-                value={recentInspections}
-                loading={loading}
-                emptyMessage="ไม่มีการตรวจประเมินล่าสุด"
-                dataKey="inspectionId"
-                columns={[
-                  {
-                    field: "inspectionNo",
-                    header: "เลขที่",
-                    headerAlign: "center",
-                    bodyAlign: "center",
-                  },
-                  {
-                    field: "farmerName",
-                    header: "เกษตรกร",
-                    headerAlign: "center",
-                    bodyAlign: "left",
-                    body: renderFarmerName,
-                  },
-                  {
-                    field: "inspectionDateAndTime",
-                    header: "วันที่",
-                    headerAlign: "center",
-                    bodyAlign: "center",
-                    body: renderInspectionDate,
-                  },
-                  {
-                    field: "inspectionResult",
-                    header: "สถานะ",
-                    headerAlign: "center",
-                    bodyAlign: "center",
-                    body: renderInspectionStatus,
-                  },
-                  {
-                    field: "action",
-                    header: "จัดการ",
-                    headerAlign: "center",
-                    bodyAlign: "center",
-                    body: renderActionLink,
-                  },
-                ]}
-              />
-            </div>
-          </div>
+          <PrimaryDataTable
+            value={recentInspections}
+            loading={loading}
+            emptyMessage="ไม่มีการตรวจประเมินล่าสุด"
+            dataKey="inspectionId"
+            columns={[
+              {
+                field: "inspectionNo",
+                header: "รหัสการตรวจ",
+                headerAlign: "center",
+                bodyAlign: "center",
+              },
+              {
+                field: "farmerName",
+                header: "เกษตรกร",
+                headerAlign: "center",
+                bodyAlign: "left",
+                body: renderFarmerName,
+              },
+              {
+                field: "inspectionDateAndTime",
+                header: "วันที่",
+                headerAlign: "center",
+                bodyAlign: "center",
+                body: renderInspectionDate,
+              },
+              {
+                field: "inspectionResult",
+                header: "สถานะ",
+                headerAlign: "center",
+                bodyAlign: "center",
+                body: renderInspectionStatus,
+                mobileAlign: "right",
+                mobileHideLabel: false,
+              },
+              {
+                field: "action",
+                header: "จัดการ",
+                headerAlign: "center",
+                bodyAlign: "center",
+                body: renderActionLink,
+                mobileAlign: "right",
+                mobileHideLabel: true,
+              },
+            ]}
+          />
         </div>
       </div>
     </AuditorLayout>

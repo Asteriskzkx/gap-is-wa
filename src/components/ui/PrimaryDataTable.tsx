@@ -21,6 +21,8 @@ interface PrimaryDataTableColumn {
   readonly className?: string;
   readonly headerAlign?: TextAlign;
   readonly bodyAlign?: TextAlign;
+  readonly mobileAlign?: "left" | "right"; // จัดตำแหน่งใน mobile (สำหรับ action buttons)
+  readonly mobileHideLabel?: boolean; // ซ่อน label ใน mobile (สำหรับ action columns)
 }
 
 interface PrimaryDataTableProps {
@@ -193,6 +195,13 @@ export default function PrimaryDataTable({
           );
           const bodyAlignClass = getBodyAlignmentClass(col.bodyAlign || "left");
 
+          // สร้าง className สำหรับ mobile
+          const mobileAlignClass =
+            col.mobileAlign === "right" ? "mobile-align-right" : "";
+          const mobileHideLabelClass = col.mobileHideLabel
+            ? "mobile-hide-label"
+            : "";
+
           return (
             <Column
               key={col.field}
@@ -202,13 +211,16 @@ export default function PrimaryDataTable({
               sortable={col.sortable}
               style={col.style}
               headerStyle={col.headerStyle}
-              className={col.className}
+              className={`${
+                col.className || ""
+              } ${mobileAlignClass} ${mobileHideLabelClass}`.trim()}
               pt={{
                 headerCell: {
                   className: `px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider ${headerAlignClass}`,
                 },
                 bodyCell: {
                   className: `px-6 py-4 text-sm text-gray-900 ${bodyAlignClass}`,
+                  "data-label": col.header, // เพิ่ม data-label สำหรับ mobile responsive
                 },
               }}
             />

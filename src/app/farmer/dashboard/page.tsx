@@ -324,7 +324,7 @@ export default function FarmerDashboardPage() {
                     },
                     {
                       field: "location",
-                      header: "ที่ตั้ง",
+                      header: "สถานที่",
                       headerAlign: "center",
                       bodyAlign: "left",
                       body: renderLocation,

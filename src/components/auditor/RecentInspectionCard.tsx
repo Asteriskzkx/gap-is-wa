@@ -65,7 +65,14 @@ export const RecentInspectionCard: React.FC<RecentInspectionCardProps> = ({
 
       <div className="text-sm text-gray-500 mt-2">
         วันที่:{" "}
-        {new Date(inspection.inspectionDateAndTime).toLocaleDateString("th-TH")}
+        {new Date(inspection.inspectionDateAndTime).toLocaleDateString(
+          "th-TH",
+          {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          }
+        )}
       </div>
 
       <div className="mt-3 flex justify-end">

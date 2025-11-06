@@ -1,0 +1,219 @@
+/* ==================== Login Page Layout ==================== */
+.loginContainer {
+  display: flex;
+  min-height: 100vh;
+  background: linear-gradient(
+    to bottom,
+    var(--secondary-color, #f0fdf4),
+    white
+  );
+}
+
+/* ==================== Left Side - Image Section ==================== */
+.imageSection {
+  display: none;
+  position: relative;
+  background-color: var(--secondary-color, #f0fdf4);
+}
+
+@media (min-width: 1024px) {
+  .imageSection {
+    display: flex;
+    width: 50%;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+.imageWrapper {
+  padding: 3rem;
+  width: 100%;
+}
+
+.heroImage {
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  object-fit: cover;
+  width: 100%;
+  height: auto;
+  max-height: 80vh;
+}
+
+.imageCaption {
+  position: absolute;
+  bottom: 2.5rem;
+  left: 2.5rem;
+  right: 2.5rem;
+  background-color: rgba(255, 255, 255, 0.8);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.captionTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #166534;
+}
+
+.captionSubtitle {
+  color: #15803d;
+}
+
+/* ==================== Right Side - Form Section ==================== */
+.formSection {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .formSection {
+    width: 50%;
+  }
+}
+
+@media (min-width: 768px) {
+  .formSection {
+    padding: 3rem;
+  }
+}
+
+.formContainer {
+  width: 100%;
+  max-width: 28rem;
+}
+
+/* ==================== Header Section ==================== */
+.header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.logoWrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #166534;
+  margin-bottom: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .title {
+    font-size: 1.875rem;
+  }
+}
+
+.subtitle {
+  color: #4b5563;
+}
+
+/* ==================== Error Message ==================== */
+.errorAlert {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  padding: 0.75rem 1rem;
+  border-radius: 0.375rem;
+  margin-bottom: 1.5rem;
+}
+
+/* ==================== Form Styles ==================== */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.formGroup {
+  display: block;
+}
+
+.label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.25rem;
+}
+
+/* ==================== Role Selection ==================== */
+.roleGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .roleGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.roleButton {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  border-radius: 0.375rem;
+  border: 1px solid;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.roleButtonActive {
+  background-color: #16a34a;
+  color: #ffffff;
+  border-color: #16a34a;
+}
+
+.roleButtonInactive {
+  background-color: white;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.roleButtonInactive:hover {
+  background-color: #f9fafb;
+}
+
+/* ==================== Submit Button ==================== */
+.submitButton {
+  width: 100%;
+}
+
+/* ==================== Footer Section ==================== */
+.footer {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.registerPrompt {
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+.registerPromptHidden {
+  visibility: hidden;
+}
+
+.registerLink {
+  font-weight: 500;
+  color: #16a34a;
+  text-decoration: none;
+}
+
+.registerLink:hover {
+  color: #15803d;
+}
+
+.copyright {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 1rem;
+}
