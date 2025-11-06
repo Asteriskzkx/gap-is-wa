@@ -749,6 +749,7 @@ button {
 .p-datepicker .p-datepicker-header .p-datepicker-title {
   color: #111827 !important;
   font-weight: 600 !important;
+  display: contents;
 }
 
 .p-datepicker table td {
