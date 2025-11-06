@@ -512,7 +512,7 @@ export default function AuditorDashboardPage() {
             columns={[
               {
                 field: "inspectionNo",
-                header: "เลขที่",
+                header: "รหัสการตรวจ",
                 headerAlign: "center",
                 bodyAlign: "center",
               },
