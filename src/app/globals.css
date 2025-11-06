@@ -1333,15 +1333,6 @@ input.p-inputtext:disabled {
     display: none !important;
   }
 
-  /* ซ่อน label สำหรับ action column (backward compatibility) */
-  .primary-datatable-wrapper
-    .p-datatable-tbody
-    > tr
-    > td.mobile-align-right::before {
-    content: none !important;
-    display: none !important;
-  }
-
   /* Border ระหว่าง cell */
   .primary-datatable-wrapper .p-datatable-tbody > tr > td:not(:last-child) {
     border-bottom: 1px solid #f3f4f6 !important;
