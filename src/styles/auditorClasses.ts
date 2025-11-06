@@ -103,6 +103,7 @@ export const SPACING = {
   p4: "p-4",
   p6: "p-6",
   px4: "px-4",
+  px3: "px-3",
   py2: "py-2",
   py3: "py-3",
 } as const;

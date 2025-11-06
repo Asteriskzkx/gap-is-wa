@@ -1,8 +1,10 @@
 "use client";
 
+import { useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { FaCheck, FaTimes } from "react-icons/fa";
 import AuditorLayout from "@/components/layout/AuditorLayout";
+import { PrimaryDataTable, PrimaryButton } from "@/components/ui";
 import { useInspectionSummary } from "@/hooks/useInspectionSummary";
 import {
   CONTAINER,
@@ -11,11 +13,8 @@ import {
   SPACING,
   INFO_CARD,
   GRID,
-  TABLE,
-  CARD,
   BADGE,
   TEXT,
-  ACTION,
   FLEX,
 } from "@/styles/auditorClasses";
 
@@ -51,11 +50,96 @@ interface InspectionItemSummary {
 
 export default function AuditorInspectionSummaryPage() {
   const params = useParams();
-  const router = useRouter(); // For navigation in JSX
+  const router = useRouter();
 
   // Use custom hook
   const { inspection, loading, savingResult, submitFinalResult } =
     useInspectionSummary(params.id);
+
+  // Check if inspection is completed
+  const isCompleted = inspection?.inspectionResult !== "รอผลการตรวจประเมิน";
+
+  // Memoized columns for PrimaryDataTable
+  const columns = useMemo(
+    () => [
+      {
+        field: "inspectionItemNo",
+        header: "ลำดับ",
+        sortable: false,
+        headerAlign: "center" as const,
+        bodyAlign: "center" as const,
+        body: (rowData: InspectionItemSummary) => (
+          <span className={TEXT.secondary}>{rowData.inspectionItemNo}</span>
+        ),
+      },
+      {
+        field: "itemName",
+        header: "รายการตรวจประเมิน",
+        sortable: false,
+        headerAlign: "left" as const,
+        bodyAlign: "left" as const,
+        body: (rowData: InspectionItemSummary) => (
+          <span className={TEXT.primary}>
+            {rowData.inspectionItemMaster?.itemName ||
+              `รายการที่ ${rowData.inspectionItemNo}`}
+          </span>
+        ),
+      },
+      {
+        field: "inspectionItemResult",
+        header: "ผลการประเมิน",
+        sortable: false,
+        headerAlign: "center" as const,
+        bodyAlign: "center" as const,
+        mobileAlign: "right" as const,
+        mobileHideLabel: false,
+        body: (rowData: InspectionItemSummary) => (
+          <div className={BADGE.wrapper}>
+            <span
+              className={`${BADGE.base} ${
+                rowData.inspectionItemResult === "ผ่าน"
+                  ? BADGE.green
+                  : BADGE.red
+              }`}
+            >
+              {rowData.inspectionItemResult === "ผ่าน" ? (
+                <FaCheck className={SPACING.mr1} />
+              ) : (
+                <FaTimes className={SPACING.mr1} />
+              )}
+              {rowData.inspectionItemResult}
+            </span>
+          </div>
+        ),
+      },
+      {
+        field: "actions",
+        header: "รายละเอียด",
+        sortable: false,
+        headerAlign: "center" as const,
+        bodyAlign: "center" as const,
+        mobileAlign: "right" as const,
+        mobileHideLabel: true,
+        body: (rowData: InspectionItemSummary) => (
+          <div className="flex justify-center">
+            <PrimaryButton
+              icon="pi pi-eye"
+              color="info"
+              size="small"
+              rounded
+              text
+              onClick={() =>
+                router.push(
+                  `/auditor/inspection-detail/${inspection?.inspectionId}/${rowData.inspectionItemId}`
+                )
+              }
+            />
+          </div>
+        ),
+      },
+    ],
+    [inspection, router]
+  );
 
   if (loading) {
     return (
@@ -134,119 +218,17 @@ export default function AuditorInspectionSummaryPage() {
                 ผลการตรวจประเมินรายหัวข้อ
               </h2>
 
-              {/* Desktop table */}
-              <div className={TABLE.wrapper}>
-                <table className={TABLE.table}>
-                  <thead className={TABLE.thead}>
-                    <tr>
-                      <th scope="col" className={TABLE.th}>
-                        ลำดับ
-                      </th>
-                      <th scope="col" className={TABLE.th}>
-                        รายการตรวจประเมิน
-                      </th>
-                      <th scope="col" className={TABLE.thCenter}>
-                        ผลการประเมิน
-                      </th>
-                      <th scope="col" className={TABLE.thCenter}>
-                        รายละเอียด
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className={TABLE.tbody}>
-                    {inspection.items
-                      ?.slice()
-                      .sort((a, b) => a.inspectionItemNo - b.inspectionItemNo)
-                      .map((item) => (
-                        <tr key={item.inspectionItemId} className={TABLE.row}>
-                          <td className={`${TABLE.td} ${TEXT.secondary}`}>
-                            {item.inspectionItemNo}
-                          </td>
-                          <td className={`${TABLE.td}`}>
-                            {item.inspectionItemMaster?.itemName ||
-                              `รายการที่ ${item.inspectionItemNo}`}
-                          </td>
-                          <td className={TABLE.tdCenter}>
-                            <span
-                              className={`${BADGE.base} ${
-                                item.inspectionItemResult === "ผ่าน"
-                                  ? BADGE.green
-                                  : BADGE.red
-                              }`}
-                            >
-                              {item.inspectionItemResult === "ผ่าน" ? (
-                                <FaCheck className={SPACING.mr1} />
-                              ) : (
-                                <FaTimes className={SPACING.mr1} />
-                              )}
-                              {item.inspectionItemResult}
-                            </span>
-                          </td>
-                          <td className={TABLE.tdCenter}>
-                            <button
-                              className={`${ACTION.button} ${TEXT.sm}`}
-                              onClick={() =>
-                                router.push(
-                                  `/auditor/inspection-detail/${inspection.inspectionId}/${item.inspectionItemId}`
-                                )
-                              }
-                            >
-                              ดูรายละเอียด
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Mobile cards */}
-              <div className={CARD.wrapper}>
-                {inspection.items
-                  ?.slice()
-                  .sort((a, b) => a.inspectionItemNo - b.inspectionItemNo)
-                  .map((item) => (
-                    <div key={item.inspectionItemId} className={CARD.item}>
-                      <div className={CARD.header}>
-                        <div className={TEXT.medium}>
-                          ลำดับที่ {item.inspectionItemNo}
-                        </div>
-                        <span
-                          className={`${BADGE.base} ${
-                            item.inspectionItemResult === "ผ่าน"
-                              ? BADGE.green
-                              : BADGE.red
-                          }`}
-                        >
-                          {item.inspectionItemResult === "ผ่าน" ? (
-                            <FaCheck className={SPACING.mr1} />
-                          ) : (
-                            <FaTimes className={SPACING.mr1} />
-                          )}
-                          {item.inspectionItemResult}
-                        </span>
-                      </div>
-
-                      <div
-                        className={`${TEXT.sm} ${TEXT.primary} ${SPACING.mb3}`}
-                      >
-                        {item.inspectionItemMaster?.itemName ||
-                          `รายการที่ ${item.inspectionItemNo}`}
-                      </div>
-
-                      <button
-                        className={`w-full ${SPACING.py2} ${SPACING.px4} border border-indigo-300 rounded-md ${TEXT.sm} ${TEXT.medium} text-indigo-600 hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500`}
-                        onClick={() =>
-                          router.push(
-                            `/auditor/inspection-detail/${inspection.inspectionId}/${item.inspectionItemId}`
-                          )
-                        }
-                      >
-                        ดูรายละเอียด
-                      </button>
-                    </div>
-                  ))}
-              </div>
+              <PrimaryDataTable
+                value={
+                  inspection.items
+                    ?.slice()
+                    .sort((a, b) => a.inspectionItemNo - b.inspectionItemNo) ||
+                  []
+                }
+                columns={columns}
+                dataKey="inspectionItemId"
+                emptyMessage="ไม่พบรายการตรวจประเมิน"
+              />
             </div>
 
             <div className={INFO_CARD.sectionBorder}>
@@ -386,21 +368,21 @@ export default function AuditorInspectionSummaryPage() {
             <div
               className={`flex flex-col sm:flex-row justify-end ${SPACING.gap2} sm:space-x-4 mt-6`}
             >
-              <button
-                type="button"
+              <PrimaryButton
+                label={isCompleted ? "กลับ" : "ยกเลิก"}
+                icon="pi pi-arrow-left"
+                color="secondary"
                 onClick={() => router.back()}
-                className={`${ACTION.buttonSecondary} ${SPACING.mb3} sm:mb-0 order-2 sm:order-1`}
-              >
-                ยกเลิก
-              </button>
-              <button
-                type="button"
-                onClick={submitFinalResult}
-                disabled={savingResult}
-                className={`${ACTION.buttonPrimary} ${ACTION.buttonDisabled} order-1 sm:order-2`}
-              >
-                {savingResult ? "กำลังบันทึก..." : "บันทึกผลการประเมิน"}
-              </button>
+              />
+              {!isCompleted && (
+                <PrimaryButton
+                  label={savingResult ? "กำลังบันทึก..." : "บันทึกผลการประเมิน"}
+                  icon="pi pi-check"
+                  color="success"
+                  onClick={submitFinalResult}
+                  disabled={savingResult}
+                />
+              )}
             </div>
           </div>
         )}

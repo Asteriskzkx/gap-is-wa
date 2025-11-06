@@ -1,14 +1,14 @@
 "use client";
 
 import { useRouter, useParams } from "next/navigation";
-import { FaCheck, FaTimes, FaArrowLeft } from "react-icons/fa";
+import { FaCheck, FaTimes } from "react-icons/fa";
 import AuditorLayout from "@/components/layout/AuditorLayout";
+import { PrimaryButton } from "@/components/ui";
 import { useInspectionDetail } from "@/hooks/useInspectionDetail";
 import {
   CONTAINER,
   HEADER,
   SPINNER,
-  ACTION,
   GRID,
   SPACING,
   INFO_CARD,
@@ -55,7 +55,7 @@ export default function AuditorInspectionDetailPage() {
               <div>
                 <label className={FIELD.label}>แหล่งน้ำที่ใช้ในแปลงปลูก</label>
                 <div className={FIELD.input}>
-                  {otherConditions.waterSource || "-"}
+                  {otherConditions.waterSourceInPlantation || "-"}
                 </div>
               </div>
               <div>
@@ -63,26 +63,51 @@ export default function AuditorInspectionDetailPage() {
                   น้ำที่ใช้ในการหลังการเก็บเกี่ยว
                 </label>
                 <div className={FIELD.input}>
-                  {otherConditions.postHarvestWaterSource || "-"}
+                  {otherConditions.waterSourcePostHarvest || "-"}
                 </div>
               </div>
             </div>
           </div>
         );
-      case "พื้นที่ปลูก":
+      case "พื้นที่ปลูก": {
+        const landConditionsArr = Array.isArray(otherConditions.landConditions)
+          ? otherConditions.landConditions
+          : otherConditions.landConditions
+          ? [otherConditions.landConditions]
+          : [];
+
+        const landLabelMap: Record<string, string> = {
+          "raised-bed-waterlogged": "ยกร่องน้ำขัง",
+          "raised-bed": "ยกร่อง",
+          flat: "ที่ราบ",
+          lowland: "ที่ราบลุ่ม",
+          upland: "ที่ดอน",
+          other: "อื่นๆ",
+        };
+
+        const labels = landConditionsArr
+          .map((k: string) => landLabelMap[k] || k)
+          .filter(Boolean);
+
+        if (
+          landConditionsArr.includes("other") &&
+          otherConditions.landConditionsOther
+        ) {
+          labels.push(`อื่นๆ: ${otherConditions.landConditionsOther}`);
+        }
+
         return (
           <div className={FIELD.wrapper}>
             <h3 className={FIELD.title}>ข้อมูลเพิ่มเติม</h3>
             <div>
               <label className={FIELD.labelMb2}>สภาพพื้นที่ปลูก</label>
               <div className={FIELD.input}>
-                {otherConditions.topography === "อื่นๆ"
-                  ? `อื่นๆ: ${otherConditions.topographyOther || ""}`
-                  : otherConditions.topography || "-"}
+                {labels.length ? labels.join(", ") : "-"}
               </div>
             </div>
           </div>
         );
+      }
       case "วัตถุอันตรายทางการเกษตร":
         return (
           <div className={FIELD.wrapper}>
@@ -127,10 +152,6 @@ export default function AuditorInspectionDetailPage() {
         <div className={SPACING.mb6}>
           <div className={FLEX.betweenCenter}>
             <h1 className={HEADER.title}>รายละเอียดการตรวจประเมิน</h1>
-            <button onClick={() => router.back()} className={ACTION.buttonBack}>
-              <FaArrowLeft className={`${SPACING.mr2}`} />
-              กลับไปหน้าสรุปผล
-            </button>
           </div>
 
           {inspection && (
@@ -248,8 +269,8 @@ export default function AuditorInspectionDetailPage() {
                             ผลการตรวจประเมิน
                           </label>
                           <div
-                            className={`w-full ${SPACING.px4} ${
-                              SPACING.py3
+                            className={`w-full ${SPACING.px3} ${
+                              SPACING.py2
                             } border rounded-md ${
                               requirement.evaluationResult === "ใช่"
                                 ? "bg-green-50 border-green-200 text-green-700"
@@ -294,13 +315,12 @@ export default function AuditorInspectionDetailPage() {
             {renderAdditionalFields()}
 
             <div className={`${FLEX.justifyCenter} ${SPACING.mt8}`}>
-              <button
+              <PrimaryButton
+                label="กลับไปหน้าสรุปผล"
+                icon="pi pi-arrow-left"
+                color="secondary"
                 onClick={() => router.back()}
-                className={`${SPACING.px4} py-2.5 bg-gray-600 text-white rounded-md ${TEXT.medium} hover:bg-gray-700`}
-              >
-                <FaArrowLeft className="inline-block ${SPACING.mr2}" />
-                กลับไปหน้าสรุปผล
-              </button>
+              />
             </div>
           </div>
         )}
