@@ -8,22 +8,22 @@ export const adminNavItems = [
         },
         {
           title: "จัดการผู้ใช้ในระบบ",
-          href: "/committee/assessments",
+          href: "/admin/user-management",
           icon: <ManageAccountIcon className="h-6 w-6" />,
         },
         {
           title: "ตรวจสอบเหตุการณ์ในระบบ",
-          href: "/committee/certifications/issue",
+          href: "/admin/incident-inspection",
           icon: <InspectIcon className="h-6 w-6" />,
         },
         {
           title: "สร้างรายงาน",
-          href: "/committee/certifications/revoke",
+          href: "/admin/create-report",
           icon: <PlusIcon className="h-6 w-6" />,
         },
         {
           title: "ตรวจสอบรายงาน",
-          href: "/committee/reports",
+          href: "/admin/report-inspection",
           icon: <FindInPageIcon className="h-6 w-6" />,
         },
       ];
