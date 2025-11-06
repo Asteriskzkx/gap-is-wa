@@ -1,4 +1,8 @@
-export default function MenuIcon(props) {
+import React from 'react';
+
+type MenuIconIconProps = React.SVGProps<SVGSVGElement>;
+
+export default function MenuIcon(props : MenuIconIconProps) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -8,6 +12,7 @@ export default function MenuIcon(props) {
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"
+      {...props}
     >
       <path
         stroke-linecap="round"

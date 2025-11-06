@@ -1,4 +1,8 @@
-export default function ChevronRightIcon(props) {
+import React from "react";
+
+type ChevronBottomIconProps = React.SVGProps<SVGSVGElement>;
+
+export default function ChevronBottomIcon(props : ChevronBottomIconProps) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -6,12 +10,13 @@ export default function ChevronRightIcon(props) {
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"
+      {...props}
     >
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
         strokeWidth={2}
-        d="M9 5l7 7-7 7"
+        d="M19 9l-7 7-7-7"
       />
     </svg>
   );

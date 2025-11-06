@@ -1,5 +1,7 @@
+import React from 'react';
 
-export default function LandFrameIcon(props) {
+type LandFrameIconProps = React.SVGProps<SVGSVGElement>;
+export default function LandFrameIcon(props : LandFrameIconProps) {
    return <svg
       xmlns="http://www.w3.org/2000/svg"
       className={props?.className || "h-6 w-6"}
@@ -7,6 +9,7 @@ export default function LandFrameIcon(props) {
       viewBox="0 0 24 24"
       stroke="currentColor"
       strokeWidth={1.5}
+      {...props}
    >
       <path
       strokeLinecap="round"

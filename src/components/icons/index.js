@@ -14,3 +14,4 @@ export { default as TestIcon } from "./TestIcon";
 export { default as TextClipboardIcon } from "./TextClipboardIcon";
 export { default as TrashIcon } from "./TrashIcon";
 export { default as XIcon } from "./XIcon";
+export { default as ManageAccountIcon } from "./ManageAccountIcon";
