@@ -58,7 +58,7 @@ export default function SidebarComponent({
         <div
           className={`bg-white shadow-md transition-all duration-300 h-screen fixed z-30 ${
             collapsed ? "w-14" : "w-64"
-          } flex flex-col`}
+          } flex flex-col ${collapsed ? styles.sidebarCollapsed : ""}`}
         >
           <div className={styles.sidebarContent}>
             {/* Toggle button at top */}
