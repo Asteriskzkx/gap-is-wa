@@ -1,7 +1,6 @@
 "use client";
 
-import React from "react";
-import { INFO_CARD, GRID, SPACING } from "@/styles/auditorClasses";
+import { GRID, INFO_CARD, SPACING } from "@/styles/auditorClasses";
 
 interface Props {
   readonly inspection: any;
@@ -13,7 +12,9 @@ export default function InspectionInfo({ inspection }: Props) {
   return (
     <div className={INFO_CARD.sectionBorder}>
       <h2 className={INFO_CARD.sectionTitle}>ข้อมูลทั่วไป</h2>
-      <div className={`${GRID.cols2Md} ${GRID.gap4} ${SPACING.mt4}`}>
+      <div
+        className={`${GRID.cols2Md} ${GRID.gap4} ${SPACING.mt4} ${SPACING.mb4}`}
+      >
         <div className={INFO_CARD.wrapper}>
           <p className={INFO_CARD.label}>เลขที่การตรวจประเมิน</p>
           <p className={INFO_CARD.value}>{inspection.inspectionNo}</p>

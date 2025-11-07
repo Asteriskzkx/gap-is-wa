@@ -9,7 +9,7 @@ export default function CommitteeAssessmentsPage() {
       <InspectionReports
         title="พิจารณาผลการตรวจประเมิน"
         defaultTab="completed"
-        subtitle="พิจารณาและออกใบรับรองตามผลการตรวจประเมิน"
+        subtitle="พิจารณาผลการตรวจประเมินจากเจ้าหน้าที่ตรวจประเมิน"
       />
     </CommitteeLayout>
   );

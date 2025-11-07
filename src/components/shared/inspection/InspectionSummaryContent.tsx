@@ -1,21 +1,21 @@
 "use client";
 
-import React, { useMemo } from "react";
-import { useRouter } from "next/navigation";
-import { PrimaryDataTable, PrimaryButton } from "@/components/ui";
+import InspectionInfo from "@/components/shared/InspectionInfo";
+import StatusBadge from "@/components/shared/StatusBadge";
+import { PrimaryButton, PrimaryDataTable } from "@/components/ui";
 import { useInspectionSummary } from "@/hooks/useInspectionSummary";
+import { getInspectionDetailRoute } from "@/lib/routeHelpers";
 import {
   CONTAINER,
-  HEADER,
-  SPINNER,
-  SPACING,
-  INFO_CARD,
-  TEXT,
   FLEX,
+  HEADER,
+  INFO_CARD,
+  SPACING,
+  SPINNER,
+  TEXT,
 } from "@/styles/auditorClasses";
-import StatusBadge from "@/components/shared/StatusBadge";
-import InspectionInfo from "@/components/shared/InspectionInfo";
-import { getInspectionDetailRoute } from "@/lib/routeHelpers";
+import { useRouter } from "next/navigation";
+import { useMemo } from "react";
 
 interface Props {
   inspectionId: string | number;
@@ -121,6 +121,8 @@ export default function InspectionSummaryContent(props: Readonly<Props>) {
   const { inspection, loading, savingResult, submitFinalResult } =
     useInspectionSummary(String(inspectionId));
 
+  const isCommittee = role && role.toLowerCase() === "committee";
+
   const isCompleted = inspection?.inspectionResult !== "รอผลการตรวจประเมิน";
 
   const columns = useMemo(() => {
@@ -184,9 +186,15 @@ export default function InspectionSummaryContent(props: Readonly<Props>) {
   return (
     <div className={CONTAINER.page}>
       <div className={SPACING.mb8}>
-        <h1 className={HEADER.title}>สรุปผลการตรวจประเมิน</h1>
+        <h1 className={HEADER.title}>
+          {isCommittee
+            ? "พิจารณาผลการตรวจประเมินตามรายการตรวจประเมิน"
+            : "สรุปผลการตรวจประเมิน"}
+        </h1>
         <p className={HEADER.subtitle}>
-          กรุณาตรวจสอบข้อมูลและสรุปผลการประเมินสวนยางพารา
+          {isCommittee
+            ? "พิจารณาผลการตรวจประเมินตามรายการตรวจประเมินจากเจ้าหน้าที่ตรวจประเมิน"
+            : "กรุณาตรวจสอบข้อมูลและสรุปผลการประเมินสวนยางพารา"}
         </p>
       </div>
 
