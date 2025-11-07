@@ -1,3 +1,4 @@
+export { default as AssignmentIcon } from "./AssignmentIcon";
 export { default as CalendarIcon } from "./CalendarIcon";
 export { default as CancelIcon } from "./CancelIcon";
 export { default as ChatBubbleIcon } from "./ChatBubbleIcon";
