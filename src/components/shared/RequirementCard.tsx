@@ -21,7 +21,7 @@ export default function RequirementCard({ requirement }: Props) {
       <div className={FLEX.itemsStart}>
         <div>
           <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs ${
+            className={`inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs whitespace-nowrap overflow-hidden truncate max-w-[6rem] sm:max-w-none ${
               TEXT.medium
             } ${
               requirement.requirementMaster?.requirementLevel === "ข้อกำหนดหลัก"

@@ -25,6 +25,7 @@ import {
   LoadingIndicator,
   StatusCard,
 } from "@/components/auditor";
+import { getInspectionSummaryRoute } from "@/lib/routeHelpers";
 import PrimaryDataTable from "@/components/ui/PrimaryDataTable";
 
 interface Inspection {
@@ -108,7 +109,7 @@ const renderActionLink = (rowData: Inspection) => {
 
   return (
     <Link
-      href={`/auditor/inspection-summary/${rowData.inspectionId}`}
+      href={getInspectionSummaryRoute("auditor", rowData.inspectionId)}
       className="text-indigo-600 hover:text-indigo-900 font-medium"
     >
       {getLinkText(rowData.inspectionResult)}

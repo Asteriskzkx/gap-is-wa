@@ -38,13 +38,9 @@ export default function InspectionReports({
     handleSort,
     handleTabChange,
     handleViewDetails,
-  } = useInspectionReports();
-
-  // Ensure default tab set when component first mounts
-  React.useEffect(() => {
-    if (currentTab !== defaultTab) handleTabChange(defaultTab);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  } = useInspectionReports(defaultTab);
+  // NOTE: we now pass `defaultTab` into the hook so the initial tab is
+  // set before the first render and we don't need a separate effect here.
 
   // Local ids for LocationFilters
   const [selectedProvinceId, setSelectedProvinceId] = React.useState<
@@ -91,6 +87,7 @@ export default function InspectionReports({
           <span>
             {[
               row.rubberFarm?.villageName,
+              row.rubberFarm?.subDistrict,
               row.rubberFarm?.district,
               row.rubberFarm?.province,
             ]

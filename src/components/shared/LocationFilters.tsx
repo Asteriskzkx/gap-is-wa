@@ -4,6 +4,7 @@ import PrimaryAutoComplete from "@/components/ui/PrimaryAutoComplete";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import thaiProvinceData from "@/data/thai-provinces.json";
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 
 interface Props {
   provinceId?: number | null;
@@ -89,6 +90,17 @@ export default function LocationFilters({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [districtId, districts]);
 
+  // detect committee role to hide certain tab buttons
+  const { data: session } = useSession();
+  const roleFromSession = (session as any)?.user?.role as string | undefined;
+  const normalizedRole = roleFromSession
+    ? roleFromSession.toLowerCase()
+    : undefined;
+  const isCommittee =
+    normalizedRole === "committee" ||
+    ((session as any)?.user?.roleData?.committeeId !== undefined &&
+      (session as any)?.user?.roleData?.committeeId !== null);
+
   return (
     <div className="flex flex-col w-full">
       {/* First row: responsive grid - 3 columns on sm+ (province, district, subdistrict) */}
@@ -142,24 +154,26 @@ export default function LocationFilters({
           onClick={onReset}
         />
       </div>
-
       {/* Third row: tab buttons (center on small, right on sm+) */}
-      <div className="mt-3 flex justify-center sm:justify-end">
-        <div className="flex items-center space-x-2">
-          <PrimaryButton
-            label="รอสรุปผล"
-            icon="pi pi-clock"
-            color={currentTab === "pending" ? "success" : "secondary"}
-            onClick={() => onTabChange("pending")}
-          />
-          <PrimaryButton
-            label="เสร็จสิ้น"
-            icon="pi pi-check-circle"
-            color={currentTab === "completed" ? "success" : "secondary"}
-            onClick={() => onTabChange("completed")}
-          />
+      {!isCommittee && (
+        <div className="mt-3 flex justify-center sm:justify-end">
+          <div className="flex items-center space-x-2">
+            <PrimaryButton
+              label="รอสรุปผล"
+              icon="pi pi-clock"
+              color={currentTab === "pending" ? "success" : "secondary"}
+              onClick={() => onTabChange("pending")}
+            />
+
+            <PrimaryButton
+              label="เสร็จสิ้น"
+              icon="pi pi-check-circle"
+              color={currentTab === "completed" ? "success" : "secondary"}
+              onClick={() => onTabChange("completed")}
+            />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

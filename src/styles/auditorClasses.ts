@@ -58,7 +58,7 @@ export const CARD = {
 
 // Status Badge Classes
 export const BADGE = {
-  base: "inline-flex items-center px-3 py-1 text-xs font-medium rounded-full",
+  base: "inline-flex items-center px-3 py-1 rounded-full",
   wrapper: "inline-flex justify-center w-full",
   yellow: "bg-yellow-100 text-yellow-800",
   green: "bg-green-100 text-green-800",
