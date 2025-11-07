@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { FaCheck, FaTimes } from "react-icons/fa";
+
 import AuditorLayout from "@/components/layout/AuditorLayout";
 import { PrimaryDataTable, PrimaryButton } from "@/components/ui";
 import { useInspectionSummary } from "@/hooks/useInspectionSummary";
@@ -12,11 +12,11 @@ import {
   SPINNER,
   SPACING,
   INFO_CARD,
-  GRID,
-  BADGE,
   TEXT,
   FLEX,
 } from "@/styles/auditorClasses";
+import StatusBadge from "@/components/shared/StatusBadge";
+import InspectionInfo from "@/components/shared/InspectionInfo";
 
 interface Requirement {
   requirementId: number;
@@ -94,22 +94,7 @@ export default function AuditorInspectionSummaryPage() {
         mobileAlign: "right" as const,
         mobileHideLabel: false,
         body: (rowData: InspectionItemSummary) => (
-          <div className={BADGE.wrapper}>
-            <span
-              className={`${BADGE.base} ${
-                rowData.inspectionItemResult === "ผ่าน"
-                  ? BADGE.green
-                  : BADGE.red
-              }`}
-            >
-              {rowData.inspectionItemResult === "ผ่าน" ? (
-                <FaCheck className={SPACING.mr1} />
-              ) : (
-                <FaTimes className={SPACING.mr1} />
-              )}
-              {rowData.inspectionItemResult}
-            </span>
-          </div>
+          <StatusBadge result={rowData.inspectionItemResult} />
         ),
       },
       {
@@ -163,55 +148,7 @@ export default function AuditorInspectionSummaryPage() {
 
         {inspection && (
           <div className={`${CONTAINER.card} ${SPACING.p6} ${SPACING.mb8}`}>
-            <div className={INFO_CARD.sectionBorder}>
-              <h2 className={INFO_CARD.sectionTitle}>ข้อมูลทั่วไป</h2>
-              <div className={`${GRID.cols2Md} ${GRID.gap4} ${SPACING.mt4}`}>
-                <div className={INFO_CARD.wrapper}>
-                  <p className={INFO_CARD.label}>เลขที่การตรวจประเมิน</p>
-                  <p className={INFO_CARD.value}>{inspection.inspectionNo}</p>
-                </div>
-                <div className={INFO_CARD.wrapper}>
-                  <p className={INFO_CARD.label}>วันที่ตรวจประเมิน</p>
-                  <p className={INFO_CARD.value}>
-                    {new Date(
-                      inspection.inspectionDateAndTime
-                    ).toLocaleDateString("th-TH", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </p>
-                </div>
-                <div className={INFO_CARD.wrapper}>
-                  <p className={INFO_CARD.label}>ชื่อเกษตรกร</p>
-                  <p className={INFO_CARD.value}>
-                    {inspection.rubberFarm?.farmer
-                      ? `${inspection.rubberFarm.farmer.namePrefix}${inspection.rubberFarm.farmer.firstName} ${inspection.rubberFarm.farmer.lastName}`
-                      : "ไม่มีข้อมูล"}
-                  </p>
-                </div>
-                <div className={INFO_CARD.wrapper}>
-                  <p className={INFO_CARD.label}>สถานที่</p>
-                  <p className={INFO_CARD.value}>
-                    {[
-                      inspection.rubberFarm?.villageName,
-                      inspection.rubberFarm?.district,
-                      inspection.rubberFarm?.province,
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                  </p>
-                </div>
-                <div className={INFO_CARD.wrapper}>
-                  <p className={INFO_CARD.label}>ประเภทการตรวจประเมิน</p>
-                  <p className={INFO_CARD.value}>
-                    {inspection.inspectionType?.typeName || "ไม่มีข้อมูล"}
-                  </p>
-                </div>
-              </div>
-            </div>
+            <InspectionInfo inspection={inspection} />
 
             <div className={INFO_CARD.sectionBorder}>
               <h2 className={`${INFO_CARD.sectionTitle}`}>
@@ -333,7 +270,7 @@ export default function AuditorInspectionSummaryPage() {
                         </p>
                       </div>
 
-                      <div className={`${FLEX.spaceX12} mt-6`}>
+                      <div className={`${FLEX.spaceX12} mt-6 gap-2`}>
                         <label className={`${FLEX.itemsCenter} space-x-2`}>
                           <input
                             type="checkbox"

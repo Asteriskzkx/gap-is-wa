@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter, useParams } from "next/navigation";
-import { FaCheck, FaTimes } from "react-icons/fa";
+import StatusBadge from "@/components/shared/StatusBadge";
+import RequirementCard from "@/components/shared/RequirementCard";
 import AuditorLayout from "@/components/layout/AuditorLayout";
 import { PrimaryButton } from "@/components/ui";
 import { useInspectionDetail } from "@/hooks/useInspectionDetail";
@@ -53,15 +54,13 @@ export default function AuditorInspectionDetailPage() {
             <h3 className={FIELD.title}>ข้อมูลเพิ่มเติม</h3>
             <div className={FIELD.spaceY}>
               <div>
-                <label className={FIELD.label}>แหล่งน้ำที่ใช้ในแปลงปลูก</label>
+                <p className={FIELD.label}>แหล่งน้ำที่ใช้ในแปลงปลูก</p>
                 <div className={FIELD.input}>
                   {otherConditions.waterSourceInPlantation || "-"}
                 </div>
               </div>
               <div>
-                <label className={FIELD.label}>
-                  น้ำที่ใช้ในการหลังการเก็บเกี่ยว
-                </label>
+                <p className={FIELD.label}>น้ำที่ใช้ในการหลังการเก็บเกี่ยว</p>
                 <div className={FIELD.input}>
                   {otherConditions.waterSourcePostHarvest || "-"}
                 </div>
@@ -69,12 +68,15 @@ export default function AuditorInspectionDetailPage() {
             </div>
           </div>
         );
+
       case "พื้นที่ปลูก": {
-        const landConditionsArr = Array.isArray(otherConditions.landConditions)
-          ? otherConditions.landConditions
-          : otherConditions.landConditions
-          ? [otherConditions.landConditions]
-          : [];
+        // Normalize landConditions to an array to avoid nested ternary expressions
+        let landConditionsArr: string[] = [];
+        if (Array.isArray(otherConditions.landConditions)) {
+          landConditionsArr = otherConditions.landConditions;
+        } else if (otherConditions.landConditions) {
+          landConditionsArr = [otherConditions.landConditions];
+        }
 
         const landLabelMap: Record<string, string> = {
           "raised-bed-waterlogged": "ยกร่องน้ำขัง",
@@ -100,7 +102,7 @@ export default function AuditorInspectionDetailPage() {
           <div className={FIELD.wrapper}>
             <h3 className={FIELD.title}>ข้อมูลเพิ่มเติม</h3>
             <div>
-              <label className={FIELD.labelMb2}>สภาพพื้นที่ปลูก</label>
+              <p className={FIELD.labelMb2}>สภาพพื้นที่ปลูก</p>
               <div className={FIELD.input}>
                 {labels.length ? labels.join(", ") : "-"}
               </div>
@@ -108,6 +110,7 @@ export default function AuditorInspectionDetailPage() {
           </div>
         );
       }
+
       case "วัตถุอันตรายทางการเกษตร":
         return (
           <div className={FIELD.wrapper}>
@@ -131,6 +134,7 @@ export default function AuditorInspectionDetailPage() {
             </div>
           </div>
         );
+
       default:
         return null;
     }
@@ -205,24 +209,7 @@ export default function AuditorInspectionDetailPage() {
               </h2>
 
               <div className={SPACING.mt4}>
-                <div
-                  className={`inline-flex items-center px-3 py-1.5 rounded-full ${
-                    TEXT.sm
-                  } ${TEXT.medium} ${
-                    inspectionItem.inspectionItemResult === "ผ่าน"
-                      ? "bg-green-100 text-green-800"
-                      : "bg-red-100 text-red-800"
-                  }`}
-                >
-                  <span className="mr-1.5">
-                    {inspectionItem.inspectionItemResult === "ผ่าน" ? (
-                      <FaCheck className="inline-block" />
-                    ) : (
-                      <FaTimes className="inline-block" />
-                    )}
-                  </span>
-                  ผลการประเมิน: {inspectionItem.inspectionItemResult}
-                </div>
+                <StatusBadge result={inspectionItem.inspectionItemResult} />
               </div>
             </div>
 
@@ -230,83 +217,16 @@ export default function AuditorInspectionDetailPage() {
             inspectionItem.requirements.length > 0 ? (
               <div className={REQ.spaceY}>
                 <h3 className={`${TEXT.lgMedium} ${SPACING.mb4}`}>ข้อกำหนด</h3>
-
-                {inspectionItem.requirements
-                  .sort((a, b) => a.requirementNo - b.requirementNo)
-                  .map((requirement) => (
+                {(() => {
+                  const sortedRequirements = [
+                    ...inspectionItem.requirements,
+                  ].sort((a, b) => a.requirementNo - b.requirementNo);
+                  return sortedRequirements.map((requirement) => (
                     <div key={requirement.requirementId} className={REQ.card}>
-                      <div className={REQ.cardMb2}>
-                        <div className={FLEX.itemsStart}>
-                          <div className={FLEX.shrink0}>
-                            <span
-                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs ${
-                                TEXT.medium
-                              } ${
-                                requirement.requirementMaster
-                                  ?.requirementLevel === "ข้อกำหนดหลัก"
-                                  ? "bg-red-100 text-red-800"
-                                  : "bg-blue-100 text-blue-800"
-                              }`}
-                            >
-                              {requirement.requirementMaster
-                                ?.requirementLevel || ""}
-                              {requirement.requirementMaster?.requirementLevelNo
-                                ? ` ${requirement.requirementMaster.requirementLevelNo}`
-                                : ""}
-                            </span>
-                          </div>
-                          <h4 className={REQ.title}>
-                            {requirement.requirementNo}.{" "}
-                            {requirement.requirementMaster?.requirementName ||
-                              ""}
-                          </h4>
-                        </div>
-                      </div>
-
-                      <div className={REQ.grid}>
-                        <div>
-                          <label className={FIELD.label}>
-                            ผลการตรวจประเมิน
-                          </label>
-                          <div
-                            className={`w-full ${SPACING.px3} ${
-                              SPACING.py2
-                            } border rounded-md ${
-                              requirement.evaluationResult === "ใช่"
-                                ? "bg-green-50 border-green-200 text-green-700"
-                                : requirement.evaluationResult === "ไม่ใช่"
-                                ? "bg-red-50 border-red-200 text-red-700"
-                                : requirement.evaluationResult === "NA"
-                                ? "bg-gray-100 border-gray-200 text-gray-700"
-                                : "bg-gray-100 border-gray-300 text-gray-700"
-                            }`}
-                          >
-                            {requirement.evaluationResult || "ไม่มีข้อมูล"}
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className={FIELD.label}>
-                            วิธีการตรวจประเมิน
-                          </label>
-                          <div className={FIELD.input}>
-                            {requirement.evaluationMethod || "ไม่มีข้อมูล"}
-                          </div>
-                        </div>
-
-                        {requirement.note && (
-                          <div className="md:col-span-2">
-                            <label className={FIELD.label}>
-                              บันทึกเพิ่มเติม
-                            </label>
-                            <div className={FIELD.inputTextArea}>
-                              {requirement.note || "-"}
-                            </div>
-                          </div>
-                        )}
-                      </div>
+                      <RequirementCard requirement={requirement} />
                     </div>
-                  ))}
+                  ));
+                })()}
               </div>
             ) : (
               <p className={TEXT.secondary}>ไม่พบข้อกำหนดสำหรับรายการนี้</p>

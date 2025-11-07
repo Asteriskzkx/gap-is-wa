@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
-import { inspectionController } from "@/utils/dependencyInjections";
 import { checkAuthorization } from "@/lib/session";
+import { inspectionController } from "@/utils/dependencyInjections";
+import { NextRequest, NextResponse } from "next/server";
 
 // Route handlers for /api/v1/inspections
 export async function GET(req: NextRequest) {
@@ -8,7 +8,6 @@ export async function GET(req: NextRequest) {
     "AUDITOR",
     "ADMIN",
     "COMMITTEE",
-    "FARMER",
   ]);
 
   if (!authorized) {

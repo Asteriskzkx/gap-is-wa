@@ -44,6 +44,11 @@ export function useInspectionReports() {
   const [currentTab, setCurrentTab] = useState<"pending" | "completed">(
     "pending"
   );
+  const [filters, setFilters] = useState<{
+    province?: string;
+    district?: string;
+    subDistrict?: string;
+  }>({});
   const [totalRecords, setTotalRecords] = useState(0);
   const [lazyParams, setLazyParams] = useState<LazyParams>({
     first: 0,
@@ -87,6 +92,12 @@ export function useInspectionReports() {
         params.append("search", searchTerm);
       }
 
+      // include location filters when provided
+      if (filters.province) params.append("province", filters.province);
+      if (filters.district) params.append("district", filters.district);
+      if (filters.subDistrict)
+        params.append("subDistrict", filters.subDistrict);
+
       if (multiSortMeta && multiSortMeta.length > 0) {
         params.append("multiSortMeta", JSON.stringify(multiSortMeta));
       }
@@ -116,7 +127,7 @@ export function useInspectionReports() {
     } finally {
       setLoading(false);
     }
-  }, [session, status, router, lazyParams, currentTab, searchTerm]);
+  }, [session, status, router, lazyParams, currentTab, searchTerm, filters]);
 
   useEffect(() => {
     fetchInspections();
@@ -172,5 +183,7 @@ export function useInspectionReports() {
     handleSort,
     handleTabChange,
     handleViewDetails,
+    filters,
+    setFilters,
   };
 }
