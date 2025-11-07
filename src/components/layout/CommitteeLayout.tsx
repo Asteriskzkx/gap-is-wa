@@ -1,19 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useSession, signOut } from "next-auth/react";
+import { useEffect, useState } from "react";
 import FooterNew from "./FooterNew";
 import HeaderNew from "./HeaderNew";
 import SidebarComponent from "./SidebarNew";
 
 // Icons
 import {
+  EditIcon,
   HomeIcon,
   TextClipboardIcon,
-  EditIcon,
   XIcon,
-  FileIcon,
 } from "@/components/icons";
 
 interface CommitteeLayoutProps {
@@ -60,11 +59,6 @@ export default function CommitteeLayout({ children }: CommitteeLayoutProps) {
       title: "ยกเลิกใบรับรองแหล่งผลิตจีเอพี",
       href: "/committee/certifications/revoke",
       icon: <XIcon className="h-6 w-6" />,
-    },
-    {
-      title: "รายงานสรุปการรับรอง",
-      href: "/committee/reports",
-      icon: <FileIcon className="h-6 w-6" />,
     },
   ];
 
