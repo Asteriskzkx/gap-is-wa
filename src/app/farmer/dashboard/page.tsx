@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import {
   ChevronRightIcon,
   EditIcon,
+  HomeIcon,
   PlusIcon,
   TextClipboardIcon,
   TrashIcon,
@@ -165,6 +166,11 @@ export default function FarmerDashboardPage() {
   // Navigation menu items for action cards
   const navItems = [
     {
+      title: "หน้าหลัก",
+      href: "/farmer/dashboard",
+      icon: <HomeIcon className="h-6 w-6" />,
+    },
+    {
       title: "ยื่นขอใบรับรองแหล่งผลิต",
       href: "/farmer/applications/new",
       icon: <PlusIcon className="h-6 w-6" />,
@@ -268,16 +274,18 @@ export default function FarmerDashboardPage() {
 
         {/* Action Cards Row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {navItems.map((item, index) => (
-            <ActionCard
-              key={`action-${item.href}`}
-              title={item.title}
-              description={getActionCardDescription(index)}
-              href={item.href}
-              icon={item.icon}
-              colorClass={getActionCardColorClass(index)}
-            />
-          ))}
+          {navItems
+            .filter((item) => item.title !== "หน้าหลัก")
+            .map((item, index) => (
+              <ActionCard
+                key={`action-${item.href}`}
+                title={item.title}
+                description={getActionCardDescription(index)}
+                href={item.href}
+                icon={item.icon}
+                colorClass={getActionCardColorClass(index)}
+              />
+            ))}
         </div>
 
         {/* Status Section */}

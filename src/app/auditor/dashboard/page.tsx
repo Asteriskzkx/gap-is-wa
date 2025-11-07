@@ -167,32 +167,32 @@ export default function AuditorDashboardPage() {
     {
       title: "หน้าหลัก",
       href: "/auditor/dashboard",
-      icon: HomeIcon(),
+      icon: <HomeIcon className="h-6 w-6" />,
     },
     {
       title: "ตรวจประเมินสวนยางพารา",
       href: "/auditor/inspections",
-      icon: TextClipboardIcon(),
+      icon: <TextClipboardIcon className="h-6 w-6" />,
     },
     {
       title: "แจ้งกำหนดการวันที่ตรวจประเมิน",
       href: "/auditor/applications",
-      icon: CalendarIcon(),
+      icon: <CalendarIcon className="h-6 w-6" />,
     },
     {
       title: "สรุปผลการตรวจประเมิน",
       href: "/auditor/reports",
-      icon: FileIcon(),
+      icon: <FileIcon className="h-6 w-6" />,
     },
     {
       title: "บันทึกข้อมูลประจำสวนยาง",
       href: "/auditor/garden-data",
-      icon: LandFrameIcon(),
+      icon: <LandFrameIcon className="h-6 w-6" />,
     },
     {
       title: "บันทึกการให้คำปรึกษาและข้อบกพร่อง",
       href: "/auditor/consultations",
-      icon: ChatBubbleIcon(),
+      icon: <ChatBubbleIcon className="h-6 w-6" />,
     },
   ];
 
