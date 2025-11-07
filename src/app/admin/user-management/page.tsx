@@ -1,15 +1,19 @@
 "use client";
 
 import AdminLayout from "@/components/layout/AdminLayout";
+import { FilterMatchMode } from "primereact/api";
 import { Column } from "primereact/column";
 import { DataTable } from "primereact/datatable";
 import { Dropdown } from "primereact/dropdown";
+import { InputText } from "primereact/inputtext";
 import React, { useEffect } from "react";
 
 export default function AdminUserManagementPage() {
   const [users, setUsers] = React.useState<User[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<Error | null>(null);
+  const [globalFilter, setGlobalFilter] = React.useState<string>("");
+  const [roleFilter, setRoleFilter] = React.useState<string | null>(null); // added
 
   type User = {
     userId: number;
@@ -18,6 +22,14 @@ export default function AdminUserManagementPage() {
     role: string;
     createdAt: string;
   };
+
+  enum UserRole {
+    BASIC = "BASIC",
+    FARMER = "FARMER",
+    AUDITOR = "AUDITOR",
+    COMMITTEE = "COMMITTEE",
+    ADMIN = "ADMIN",
+  }
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -69,14 +81,41 @@ export default function AdminUserManagementPage() {
     }
   };
 
+  const roleOptions = [
+    { label: "All roles", value: null },
+    ...Object.values(UserRole).map((role) => ({
+      label: role,
+      value: role,
+    })),
+  ];
+
   const roleTemplate = (rowData: User) => (
     <Dropdown
       value={users.find((user) => user.userId === rowData.userId)?.role}
       options={["ADMIN", "FARMER", "AUDITOR", "COMMITTEE"]}
       onChange={(e) => handleRoleChange(rowData.userId, e.value)}
       placeholder="Select a Role"
-      filter 
+      filter
     ></Dropdown>
+  );
+
+  const tableHeader = (
+    <div className="flex items-center justify-between gap-2">
+      <i className="pi pi-search" />
+      <InputText
+        value={globalFilter}
+        onChange={(e) => setGlobalFilter((e.target as HTMLInputElement).value)}
+        placeholder="Search by name, email or role"
+      ></InputText>
+
+      <Dropdown
+        value={roleFilter}
+        options={roleOptions}
+        onChange={(e) => setRoleFilter(e.value)}
+        placeholder="Filter by role"
+        showClear
+      ></Dropdown>
+    </div>
   );
 
   return (
@@ -102,23 +141,37 @@ export default function AdminUserManagementPage() {
             </p>
             <DataTable
               value={users}
-              header
+              header={tableHeader}
+              globalFilter={globalFilter}
+              globalFilterFields={["name", "email", "role"]}
+              filters={ roleFilter ? { role: { value: roleFilter, matchMode: FilterMatchMode.EQUALS } } : {} } // added
+              loading={loading}
               paginator
               paginatorLeft
+              paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
               rows={10}
+              rowsPerPageOptions={[10, 25, 50 , 100]}
+              tableStyle={{ minWidth: '50rem' }}
               stripedRows
               resizableColumns
-              emptyMessage="No users found."
-              className="p-4"
+              className="[&_.p-paginator_.p-dropdown]:!w-auto [&_.p-paginator_.p-dropdown]:min-w-[6rem]"
+              emptyMessage="ไม่พบผู้ใช้ในระบบ."
+              
             >
-              <Column field="userId" header="ID" sortable></Column>
+              <Column field="userId" header="ID" style={{ width: '5%' }} sortable></Column>
               <Column field="name" header="Name" sortable></Column>
               <Column field="email" header="Email" sortable></Column>
-              <Column field="role" header="Role" body={roleTemplate} sortable></Column>
+              <Column
+                field="role"
+                header="Role"
+                body={roleTemplate}
+                sortable
+              ></Column>
               <Column
                 field="createdAt"
                 body={dateTemplate}
                 header="Create Date"
+                sortable
               ></Column>
             </DataTable>
           </div>
