@@ -1,23 +1,22 @@
 "use client";
 
-import React from "react";
-import { useRouter } from "next/navigation";
-import StatusBadge from "@/components/shared/StatusBadge";
 import RequirementCard from "@/components/shared/RequirementCard";
+import StatusBadge from "@/components/shared/StatusBadge";
 import { PrimaryButton } from "@/components/ui";
 import { useInspectionDetail } from "@/hooks/useInspectionDetail";
 import {
   CONTAINER,
-  HEADER,
-  SPINNER,
-  GRID,
-  SPACING,
-  INFO_CARD,
   FIELD,
-  TEXT,
   FLEX,
+  GRID,
+  HEADER,
+  INFO_CARD,
   REQ,
+  SPACING,
+  SPINNER,
+  TEXT,
 } from "@/styles/auditorClasses";
+import { useRouter } from "next/navigation";
 
 interface Props {
   inspectionId: string | number;

@@ -1,19 +1,11 @@
 "use client";
 
-import React, { useMemo } from "react";
-import { PrimaryDataTable } from "@/components/ui";
 import LocationFilters from "@/components/shared/LocationFilters";
-import { useInspectionReports } from "@/hooks/useInspectionReports";
+import { PrimaryButton, PrimaryDataTable } from "@/components/ui";
 import thaiProvinceData from "@/data/thai-provinces.json";
-import {
-  BADGE,
-  CONTAINER,
-  FLEX,
-  HEADER,
-  SPACING,
-  SPINNER,
-} from "@/styles/auditorClasses";
-import { PrimaryButton } from "@/components/ui";
+import { useInspectionReports } from "@/hooks/useInspectionReports";
+import { CONTAINER, FLEX, HEADER, SPACING } from "@/styles/auditorClasses";
+import React, { useMemo } from "react";
 import StatusBadge from "./StatusBadge";
 
 interface Props {
