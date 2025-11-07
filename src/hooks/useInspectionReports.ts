@@ -60,7 +60,8 @@ export function useInspectionReports() {
   });
 
   const fetchInspections = useCallback(async () => {
-    if (status === "loading" || !session?.user?.roleData?.auditorId) {
+    // wait until session status is resolved
+    if (status === "loading") {
       return;
     }
 
@@ -71,15 +72,19 @@ export function useInspectionReports() {
 
     try {
       setLoading(true);
-      const auditorId = session.user.roleData.auditorId;
 
+      const auditorId = session?.user?.roleData?.auditorId;
       const { first, rows, multiSortMeta } = lazyParams;
 
+      // build query params; include auditorId only when present
       const params = new URLSearchParams({
-        auditorId: auditorId.toString(),
         limit: rows.toString(),
         offset: first.toString(),
       });
+
+      if (auditorId) {
+        params.append("auditorId", auditorId.toString());
+      }
 
       if (currentTab === "pending") {
         params.append("inspectionStatus", "ตรวจประเมินแล้ว");
@@ -119,7 +124,9 @@ export function useInspectionReports() {
       }
 
       setInspections(results);
-      setTotalRecords(data.total || results.length);
+      // support both shapes: { results, paginator: { total } } and legacy { total }
+      const totalFromPaginator = data?.paginator?.total;
+      setTotalRecords(totalFromPaginator ?? data.total ?? results.length);
     } catch (error) {
       console.error("Error fetching inspections:", error);
       setInspections([]);

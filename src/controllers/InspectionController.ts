@@ -225,6 +225,60 @@ export class InspectionController extends BaseController<InspectionModel> {
     }
   }
 
+  // Override getAll to support pagination, filtering and sorting for the public inspections endpoint
+  async getAll(req: NextRequest): Promise<NextResponse> {
+    try {
+      const { searchParams } = new URL(req.url);
+
+      // Pagination parameters
+      const limit = Number.parseInt(searchParams.get("limit") || "10", 10);
+      const offset = Number.parseInt(searchParams.get("offset") || "0", 10);
+
+      // Filter parameters
+      const inspectionNo = searchParams.get("inspectionNo") || undefined;
+      const inspectionStatus =
+        searchParams.get("inspectionStatus") || undefined;
+      const inspectionResult =
+        searchParams.get("inspectionResult") || undefined;
+      const province = searchParams.get("province") || undefined;
+      const district = searchParams.get("district") || undefined;
+      const subDistrict = searchParams.get("subDistrict") || undefined;
+
+      // Sort parameters
+      const sortField = searchParams.get("sortField") || undefined;
+      const sortOrder = searchParams.get("sortOrder") || undefined;
+      const multiSortMeta = searchParams.get("multiSortMeta") || undefined;
+
+      const result = await this.inspectionService.getAllWithPagination({
+        inspectionNo,
+        inspectionStatus,
+        inspectionResult,
+        province,
+        district,
+        subDistrict,
+        sortField,
+        sortOrder: sortOrder as "asc" | "desc" | undefined,
+        multiSortMeta: multiSortMeta ? JSON.parse(multiSortMeta) : undefined,
+        limit,
+        offset,
+      });
+
+      return NextResponse.json(
+        {
+          results: result.data,
+          paginator: {
+            limit,
+            offset,
+            total: result.total,
+          },
+        },
+        { status: 200 }
+      );
+    } catch (error: any) {
+      return this.handleControllerError(error);
+    }
+  }
+
   async updateInspectionStatus(
     req: NextRequest,
     { params }: { params: { id: string } }
