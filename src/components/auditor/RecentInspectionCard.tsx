@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getInspectionSummaryRoute } from "@/lib/routeHelpers";
 import React from "react";
 
 interface Inspection {
@@ -18,6 +19,7 @@ interface Inspection {
 
 interface RecentInspectionCardProps {
   inspection: Inspection;
+  role?: string;
 }
 
 const getResultBadgeColor = (result: string): string => {
@@ -40,6 +42,7 @@ const getLinkText = (result: string): string => {
 
 export const RecentInspectionCard: React.FC<RecentInspectionCardProps> = ({
   inspection,
+  role = "auditor",
 }) => {
   const farmerName = inspection.rubberFarm?.farmer
     ? `${inspection.rubberFarm.farmer.namePrefix}${inspection.rubberFarm.farmer.firstName} ${inspection.rubberFarm.farmer.lastName}`
@@ -77,7 +80,7 @@ export const RecentInspectionCard: React.FC<RecentInspectionCardProps> = ({
 
       <div className="mt-3 flex justify-end">
         <Link
-          href={`/auditor/inspection-summary/${inspection.inspectionId}`}
+          href={getInspectionSummaryRoute(role, inspection.inspectionId)}
           className="text-sm text-indigo-600 hover:text-indigo-900 flex items-center"
         >
           {getLinkText(inspection.inspectionResult)}

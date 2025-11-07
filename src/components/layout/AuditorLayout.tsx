@@ -14,6 +14,7 @@ import {
   FileIcon,
   HomeIcon,
   LandFrameIcon,
+  NaturePeopleIcon,
   TextClipboardIcon,
 } from "../icons";
 
@@ -66,7 +67,7 @@ export default function AuditorLayout({ children }: AuditorLayoutProps) {
     {
       title: "บันทึกข้อมูลประจำสวนยาง",
       href: "/auditor/garden-data",
-      icon: <LandFrameIcon className="h-6 w-6" />,
+      icon: <NaturePeopleIcon className="h-6 w-6" />,
     },
     {
       title: "บันทึกการให้คำปรึกษาและข้อบกพร่อง",

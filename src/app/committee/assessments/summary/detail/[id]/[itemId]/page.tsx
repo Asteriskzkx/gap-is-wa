@@ -1,11 +1,10 @@
 "use client";
 
 import { useParams } from "next/navigation";
-
-import AuditorLayout from "@/components/layout/AuditorLayout";
+import CommitteeLayout from "@/components/layout/CommitteeLayout";
 import InspectionDetailContent from "@/components/shared/inspection/InspectionDetailContent";
 
-export default function AuditorInspectionDetailPage() {
+export default function CommitteeInspectionDetailPage() {
   const params = useParams();
   const inspectionId = Array.isArray(params.id) ? params.id[0] : params.id;
   const itemId = Array.isArray(params.itemId)
@@ -13,8 +12,8 @@ export default function AuditorInspectionDetailPage() {
     : params.itemId;
 
   return (
-    <AuditorLayout>
+    <CommitteeLayout>
       <InspectionDetailContent inspectionId={inspectionId} itemId={itemId} />
-    </AuditorLayout>
+    </CommitteeLayout>
   );
 }

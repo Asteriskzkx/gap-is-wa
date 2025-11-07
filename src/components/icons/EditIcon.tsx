@@ -1,4 +1,8 @@
-export default function EditIcon(props) {
+import React from "react";
+
+type EditIconProps = React.SVGProps<SVGSVGElement>;
+
+export default function EditIcon(props : EditIconProps) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -7,6 +11,7 @@ export default function EditIcon(props) {
       viewBox="0 0 24 24"
       stroke="currentColor"
       strokeWidth={1.5}
+      {...props}
     >
       <path
         strokeLinecap="round"

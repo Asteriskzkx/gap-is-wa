@@ -1,5 +1,8 @@
+import React from "react";
 
-export default function TextClipboardIcon(props) {
+type TextClipboardIconProps = React.SVGProps<SVGSVGElement>;
+
+export default function TextClipboardIcon(props : TextClipboardIconProps) {
    return <svg
       xmlns="http://www.w3.org/2000/svg"
       className={props?.className || "h-6 w-6"}
@@ -7,6 +10,7 @@ export default function TextClipboardIcon(props) {
       viewBox="0 0 24 24"
       stroke="currentColor"
       strokeWidth={1.5}
+      {...props}
    >
       <path
       strokeLinecap="round"

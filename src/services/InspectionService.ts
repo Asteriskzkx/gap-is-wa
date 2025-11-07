@@ -304,6 +304,38 @@ export class InspectionService extends BaseService<InspectionModel> {
     }
   }
 
+  async getAllWithPagination(options?: {
+    inspectionNo?: string;
+    inspectionStatus?: string;
+    inspectionResult?: string;
+    province?: string;
+    district?: string;
+    subDistrict?: string;
+    sortField?: string;
+    sortOrder?: "asc" | "desc";
+    multiSortMeta?: Array<{ field: string; order: number }>;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ data: any[]; total: number }> {
+    try {
+      const result = await this.inspectionRepository.findAllWithPagination(
+        options
+      );
+
+      const dataJson = result.data.map((inspection: InspectionModel) =>
+        inspection.toJSON()
+      );
+
+      return {
+        data: dataJson,
+        total: result.total,
+      };
+    } catch (error) {
+      this.handleServiceError(error);
+      return { data: [], total: 0 };
+    }
+  }
+
   async updateInspectionStatus(
     inspectionId: number,
     status: string,

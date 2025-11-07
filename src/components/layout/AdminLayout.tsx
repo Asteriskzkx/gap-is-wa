@@ -6,6 +6,7 @@ import { useSession, signOut } from "next-auth/react";
 import FooterNew from "./FooterNew";
 import HeaderNew from "./HeaderNew";
 import SidebarComponent from "./SidebarNew";
+import { adminNavItems } from "@/config/navItems";
 
 // Icons
 import {
@@ -37,35 +38,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   // State to track screen size for responsive behavior
   const [isMobile, setIsMobile] = useState(false);
+  const navItems = adminNavItems;
 
-  // Navigation menu items
-  const navItems = [
-    {
-      title: "หน้าหลัก",
-      href: "/admin/dashboard",
-      icon: <HomeIcon className="h-6 w-6" />,
-    },
-    // {
-    //   title: "พิจารณาผลการตรวจประเมิน",
-    //   href: "/committee/assessments",
-    //   icon: <TextClipboardIcon className="h-6 w-6" />,
-    // },
-    // {
-    //   title: "ออกใบรับรองแหล่งผลิตจีเอพี",
-    //   href: "/committee/certifications/issue",
-    //   icon: <EditIcon className="h-6 w-6" />,
-    // },
-    // {
-    //   title: "ยกเลิกใบรับรองแหล่งผลิตจีเอพี",
-    //   href: "/committee/certifications/revoke",
-    //   icon: <XIcon className="h-6 w-6" />,
-    // },
-    // {
-    //   title: "รายงานสรุปการรับรอง",
-    //   href: "/committee/reports",
-    //   icon: <FileIcon className="h-6 w-6" />,
-    // },
-  ];
 
   useEffect(() => {
     // ใช้ข้อมูลจาก NextAuth session แทน localStorage

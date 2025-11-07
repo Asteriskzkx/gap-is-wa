@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { getInspectionSummaryRoute } from "@/lib/routeHelpers";
 import { useSession } from "next-auth/react";
 import { DataTablePageEvent, DataTableSortEvent } from "primereact/datatable";
 
@@ -34,7 +35,9 @@ interface Inspection {
   };
 }
 
-export function useInspectionReports() {
+export function useInspectionReports(
+  initialTab: "pending" | "completed" = "pending"
+) {
   const router = useRouter();
   const { data: session, status } = useSession();
 
@@ -42,8 +45,13 @@ export function useInspectionReports() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentTab, setCurrentTab] = useState<"pending" | "completed">(
-    "pending"
+    initialTab
   );
+  const [filters, setFilters] = useState<{
+    province?: string;
+    district?: string;
+    subDistrict?: string;
+  }>({});
   const [totalRecords, setTotalRecords] = useState(0);
   const [lazyParams, setLazyParams] = useState<LazyParams>({
     first: 0,
@@ -55,7 +63,8 @@ export function useInspectionReports() {
   });
 
   const fetchInspections = useCallback(async () => {
-    if (status === "loading" || !session?.user?.roleData?.auditorId) {
+    // wait until session status is resolved
+    if (status === "loading") {
       return;
     }
 
@@ -66,15 +75,19 @@ export function useInspectionReports() {
 
     try {
       setLoading(true);
-      const auditorId = session.user.roleData.auditorId;
 
+      const auditorId = session?.user?.roleData?.auditorId;
       const { first, rows, multiSortMeta } = lazyParams;
 
+      // build query params; include auditorId only when present
       const params = new URLSearchParams({
-        auditorId: auditorId.toString(),
         limit: rows.toString(),
         offset: first.toString(),
       });
+
+      if (auditorId) {
+        params.append("auditorId", auditorId.toString());
+      }
 
       if (currentTab === "pending") {
         params.append("inspectionStatus", "ตรวจประเมินแล้ว");
@@ -86,6 +99,12 @@ export function useInspectionReports() {
       if (searchTerm) {
         params.append("search", searchTerm);
       }
+
+      // include location filters when provided
+      if (filters.province) params.append("province", filters.province);
+      if (filters.district) params.append("district", filters.district);
+      if (filters.subDistrict)
+        params.append("subDistrict", filters.subDistrict);
 
       if (multiSortMeta && multiSortMeta.length > 0) {
         params.append("multiSortMeta", JSON.stringify(multiSortMeta));
@@ -108,7 +127,9 @@ export function useInspectionReports() {
       }
 
       setInspections(results);
-      setTotalRecords(data.total || results.length);
+      // support both shapes: { results, paginator: { total } } and legacy { total }
+      const totalFromPaginator = data?.paginator?.total;
+      setTotalRecords(totalFromPaginator ?? data.total ?? results.length);
     } catch (error) {
       console.error("Error fetching inspections:", error);
       setInspections([]);
@@ -116,7 +137,7 @@ export function useInspectionReports() {
     } finally {
       setLoading(false);
     }
-  }, [session, status, router, lazyParams, currentTab, searchTerm]);
+  }, [session, status, router, lazyParams, currentTab, searchTerm, filters]);
 
   useEffect(() => {
     fetchInspections();
@@ -154,9 +175,38 @@ export function useInspectionReports() {
 
   const handleViewDetails = useCallback(
     (inspectionId: number) => {
-      router.push(`/auditor/inspection-summary/${inspectionId}`);
+      // route to the correct inspection summary page depending on the user's role
+      // prefer explicit role from session.user.role if available, otherwise
+      // infer from roleData fields (auditorId / committeeId)
+      const roleFromSession = (session as any)?.user?.role as
+        | string
+        | undefined;
+
+      console.log("roleFromSession:", roleFromSession);
+
+      // normalize role to lowercase to handle different casing (e.g. 'COMMITTEE')
+      const normalizedRoleFromSession = roleFromSession
+        ? roleFromSession.toLowerCase()
+        : undefined;
+
+      const hasCommittee =
+        (session as any)?.user?.roleData?.committeeId !== undefined &&
+        (session as any)?.user?.roleData?.committeeId !== null;
+
+      const hasAuditor =
+        (session as any)?.user?.roleData?.auditorId !== undefined &&
+        (session as any)?.user?.roleData?.auditorId !== null;
+
+      let role = normalizedRoleFromSession || roleFromSession;
+      if (!role) {
+        if (hasCommittee) role = "committee";
+        else if (hasAuditor) role = "auditor";
+        else role = "auditor";
+      }
+
+      router.push(getInspectionSummaryRoute(role, inspectionId));
     },
-    [router]
+    [router, session]
   );
 
   return {
@@ -172,5 +222,7 @@ export function useInspectionReports() {
     handleSort,
     handleTabChange,
     handleViewDetails,
+    filters,
+    setFilters,
   };
 }

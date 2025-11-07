@@ -5,7 +5,11 @@ import { checkAuthorization } from "@/lib/session";
 export async function GET(req: NextRequest) {
   try {
     // ตรวจสอบสิทธิ์ว่าเป็น Auditor จริงหรือไม่
-    const authResult = await checkAuthorization(req, ["AUDITOR"]);
+    const authResult = await checkAuthorization(req, [
+      "AUDITOR",
+      "COMMITTEE",
+      "ADMIN",
+    ]);
     if (!authResult.authorized) {
       return NextResponse.json(
         { message: authResult.error || "Unauthorized" },

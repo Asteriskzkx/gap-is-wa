@@ -1,4 +1,8 @@
-export default function DangerIcon(props) {
+import React from "react"
+
+type DangerIconProps = React.SVGProps<SVGSVGElement>;
+
+export default function DangerIcon(props : DangerIconProps) {
   return (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -6,6 +10,7 @@ export default function DangerIcon(props) {
     fill="none"
     viewBox="0 0 24 24"
     stroke="currentColor"
+    {...props}
   >
     <path
       strokeLinecap="round"

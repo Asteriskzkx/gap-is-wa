@@ -12,6 +12,7 @@ import {
   FileIcon,
   HomeIcon,
   LandFrameIcon,
+  NaturePeopleIcon,
   TextClipboardIcon,
 } from "@/components/icons";
 
@@ -24,6 +25,7 @@ import {
   LoadingIndicator,
   StatusCard,
 } from "@/components/auditor";
+import { getInspectionSummaryRoute } from "@/lib/routeHelpers";
 import PrimaryDataTable from "@/components/ui/PrimaryDataTable";
 
 interface Inspection {
@@ -107,7 +109,7 @@ const renderActionLink = (rowData: Inspection) => {
 
   return (
     <Link
-      href={`/auditor/inspection-summary/${rowData.inspectionId}`}
+      href={getInspectionSummaryRoute("auditor", rowData.inspectionId)}
       className="text-indigo-600 hover:text-indigo-900 font-medium"
     >
       {getLinkText(rowData.inspectionResult)}
@@ -167,32 +169,32 @@ export default function AuditorDashboardPage() {
     {
       title: "หน้าหลัก",
       href: "/auditor/dashboard",
-      icon: HomeIcon(),
+      icon: <HomeIcon className="h-6 w-6" />,
     },
     {
       title: "ตรวจประเมินสวนยางพารา",
       href: "/auditor/inspections",
-      icon: TextClipboardIcon(),
+      icon: <TextClipboardIcon className="h-6 w-6" />,
     },
     {
       title: "แจ้งกำหนดการวันที่ตรวจประเมิน",
       href: "/auditor/applications",
-      icon: CalendarIcon(),
+      icon: <CalendarIcon className="h-6 w-6" />,
     },
     {
       title: "สรุปผลการตรวจประเมิน",
       href: "/auditor/reports",
-      icon: FileIcon(),
+      icon: <FileIcon className="h-6 w-6" />,
     },
     {
       title: "บันทึกข้อมูลประจำสวนยาง",
       href: "/auditor/garden-data",
-      icon: LandFrameIcon(),
+      icon: <NaturePeopleIcon className="h-6 w-6" />,
     },
     {
       title: "บันทึกการให้คำปรึกษาและข้อบกพร่อง",
       href: "/auditor/consultations",
-      icon: ChatBubbleIcon(),
+      icon: <ChatBubbleIcon className="h-6 w-6" />,
     },
   ];
 
@@ -439,14 +441,14 @@ export default function AuditorDashboardPage() {
                 title="รอสรุปผล"
                 count={inspectionSummary.pendingResult}
                 icon={
-                  <FileIcon className="h-6 w-6 text-yellow-500 mr-3 mt-0.5" />
+                  <FileIcon className="h-6 w-6 text-purple-500 mr-3 mt-0.5" />
                 }
-                bgColor="bg-yellow-50"
-                borderColor="border-yellow-100"
-                textColor="text-yellow-800"
+                bgColor="bg-purple-50"
+                borderColor="border-purple-100"
+                textColor="text-purple-800"
                 linkText="จัดการรายงาน"
                 linkHref="/auditor/reports"
-                linkTextColor="text-yellow-600"
+                linkTextColor="text-purple-600"
               />
 
               <StatusCard
