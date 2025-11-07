@@ -441,14 +441,14 @@ export default function AuditorDashboardPage() {
                 title="รอสรุปผล"
                 count={inspectionSummary.pendingResult}
                 icon={
-                  <FileIcon className="h-6 w-6 text-yellow-500 mr-3 mt-0.5" />
+                  <FileIcon className="h-6 w-6 text-purple-500 mr-3 mt-0.5" />
                 }
-                bgColor="bg-yellow-50"
-                borderColor="border-yellow-100"
-                textColor="text-yellow-800"
+                bgColor="bg-purple-50"
+                borderColor="border-purple-100"
+                textColor="text-purple-800"
                 linkText="จัดการรายงาน"
                 linkHref="/auditor/reports"
-                linkTextColor="text-yellow-600"
+                linkTextColor="text-purple-600"
               />
 
               <StatusCard

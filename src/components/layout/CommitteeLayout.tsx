@@ -9,10 +9,10 @@ import SidebarComponent from "./SidebarNew";
 
 // Icons
 import {
+  CancelIcon,
   EditIcon,
   HomeIcon,
   TextClipboardIcon,
-  XIcon,
 } from "@/components/icons";
 
 interface CommitteeLayoutProps {
@@ -58,7 +58,7 @@ export default function CommitteeLayout({ children }: CommitteeLayoutProps) {
     {
       title: "ยกเลิกใบรับรองแหล่งผลิตจีเอพี",
       href: "/committee/certifications/revoke",
-      icon: <XIcon className="h-6 w-6" />,
+      icon: <CancelIcon className="h-6 w-6" />,
     },
   ];
 

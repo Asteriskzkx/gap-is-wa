@@ -13,7 +13,6 @@ import {
   EditIcon,
   HomeIcon,
   TextClipboardIcon,
-  XIcon,
 } from "@/components/icons";
 
 export default function CommitteeDashboardPage() {
@@ -37,7 +36,7 @@ export default function CommitteeDashboardPage() {
     {
       title: "ยกเลิกใบรับรองแหล่งผลิตจีเอพี",
       href: "/committee/certifications/revoke",
-      icon: <XIcon className="h-6 w-6" />,
+      icon: <CancelIcon className="h-6 w-6" />,
     },
   ];
 
@@ -102,7 +101,7 @@ export default function CommitteeDashboardPage() {
               }
               bgColor="bg-indigo-50"
               borderColor="border-indigo-100"
-              textColor="text-indigo-800"
+              textColor="text-indigo-700"
               linkHref="#"
               linkText="ดูรายการ"
               linkTextColor="text-indigo-600"
@@ -116,7 +115,7 @@ export default function CommitteeDashboardPage() {
               }
               bgColor="bg-emerald-50"
               borderColor="border-emerald-100"
-              textColor="text-emerald-800"
+              textColor="text-emerald-700"
               linkHref="#"
               linkText="ดูรายการ"
               linkTextColor="text-emerald-600"
@@ -128,7 +127,7 @@ export default function CommitteeDashboardPage() {
               icon={<CancelIcon className="h-6 w-6 text-red-500 mr-3 mt-0.5" />}
               bgColor="bg-red-50"
               borderColor="border-red-100"
-              textColor="text-red-800"
+              textColor="text-red-700"
               linkHref="#"
               linkText="ดูรายการ"
               linkTextColor="text-red-600"
