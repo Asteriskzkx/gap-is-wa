@@ -1,4 +1,5 @@
-import { PrimaryButton } from "@/components/ui";
+import { PrimaryButton, PrimaryDataTable } from "@/components/ui";
+import { formatThaiDate } from "@/utils/dateFormatter";
 import React, { useEffect } from "react";
 import { FaTimes } from "react-icons/fa";
 
@@ -53,7 +54,7 @@ export const RubberFarmDetailsModal: React.FC<RubberFarmDetailsModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg max-w-8xl w-full max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
           <h3 className="text-lg font-semibold text-gray-900">
             รายละเอียดสวนยางพารา
@@ -67,12 +68,14 @@ export const RubberFarmDetailsModal: React.FC<RubberFarmDetailsModalProps> = ({
         </div>
 
         <div className="p-6">
-          {loading ? (
+          {loading && (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-900 mx-auto"></div>
               <p className="mt-3 text-sm text-gray-500">กำลังโหลดข้อมูล...</p>
             </div>
-          ) : farmDetails ? (
+          )}
+
+          {!loading && farmDetails && (
             <div className="space-y-6">
               {/* ข้อมูลทั่วไป */}
               <div className="bg-gray-50 p-4 rounded-lg">
@@ -122,51 +125,58 @@ export const RubberFarmDetailsModal: React.FC<RubberFarmDetailsModalProps> = ({
                 </h4>
                 {farmDetails.plantingDetails &&
                 farmDetails.plantingDetails.length > 0 ? (
-                  <div className="space-y-4">
-                    {farmDetails.plantingDetails.map((detail, index) => (
-                      <div
-                        key={detail.plantingDetailId}
-                        className="border border-gray-200 rounded-lg p-4"
-                      >
-                        <p className="font-medium text-gray-900 mb-3">
-                          แปลงที่ {index + 1}
-                        </p>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-                          <div>
-                            <p className="text-gray-600">พันธุ์ยางพารา:</p>
-                            <p className="font-medium">{detail.specie}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-600">พื้นที่แปลง (ไร่):</p>
-                            <p className="font-medium">{detail.areaOfPlot}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-600">จำนวนต้น:</p>
-                            <p className="font-medium">
-                              {detail.numberOfRubber}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-gray-600">จำนวนต้นที่กรีด:</p>
-                            <p className="font-medium">
-                              {detail.numberOfTapping}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-gray-600">อายุยางพารา (ปี):</p>
-                            <p className="font-medium">{detail.ageOfRubber}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-600">
-                              ปริมาณผลผลิต (กก./ปี):
-                            </p>
-                            <p className="font-medium">
-                              {detail.totalProduction}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="overflow-x-auto">
+                    <PrimaryDataTable
+                      value={farmDetails.plantingDetails}
+                      columns={[
+                        {
+                          field: "specie",
+                          header: "พันธุ์ยางพารา",
+                          body: (rowData: any) => rowData.specie,
+                        },
+                        {
+                          field: "areaOfPlot",
+                          header: "พื้นที่แปลง (ไร่)",
+                          body: (rowData: any) => rowData.areaOfPlot,
+                        },
+                        {
+                          field: "numberOfRubber",
+                          header: "จำนวนต้นยางทั้งหมด (ต้น)",
+                          body: (rowData: any) => rowData.numberOfRubber,
+                        },
+                        {
+                          field: "numberOfTapping",
+                          header: "จำนวนต้นยางที่กรีดได้ (ต้น)",
+                          body: (rowData: any) => rowData.numberOfTapping,
+                        },
+                        {
+                          field: "ageOfRubber",
+                          header: "อายุยางพารา (ปี)",
+                          body: (rowData: any) => rowData.ageOfRubber,
+                        },
+                        {
+                          field: "yearOfTapping",
+                          header: "ปีที่เริ่มกรีด",
+                          body: (rowData: any) =>
+                            formatThaiDate(rowData.yearOfTapping, "year"),
+                        },
+                        {
+                          field: "monthOfTapping",
+                          header: "เดือนที่เริ่มกรีด",
+                          body: (rowData: any) =>
+                            formatThaiDate(rowData.monthOfTapping, "month"),
+                        },
+                        {
+                          field: "totalProduction",
+                          header: "ผลผลิตรวม (กก./ปี)",
+                          body: (rowData: any) => rowData.totalProduction,
+                        },
+                      ]}
+                      loading={loading}
+                      paginator={false}
+                      emptyMessage="ไม่มีข้อมูลรายละเอียดการปลูก"
+                      className="w-full"
+                    />
                   </div>
                 ) : (
                   <p className="text-gray-500 text-center py-4">
@@ -175,7 +185,9 @@ export const RubberFarmDetailsModal: React.FC<RubberFarmDetailsModalProps> = ({
                 )}
               </div>
             </div>
-          ) : (
+          )}
+
+          {!loading && !farmDetails && (
             <div className="text-center py-8 text-gray-500">
               ไม่พบข้อมูลสวนยางพารา
             </div>
