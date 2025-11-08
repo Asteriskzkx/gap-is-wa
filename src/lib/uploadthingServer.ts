@@ -32,8 +32,16 @@ export async function uploadBufferToUploadThing(
     first?.data?.id ||
     first?.id ||
     null;
+  // If the SDK didn't return an explicit id, try to derive one from the URL
+  // pattern UploadThing uses: e.g. https://utfs.io/f/<fileKey>
+  let derivedFileKey: string | null = fileKey ?? null;
+  if (!derivedFileKey && typeof url === "string") {
+    const re = /\/f\/([^/?#]+)/;
+    const m = re.exec(url);
+    if (m?.[1]) derivedFileKey = m[1];
+  }
 
-  return { url, fileKey };
+  return { url, fileKey: derivedFileKey };
 }
 
 // Attempt to delete a previously-uploaded file from UploadThing via UTApi.
