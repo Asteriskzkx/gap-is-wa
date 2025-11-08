@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { BaseController } from "./BaseController";
-import { UserModel } from "../models/UserModel";
+import { UserModel, UserRole } from "../models/UserModel";
 import { UserService } from "../services/UserService";
 import { requireValidId, isValidId } from "../utils/ParamUtils";
 import { checkAuthorization } from "@/lib/session";
@@ -174,5 +174,24 @@ export class UserController extends BaseController<UserModel> {
 
   protected async createModel(data: any): Promise<UserModel> {
     return UserModel.create(data.email, data.password, data.name, data.role);
+  }
+
+  async changeRole(req: NextRequest, params: {userId:string}): Promise<NextResponse> {
+    try {
+      const userId = parseInt(params.userId);
+      const data = await req.json();
+      const newRole: UserRole = data.role;
+      const updatedUser = await this.userService.changeRole(userId, newRole);
+      if (!updatedUser) {
+        return NextResponse.json(
+          { message: "User not found or role unchanged" },
+          { status: 404 }
+        );
+      }
+      const userJson = updatedUser.toJSON();
+      return NextResponse.json(userJson, { status: 200 });
+    } catch (error) {
+      return this.handleControllerError(error);
+    } 
   }
 }

@@ -10,6 +10,7 @@ import {
   PrimaryCheckbox,
 } from "@/components/ui";
 import thaiProvinceData from "@/data/thai-provinces.json";
+import { formatThaiDate } from "@/utils/dateFormatter";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { DataTablePageEvent, DataTableSortEvent } from "primereact/datatable";
@@ -355,6 +356,22 @@ export default function AuditorScheduleInspectionPage() {
   useEffect(() => {
     setProvinces(thaiProvinceData as Province[]);
   }, []);
+
+  // ปรับไม่ให้ background scroll เมื่อเปิด modal รายละเอียดสวน
+  useEffect(() => {
+    if (showFarmDetails) {
+      // ซ่อนการเลื่อนของ body
+      document.body.style.overflow = "hidden";
+    } else {
+      // คืนค่าเดิม
+      document.body.style.overflow = "";
+    }
+
+    // cleanup on unmount
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [showFarmDetails]);
 
   // อัพเดทอำเภอเมื่อเลือกจังหวัด
   useEffect(() => {
@@ -1360,7 +1377,7 @@ export default function AuditorScheduleInspectionPage() {
 
         {showFarmDetails && selectedFarmDetails && (
           <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div className="relative top-20 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
+            <div className="relative top-10 mx-auto p-5 border w-full max-w-8xl shadow-lg rounded-md bg-white">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-bold text-gray-900">
                   ข้อมูลสวนยางพารา
@@ -1381,7 +1398,7 @@ export default function AuditorScheduleInspectionPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                     <div>
                       <span className="font-medium text-gray-600">
-                        หมู่บ้าน:
+                        หมู่บ้าน/ชุมชน:
                       </span>{" "}
                       {selectedFarmDetails.villageName}
                     </div>
@@ -1400,11 +1417,15 @@ export default function AuditorScheduleInspectionPage() {
                       {selectedFarmDetails.alley || "-"}
                     </div>
                     <div>
-                      <span className="font-medium text-gray-600">ตำบล:</span>{" "}
+                      <span className="font-medium text-gray-600">
+                        ตำบล/แขวง:
+                      </span>{" "}
                       {selectedFarmDetails.subDistrict}
                     </div>
                     <div>
-                      <span className="font-medium text-gray-600">อำเภอ:</span>{" "}
+                      <span className="font-medium text-gray-600">
+                        อำเภอ/เขต:
+                      </span>{" "}
                       {selectedFarmDetails.district}
                     </div>
                     <div className="md:col-span-2">
@@ -1417,64 +1438,67 @@ export default function AuditorScheduleInspectionPage() {
                 </div>
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <h4 className="font-semibold text-gray-800 mb-2">
-                    รายละเอียดแปลงปลูก
+                    รายละเอียดการปลูก
                   </h4>
                   {selectedFarmDetails.plantingDetails &&
                   selectedFarmDetails.plantingDetails.length > 0 ? (
                     <div className="overflow-x-auto">
-                      <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-100">
-                          <tr>
-                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                              พันธุ์ยาง
-                            </th>
-                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                              พื้นที่ (ไร่)
-                            </th>
-                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                              จำนวนต้น
-                            </th>
-                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                              จำนวนต้นที่กรีด
-                            </th>
-                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                              อายุ (ปี)
-                            </th>
-                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                              ผลผลิต (กก.)
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                          {selectedFarmDetails.plantingDetails.map(
-                            (detail, index) => (
-                              <tr key={index}>
-                                <td className="px-3 py-2 text-sm text-gray-900">
-                                  {detail.specie}
-                                </td>
-                                <td className="px-3 py-2 text-sm text-gray-900">
-                                  {detail.areaOfPlot}
-                                </td>
-                                <td className="px-3 py-2 text-sm text-gray-900">
-                                  {detail.numberOfRubber}
-                                </td>
-                                <td className="px-3 py-2 text-sm text-gray-900">
-                                  {detail.numberOfTapping}
-                                </td>
-                                <td className="px-3 py-2 text-sm text-gray-900">
-                                  {detail.ageOfRubber}
-                                </td>
-                                <td className="px-3 py-2 text-sm text-gray-900">
-                                  {detail.totalProduction}
-                                </td>
-                              </tr>
-                            )
-                          )}
-                        </tbody>
-                      </table>
+                      <PrimaryDataTable
+                        value={selectedFarmDetails.plantingDetails}
+                        columns={[
+                          {
+                            field: "specie",
+                            header: "พันธุ์ยางพารา",
+                            body: (rowData: any) => rowData.specie,
+                          },
+                          {
+                            field: "areaOfPlot",
+                            header: "พื้นที่แปลง (ไร่)",
+                            body: (rowData: any) => rowData.areaOfPlot,
+                          },
+                          {
+                            field: "numberOfRubber",
+                            header: "จำนวนต้นยางทั้งหมด (ต้น)",
+                            body: (rowData: any) => rowData.numberOfRubber,
+                          },
+                          {
+                            field: "numberOfTapping",
+                            header: "จำนวนต้นยางที่กรีดได้ (ต้น)",
+                            body: (rowData: any) => rowData.numberOfTapping,
+                          },
+                          {
+                            field: "ageOfRubber",
+                            header: "อายุต้นยาง (ปี)",
+                            body: (rowData: any) => rowData.ageOfRubber,
+                          },
+                          {
+                            field: "yearOfTapping",
+                            header: "ปีที่เริ่มกรีด",
+                            body: (rowData: any) =>
+                              formatThaiDate(rowData.yearOfTapping, "year"),
+                          },
+                          {
+                            field: "monthOfTapping",
+                            header: "เดือนที่เริ่มกรีด",
+                            body: (rowData: any) =>
+                              formatThaiDate(rowData.monthOfTapping, "month"),
+                          },
+                          {
+                            field: "totalProduction",
+                            header: "ผลผลิตรวม (กก./ปี)",
+                            body: (rowData: any) => rowData.totalProduction,
+                          },
+                        ]}
+                        loading={loadingFarmDetails}
+                        paginator={false}
+                        emptyMessage="ไม่มีข้อมูลรายละเอียดการปลูก"
+                        className="w-full"
+                      />
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-500">ไม่มีข้อมูลแปลงปลูก</p>
+                    <p className="text-sm text-gray-500">
+                      ไม่มีข้อมูลรายละเอียดการปลูก
+                    </p>
                   )}
                 </div>
               </div>

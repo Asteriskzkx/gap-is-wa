@@ -9,7 +9,7 @@ import {
 } from "@/components/ui";
 import { PlantingDetail } from "@/hooks/useRubberFarmForm";
 
-// ตัวเลือกพันธุ์ยาง
+// ตัวเลือกพันธุ์ยางพารา
 const rubberSpeciesOptions = [
   { label: "RRIT 251", value: "RRIT 251" },
   { label: "RRIM 600", value: "RRIM 600" },
@@ -87,7 +87,7 @@ export const PlantingDetailsStep: React.FC<PlantingDetailsStepProps> = ({
                   htmlFor={`specie-${index}`}
                   className={formStyles.formField.label}
                 >
-                  สายพันธุ์ยาง{" "}
+                  พันธุ์ยางพารา{" "}
                   <span className={formStyles.formField.requiredMark}>*</span>
                 </label>
                 <PrimaryAutoComplete
@@ -98,7 +98,7 @@ export const PlantingDetailsStep: React.FC<PlantingDetailsStepProps> = ({
                   onChange={(value) =>
                     updatePlantingDetail(index, "specie", value)
                   }
-                  placeholder="เลือกสายพันธุ์ยาง"
+                  placeholder="เลือกพันธุ์ยางพารา"
                 />
               </div>
 

@@ -106,17 +106,17 @@ export const EditConfirmationStep: React.FC<EditConfirmationStepProps> = ({
                 )}
               </h4>
               <div className={formStyles.section.summaryDetailGrid}>
-                <SummaryItem label="พันธุ์ยาง" value={detail.specie} />
+                <SummaryItem label="พันธุ์ยางพารา" value={detail.specie} />
                 <SummaryItem
                   label="พื้นที่แปลง (ไร่)"
                   value={detail.areaOfPlot}
                 />
                 <SummaryItem
-                  label="จำนวนต้นยาง (ต้น)"
+                  label="จำนวนต้นยางทั้งหมด (ต้น)"
                   value={detail.numberOfRubber}
                 />
                 <SummaryItem
-                  label="จำนวนต้นกรีด (ต้น)"
+                  label="จำนวนต้นกรีดที่กรีดได้ (ต้น)"
                   value={detail.numberOfTapping}
                 />
                 <SummaryItem

@@ -54,6 +54,7 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@svgr/cli": "^8.1.0",
     "@types/bcrypt": "^5.0.2",
     "@types/busboy": "^1.5.4",
     "@types/esri-leaflet-geocoder": "^2.2.7",

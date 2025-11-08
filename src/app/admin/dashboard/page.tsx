@@ -29,7 +29,7 @@ export default function AdminDashboardPage() {
             ยินดีต้อนรับสู่ระบบสารสนเทศสำหรับการจัดการข้อมูลทางการเกษตรผลผลิตยางพาราตามมาตรฐานจีเอพี
           </p>
         </div>
-      </div>
+      
       {/* Action Cards Row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {navItems
@@ -59,12 +59,12 @@ export default function AdminDashboardPage() {
                     </h3>
                     <p className="text-sm text-gray-500 flex-grow">
                       {index === 0
-                        ? "พิจารณาผลการตรวจประเมินสวนยางพาราจากผู้ตรวจประเมิน"
+                        ? "จัดการ เพิ่ม ลบ หรือแก้ไข ข้อมูลผู้ใช้ในระบบ"
                         : index === 1
-                        ? "ออกใบรับรองแหล่งผลิตยางพาราที่ผ่านการตรวจประเมิน"
+                        ? "ตรวจสอบความเคลื่อนไหวและกิจกรรมต่างๆ ในระบบ"
                         : index === 2
-                        ? "ยกเลิกใบรับรองแหล่งผลิต"
-                        : "ดูรายงานสรุปข้อมูลต่างๆ"}
+                        ? "สร้างรายงาน"
+                        : "ตรวจสอบรายงานและเอกสารต่างๆ ที่สร้างขึ้นในระบบ"}
                     </p>
                     <div className="mt-4 flex items-center text-indigo-600 font-medium text-sm">
                       <span>เข้าสู่เมนู</span>
@@ -87,6 +87,7 @@ export default function AdminDashboardPage() {
                 </Link>
               </div>
             ))}
+        </div>
         </div>
     </AdminLayout>
   );

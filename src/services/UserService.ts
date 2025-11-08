@@ -2,6 +2,7 @@ import { BaseService } from "./BaseService";
 import { UserModel } from "../models/UserModel";
 import { UserRepository } from "../repositories/UserRepository";
 import bcrypt from "bcrypt";
+import { UserRole } from "@/models/UserModel";
 
 export class UserService extends BaseService<UserModel> {
   private userRepository: UserRepository;
@@ -97,5 +98,20 @@ export class UserService extends BaseService<UserModel> {
       this.handleServiceError(error);
       return false;
     }
+  }
+
+  async changeRole(userId:number, newRole:UserRole) : Promise<UserModel | null> {
+    try {
+      const user = await this.getById(userId);
+      if (!user) {
+        return null;
+      }
+      user.role = newRole;
+      return await this.userRepository.update(userId, user);
+    } catch (error) {
+      this.handleServiceError(error);
+      return null;
+    }
+
   }
 }
