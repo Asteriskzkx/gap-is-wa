@@ -361,6 +361,8 @@ model File {
   fileName String  @db.VarChar(255)
   mimeType String? @db.VarChar(100)
   url      String  @db.VarChar(1024) // remote URL (UploadThing / S3 / CDN)
+  // Internal provider file key (UploadThing internal id) for reliable deletes
+  fileKey  String? @db.VarChar(255)
   size     Int? // optional file size in bytes
 
   version   Int      @default(0)

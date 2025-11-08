@@ -7,6 +7,7 @@ export class FileModel extends BaseModel {
   fileName: string;
   mimeType?: string;
   url: string;
+  fileKey?: string;
   size?: number;
   version?: number;
 
@@ -33,11 +34,13 @@ export class FileModel extends BaseModel {
     fileName: string,
     url: string,
     mimeType?: string,
-    size?: number
+    size?: number,
+    fileKey?: string
   ) {
     const m = new FileModel(0, tableReference, idReference, fileName, url);
     if (mimeType) m.mimeType = mimeType;
     if (size) m.size = size;
+    if (fileKey) m.fileKey = fileKey;
     return m;
   }
 

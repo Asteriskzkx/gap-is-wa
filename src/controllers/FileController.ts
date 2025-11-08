@@ -30,12 +30,12 @@ export class FileController {
       const createdFiles: any[] = [];
 
       for (const f of parsed.files) {
-        const uploadedUrl = await uploadBufferToUploadThing(
+        const uploaded = await uploadBufferToUploadThing(
           f.buffer,
           f.filename,
           f.mimeType
         );
-        if (!uploadedUrl) {
+        if (!uploaded?.url) {
           console.error("Failed to upload file to UploadThing for", f.filename);
           continue;
         }
@@ -44,9 +44,10 @@ export class FileController {
           parsed.tableReference,
           parsed.idReference,
           f.filename,
-          uploadedUrl,
+          uploaded.url,
           f.mimeType,
-          f.buffer.length
+          f.buffer.length,
+          uploaded.fileKey ?? undefined
         );
         const created = await this.fileService.createFile(model);
         createdFiles.push(created);

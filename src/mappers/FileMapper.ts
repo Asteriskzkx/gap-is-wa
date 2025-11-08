@@ -16,6 +16,7 @@ export class FileMapper implements BaseMapper<any, FileModel> {
     m.mimeType = prismaEntity.mimeType ?? undefined;
     m.size = prismaEntity.size ?? undefined;
     m.version = prismaEntity.version ?? undefined;
+    m.fileKey = prismaEntity.fileKey ?? undefined;
 
     return m;
   }
@@ -27,6 +28,7 @@ export class FileMapper implements BaseMapper<any, FileModel> {
       fileName: domainEntity.fileName,
       mimeType: domainEntity.mimeType ?? undefined,
       url: domainEntity.url,
+      fileKey: domainEntity.fileKey ?? undefined,
       size: domainEntity.size ?? undefined,
       version: domainEntity.version ?? undefined,
     };

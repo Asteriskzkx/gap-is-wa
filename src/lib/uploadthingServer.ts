@@ -4,7 +4,7 @@ export async function uploadBufferToUploadThing(
   buffer: Buffer,
   filename: string,
   mimeType: string
-) {
+): Promise<{ url: string | null; fileKey?: string | null }> {
   const utapi = new UTApi();
 
   // UTFile expects BlobPart-like parts (ArrayBufferView). Convert Node Buffer -> Uint8Array
@@ -17,14 +17,23 @@ export async function uploadBufferToUploadThing(
   const first: any = res && res[0];
 
   // Try several possible properties that might contain the uploaded file URL
-  return (
+  const url =
     first?.data?.file?.ufsUrl ||
     first?.data?.file?.url ||
     first?.data?.url ||
     first?.ufsUrl ||
     first?.url ||
-    null
-  );
+    null;
+
+  // Try to extract an internal id/file key if present in the response
+  const fileKey =
+    first?.data?.file?.id ||
+    first?.data?.file?.fileId ||
+    first?.data?.id ||
+    first?.id ||
+    null;
+
+  return { url, fileKey };
 }
 
 // Attempt to delete a previously-uploaded file from UploadThing via UTApi.
@@ -51,14 +60,67 @@ export async function deleteUploadThingFile(
 
     // Some SDKs expect a file key rather than a URL. Try passing the URL as-is.
     if (typeof utapi.delete === "function") {
-      await utapi.delete(urlOrUfsUrl);
-      return true;
+      try {
+        await utapi.delete(urlOrUfsUrl);
+        return true;
+      } catch (e) {
+        // continue to try other variants
+        console.warn("utapi.delete failed for url, will try id variants", e);
+      }
     }
 
-    // If none of the above exist, log and return false.
-    console.warn("UTApi does not expose a delete method on this SDK version.", {
-      urlOrUfsUrl,
-    });
+    // Try extracting file id(s) and attempt deletion for each candidate.
+    const tryDeleteCandidate = async (candidate: string) => {
+      try {
+        if (typeof utapi.deleteFiles === "function") {
+          await utapi.deleteFiles([candidate]);
+          return true;
+        }
+        if (typeof utapi.deleteFile === "function") {
+          await utapi.deleteFile(candidate);
+          return true;
+        }
+        if (typeof utapi.delete === "function") {
+          await utapi.delete(candidate);
+          return true;
+        }
+      } catch (e) {
+        console.warn(
+          "delete attempt failed for candidate, trying next",
+          candidate,
+          e
+        );
+      }
+      return false;
+    };
+
+    const candidateIds: string[] = [];
+    try {
+      const u = new URL(urlOrUfsUrl);
+      const parts = u.pathname.split("/").filter(Boolean);
+      const last = parts.at(-1);
+      if (last) {
+        candidateIds.push(last, u.pathname);
+      }
+    } catch (e) {
+      console.warn("Not a full URL; will try raw string as candidate", e);
+    }
+
+    // include the original as last resort
+    candidateIds.push(urlOrUfsUrl);
+
+    for (const id of candidateIds) {
+      const ok = await tryDeleteCandidate(id);
+      if (ok) return true;
+    }
+
+    // If none of the above succeed, log and return false.
+    console.warn(
+      "UTApi does not expose a usable delete method or all attempts failed.",
+      {
+        urlOrUfsUrl,
+      }
+    );
     return false;
   } catch (err) {
     console.error("Failed to delete file from UploadThing:", err, urlOrUfsUrl);
