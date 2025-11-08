@@ -3,6 +3,7 @@ export { default as CalendarIcon } from "./CalendarIcon";
 export { default as CancelIcon } from "./CancelIcon";
 export { default as ChatBubbleIcon } from "./ChatBubbleIcon";
 export { default as CheckCircleIcon } from "./CheckCircleIcon";
+export { default as CheckIcon } from "./CheckIcon";
 export { default as ChevronBottomIcon } from "./ChevronBottomIcon";
 export { default as ChevronRightIcon } from "./ChevronRightIcon";
 export { default as DangerIcon } from "./DangerIcon";
