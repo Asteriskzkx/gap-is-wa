@@ -12,7 +12,11 @@ export class FileController {
 
   async uploadFiles(req: NextRequest): Promise<NextResponse> {
     try {
-      const allowedRoles = ["BASIC", "FARMER", "AUDITOR", "COMMITTEE", "ADMIN"];
+      // parse + validate
+      const parsed = await this.parseRequestForFiles(req);
+
+      // role policy per tableReference
+      const allowedRoles = this.getAllowedRolesForTable(parsed.tableReference);
       const { authorized, error } = await checkAuthorization(req, allowedRoles);
       if (!authorized)
         return NextResponse.json(
@@ -20,103 +24,12 @@ export class FileController {
           { status: 401 }
         );
 
-      let tableReference = "";
-      let idReference: number | undefined;
-      const files: { buffer: Buffer; filename: string; mimeType: string }[] =
-        [];
-
-      if (typeof (req as any).formData === "function") {
-        const formData = await (req as any).formData();
-        const tableVal = formData.get("tableReference");
-        if (tableVal != null) tableReference = String(tableVal);
-        const idVal = formData.get("idReference");
-        if (idVal != null) idReference = Number(String(idVal));
-
-        const fileField = formData.get("file") as any;
-        if (fileField && typeof fileField.arrayBuffer === "function") {
-          const ab = await fileField.arrayBuffer();
-          files.push({
-            buffer: Buffer.from(ab),
-            filename: fileField.name || "file",
-            mimeType: fileField.type || "application/octet-stream",
-          });
-        }
-
-        const allFiles = formData.getAll("files") as any[];
-        if (allFiles && Array.isArray(allFiles) && allFiles.length) {
-          for (const f of allFiles) {
-            if (f && typeof f.arrayBuffer === "function") {
-              const ab = await f.arrayBuffer();
-              files.push({
-                buffer: Buffer.from(ab),
-                filename: f.name || "file",
-                mimeType: f.type || "application/octet-stream",
-              });
-            }
-          }
-        }
-      }
-
-      // Fallback parsing if needed
-      if (!files.length) {
-        const Busboy: any = (await import("busboy")).default;
-        const contentType = req.headers.get("content-type") || "";
-        const headers: any = { "content-type": contentType };
-        const bb = new Busboy({ headers });
-
-        const bodyBuffer = Buffer.from(await req.arrayBuffer());
-        const { Readable } = await import("node:stream");
-        const stream = Readable.from(bodyBuffer);
-
-        await new Promise<void>((resolve, reject) => {
-          bb.on("file", (_name: string, file: any, info: any) => {
-            const filename = info.filename;
-            const mimeType = info.mimeType || "application/octet-stream";
-            const fileChunks: Buffer[] = [];
-            file.on("data", (d: Buffer) => fileChunks.push(d));
-            file.on("end", () => {
-              if (fileChunks.length)
-                files.push({
-                  buffer: Buffer.concat(fileChunks),
-                  filename,
-                  mimeType,
-                });
-            });
-          });
-
-          bb.on("field", (name: string, val: string) => {
-            if (name === "tableReference") tableReference = val;
-            if (name === "idReference") idReference = Number(val);
-          });
-
-          bb.on("error", (err: any) => reject(err));
-          bb.on("finish", () => resolve());
-          stream.pipe(bb);
-        });
-      }
-
-      if (!tableReference)
-        return NextResponse.json(
-          { message: "tableReference is required" },
-          { status: 400 }
-        );
-      if (!idReference && idReference !== 0)
-        return NextResponse.json(
-          { message: "idReference is required" },
-          { status: 400 }
-        );
-      if (!files.length)
-        return NextResponse.json(
-          { message: "No files uploaded" },
-          { status: 400 }
-        );
-
       const { uploadBufferToUploadThing } = await import(
         "@/lib/uploadthingServer"
       );
       const createdFiles: any[] = [];
 
-      for (const f of files) {
+      for (const f of parsed.files) {
         const uploadedUrl = await uploadBufferToUploadThing(
           f.buffer,
           f.filename,
@@ -128,8 +41,8 @@ export class FileController {
         }
 
         const model = FileModel.createFile(
-          tableReference,
-          idReference!,
+          parsed.tableReference,
+          parsed.idReference,
           f.filename,
           uploadedUrl,
           f.mimeType,
@@ -168,6 +81,15 @@ export class FileController {
           { status: 400 }
         );
 
+      // authorization based on table
+      const allowedRoles = this.getAllowedRolesForTable(tableReference);
+      const { authorized, error } = await checkAuthorization(req, allowedRoles);
+      if (!authorized)
+        return NextResponse.json(
+          { message: error || "Unauthorized" },
+          { status: 401 }
+        );
+
       const files = await this.fileService.findByReference(
         tableReference,
         idReference
@@ -180,5 +102,170 @@ export class FileController {
         { status: 500 }
       );
     }
+  }
+
+  // Delete a file by its fileId. Returns deleted record (if existed) and boolean success
+  async deleteFileById(fileId: number): Promise<NextResponse> {
+    try {
+      const existing = await this.fileService.getById(fileId);
+      if (!existing)
+        return NextResponse.json(
+          { message: "File not found" },
+          { status: 404 }
+        );
+
+      const ok = await this.fileService.delete(fileId);
+      return NextResponse.json({ deleted: ok, file: existing });
+    } catch (err: any) {
+      console.error("FileController.deleteFileById error:", err);
+      return NextResponse.json(
+        { message: err?.message || "Internal server error" },
+        { status: 500 }
+      );
+    }
+  }
+
+  // ---------------- helpers ----------------
+  private getAllowedRolesForTable(tableReference: string) {
+    const policy: Record<string, string[]> = {
+      Certificate: ["COMMITTEE", "ADMIN"],
+      Inspection: ["AUDITOR", "COMMITTEE", "ADMIN"],
+      RubberFarm: ["FARMER", "ADMIN"],
+      DataRecord: ["AUDITOR", "ADMIN"],
+    };
+
+    return (
+      policy[tableReference] ?? [
+        "BASIC",
+        "FARMER",
+        "AUDITOR",
+        "COMMITTEE",
+        "ADMIN",
+      ]
+    );
+  }
+
+  private async parseRequestForFiles(
+    req: NextRequest
+  ): Promise<{
+    tableReference: string;
+    idReference: number;
+    files: { buffer: Buffer; filename: string; mimeType: string }[];
+  }> {
+    // try formData first
+    const fromForm = await this.parseFormData(req);
+    let tableReference = fromForm.tableReference;
+    let idReference = fromForm.idReference;
+    const files = fromForm.files || [];
+
+    // if no files found, fallback to busboy
+    if (!files.length) {
+      const fromBusboy = await this.parseWithBusboy(req);
+      tableReference = tableReference || fromBusboy.tableReference;
+      idReference = idReference ?? fromBusboy.idReference;
+      files.push(...fromBusboy.files);
+    }
+
+    if (!tableReference) throw new Error("tableReference is required");
+    if (idReference === undefined || idReference === null)
+      throw new Error("idReference is required");
+
+    const finalId = idReference;
+    return { tableReference, idReference: finalId, files };
+  }
+
+  private async parseFormData(
+    req: NextRequest
+  ): Promise<{
+    tableReference?: string;
+    idReference?: number;
+    files?: { buffer: Buffer; filename: string; mimeType: string }[];
+  }> {
+    if (typeof (req as any).formData !== "function") return {};
+    const formData = await (req as any).formData();
+    const tableVal = formData.get("tableReference");
+    const idVal = formData.get("idReference");
+    const tableReference =
+      tableVal !== null && tableVal !== undefined
+        ? String(tableVal)
+        : undefined;
+    const idReference =
+      idVal !== null && idVal !== undefined ? Number(String(idVal)) : undefined;
+
+    const files: { buffer: Buffer; filename: string; mimeType: string }[] = [];
+    const pushFile = async (f: any) => {
+      if (f && typeof f.arrayBuffer === "function") {
+        const ab = await f.arrayBuffer();
+        files.push({
+          buffer: Buffer.from(ab),
+          filename: f.name || "file",
+          mimeType: f.type || "application/octet-stream",
+        });
+      }
+    };
+
+    const single = formData.get("file");
+    if (single) await pushFile(single);
+
+    const all = formData.getAll("files") as any[];
+    if (all && Array.isArray(all) && all.length) {
+      for (const f of all) await pushFile(f);
+    }
+
+    return { tableReference, idReference, files };
+  }
+
+  private async parseWithBusboy(
+    req: NextRequest
+  ): Promise<{
+    tableReference?: string;
+    idReference?: number;
+    files: { buffer: Buffer; filename: string; mimeType: string }[];
+  }> {
+    const files: { buffer: Buffer; filename: string; mimeType: string }[] = [];
+    const Busboy: any = (await import("busboy")).default;
+    const contentType = req.headers.get("content-type") || "";
+    const headers: any = { "content-type": contentType };
+    const bb = new Busboy({ headers });
+
+    let tableReference: string | undefined;
+    let idReference: number | undefined;
+
+    const bodyBuffer = Buffer.from(await req.arrayBuffer());
+    const { Readable } = await import("node:stream");
+    const stream = Readable.from(bodyBuffer);
+
+    await new Promise<void>((resolve, reject) => {
+      bb.on("file", (_name: string, file: any, info: any) => {
+        const filename = info.filename;
+        const mimeType = info.mimeType || "application/octet-stream";
+        const fileChunks: Buffer[] = [];
+        file.on("data", (d: Buffer) => fileChunks.push(d));
+        file.on("end", () => {
+          if (fileChunks.length) {
+            files.push({
+              buffer: Buffer.concat(fileChunks),
+              filename,
+              mimeType,
+            });
+          }
+        });
+      });
+
+      bb.on("field", (name: string, val: string) => {
+        if (name === "tableReference") {
+          tableReference = val;
+        }
+        if (name === "idReference") {
+          idReference = Number(val);
+        }
+      });
+
+      bb.on("error", (err: any) => reject(err));
+      bb.on("finish", () => resolve());
+      stream.pipe(bb);
+    });
+
+    return { tableReference, idReference, files };
   }
 }
