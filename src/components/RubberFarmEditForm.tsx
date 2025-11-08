@@ -73,11 +73,7 @@ export default function RubberFarmEditForm() {
       };
       loadFarmDetails();
     }
-    // Included `provinces` and `fetchFarmDetails` in deps to satisfy
-    // react-hooks/exhaustive-deps lint rule. Using `provinces.length`
-    // alone can miss when the array reference changes; including the
-    // array ensures the effect reruns when its contents change.
-  }, [selectedFarmId, provinces, isLoadingProvinces, fetchFarmDetails]);
+  }, [selectedFarmId, provinces.length, isLoadingProvinces]);
 
   // Handler functions
   const handleNextStep = () => {
