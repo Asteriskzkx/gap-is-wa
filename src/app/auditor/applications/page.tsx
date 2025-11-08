@@ -1426,7 +1426,7 @@ export default function AuditorScheduleInspectionPage() {
                         <thead className="bg-gray-100">
                           <tr>
                             <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                              พันธุ์ยาง
+                              พันธุ์ยางพารา
                             </th>
                             <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
                               พื้นที่ (ไร่)

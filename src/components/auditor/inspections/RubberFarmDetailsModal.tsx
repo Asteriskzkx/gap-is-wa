@@ -132,7 +132,7 @@ export const RubberFarmDetailsModal: React.FC<RubberFarmDetailsModalProps> = ({
                         </p>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
                           <div>
-                            <p className="text-gray-600">สายพันธุ์:</p>
+                            <p className="text-gray-600">พันธุ์ยางพารา:</p>
                             <p className="font-medium">{detail.specie}</p>
                           </div>
                           <div>

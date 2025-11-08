@@ -171,7 +171,7 @@ export const useRubberFarmForm = () => {
     const itemNumber = index + 1;
 
     if (!detail.specie || detail.specie.trim() === "") {
-      return `รายการที่ ${itemNumber}: กรุณาเลือกสายพันธุ์ยาง`;
+      return `รายการที่ ${itemNumber}: กรุณาเลือกพันธุ์ยางพารา`;
     }
 
     if (!detail.areaOfPlot || detail.areaOfPlot <= 0) {

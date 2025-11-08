@@ -57,7 +57,7 @@ export const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
               รายการที่ {index + 1}
             </h4>
             <div className={formStyles.section.summaryDetailGrid}>
-              <SummaryItem label="สายพันธุ์ยาง" value={detail.specie} />
+              <SummaryItem label="พันธุ์ยางพารา" value={detail.specie} />
               <SummaryItem
                 label="พื้นที่แปลง (ไร่)"
                 value={detail.areaOfPlot.toFixed(2)}
