@@ -151,7 +151,7 @@ export const RubberFarmDetailsModal: React.FC<RubberFarmDetailsModalProps> = ({
                         },
                         {
                           field: "ageOfRubber",
-                          header: "อายุยางพารา (ปี)",
+                          header: "อายุต้นยาง (ปี)",
                           body: (rowData: any) => rowData.ageOfRubber,
                         },
                         {
