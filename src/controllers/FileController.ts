@@ -132,15 +132,45 @@ export class FileController {
           { status: 401 }
         );
 
-      // Try to delete remote file first (best-effort). If remote deletion fails
-      // we still attempt to delete the DB record but return the remote result.
+      // Try to delete remote file first (best-effort). Prefer using the
+      // stored provider file key (`fileKey`) if available because it's the
+      // deterministic identifier UploadThing's API expects. If that fails,
+      // fall back to the URL-based delete helper.
       let remoteDeleted = false;
       try {
-        const { deleteUploadThingFile } = await import(
-          "@/lib/uploadthingServer"
-        );
-        if (existing.url) {
-          remoteDeleted = await deleteUploadThingFile(existing.url);
+        if (existing.fileKey) {
+          try {
+            // Prefer calling UTApi.deleteFiles directly with the key.
+            const { UTApi } = await import("uploadthing/server");
+            const utapi: any = new UTApi();
+            if (typeof utapi.deleteFiles === "function") {
+              const resp = await utapi.deleteFiles([existing.fileKey]);
+              remoteDeleted = !!(resp && resp.success);
+            } else if (typeof utapi.delete === "function") {
+              // Some SDKs may expose a different method name.
+              await utapi.delete(existing.fileKey);
+              remoteDeleted = true;
+            } else {
+              // If no delete method available on this SDK, fall through to URL helper.
+              remoteDeleted = false;
+            }
+          } catch (err) {
+            console.warn(
+              "delete by fileKey failed, will try URL-based delete",
+              err
+            );
+            // fallback to url-based deletion below
+            remoteDeleted = false;
+          }
+        }
+
+        if (!remoteDeleted) {
+          const { deleteUploadThingFile } = await import(
+            "@/lib/uploadthingServer"
+          );
+          if (existing.url) {
+            remoteDeleted = await deleteUploadThingFile(existing.url);
+          }
         }
       } catch (err) {
         console.error("Error while attempting remote deletion:", err);

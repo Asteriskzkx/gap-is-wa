@@ -1,10 +1,9 @@
-import { NextResponse, NextRequest } from "next/server";
 import { fileController } from "@/utils/dependencyInjections";
+import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
-  // Delegate to controller
   return fileController.uploadFiles(req as unknown as NextRequest);
 }
 
