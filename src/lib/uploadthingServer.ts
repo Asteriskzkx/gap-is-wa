@@ -13,35 +13,32 @@ export async function uploadBufferToUploadThing(
 
   const res = await utapi.uploadFiles([file]);
 
-  // res shape may vary depending on SDK version; be defensive and treat as any
-  const first: any = res && res[0];
+  // The SDK returns an UploadFileResult or an array of them. Normalize to first entry.
+  const first: any = Array.isArray(res) ? res[0] : res;
 
-  // Try several possible properties that might contain the uploaded file URL
+  // Prefer the SDK-provided URL fields (ufsUrl/url). Check common nesting variants.
   const url =
-    first?.data?.file?.ufsUrl ||
-    first?.data?.file?.url ||
-    first?.data?.url ||
     first?.ufsUrl ||
     first?.url ||
+    first?.data?.ufsUrl ||
+    first?.data?.url ||
+    first?.data?.file?.ufsUrl ||
+    first?.data?.file?.url ||
     null;
 
-  // Try to extract an internal id/file key if present in the response
+  // Prefer the SDK-provided file key (deterministic identifier). Do NOT derive
+  // the key from the public URL — rely on SDK fields like `key`, `id`, or
+  // nested `data.file.key` which UploadThing exposes in recent versions.
   const fileKey =
+    first?.key ||
+    first?.file?.key ||
+    first?.data?.key ||
+    first?.data?.file?.key ||
     first?.data?.file?.id ||
-    first?.data?.file?.fileId ||
-    first?.data?.id ||
     first?.id ||
     null;
-  // If the SDK didn't return an explicit id, try to derive one from the URL
-  // pattern UploadThing uses: e.g. https://utfs.io/f/<fileKey>
-  let derivedFileKey: string | null = fileKey ?? null;
-  if (!derivedFileKey && typeof url === "string") {
-    const re = /\/f\/([^/?#]+)/;
-    const m = re.exec(url);
-    if (m?.[1]) derivedFileKey = m[1];
-  }
 
-  return { url, fileKey: derivedFileKey };
+  return { url, fileKey };
 }
 
 // Attempt to delete a previously-uploaded file from UploadThing via UTApi.

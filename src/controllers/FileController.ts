@@ -233,12 +233,24 @@ export class FileController {
       }
     };
 
-    const single = formData.get("file");
-    if (single) await pushFile(single);
+    // Support multiple conventions used by clients:
+    // - multiple files under the same key "file" (formData.getAll('file'))
+    // - files under the key "files" (formData.getAll('files'))
+    // - single file under "file" (formData.get('file'))
+    const allFileInputs = formData.getAll("file") as any[];
+    if (allFileInputs && Array.isArray(allFileInputs) && allFileInputs.length) {
+      for (const f of allFileInputs) await pushFile(f);
+    }
 
     const all = formData.getAll("files") as any[];
     if (all && Array.isArray(all) && all.length) {
       for (const f of all) await pushFile(f);
+    }
+
+    // Backwards-compatible single file check (if no getAll was used)
+    if (!files.length) {
+      const single = formData.get("file");
+      if (single) await pushFile(single);
     }
 
     return { tableReference, idReference, files };
