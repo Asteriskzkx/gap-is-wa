@@ -28,7 +28,7 @@ export default function RegisterSuccessPage() {
         </div>
 
         <h1 className="text-2xl font-bold text-gray-800 mb-2">
-          ลงทะเบียนสำเร็จ!
+          ลงทะเบียนสำเร็จ
         </h1>
         <p className="text-gray-600 mb-8">
           ขอบคุณที่ลงทะเบียนเข้าใช้งานระบบสารสนเทศสำหรับการจัดการข้อมูลทางการเกษตรผลผลิตยางพาราตามมาตรฐานจีเอพี
