@@ -1,12 +1,16 @@
 import { PrismaClient } from "@prisma/client";
-import { seedInspectionTypes } from "./inspection-types";
+import { seedAdmin } from "./admin";
 import { seedInspectionItems } from "./inspection-items";
+import { seedInspectionTypes } from "./inspection-types";
 import { seedRequirements } from "./requirements";
 
 const prisma = new PrismaClient();
 
 async function main() {
   console.log(`Start seeding...`);
+
+  // Create default admin first so other seeds can reference users if needed
+  await seedAdmin(prisma);
 
   await seedInspectionTypes(prisma);
   await seedInspectionItems(prisma);

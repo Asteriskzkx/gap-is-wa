@@ -1,5 +1,6 @@
 "use client";
 
+import { CheckIcon } from "@/components/icons";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -22,25 +23,12 @@ export default function RegisterSuccessPage() {
 
         <div className="mb-6 flex justify-center">
           <div className="rounded-full bg-green-100 p-3">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-12 w-12 text-green-600"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
+            <CheckIcon className="h-12 w-12 text-green-600" />
           </div>
         </div>
 
         <h1 className="text-2xl font-bold text-gray-800 mb-2">
-          ลงทะเบียนสำเร็จ!
+          ลงทะเบียนสำเร็จ
         </h1>
         <p className="text-gray-600 mb-8">
           ขอบคุณที่ลงทะเบียนเข้าใช้งานระบบสารสนเทศสำหรับการจัดการข้อมูลทางการเกษตรผลผลิตยางพาราตามมาตรฐานจีเอพี

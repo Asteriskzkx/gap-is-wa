@@ -14,6 +14,7 @@ import {
   rubberFarmMapper,
   userMapper,
   certificateMapper,
+  fileMapper,
 } from "../mappers";
 
 import { AdminRepository } from "@/repositories/AdminRepository";
@@ -27,6 +28,7 @@ import { InspectionItemRepository } from "@/repositories/InspectionItemRepositor
 import { InspectionRepository } from "@/repositories/InspectionRepository";
 import { InspectionTypeMasterRepository } from "@/repositories/InspectionTypeMasterRepository";
 import { CertificateRepository } from "@/repositories/CertificateRepository";
+import { FileRepository } from "@/repositories/FileRepository";
 import { PlantingDetailRepository } from "@/repositories/PlantingDetailRepository";
 import { RequirementRepository } from "@/repositories/RequirementRepository";
 import { RubberFarmRepository } from "@/repositories/RubberFarmRepository";
@@ -43,6 +45,7 @@ import { InspectionItemService } from "@/services/InspectionItemService";
 import { InspectionService } from "@/services/InspectionService";
 import { PlantingDetailService } from "@/services/PlantingDetailService";
 import { CertificateService } from "@/services/CertificateService";
+import { FileService } from "@/services/FileService";
 import { RequirementService } from "@/services/RequirementService";
 import { RubberFarmService } from "@/services/RubberFarmService";
 import { UserService } from "@/services/UserService";
@@ -58,6 +61,7 @@ import { InspectionController } from "@/controllers/InspectionController";
 import { InspectionItemController } from "@/controllers/InspectionItemController";
 import { PlantingDetailController } from "@/controllers/PlantingDetailController";
 import { CertificateController } from "@/controllers/CertificateController";
+import { FileController } from "@/controllers/FileController";
 import { RequirementController } from "@/controllers/RequirementController";
 import { RubberFarmController } from "@/controllers/RubberFarmController";
 import { UserController } from "@/controllers/UserController";
@@ -88,6 +92,7 @@ const inspectionTypeMasterRepository = new InspectionTypeMasterRepository(
   inspectionTypeMasterMapper
 );
 const certificateRepository = new CertificateRepository(certificateMapper);
+const fileRepository = new FileRepository(fileMapper);
 
 // Services
 const userService = new UserService(userRepository);
@@ -133,6 +138,7 @@ const adviceAndDefectService = new AdviceAndDefectService(
   adviceAndDefectRepository
 );
 const certificateService = new CertificateService(certificateRepository);
+const fileService = new FileService(fileRepository);
 
 // Controllers
 const userController = new UserController(userService);
@@ -157,6 +163,7 @@ const adviceAndDefectController = new AdviceAndDefectController(
   adviceAndDefectService
 );
 const certificateController = new CertificateController(certificateService);
+const fileController = new FileController(fileService);
 
 // Export all instances
 export {
@@ -200,6 +207,9 @@ export {
   certificateController,
   certificateRepository,
   certificateService,
+  fileController,
+  fileRepository,
+  fileService,
   // Controllers
   userController,
   // Repositories

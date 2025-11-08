@@ -2,52 +2,74 @@ import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { UploadThingError } from "uploadthing/server";
 import { z } from "zod";
 import { getSessionFromRequest } from "@/lib/session";
-import { certificateService } from "@/utils/dependencyInjections";
+import { fileService } from "@/utils/dependencyInjections";
+import { FileModel } from "@/models/FileModel";
 
 const f = createUploadthing();
 
-// Define a FileRouter for certificate PDFs
+// UploadThing router for direct client uploads. Clients using @uploadthing/react
+// should call the `files` key and pass `{ tableReference, idReference }` as
+// the input. onUploadComplete will persist metadata to our File table.
 export const ourFileRouter = {
-  // UploadThing types only accept certain preset sizes; 10MB isn't in the allowed literal union.
-  // Use 16MB (closest larger preset) to allow uploads up to 10MB safely.
-  certificate: f({ pdf: { maxFileSize: "16MB", maxFileCount: 1 } }) // accept pdf files up to ~16MB
-    .input(z.object({ inspectionId: z.number() }))
+  files: f({
+    pdf: { maxFileSize: "16MB", maxFileCount: 5 },
+    image: { maxFileSize: "16MB", maxFileCount: 5 },
+    // Don't use a wildcard key; declare the presets you need. If you need
+    // other types, add them above.
+  })
+    .input(
+      z.object({ tableReference: z.string().min(1), idReference: z.number() })
+    )
     .middleware(async ({ input }) => {
-      // authorize COMMITTEE or ADMIN
       const session = await getSessionFromRequest();
-      if (!session || !session.user) {
+      if (!session?.user) {
         throw new UploadThingError("Unauthorized");
       }
 
-      if (!["COMMITTEE", "ADMIN"].includes(session.user.role)) {
-        throw new UploadThingError("Forbidden");
-      }
-
-      // Return metadata that will be available in onUploadComplete
+      // Attach minimal metadata for onUploadComplete
       return {
-        inspectionId: input.inspectionId,
-        committeeId:
-          session.user.role === "COMMITTEE"
-            ? session.user.roleData?.committeeId || session.user.roleData?.id
-            : undefined,
+        tableReference: input.tableReference,
+        idReference: input.idReference,
+        uploaderId: session.user.id,
+        uploaderRole: session.user.role,
       } as const;
     })
     .onUploadComplete(async ({ metadata, file }) => {
       try {
-        // file.ufsUrl is provided by UploadThing per docs
-        const pdfFileUrl = (file as any).ufsUrl || (file as any).url;
+        const url = (file as any).ufsUrl || (file as any).url || null;
+        if (!url) {
+          console.warn("UploadThing file missing URL", file);
+          return { success: false } as const;
+        }
 
-        await certificateService.uploadCertificate({
-          inspectionId: metadata.inspectionId,
-          pdfFileUrl,
-          committeeId: (metadata as any).committeeId,
-        });
-      } catch (error) {
-        console.error("Failed to persist certificate after upload:", error);
+        const filename = (file as any).name || (file as any).filename || "file";
+        const mimeType =
+          (file as any).mimeType || (file as any).type || undefined;
+        const size = (file as any).size || undefined;
+
+        const model = FileModel.createFile(
+          metadata.tableReference,
+          metadata.idReference,
+          filename,
+          url,
+          mimeType,
+          size
+        );
+
+        try {
+          await fileService.createFile(model);
+        } catch (err) {
+          console.error(
+            "Failed to persist file metadata from UploadThing:",
+            err
+          );
+        }
+
+        return { success: true } as const;
+      } catch (err) {
+        console.error("onUploadComplete error:", err);
+        return { success: false } as const;
       }
-
-      // You can return data to the client if needed
-      return { success: true } as const;
     }),
 } satisfies FileRouter;
 
