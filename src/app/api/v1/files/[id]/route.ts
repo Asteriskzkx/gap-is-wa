@@ -15,5 +15,7 @@ export async function DELETE(
   }
 
   // Delegate to controller
-  return fileController.deleteFileById(id);
+  // Delegate to controller and pass the incoming request so controller
+  // can perform authorization checks and any additional logic.
+  return fileController.deleteFileById(id, req as any);
 }

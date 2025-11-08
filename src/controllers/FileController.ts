@@ -105,7 +105,10 @@ export class FileController {
   }
 
   // Delete a file by its fileId. Returns deleted record (if existed) and boolean success
-  async deleteFileById(fileId: number): Promise<NextResponse> {
+  async deleteFileById(
+    fileId: number,
+    req?: Request | NextRequest
+  ): Promise<NextResponse> {
     try {
       const existing = await this.fileService.getById(fileId);
       if (!existing)
@@ -114,8 +117,37 @@ export class FileController {
           { status: 404 }
         );
 
+      // Authorization based on the table this file belongs to
+      const allowedRoles = this.getAllowedRolesForTable(
+        existing.tableReference
+      );
+      const { authorized, error } = await checkAuthorization(
+        req as NextRequest,
+        allowedRoles
+      );
+      if (!authorized)
+        return NextResponse.json(
+          { message: error || "Unauthorized" },
+          { status: 401 }
+        );
+
+      // Try to delete remote file first (best-effort). If remote deletion fails
+      // we still attempt to delete the DB record but return the remote result.
+      let remoteDeleted = false;
+      try {
+        const { deleteUploadThingFile } = await import(
+          "@/lib/uploadthingServer"
+        );
+        if (existing.url) {
+          remoteDeleted = await deleteUploadThingFile(existing.url);
+        }
+      } catch (err) {
+        console.error("Error while attempting remote deletion:", err);
+        remoteDeleted = false;
+      }
+
       const ok = await this.fileService.delete(fileId);
-      return NextResponse.json({ deleted: ok, file: existing });
+      return NextResponse.json({ deleted: ok, file: existing, remoteDeleted });
     } catch (err: any) {
       console.error("FileController.deleteFileById error:", err);
       return NextResponse.json(
@@ -145,9 +177,7 @@ export class FileController {
     );
   }
 
-  private async parseRequestForFiles(
-    req: NextRequest
-  ): Promise<{
+  private async parseRequestForFiles(req: NextRequest): Promise<{
     tableReference: string;
     idReference: number;
     files: { buffer: Buffer; filename: string; mimeType: string }[];
@@ -174,9 +204,7 @@ export class FileController {
     return { tableReference, idReference: finalId, files };
   }
 
-  private async parseFormData(
-    req: NextRequest
-  ): Promise<{
+  private async parseFormData(req: NextRequest): Promise<{
     tableReference?: string;
     idReference?: number;
     files?: { buffer: Buffer; filename: string; mimeType: string }[];
@@ -215,9 +243,7 @@ export class FileController {
     return { tableReference, idReference, files };
   }
 
-  private async parseWithBusboy(
-    req: NextRequest
-  ): Promise<{
+  private async parseWithBusboy(req: NextRequest): Promise<{
     tableReference?: string;
     idReference?: number;
     files: { buffer: Buffer; filename: string; mimeType: string }[];
