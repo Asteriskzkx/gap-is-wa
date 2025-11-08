@@ -350,3 +350,22 @@ model CommitteeCertificate {
 
   @@unique([committeeId, certificateId]) // Ensure no duplicate entries
 }
+
+// Generic file metadata table for reusable uploads across the system
+model File {
+  fileId         Int    @id @default(autoincrement())
+  tableReference String @db.VarChar(100) // which table/resource this file refers to (e.g. "Certificate", "Inspection")
+  idReference    Int // the primary key value in the referenced table
+
+  // Useful metadata for serving and filtering files
+  fileName String  @db.VarChar(255)
+  mimeType String? @db.VarChar(100)
+  url      String  @db.VarChar(1024) // remote URL (UploadThing / S3 / CDN)
+  size     Int? // optional file size in bytes
+
+  version   Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tableReference, idReference])
+}
