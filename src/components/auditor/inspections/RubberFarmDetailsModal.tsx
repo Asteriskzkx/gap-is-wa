@@ -1,3 +1,4 @@
+import { PrimaryButton } from "@/components/ui";
 import React, { useEffect } from "react";
 import { FaTimes } from "react-icons/fa";
 
@@ -76,11 +77,11 @@ export const RubberFarmDetailsModal: React.FC<RubberFarmDetailsModalProps> = ({
               {/* ข้อมูลทั่วไป */}
               <div className="bg-gray-50 p-4 rounded-lg">
                 <h4 className="font-semibold text-gray-900 mb-3">
-                  ข้อมูลทั่วไป
+                  ที่ตั้งสวนยาง
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-gray-600">หมู่บ้าน:</p>
+                    <p className="text-sm text-gray-600">หมู่บ้าน/ชุมชน:</p>
                     <p className="font-medium">{farmDetails.villageName}</p>
                   </div>
                   <div>
@@ -100,11 +101,11 @@ export const RubberFarmDetailsModal: React.FC<RubberFarmDetailsModalProps> = ({
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">ตำบล:</p>
+                    <p className="text-sm text-gray-600">ตำบล/แขวง:</p>
                     <p className="font-medium">{farmDetails.subDistrict}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">อำเภอ:</p>
+                    <p className="text-sm text-gray-600">อำเภอ/เขต:</p>
                     <p className="font-medium">{farmDetails.district}</p>
                   </div>
                   <div>
@@ -182,12 +183,12 @@ export const RubberFarmDetailsModal: React.FC<RubberFarmDetailsModalProps> = ({
         </div>
 
         <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4">
-          <button
+          <PrimaryButton
+            label="ปิด"
             onClick={onClose}
-            className="w-full px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
-          >
-            ปิด
-          </button>
+            color="secondary"
+            fullWidth
+          ></PrimaryButton>
         </div>
       </div>
     </div>
