@@ -6,6 +6,7 @@ import { Column } from "primereact/column";
 import { DataTable } from "primereact/datatable";
 import { Dropdown } from "primereact/dropdown";
 import { InputText } from "primereact/inputtext";
+import { Tag } from "primereact/tag";
 import React, { useEffect } from "react";
 
 export default function AdminUserManagementPage() {
@@ -90,6 +91,25 @@ export default function AdminUserManagementPage() {
     })),
   ];
 
+  const getRoleSeverity = (role: string) => {
+    switch (role) {
+      case UserRole.ADMIN:
+        return "danger";
+      case UserRole.COMMITTEE:
+        return "warning";
+      case UserRole.AUDITOR:
+        return "info";
+      case UserRole.FARMER:
+        return "success";
+      default:
+        return null;
+    }
+  };
+
+  const roleTemplate = (rowData: User) => (
+    <Tag severity={getRoleSeverity(rowData.role)} value={rowData.role}></Tag>
+  )
+
   // const roleTemplate = (rowData: User) => (
   //   <Dropdown
   //     value={users.find((user) => user.userId === rowData.userId)?.role}
@@ -165,6 +185,7 @@ export default function AdminUserManagementPage() {
               <Column
                 field="role"
                 header="Role"
+                body={roleTemplate}
                 sortable
               ></Column>
               <Column
