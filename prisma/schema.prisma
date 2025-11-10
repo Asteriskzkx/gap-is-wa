@@ -22,15 +22,13 @@ enum UserRole {
 }
 
 model User {
-  userId         Int       @id @default(autoincrement())
-  email          String    @unique @db.VarChar(100)
-  hashedPassword String    @db.VarChar(60)
-  name           String    @db.VarChar(200)
-  role           UserRole  @default(BASIC)
-  emailVerified  DateTime?
-  image          String?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  userId         Int      @id @default(autoincrement())
+  email          String   @unique @db.VarChar(100)
+  hashedPassword String   @db.VarChar(60)
+  name           String   @db.VarChar(200)
+  role           UserRole @default(BASIC)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   farmer    Farmer?
   auditor   Auditor?
