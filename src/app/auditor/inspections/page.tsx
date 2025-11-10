@@ -185,6 +185,8 @@ export default function AuditorInspectionsPage() {
           auditorId: auditorId.toString(),
           limit: rows.toString(),
           offset: first.toString(),
+          inspectionStatus: "รอการตรวจประเมิน",
+          inspectionResult: "รอผลการตรวจประเมิน",
         });
 
         // Add filters
