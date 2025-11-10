@@ -417,7 +417,7 @@ export default function AuditorDashboardPage() {
                 }
                 bgColor="bg-amber-50"
                 borderColor="border-amber-100"
-                textColor="text-amber-800"
+                textColor="text-amber-700"
                 linkText="จัดการนัดหมาย"
                 linkHref="/auditor/applications"
                 linkTextColor="text-amber-600"
@@ -445,7 +445,7 @@ export default function AuditorDashboardPage() {
                 }
                 bgColor="bg-purple-50"
                 borderColor="border-purple-100"
-                textColor="text-purple-800"
+                textColor="text-purple-700"
                 linkText="จัดการรายงาน"
                 linkHref="/auditor/reports"
                 linkTextColor="text-purple-600"
