@@ -234,52 +234,6 @@ export class AuditorController extends BaseController<AuditorModel> {
     }
   }
 
-  /**
-   * ตรวจสอบว่า farm สามารถใช้งานได้หรือไม่
-   */
-  async checkFarmAvailability(
-    req: NextRequest,
-    { params }: { params: { farmId: string } }
-  ): Promise<NextResponse> {
-    try {
-      // ตรวจสอบ authorization ด้วย NextAuth
-      const { authorized, session, error } = await checkAuthorization(req, [
-        "AUDITOR",
-      ]);
-
-      if (!authorized || !session) {
-        return NextResponse.json(
-          { message: error || "Authorization required" },
-          { status: 401 }
-        );
-      }
-
-      // ตรวจสอบ farmId
-      let farmId: number;
-      try {
-        farmId = requireValidId(params.farmId, "farmId");
-      } catch (error: any) {
-        return NextResponse.json({ message: error.message }, { status: 400 });
-      }
-
-      // ตรวจสอบความพร้อมใช้งาน
-      const isAvailable = await this.auditorService.isFarmAvailable(farmId);
-
-      return NextResponse.json(
-        {
-          farmId,
-          isAvailable,
-          message: isAvailable
-            ? "Farm is available for inspection"
-            : "Farm has pending inspection",
-        },
-        { status: 200 }
-      );
-    } catch (error) {
-      return this.handleControllerError(error);
-    }
-  }
-
   async assignAuditorToRegion(
     req: NextRequest,
     { params }: { params: { id: string } }

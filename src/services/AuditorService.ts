@@ -176,11 +176,19 @@ export class AuditorService extends BaseService<AuditorModel> {
       const allRubberFarmsWithFarmers =
         await this.rubberFarmRepository.findAllWithFarmerDetails();
 
-      // ดึงรายการ inspection ที่มีสถานะ "รอการตรวจประเมิน"
+      // ดึงรายการ inspection ทั้งหมด
       const allInspections = await this.inspectionRepository.findAll();
-      const pendingInspections = allInspections.filter(
-        (inspection) => inspection.inspectionStatus === "รอการตรวจประเมิน"
-      );
+      // พิจารณาว่าเป็น inspection ที่ทำให้ฟาร์มไม่พร้อมใช้งานได้เมื่อ
+      // - สถานะเป็น "รอการตรวจประเมิน"
+      // OR
+      // - สถานะเป็น "ตรวจประเมินแล้ว" และผลการตรวจเป็น "ผ่าน" (ผ่านการรับรองแล้ว)
+      const pendingInspections = allInspections.filter((inspection) => {
+        return (
+          inspection.inspectionStatus === "รอการตรวจประเมิน" ||
+          (inspection.inspectionStatus === "ตรวจประเมินแล้ว" &&
+            inspection.inspectionResult === "ผ่าน")
+        );
+      });
 
       // สร้าง Set ของ rubberFarmId ที่มี inspection รอการตรวจประเมิน
       const pendingFarmIds = new Set(
@@ -281,27 +289,6 @@ export class AuditorService extends BaseService<AuditorModel> {
    */
   private getNestedValue(obj: any, path: string): any {
     return path.split(".").reduce((acc, part) => acc?.[part], obj);
-  }
-
-  /**
-   * ตรวจสอบว่า rubber farm สามารถใช้งานได้หรือไม่
-   * @param rubberFarmId - ID ของ rubber farm ที่ต้องการตรวจสอบ
-   * @returns true หากพร้อมใช้งาน, false หากมี inspection รอการตรวจประเมิน
-   */
-  async isFarmAvailable(rubberFarmId: number): Promise<boolean> {
-    try {
-      // ตรวจสอบว่ามี inspection ที่รอการตรวจประเมินสำหรับ farm นี้หรือไม่
-      const farmInspections =
-        await this.inspectionRepository.findByRubberFarmId(rubberFarmId);
-      const pendingInspection = farmInspections.find(
-        (inspection) => inspection.inspectionStatus === "รอการตรวจประเมิน"
-      );
-
-      return !pendingInspection; // return true หากไม่มี pending inspection
-    } catch (error) {
-      this.handleServiceError(error);
-      return false;
-    }
   }
 
   async getInspectionTypes(): Promise<any[]> {
