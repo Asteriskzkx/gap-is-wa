@@ -1,13 +1,15 @@
 "use client";
 
 import AdminLayout from "@/components/layout/AdminLayout";
+import { useRouter } from "next/navigation";
 import { FilterMatchMode } from "primereact/api";
 import { Column } from "primereact/column";
 import { DataTable } from "primereact/datatable";
 import { Dropdown } from "primereact/dropdown";
 import { InputText } from "primereact/inputtext";
 import { Tag } from "primereact/tag";
-import React, { useEffect } from "react";
+import { Menu } from "primereact/menu";
+import React, { useEffect, useRef } from "react";
 
 export default function AdminUserManagementPage() {
   const [users, setUsers] = React.useState<User[]>([]);
@@ -15,6 +17,7 @@ export default function AdminUserManagementPage() {
   const [error, setError] = React.useState<Error | null>(null);
   const [globalFilter, setGlobalFilter] = React.useState<string>("");
   const [roleFilter, setRoleFilter] = React.useState<string | null>(null); // added
+  const router = useRouter();
 
   type User = {
     userId: number;
@@ -108,7 +111,7 @@ export default function AdminUserManagementPage() {
 
   const roleTemplate = (rowData: User) => (
     <Tag severity={getRoleSeverity(rowData.role)} value={rowData.role}></Tag>
-  )
+  );
 
   // const roleTemplate = (rowData: User) => (
   //   <Dropdown
@@ -119,6 +122,51 @@ export default function AdminUserManagementPage() {
   //     filter
   //   ></Dropdown>
   // );
+    // <Dropdown
+    
+    //   value={users.find((user) => user.userId === rowData.userId)?.role}
+    //   options={["ADMIN", "FARMER", "AUDITOR", "COMMITTEE"]}
+    //   onChange={(e) => handleRoleChange(rowData.userId, e.value)}
+    //   placeholder="Select a Role"
+    //   filter
+    // ></Dropdown>
+  // );
+  
+  const MoreVertMenu = ({ rowData }: { rowData: User }) => {
+    const rowMenuRef = React.useRef<Menu | null>(null);
+
+    const menuItems = [
+      {
+        label: "Edit",
+        icon: "pi pi-pencil",
+        command: () =>
+          router.push(`/admin/user-management/edit/${rowData.userId}`),
+      },
+      {
+        label: "Delete",
+        icon: "pi pi-trash",
+        command: () => console.log("Delete clicked", rowData.userId),
+      },
+    ];
+
+    return (
+      <>
+        <Menu
+          model={menuItems}
+          popup
+          ref={rowMenuRef}
+          id={`menu_${rowData.userId}`}
+        />
+        <button
+          className="p-button p-button-text p-button-plain"
+          onClick={(e) => rowMenuRef.current?.toggle(e)}
+        >
+          <i className="pi pi-ellipsis-v"></i>
+        </button>
+      </>
+    );
+  };
+
 
   const tableHeader = (
     <div className="flex items-center justify-between gap-2">
@@ -165,21 +213,34 @@ export default function AdminUserManagementPage() {
               header={tableHeader}
               globalFilter={globalFilter}
               globalFilterFields={["name", "email", "role"]}
-              filters={ roleFilter ? { role: { value: roleFilter, matchMode: FilterMatchMode.EQUALS } } : {} } // added
+              filters={
+                roleFilter
+                  ? {
+                      role: {
+                        value: roleFilter,
+                        matchMode: FilterMatchMode.EQUALS,
+                      },
+                    }
+                  : {}
+              } // added
               loading={loading}
               paginator
               paginatorLeft
               paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
               rows={10}
-              rowsPerPageOptions={[10, 25, 50 , 100]}
-              tableStyle={{ minWidth: '50rem' }}
+              rowsPerPageOptions={[10, 25, 50, 100]}
+              tableStyle={{ minWidth: "50rem" }}
               stripedRows
               resizableColumns
               className="[&_.p-paginator_.p-dropdown]:!w-auto [&_.p-paginator_.p-dropdown]:min-w-[6rem]"
               emptyMessage="ไม่พบผู้ใช้ในระบบ."
-              
             >
-              <Column field="userId" header="ID" style={{ width: '5%' }} sortable></Column>
+              <Column
+                field="userId"
+                header="ID"
+                style={{ width: "5%" }}
+                sortable
+              ></Column>
               <Column field="name" header="Name" sortable></Column>
               <Column field="email" header="Email" sortable></Column>
               <Column
@@ -194,6 +255,12 @@ export default function AdminUserManagementPage() {
                 header="Create Date"
                 sortable
               ></Column>
+              <Column
+                field=""
+                body={(rowData) => <MoreVertMenu rowData={rowData} />}
+                style={{ width: "2%" }}
+                header=""
+              />
             </DataTable>
           </div>
         </div>
