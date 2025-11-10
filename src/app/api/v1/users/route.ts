@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { userController } from "@/utils/dependencyInjections";
+import { checkAuthorization } from "@/lib/session";
 
-// Route handlers สำหรับ /api/v1/users เท่านั้น
+// Route handlers สำหรับ /api/v1/users
 export async function GET(req: NextRequest) {
   // Check URL params to determine if it's getting current user
   const url = new URL(req.url);
@@ -11,11 +12,15 @@ export async function GET(req: NextRequest) {
     return userController.getCurrentUser(req);
   }
 
+  const { authorized, error } = await checkAuthorization(req, ["ADMIN"]);
+
+  if (!authorized) {
+    return NextResponse.json(
+      { message: error || "Unauthorized" },
+      { status: 401 }
+    );
+  }
+
   // Otherwise return all users
   return userController.getAll(req);
-}
-
-export async function POST(req: NextRequest) {
-  // เฉพาะสำหรับการสร้างผู้ใช้ใหม่เท่านั้น (สำหรับ admin)
-  return userController.create(req);
 }
