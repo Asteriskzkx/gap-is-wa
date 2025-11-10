@@ -81,23 +81,24 @@ export default function AdminUserManagementPage() {
     }
   };
 
+  // TODO: Working on this part to implement role tag instead of dropdown
+
   const roleOptions = [
-    { label: "All roles", value: null },
     ...Object.values(UserRole).map((role) => ({
       label: role,
       value: role,
     })),
   ];
 
-  const roleTemplate = (rowData: User) => (
-    <Dropdown
-      value={users.find((user) => user.userId === rowData.userId)?.role}
-      options={["ADMIN", "FARMER", "AUDITOR", "COMMITTEE"]}
-      onChange={(e) => handleRoleChange(rowData.userId, e.value)}
-      placeholder="Select a Role"
-      filter
-    ></Dropdown>
-  );
+  // const roleTemplate = (rowData: User) => (
+  //   <Dropdown
+  //     value={users.find((user) => user.userId === rowData.userId)?.role}
+  //     options={["ADMIN", "FARMER", "AUDITOR", "COMMITTEE"]}
+  //     onChange={(e) => handleRoleChange(rowData.userId, e.value)}
+  //     placeholder="Select a Role"
+  //     filter
+  //   ></Dropdown>
+  // );
 
   const tableHeader = (
     <div className="flex items-center justify-between gap-2">
@@ -164,7 +165,6 @@ export default function AdminUserManagementPage() {
               <Column
                 field="role"
                 header="Role"
-                body={roleTemplate}
                 sortable
               ></Column>
               <Column
