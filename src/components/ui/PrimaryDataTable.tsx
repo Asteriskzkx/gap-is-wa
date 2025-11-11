@@ -51,6 +51,7 @@ interface PrimaryDataTableProps {
   }>;
   readonly onSort?: (event: DataTableSortEvent) => void;
   readonly first?: number;
+  readonly rowsPerPageOptions?: number[];
 }
 
 const CurrentPageReport = (options: any) => {
@@ -90,6 +91,7 @@ export default function PrimaryDataTable({
   totalRecords,
   lazy = false,
   onPage,
+  rowsPerPageOptions,
   emptyMessage = "ไม่พบข้อมูล",
   className = "",
   rowClassName,
@@ -119,9 +121,14 @@ export default function PrimaryDataTable({
     }
   };
 
+  const basePaginatorLayout =
+    "FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport";
+
   const paginatorTemplate: PaginatorTemplate = {
     layout:
-      "FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport",
+      rowsPerPageOptions && rowsPerPageOptions.length > 0
+        ? `${basePaginatorLayout} RowsPerPageDropdown`
+        : basePaginatorLayout,
     CurrentPageReport,
   };
 
@@ -136,6 +143,7 @@ export default function PrimaryDataTable({
         paginator={paginator}
         rows={rows}
         first={first}
+        rowsPerPageOptions={rowsPerPageOptions}
         totalRecords={actualTotalRecords}
         lazy={lazy}
         onPage={handlePageChange}

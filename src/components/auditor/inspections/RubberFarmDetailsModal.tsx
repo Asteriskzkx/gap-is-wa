@@ -2,6 +2,7 @@ import { PrimaryButton, PrimaryDataTable } from "@/components/ui";
 import { formatThaiDate } from "@/utils/dateFormatter";
 import React, { useEffect } from "react";
 import { FaTimes } from "react-icons/fa";
+import DynamicMapViewer from "@/components/maps/DynamicMapViewer";
 
 export interface PlantingDetail {
   plantingDetailId: number;
@@ -115,6 +116,20 @@ export const RubberFarmDetailsModal: React.FC<RubberFarmDetailsModalProps> = ({
                     <p className="text-sm text-gray-600">จังหวัด:</p>
                     <p className="font-medium">{farmDetails.province}</p>
                   </div>
+                </div>
+              </div>
+
+              {/* แผนที่ */}
+              <div className="bg-white p-4 rounded-lg">
+                <h4 className="font-semibold text-gray-900 mb-3">
+                  แผนที่ที่ตั้งสวน
+                </h4>
+                <div className="w-full">
+                  <DynamicMapViewer
+                    location={farmDetails.location}
+                    height="320px"
+                    width="100%"
+                  />
                 </div>
               </div>
 
