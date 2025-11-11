@@ -1420,6 +1420,21 @@ input.p-inputtext:disabled {
   font-size: 0.875rem;
 }
 
+/* Make rows-per-page dropdown compact and inline for PrimaryDataTable */
+.primary-datatable-wrapper .p-paginator .p-dropdown,
+.primary-datatable-wrapper .p-paginator .p-dropdown.p-component {
+  width: auto !important;
+  min-width: 3.25rem !important;
+  max-width: 6rem !important;
+  display: inline-flex !important;
+}
+
+.primary-datatable-wrapper .p-paginator .p-dropdown .p-dropdown-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 @media (max-width: 768px) {
   .primary-datatable-wrapper .p-paginator {
     flex-direction: column;
