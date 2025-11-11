@@ -15,6 +15,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { DataTablePageEvent, DataTableSortEvent } from "primereact/datatable";
 import React, { useEffect, useState } from "react";
+import DynamicMapViewer from "@/components/maps/DynamicMapViewer";
 
 // Interface สำหรับข้อมูลจังหวัด อำเภอ ตำบล
 interface Tambon {
@@ -1437,6 +1438,19 @@ export default function AuditorScheduleInspectionPage() {
                     </div>
                   </div>
                 </div>
+                <div className="bg-white p-4 rounded-lg">
+                  <h4 className="font-semibold text-gray-800 mb-2">
+                    แผนที่ที่ตั้งสวน
+                  </h4>
+                  <div className="w-full">
+                    <DynamicMapViewer
+                      location={selectedFarmDetails.location}
+                      height="320px"
+                      width="100%"
+                    />
+                  </div>
+                </div>
+
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <h4 className="font-semibold text-gray-800 mb-2">
                     รายละเอียดการปลูก
