@@ -211,6 +211,7 @@ export default function InspectionReports({
             loading={loading}
             paginator
             rows={lazyParams.rows}
+            rowsPerPageOptions={[10, 25, 50]}
             totalRecords={totalRecords}
             lazy
             onPage={handlePageChange}

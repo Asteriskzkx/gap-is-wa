@@ -413,6 +413,7 @@ export default function FarmerApplicationsPage() {
               multiSortMeta={multiSortMeta}
               onSort={onSortChange}
               emptyMessage="ไม่พบข้อมูลสวนยางพารา"
+              rowsPerPageOptions={[10, 25, 50]}
             />
           )}
         </div>

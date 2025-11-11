@@ -861,6 +861,7 @@ export default function AuditorInspectionsPage() {
             onSort={onSort}
             emptyMessage="ไม่พบรายการตรวจประเมินที่รอดำเนินการ"
             dataKey="inspectionId"
+            rowsPerPageOptions={[10, 25, 50]}
           />
         </div>
 
