@@ -12,13 +12,15 @@ export class CertificateService extends BaseService<CertificateModel> {
 
   async uploadCertificate(data: {
     inspectionId: number;
-    pdfFileUrl: string;
+    effectiveDate?: Date | string;
+    expiryDate?: Date | string;
     committeeId?: number;
   }): Promise<CertificateModel> {
     try {
       const model = CertificateModel.createCertificate(
         data.inspectionId,
-        data.pdfFileUrl
+        data.effectiveDate,
+        data.expiryDate
       );
 
       const created = await this.create(model);

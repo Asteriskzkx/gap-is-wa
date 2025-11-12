@@ -47,14 +47,19 @@ export class CertificateRepository extends BaseRepository<CertificateModel> {
     data: Partial<CertificateModel>
   ): Promise<CertificateModel | null> {
     try {
+      const updateData: any = {
+        inspectionId: data.inspectionId,
+        effectiveDate: (data as any).effectiveDate,
+        expiryDate: (data as any).expiryDate,
+        cancelRequestFlag: (data as any).cancelRequestFlag,
+        activeFlag: (data as any).activeFlag,
+        version: data.version,
+        updatedAt: new Date(),
+      };
+
       const updated = await this.prisma.certificate.update({
         where: { certificateId: id },
-        data: {
-          inspectionId: data.inspectionId,
-          pdfFileUrl: data.pdfFileUrl,
-          version: data.version,
-          updatedAt: new Date(),
-        },
+        data: updateData,
       });
 
       return this.mapper.toDomain(updated);

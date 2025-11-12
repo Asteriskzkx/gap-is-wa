@@ -28,11 +28,11 @@ export class CertificateController extends BaseController<CertificateModel> {
       }
 
       const data = await req.json();
-      const { inspectionId, pdfFileUrl } = data;
+      const { inspectionId, effectiveDate, expiryDate } = data;
 
-      if (!inspectionId || !pdfFileUrl) {
+      if (!inspectionId) {
         return NextResponse.json(
-          { message: "inspectionId and pdfFileUrl are required" },
+          { message: "inspectionId is required" },
           { status: 400 }
         );
       }
@@ -46,7 +46,8 @@ export class CertificateController extends BaseController<CertificateModel> {
 
       const created = await this.certificateService.uploadCertificate({
         inspectionId: Number(inspectionId),
-        pdfFileUrl,
+        effectiveDate,
+        expiryDate,
         committeeId,
       });
 
@@ -59,7 +60,8 @@ export class CertificateController extends BaseController<CertificateModel> {
   protected async createModel(data: any): Promise<CertificateModel> {
     return CertificateModel.createCertificate(
       Number(data.inspectionId),
-      data.pdfFileUrl
+      data.effectiveDate,
+      data.expiryDate
     );
   }
 }

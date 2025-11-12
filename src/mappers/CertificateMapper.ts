@@ -6,17 +6,25 @@ export class CertificateMapper implements BaseMapper<any, CertificateModel> {
     return new CertificateModel(
       prismaEntity.certificateId,
       prismaEntity.inspectionId,
-      prismaEntity.pdfFileUrl,
-      prismaEntity.createdAt,
-      prismaEntity.updatedAt,
-      prismaEntity.version
+      new Date(prismaEntity.effectiveDate),
+      new Date(prismaEntity.expiryDate),
+      {
+        createdAt: prismaEntity.createdAt,
+        updatedAt: prismaEntity.updatedAt,
+        cancelRequestFlag: prismaEntity.cancelRequestFlag ?? false,
+        activeFlag: prismaEntity.activeFlag ?? true,
+        version: prismaEntity.version,
+      }
     );
   }
 
   toPrisma(domainEntity: CertificateModel): any {
     return {
       inspectionId: domainEntity.inspectionId,
-      pdfFileUrl: domainEntity.pdfFileUrl,
+      effectiveDate: domainEntity.effectiveDate,
+      expiryDate: domainEntity.expiryDate,
+      cancelRequestFlag: domainEntity.cancelRequestFlag,
+      activeFlag: domainEntity.activeFlag,
       version: domainEntity.version,
     };
   }

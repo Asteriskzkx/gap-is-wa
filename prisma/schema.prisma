@@ -325,13 +325,16 @@ model AdviceAndDefect {
 }
 
 model Certificate {
-  certificateId Int        @id @default(autoincrement())
-  inspectionId  Int        @unique
-  inspection    Inspection @relation(fields: [inspectionId], references: [inspectionId], onDelete: Cascade)
-  pdfFileUrl    String     @db.VarChar(255) // Store S3 URL reference to the PDF file
-  version       Int        @default(0)
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  certificateId     Int        @id @default(autoincrement())
+  inspectionId      Int        @unique
+  inspection        Inspection @relation(fields: [inspectionId], references: [inspectionId], onDelete: Cascade)
+  effectiveDate     DateTime   @default(now())
+  expiryDate        DateTime
+  cancelRequestFlag Boolean    @default(false)
+  activeFlag        Boolean    @default(true)
+  version           Int        @default(0)
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
 
   // Relation to CommitteeCertificate (many-to-many)
   committeeCertificates CommitteeCertificate[]
@@ -349,13 +352,11 @@ model CommitteeCertificate {
   @@unique([committeeId, certificateId]) // Ensure no duplicate entries
 }
 
-// Generic file metadata table for reusable uploads across the system
 model File {
   fileId         Int    @id @default(autoincrement())
   tableReference String @db.VarChar(100) // which table/resource this file refers to (e.g. "Certificate", "Inspection")
   idReference    Int // the primary key value in the referenced table
 
-  // Useful metadata for serving and filtering files
   fileName String  @db.VarChar(255)
   mimeType String? @db.VarChar(100)
   url      String  @db.VarChar(1024) // remote URL (UploadThing / S3 / CDN)
