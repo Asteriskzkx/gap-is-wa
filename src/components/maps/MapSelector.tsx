@@ -13,6 +13,7 @@ import {
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import booleanPointInPolygon from "@turf/boolean-point-in-polygon";
+import regNesdb from "@/data/reg_nesdb.geojson";
 import { OpenStreetMapProvider } from "leaflet-geosearch";
 import { GeoSearchControl } from "leaflet-geosearch";
 import "leaflet-geosearch/dist/geosearch.css";
@@ -123,50 +124,27 @@ const MapSelector: React.FC<MapSelectorProps> = ({
   // ข้อความ error เมื่อเลือกตำแหน่งนอกประเทศไทย
   const [locationError, setLocationError] = useState<string | null>(null);
 
-  // GeoJSON แบบง่ายของประเทศไทย (simplified polygon) - coordinates are [lng, lat]
-  // This is a coarse polygon approximating the country's outline to be used with turf point-in-polygon.
-  const thailandGeoJSON = {
-    type: "Feature",
-    properties: {},
-    geometry: {
-      type: "Polygon",
-      coordinates: [
-        [
-          [97.0, 20.45],
-          [99.5, 20.45],
-          [101.5, 19.0],
-          [103.5, 17.5],
-          [104.5, 16.0],
-          [105.5, 14.0],
-          [104.0, 11.0],
-          [101.0, 7.5],
-          [100.0, 6.0],
-          [98.5, 6.5],
-          [97.5, 8.5],
-          [96.5, 10.0],
-          [97.0, 12.5],
-          [97.0, 16.0],
-          [97.0, 20.45],
-        ],
-      ],
-    },
-  } as any;
-
+  // ใช้ GeoJSON ที่มาจากไฟล์ `src/data/reg_nesdb.geojson` (FeatureCollection)
+  // ตรวจว่า point อยู่ใน any feature ของ FeatureCollection
   const isPointInThailand = (lat: number, lng: number) => {
     try {
       const pt = {
         type: "Feature",
         properties: {},
-        geometry: {
-          type: "Point",
-          coordinates: [lng, lat],
-        },
+        geometry: { type: "Point", coordinates: [lng, lat] },
       } as any;
 
-      return booleanPointInPolygon(pt, thailandGeoJSON as any) as boolean;
+      if (regNesdb && Array.isArray((regNesdb as any).features)) {
+        for (const feat of (regNesdb as any).features) {
+          if (booleanPointInPolygon(pt, feat as any)) return true;
+        }
+        return false;
+      }
+
+      // fallback: allow
+      return true;
     } catch (err) {
       console.error("Error checking point-in-polygon:", err);
-      // Fallback to allow selection if turf check fails
       return true;
     }
   };
