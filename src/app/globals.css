@@ -803,6 +803,48 @@ button {
   padding: 0.5rem 1rem !important;
 }
 
+/* Scoped styles for PrimaryUpload component */
+
+.primary-upload {
+  --pu-bg: #ffffff;
+}
+
+.primary-upload .p-fileupload {
+  border: 1px solid #e6edf0;
+  border-radius: 0.5rem;
+  background: var(--pu-bg);
+}
+
+.primary-upload .p-fileupload .p-fileupload-content {
+  min-height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+}
+
+.primary-upload .p-fileupload .p-fileupload-buttonbar {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem;
+}
+
+/* .primary-upload .p-fileupload-choose,
+.primary-upload .p-fileupload-upload,
+.primary-upload .p-fileupload-cancel {
+  display: none;
+} */
+
+.primary-upload .p-fileupload-files {
+  width: 100%;
+}
+
+.primary-upload .p-fileupload-empty-message {
+  text-align: center;
+  color: #6b7280;
+}
+
 /* ==================== PrimeReact AutoComplete Styling ==================== */
 /* AutoComplete Container */
 .p-autocomplete {

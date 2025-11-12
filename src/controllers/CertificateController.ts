@@ -12,7 +12,7 @@ export class CertificateController extends BaseController<CertificateModel> {
     this.certificateService = certificateService;
   }
 
-  async uploadCertificate(req: NextRequest): Promise<NextResponse> {
+  async createCertificate(req: NextRequest): Promise<NextResponse> {
     try {
       // Ensure only COMMITTEE or ADMIN can call
       const { authorized, session, error } = await checkAuthorization(req, [
@@ -28,11 +28,11 @@ export class CertificateController extends BaseController<CertificateModel> {
       }
 
       const data = await req.json();
-      const { inspectionId, pdfFileUrl } = data;
+      const { inspectionId, effectiveDate, expiryDate } = data;
 
-      if (!inspectionId || !pdfFileUrl) {
+      if (!inspectionId) {
         return NextResponse.json(
-          { message: "inspectionId and pdfFileUrl are required" },
+          { message: "inspectionId is required" },
           { status: 400 }
         );
       }
@@ -44,9 +44,10 @@ export class CertificateController extends BaseController<CertificateModel> {
           session.user.roleData?.committeeId || session.user.roleData?.id;
       }
 
-      const created = await this.certificateService.uploadCertificate({
+      const created = await this.certificateService.createCertificate({
         inspectionId: Number(inspectionId),
-        pdfFileUrl,
+        effectiveDate,
+        expiryDate,
         committeeId,
       });
 
@@ -59,7 +60,8 @@ export class CertificateController extends BaseController<CertificateModel> {
   protected async createModel(data: any): Promise<CertificateModel> {
     return CertificateModel.createCertificate(
       Number(data.inspectionId),
-      data.pdfFileUrl
+      data.effectiveDate,
+      data.expiryDate
     );
   }
 }

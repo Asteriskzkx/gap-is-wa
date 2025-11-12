@@ -279,6 +279,48 @@ export class InspectionController extends BaseController<InspectionModel> {
     }
   }
 
+  // GET /api/v1/inspections/ready-to-issue
+  async getReadyToIssue(req: NextRequest): Promise<NextResponse> {
+    try {
+      const { searchParams } = new URL(req.url);
+
+      // Pagination
+      const limit = Number.parseInt(searchParams.get("limit") || "10", 10);
+      const offset = Number.parseInt(searchParams.get("offset") || "0", 10);
+
+      // Date range
+      const fromDate = searchParams.get("from") || undefined;
+      const toDate = searchParams.get("to") || undefined;
+
+      const result = await this.inspectionService.getReadyToIssueInspections({
+        fromDate,
+        toDate,
+        limit,
+        offset,
+        sortField: searchParams.get("sortField") || undefined,
+        sortOrder:
+          (searchParams.get("sortOrder") as "asc" | "desc") || undefined,
+        multiSortMeta: searchParams.get("multiSortMeta")
+          ? JSON.parse(searchParams.get("multiSortMeta") || "[]")
+          : undefined,
+      });
+
+      return NextResponse.json(
+        {
+          results: result.data,
+          paginator: {
+            limit,
+            offset,
+            total: result.total,
+          },
+        },
+        { status: 200 }
+      );
+    } catch (error: any) {
+      return this.handleControllerError(error);
+    }
+  }
+
   async updateInspectionStatus(
     req: NextRequest,
     { params }: { params: { id: string } }

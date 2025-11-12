@@ -156,11 +156,11 @@ export default function FarmerDashboardPage() {
 
   // Helper function สำหรับกำหนด description
   const getActionCardDescription = (index: number): string => {
-    if (index === 0) return "ยื่นคำขอรับรองแหล่งผลิตยางพาราตามมาตรฐาน GAP";
+    if (index === 0) return "ยื่นคำขอรับรองแหล่งผลิตยางพาราตามมาตรฐานจีเอพี";
     if (index === 1) return "ตรวจสอบสถานะคำขอและผลการรับรองแหล่งผลิต";
     if (index === 2)
-      return "ขอแก้ไขข้อมูลใบรับรองแหล่งผลิตที่ได้รับการอนุมัติแล้ว";
-    return "ขอยกเลิกใบรับรองแหล่งผลิตที่ไม่ต้องการใช้งาน";
+      return "ขอแก้ไขข้อมูลใบรับรองแหล่งผลิตที่ต้องการปรับปรุงข้อมูล";
+    return "ขอยกเลิกใบรับรองแหล่งผลิตที่ไม่ประสงค์จะรับรองต่อ";
   };
 
   // Navigation menu items for action cards

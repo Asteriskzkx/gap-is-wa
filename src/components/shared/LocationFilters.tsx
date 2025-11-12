@@ -154,6 +154,7 @@ export default function LocationFilters({
           onClick={onReset}
         />
       </div>
+
       {/* Third row: tab buttons (center on small, right on sm+) */}
       {!isCommittee && (
         <div className="mt-3 flex justify-center sm:justify-end">

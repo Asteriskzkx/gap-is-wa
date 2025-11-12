@@ -12,6 +12,8 @@ import {
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+import booleanPointInPolygon from "@turf/boolean-point-in-polygon";
+import regNesdb from "@/data/reg_nesdb.geojson";
 import { OpenStreetMapProvider } from "leaflet-geosearch";
 import { GeoSearchControl } from "leaflet-geosearch";
 import "leaflet-geosearch/dist/geosearch.css";
@@ -77,7 +79,7 @@ const MapSelector: React.FC<MapSelectorProps> = ({
 
   // สถานะสำหรับจุด
   const [pointPosition, setPointPosition] = useState<LatLngPosition>(() => {
-    // ตรวจสอบว่ามีพิกัดที่ถูกต้องหรือไม่
+    // ถ้ามีพิกัดจริง ให้ใช้พิกัดนั้นเป็นตำแหน่งเริ่มต้น (และถือว่าเป็นการเลือกแล้ว)
     if (
       location.type === "Point" &&
       location.coordinates &&
@@ -86,12 +88,26 @@ const MapSelector: React.FC<MapSelectorProps> = ({
     ) {
       return [location.coordinates[1], location.coordinates[0]];
     }
-    return defaultPosition; // ใช้กรุงเทพฯเป็นค่าเริ่มต้น
+    // หากไม่มีพิกัดที่เลือกจริง ให้ใช้ค่าเริ่มต้นเพื่อเป็นตำแหน่งมุมมอง แต่ไม่ถือว่าเป็นการเลือก
+    return defaultPosition; // ใช้กรุงเทพฯเป็นค่าเริ่มต้นมุมมอง
+  });
+
+  // บอกว่า user ได้เลือกจุดแล้วหรือยัง (ถ้า location เป็น Point และไม่ใช่ [0,0] ให้ถือว่าเลือกแล้ว)
+  const [isPointSelected, setIsPointSelected] = useState<boolean>(() => {
+    return (
+      location.type === "Point" &&
+      Array.isArray(location.coordinates) &&
+      location.coordinates[0] !== 0 &&
+      location.coordinates[1] !== 0
+    );
   });
 
   // สถานะสำหรับวงกลม
   const [circleCenter, setCircleCenter] = useState<LatLngPosition>(
-    location.type === "Point"
+    location.type === "Point" &&
+      Array.isArray(location.coordinates) &&
+      location.coordinates[0] !== 0 &&
+      location.coordinates[1] !== 0
       ? [location.coordinates[1], location.coordinates[0]]
       : defaultPosition
   );
@@ -105,9 +121,51 @@ const MapSelector: React.FC<MapSelectorProps> = ({
   const [rectangleEnd, setRectangleEnd] = useState<LatLngPosition | null>(null);
   const [isDrawingRectangle, setIsDrawingRectangle] = useState<boolean>(false);
 
+  // ข้อความ error เมื่อเลือกตำแหน่งนอกประเทศไทย
+  const [locationError, setLocationError] = useState<string | null>(null);
+
+  // ใช้ GeoJSON ที่มาจากไฟล์ `src/data/reg_nesdb.geojson` (FeatureCollection)
+  // ตรวจว่า point อยู่ใน any feature ของ FeatureCollection
+  const isPointInThailand = (lat: number, lng: number) => {
+    try {
+      const pt = {
+        type: "Feature",
+        properties: {},
+        geometry: { type: "Point", coordinates: [lng, lat] },
+      } as any;
+
+      if (regNesdb && Array.isArray((regNesdb as any).features)) {
+        for (const feat of (regNesdb as any).features) {
+          if (booleanPointInPolygon(pt, feat as any)) return true;
+        }
+        return false;
+      }
+
+      // fallback: allow
+      return true;
+    } catch (err) {
+      console.error("Error checking point-in-polygon:", err);
+      return true;
+    }
+  };
+
+  // ตรวจว่า polygon (array of [lng, lat]) อยู่ทั้งหมดในประเทศไทย
+  const isPolygonInsideThailand = (coords: [number, number][]) => {
+    try {
+      for (const coord of coords) {
+        const lng = coord[0];
+        const lat = coord[1];
+        if (!isPointInThailand(lat, lng)) return false;
+      }
+      return true;
+    } catch (err) {
+      console.error("Error checking polygon-in-polygon:", err);
+      return true; // fail-open: allow if check fails unexpectedly
+    }
+  };
+
   // Refs
   const mapRef = useRef<L.Map | null>(null);
-  const mapContainerRef = useRef<HTMLDivElement | null>(null);
 
   // แก้ไขปัญหา marker icon
   useEffect(() => {
@@ -152,10 +210,18 @@ const MapSelector: React.FC<MapSelectorProps> = ({
     try {
       const latlng: LatLngPosition = [e.latlng.lat, e.latlng.lng];
 
+      // ป้องกันการเลือกนอกประเทศไทย (ใช้ GeoJSON + turf)
+      if (!isPointInThailand(latlng[0], latlng[1])) {
+        setLocationError("ตำแหน่งอยู่นอกประเทศไทย กรุณาเลือกภายในประเทศไทย");
+        return;
+      }
+      setLocationError(null);
+
       switch (shapeType) {
         case "Point":
           // กรณีจุด: วางจุดได้เลย
           setPointPosition(latlng);
+          setIsPointSelected(true);
           onChange({
             type: "Point",
             coordinates: [latlng[1], latlng[0]],
@@ -170,11 +236,13 @@ const MapSelector: React.FC<MapSelectorProps> = ({
           } else {
             // คำนวณรัศมีจากจุดศูนย์กลางถึงจุดที่คลิก
             const radius = calculateDistance(circleCenter, latlng);
-            setCircleRadius(radius);
-            setIsSettingCircle(false);
 
-            // สร้าง GeoJSON
-            createCircleGeoJSON(circleCenter, radius);
+            // สร้าง GeoJSON แบบตรวจสอบก่อน ถ้าไม่ผ่านจะไม่ปิดการตั้งค่าวงกลม
+            const ok = createCircleGeoJSON(circleCenter, radius);
+            if (ok) {
+              setCircleRadius(radius);
+              setIsSettingCircle(false);
+            }
           }
           break;
 
@@ -184,13 +252,18 @@ const MapSelector: React.FC<MapSelectorProps> = ({
             setRectangleStart(latlng);
             setIsDrawingRectangle(true);
           } else {
-            // กำหนดจุดสิ้นสุด
-            setRectangleEnd(latlng);
-            setIsDrawingRectangle(false);
-
-            // สร้าง GeoJSON
+            // พยายามสร้างสี่เหลี่ยมและตรวจสอบก่อน
             if (rectangleStart) {
-              createRectangleGeoJSON(rectangleStart, latlng);
+              const ok = createRectangleGeoJSON(rectangleStart, latlng);
+              if (ok) {
+                setRectangleEnd(latlng);
+                setIsDrawingRectangle(false);
+              }
+            } else {
+              // ถ้าไม่มี start ให้รีเซ็ตเป็นกรณีผิดพลาด
+              setRectangleStart(null);
+              setRectangleEnd(null);
+              setIsDrawingRectangle(false);
             }
           }
           break;
@@ -216,7 +289,11 @@ const MapSelector: React.FC<MapSelectorProps> = ({
   // เพิ่ม/ลดรัศมีวงกลม
   const handleCircleRadiusChange = (newRadius: number) => {
     setCircleRadius(newRadius);
-    createCircleGeoJSON(circleCenter, newRadius);
+    // only emit change if generated polygon is fully inside the country
+    const ok = createCircleGeoJSON(circleCenter, newRadius);
+    if (!ok) {
+      // keep the error message set by createCircleGeoJSON
+    }
   };
 
   // สร้าง GeoJSON สำหรับวงกลม
@@ -238,10 +315,23 @@ const MapSelector: React.FC<MapSelectorProps> = ({
     // ปิดวง
     coordinates.push(coordinates[0]);
 
+    // ตรวจสอบว่า polygon ทั้งหมดอยู่ในประเทศไทย
+    // note: coordinates are [lng, lat]
+    if (!isPolygonInsideThailand(coordinates)) {
+      setLocationError(
+        "วงกลมนี้ข้ามนอกประเทศไทย หรืออยู่บางส่วนอยู่นอกประเทศ กรุณาย่อขนาดหรือย้ายจุดศูนย์กลาง"
+      );
+      return false;
+    }
+
+    // ถ้า OK ให้เคลียร์ error และส่งข้อมูล
+    setLocationError(null);
     onChange({
       type: "Polygon",
       coordinates: [coordinates],
     });
+
+    return true;
   };
 
   // สร้าง GeoJSON สำหรับสี่เหลี่ยม
@@ -258,10 +348,21 @@ const MapSelector: React.FC<MapSelectorProps> = ({
       [start[1], start[0]], // ปิดวง
     ];
 
+    // ตรวจสอบว่า polygon ทั้งหมดอยู่ในประเทศไทย
+    if (!isPolygonInsideThailand(rectPoints)) {
+      setLocationError(
+        "สี่เหลี่ยมนี้ข้ามนอกประเทศไทย หรืออยู่บางส่วนอยู่นอกประเทศ กรุณาเลือกใหม่"
+      );
+      return false;
+    }
+
+    setLocationError(null);
     onChange({
       type: "Polygon",
       coordinates: [rectPoints],
     });
+
+    return true;
   };
 
   // Component จัดการคลิกบนแผนที่
@@ -342,7 +443,9 @@ const MapSelector: React.FC<MapSelectorProps> = ({
                 type="number"
                 value={circleRadius}
                 onChange={(e) =>
-                  handleCircleRadiusChange(parseFloat(e.target.value) || 100)
+                  handleCircleRadiusChange(
+                    Number.parseFloat(e.target.value) || 100
+                  )
                 }
                 min="10"
                 max="10000"
@@ -416,7 +519,7 @@ const MapSelector: React.FC<MapSelectorProps> = ({
             <MapClickHandler />
 
             {/* แสดงรูปร่าง */}
-            {shapeType === "Point" && (
+            {shapeType === "Point" && isPointSelected && (
               <Marker position={pointPosition}>
                 <Popup>
                   ละติจูด: {pointPosition[0].toFixed(6)}, ลองจิจูด:{" "}
@@ -472,6 +575,14 @@ const MapSelector: React.FC<MapSelectorProps> = ({
           <i className="pi pi-info-circle text-blue-500"></i>
           <p className="font-medium">{getInstructions()}</p>
         </div>
+
+        {/* ข้อความ error เมื่อเลือกนอกประเทศไทย */}
+        {locationError && (
+          <div className="text-sm text-red-600 mb-2 flex items-start gap-2">
+            <i className="pi pi-exclamation-triangle"></i>
+            <p>{locationError}</p>
+          </div>
+        )}
 
         {/* ข้อมูลพิกัด */}
         {shapeType === "Point" && (
