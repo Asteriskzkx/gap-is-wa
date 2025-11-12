@@ -149,9 +149,23 @@ const MapSelector: React.FC<MapSelectorProps> = ({
     }
   };
 
+  // ตรวจว่า polygon (array of [lng, lat]) อยู่ทั้งหมดในประเทศไทย
+  const isPolygonInsideThailand = (coords: [number, number][]) => {
+    try {
+      for (const coord of coords) {
+        const lng = coord[0];
+        const lat = coord[1];
+        if (!isPointInThailand(lat, lng)) return false;
+      }
+      return true;
+    } catch (err) {
+      console.error("Error checking polygon-in-polygon:", err);
+      return true; // fail-open: allow if check fails unexpectedly
+    }
+  };
+
   // Refs
   const mapRef = useRef<L.Map | null>(null);
-  const mapContainerRef = useRef<HTMLDivElement | null>(null);
 
   // แก้ไขปัญหา marker icon
   useEffect(() => {
@@ -222,11 +236,13 @@ const MapSelector: React.FC<MapSelectorProps> = ({
           } else {
             // คำนวณรัศมีจากจุดศูนย์กลางถึงจุดที่คลิก
             const radius = calculateDistance(circleCenter, latlng);
-            setCircleRadius(radius);
-            setIsSettingCircle(false);
 
-            // สร้าง GeoJSON
-            createCircleGeoJSON(circleCenter, radius);
+            // สร้าง GeoJSON แบบตรวจสอบก่อน ถ้าไม่ผ่านจะไม่ปิดการตั้งค่าวงกลม
+            const ok = createCircleGeoJSON(circleCenter, radius);
+            if (ok) {
+              setCircleRadius(radius);
+              setIsSettingCircle(false);
+            }
           }
           break;
 
@@ -236,13 +252,18 @@ const MapSelector: React.FC<MapSelectorProps> = ({
             setRectangleStart(latlng);
             setIsDrawingRectangle(true);
           } else {
-            // กำหนดจุดสิ้นสุด
-            setRectangleEnd(latlng);
-            setIsDrawingRectangle(false);
-
-            // สร้าง GeoJSON
+            // พยายามสร้างสี่เหลี่ยมและตรวจสอบก่อน
             if (rectangleStart) {
-              createRectangleGeoJSON(rectangleStart, latlng);
+              const ok = createRectangleGeoJSON(rectangleStart, latlng);
+              if (ok) {
+                setRectangleEnd(latlng);
+                setIsDrawingRectangle(false);
+              }
+            } else {
+              // ถ้าไม่มี start ให้รีเซ็ตเป็นกรณีผิดพลาด
+              setRectangleStart(null);
+              setRectangleEnd(null);
+              setIsDrawingRectangle(false);
             }
           }
           break;
@@ -268,7 +289,11 @@ const MapSelector: React.FC<MapSelectorProps> = ({
   // เพิ่ม/ลดรัศมีวงกลม
   const handleCircleRadiusChange = (newRadius: number) => {
     setCircleRadius(newRadius);
-    createCircleGeoJSON(circleCenter, newRadius);
+    // only emit change if generated polygon is fully inside the country
+    const ok = createCircleGeoJSON(circleCenter, newRadius);
+    if (!ok) {
+      // keep the error message set by createCircleGeoJSON
+    }
   };
 
   // สร้าง GeoJSON สำหรับวงกลม
@@ -290,10 +315,23 @@ const MapSelector: React.FC<MapSelectorProps> = ({
     // ปิดวง
     coordinates.push(coordinates[0]);
 
+    // ตรวจสอบว่า polygon ทั้งหมดอยู่ในประเทศไทย
+    // note: coordinates are [lng, lat]
+    if (!isPolygonInsideThailand(coordinates)) {
+      setLocationError(
+        "วงกลมนี้ข้ามนอกประเทศไทย หรืออยู่บางส่วนอยู่นอกประเทศ กรุณาย่อขนาดหรือย้ายจุดศูนย์กลาง"
+      );
+      return false;
+    }
+
+    // ถ้า OK ให้เคลียร์ error และส่งข้อมูล
+    setLocationError(null);
     onChange({
       type: "Polygon",
       coordinates: [coordinates],
     });
+
+    return true;
   };
 
   // สร้าง GeoJSON สำหรับสี่เหลี่ยม
@@ -310,10 +348,21 @@ const MapSelector: React.FC<MapSelectorProps> = ({
       [start[1], start[0]], // ปิดวง
     ];
 
+    // ตรวจสอบว่า polygon ทั้งหมดอยู่ในประเทศไทย
+    if (!isPolygonInsideThailand(rectPoints)) {
+      setLocationError(
+        "สี่เหลี่ยมนี้ข้ามนอกประเทศไทย หรืออยู่บางส่วนอยู่นอกประเทศ กรุณาเลือกใหม่"
+      );
+      return false;
+    }
+
+    setLocationError(null);
     onChange({
       type: "Polygon",
       coordinates: [rectPoints],
     });
+
+    return true;
   };
 
   // Component จัดการคลิกบนแผนที่
@@ -394,7 +443,9 @@ const MapSelector: React.FC<MapSelectorProps> = ({
                 type="number"
                 value={circleRadius}
                 onChange={(e) =>
-                  handleCircleRadiusChange(parseFloat(e.target.value) || 100)
+                  handleCircleRadiusChange(
+                    Number.parseFloat(e.target.value) || 100
+                  )
                 }
                 min="10"
                 max="10000"
