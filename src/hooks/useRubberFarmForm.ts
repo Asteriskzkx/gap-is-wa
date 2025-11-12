@@ -159,6 +159,39 @@ export const useRubberFarmForm = () => {
       setError("กรุณากรอกข้อมูลฟาร์มให้ครบถ้วน");
       return false;
     }
+    // ตรวจสอบตำแหน่งบนแผนที่ (ไม่อนุญาตให้เป็นค่าเริ่มต้น [0,0])
+    try {
+      const loc = rubberFarm.location;
+      if (!loc) {
+        setError("กรุณาระบุตำแหน่งที่ตั้งสวนยางบนแผนที่");
+        return false;
+      }
+
+      // กรณี Point ให้ตรวจสอบพิกัดไม่เท่ากับ [0,0]
+      if (
+        loc.type === "Point" &&
+        Array.isArray(loc.coordinates) &&
+        loc.coordinates.length === 2 &&
+        loc.coordinates[0] === 0 &&
+        loc.coordinates[1] === 0
+      ) {
+        setError("กรุณาระบุตำแหน่งที่ตั้งสวนยางบนแผนที่");
+        return false;
+      }
+
+      // กรณี Polygon/LineString ให้ตรวจสอบอย่างง่ายว่ามีพิกัดอยู่จริง
+      if (loc.type === "Polygon" || loc.type === "LineString") {
+        const coords: any = (loc as any).coordinates;
+        if (!coords || (Array.isArray(coords) && coords.length === 0)) {
+          setError("กรุณาระบุตำแหน่งที่ตั้งสวนยางบนแผนที่");
+          return false;
+        }
+      }
+    } catch (err) {
+      console.error("Error validating location:", err);
+      setError("เกิดข้อผิดพลาดในการตรวจสอบตำแหน่งบนแผนที่");
+      return false;
+    }
     setError("");
     return true;
   };
