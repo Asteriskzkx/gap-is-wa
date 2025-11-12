@@ -311,6 +311,9 @@ export class InspectionService extends BaseService<InspectionModel> {
     province?: string;
     district?: string;
     subDistrict?: string;
+    fromDate?: string;
+    toDate?: string;
+    noCertificate?: boolean;
     sortField?: string;
     sortOrder?: "asc" | "desc";
     multiSortMeta?: Array<{ field: string; order: number }>;
@@ -320,6 +323,44 @@ export class InspectionService extends BaseService<InspectionModel> {
     try {
       const result = await this.inspectionRepository.findAllWithPagination(
         options
+      );
+
+      const dataJson = result.data.map((inspection: InspectionModel) =>
+        inspection.toJSON()
+      );
+
+      return {
+        data: dataJson,
+        total: result.total,
+      };
+    } catch (error) {
+      this.handleServiceError(error);
+      return { data: [], total: 0 };
+    }
+  }
+
+  /**
+   * Fetch inspections that are ready to issue certificates.
+   * By default this means inspectionResult === "ผ่าน" and no certificate exists yet.
+   */
+  async getReadyToIssueInspections(options?: {
+    fromDate?: string;
+    toDate?: string;
+    sortField?: string;
+    sortOrder?: "asc" | "desc";
+    multiSortMeta?: Array<{ field: string; order: number }>;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ data: any[]; total: number }> {
+    try {
+      const mergedOpts: any = {
+        inspectionResult: "ผ่าน",
+        noCertificate: true,
+        ...(options || {}),
+      };
+
+      const result = await this.inspectionRepository.findAllWithPagination(
+        mergedOpts
       );
 
       const dataJson = result.data.map((inspection: InspectionModel) =>

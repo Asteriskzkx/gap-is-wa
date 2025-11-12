@@ -10,7 +10,7 @@ export class CertificateService extends BaseService<CertificateModel> {
     this.certificateRepository = certificateRepository;
   }
 
-  async uploadCertificate(data: {
+  async createCertificate(data: {
     inspectionId: number;
     effectiveDate?: Date | string;
     expiryDate?: Date | string;

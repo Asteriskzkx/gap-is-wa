@@ -12,7 +12,7 @@ export class CertificateController extends BaseController<CertificateModel> {
     this.certificateService = certificateService;
   }
 
-  async uploadCertificate(req: NextRequest): Promise<NextResponse> {
+  async createCertificate(req: NextRequest): Promise<NextResponse> {
     try {
       // Ensure only COMMITTEE or ADMIN can call
       const { authorized, session, error } = await checkAuthorization(req, [
@@ -44,7 +44,7 @@ export class CertificateController extends BaseController<CertificateModel> {
           session.user.roleData?.committeeId || session.user.roleData?.id;
       }
 
-      const created = await this.certificateService.uploadCertificate({
+      const created = await this.certificateService.createCertificate({
         inspectionId: Number(inspectionId),
         effectiveDate,
         expiryDate,

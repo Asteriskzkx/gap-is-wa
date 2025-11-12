@@ -1,4 +1,3 @@
-import { PrismaClient, Inspection as PrismaInspection } from "@prisma/client";
 import { BaseRepository } from "./BaseRepository";
 import { InspectionModel } from "../models/InspectionModel";
 import { BaseMapper } from "../mappers/BaseMapper";
@@ -153,6 +152,9 @@ export class InspectionRepository extends BaseRepository<InspectionModel> {
       province?: string;
       district?: string;
       subDistrict?: string;
+      fromDate?: string;
+      toDate?: string;
+      noCertificate?: boolean;
       sortField?: string;
       sortOrder?: "asc" | "desc";
       multiSortMeta?: Array<{ field: string; order: number }>;
@@ -185,6 +187,23 @@ export class InspectionRepository extends BaseRepository<InspectionModel> {
 
       if (options?.inspectionResult) {
         whereClause.inspectionResult = options.inspectionResult;
+      }
+
+      // Date range filter
+      if (options?.fromDate || options?.toDate) {
+        whereClause.inspectionDateAndTime = {} as any;
+        if (options?.fromDate) {
+          whereClause.inspectionDateAndTime.gte = new Date(options.fromDate);
+        }
+        if (options?.toDate) {
+          whereClause.inspectionDateAndTime.lte = new Date(options.toDate);
+        }
+      }
+
+      // Filter inspections that have no certificate yet
+      if (options?.noCertificate) {
+        // For optional relation, Prisma allows `certificate: { is: null }`
+        whereClause.certificate = { is: null };
       }
 
       // Filter by location (province, district, subDistrict)
@@ -346,6 +365,9 @@ export class InspectionRepository extends BaseRepository<InspectionModel> {
     province?: string;
     district?: string;
     subDistrict?: string;
+    fromDate?: string;
+    toDate?: string;
+    noCertificate?: boolean;
     sortField?: string;
     sortOrder?: "asc" | "desc";
     multiSortMeta?: Array<{ field: string; order: number }>;
@@ -370,6 +392,22 @@ export class InspectionRepository extends BaseRepository<InspectionModel> {
 
       if (options?.inspectionResult) {
         whereClause.inspectionResult = options.inspectionResult;
+      }
+
+      // Date range filter
+      if (options?.fromDate || options?.toDate) {
+        whereClause.inspectionDateAndTime = {} as any;
+        if (options?.fromDate) {
+          whereClause.inspectionDateAndTime.gte = new Date(options.fromDate);
+        }
+        if (options?.toDate) {
+          whereClause.inspectionDateAndTime.lte = new Date(options.toDate);
+        }
+      }
+
+      // Filter inspections that have no certificate yet
+      if (options?.noCertificate) {
+        whereClause.certificate = { is: null };
       }
 
       // Filter by location (province, district, subDistrict)
