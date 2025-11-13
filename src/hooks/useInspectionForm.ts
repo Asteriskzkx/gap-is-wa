@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 
 export interface Requirement {
   requirementId: number;
@@ -42,11 +42,7 @@ interface UseInspectionFormReturn {
     field: string,
     value: string
   ) => void;
-  updateOtherConditions: (
-    itemIndex: number,
-    field: string,
-    value: string
-  ) => void;
+  updateOtherConditions: (itemIndex: number, field: string, value: any) => void;
   validateCurrentItem: () => boolean;
   saveCurrentItem: (inspectionId: number) => Promise<boolean>;
   saveAllItems: (inspectionId: number) => Promise<boolean>;
@@ -111,7 +107,7 @@ export function useInspectionForm(): UseInspectionFormReturn {
   );
 
   const updateOtherConditions = useCallback(
-    (itemIndex: number, field: string, value: string) => {
+    (itemIndex: number, field: string, value: any) => {
       setInspectionItems((prev) => {
         const updated = [...prev];
         updated[itemIndex].otherConditions = {
@@ -451,6 +447,14 @@ function determineItemResult(item: InspectionItem): string {
   if (!item.requirements || item.requirements.length === 0) {
     return "ผ่าน";
   }
+
+  // If any requirement is still pending / not evaluated, treat the whole item as NOT_EVALUATED
+  const hasNotEvaluated = item.requirements.some(
+    (req) =>
+      req.evaluationMethod === "PENDING" &&
+      req.evaluationResult === "NOT_EVALUATED"
+  );
+  if (hasNotEvaluated) return "NOT_EVALUATED";
 
   // กรองเฉพาะข้อกำหนดหลัก
   const mainRequirements = item.requirements.filter(
