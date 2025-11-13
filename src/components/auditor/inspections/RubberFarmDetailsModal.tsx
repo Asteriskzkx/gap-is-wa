@@ -54,9 +54,9 @@ export const RubberFarmDetailsModal: React.FC<RubberFarmDetailsModalProps> = ({
   }, []);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]">
       <div className="bg-white rounded-lg max-w-8xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center z-[10000]">
           <h3 className="text-lg font-semibold text-gray-900">
             รายละเอียดสวนยางพารา
           </h3>
@@ -209,7 +209,7 @@ export const RubberFarmDetailsModal: React.FC<RubberFarmDetailsModalProps> = ({
           )}
         </div>
 
-        <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4">
+        <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 z-[10000]">
           <PrimaryButton
             label="ปิด"
             onClick={onClose}
