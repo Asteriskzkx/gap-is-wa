@@ -580,6 +580,15 @@ export default function AuditorInspectionsPage() {
   const areAllRequiredFieldsFilled = (): boolean => {
     // ตรวจสอบทุก item
     for (const item of inspectionItems) {
+      // If this is itemNo 3 (hazardous fertilizer usage) and the
+      // "ไม่ได้ใช้วัตถุอันตรายทางการเกษตรในการผลิต" checkbox is checked,
+      // skip validation for this item.
+      const itemNo = item.inspectionItemMaster?.itemNo;
+      const otherConditions = item.otherConditions || {};
+      if (itemNo === 3 && otherConditions.notUsingHazardous) {
+        continue;
+      }
+
       // ตรวจสอบว่าทุก requirement มีการกรอก evaluationResult และ evaluationMethod
       if (item.requirements && item.requirements.length > 0) {
         for (const req of item.requirements) {
