@@ -1,5 +1,5 @@
-import React from 'react';
-import * as Icons from "@/components/icons/" // adjust the path if needed
+import React from "react";
+import * as Icons from "@/components/icons/"; // adjust the path if needed
 
 export default function IconGallery() {
   return (
