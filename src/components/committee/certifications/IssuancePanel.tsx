@@ -128,6 +128,8 @@ export default function IssuancePanel({
           cacheKey={`certificate-inspection-${inspection.inspectionId}`}
           idReference={issuedId ?? undefined}
           accept="application/pdf"
+          multiple={false}
+          maxFileSize={10 * 1024 * 1024} // 10 MB
         />
       </div>
 
