@@ -64,6 +64,9 @@ export const InspectionItemForm: React.FC<InspectionItemFormProps> = ({
         </h3>
       </div>
 
+      {/* ข้อมูลเพิ่มเติม */}
+      {renderAdditionalFields(itemIndex)}
+
       {/* ข้อกำหนด */}
       {item.requirements && item.requirements.length > 0 ? (
         <div className="space-y-4">
@@ -179,9 +182,6 @@ export const InspectionItemForm: React.FC<InspectionItemFormProps> = ({
           ไม่มีข้อกำหนดสำหรับรายการตรวจนี้
         </div>
       )}
-
-      {/* ข้อมูลเพิ่มเติม */}
-      {renderAdditionalFields(itemIndex)}
     </div>
   );
 };

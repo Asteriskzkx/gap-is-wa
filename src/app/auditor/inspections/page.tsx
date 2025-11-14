@@ -18,6 +18,7 @@ import {
 } from "@/hooks/useInspectionForm";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import PrimaryCheckbox from "@/components/ui/PrimaryCheckbox";
 import { DataTablePageEvent, DataTableSortEvent } from "primereact/datatable";
 import React, { useCallback, useEffect, useState } from "react";
 
@@ -550,6 +551,28 @@ export default function AuditorInspectionsPage() {
       );
     }
 
+    // For inspection item 3: Hazardous fertilizer usage - Checkbox to tell not use fertilizer
+    if (itemNo === 3) {
+      const notUsingHazardous = otherConditions.notUsingHazardous || false;
+
+      return (
+        <div className="mt-6 border-t pt-4">
+          <h4 className="text-sm font-semibold text-gray-700 mb-4">
+            ข้อมูลเพิ่มเติม
+          </h4>
+          <div className="space-y-4">
+            <PrimaryCheckbox
+              checked={notUsingHazardous}
+              label="ไม่ได้ใช้วัตถุอันตรายทางการเกษตรในการผลิต"
+              onChange={(checked: boolean) =>
+                updateOtherConditions(itemIndex, "notUsingHazardous", checked)
+              }
+            />
+          </div>
+        </div>
+      );
+    }
+
     return null;
   };
 
@@ -557,6 +580,15 @@ export default function AuditorInspectionsPage() {
   const areAllRequiredFieldsFilled = (): boolean => {
     // ตรวจสอบทุก item
     for (const item of inspectionItems) {
+      // If this is itemNo 3 (hazardous fertilizer usage) and the
+      // "ไม่ได้ใช้วัตถุอันตรายทางการเกษตรในการผลิต" checkbox is checked,
+      // skip validation for this item.
+      const itemNo = item.inspectionItemMaster?.itemNo;
+      const otherConditions = item.otherConditions || {};
+      if (itemNo === 3 && otherConditions.notUsingHazardous) {
+        continue;
+      }
+
       // ตรวจสอบว่าทุก requirement มีการกรอก evaluationResult และ evaluationMethod
       if (item.requirements && item.requirements.length > 0) {
         for (const req of item.requirements) {

@@ -1,30 +1,15 @@
-/**
- * PrimeReact Thai Locale Test Page
- *
- * หน้าทดสอบการแสดงผลภาษาไทยใน PrimeReact Components
- */
-
 "use client";
 
-import { useState } from "react";
-import { Calendar } from "primereact/calendar";
-import { Button } from "primereact/button";
-import { Dialog } from "primereact/dialog";
-import { DataTable } from "primereact/datatable";
-import { Column } from "primereact/column";
-import { Checkbox } from "primereact/checkbox";
 import PrimaryButton from "@/components/ui/PrimaryButton";
+import { Button } from "primereact/button";
+import { Calendar } from "primereact/calendar";
+import { Dialog } from "primereact/dialog";
+import { useState } from "react";
+import toast from "react-hot-toast";
 
 export default function LocaleTestPage() {
   const [date, setDate] = useState<Date | null>(null);
   const [visible, setVisible] = useState(false);
-  const [checked, setChecked] = useState(false);
-
-  const sampleData = [
-    { id: 1, name: "สมชาย ใจดี", email: "somchai@example.com" },
-    { id: 2, name: "สมหญิง รักดี", email: "somying@example.com" },
-    { id: 3, name: "สมศักดิ์ เก่งดี", email: "somsak@example.com" },
-  ];
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
@@ -172,48 +157,27 @@ export default function LocaleTestPage() {
             </Dialog>
           </div>
 
-          {/* DataTable Test */}
+          {/* Toast Test (react-hot-toast)*/}
           <div className="mb-8">
             <h2 className="text-xl font-bold text-gray-800 mb-4">
-              4. DataTable (ตาราง)
+              4. Toast (ข้อความแจ้งเตือน)
             </h2>
-            <DataTable
-              value={sampleData}
-              paginator
-              rows={2}
-              rowsPerPageOptions={[2, 5, 10]}
-              className="border border-gray-200 rounded-lg"
-            >
-              <Column field="id" header="รหัส" sortable />
-              <Column field="name" header="ชื่อ" sortable />
-              <Column field="email" header="อีเมล" sortable />
-            </DataTable>
-          </div>
-
-          {/* Result */}
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <h3 className="font-bold text-green-800 mb-2">✅ ผลการทดสอบ</h3>
-            <ul className="list-disc list-inside text-sm text-green-700 space-y-1">
-              <li>ชื่อวันและเดือนแสดงเป็นภาษาไทย</li>
-              <li>ปุ่มต่างๆ แสดงข้อความภาษาไทย</li>
-              <li>Dialog แสดงข้อความภาษาไทย</li>
-              <li>DataTable แสดงการแบ่งหน้าเป็นภาษาไทย</li>
-            </ul>
-          </div>
-
-          {/* Checkbox Test */}
-          <div className="mt-8">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">
-              5. Checkbox (กล่องเลือก)
-            </h2>
-            <div className="flex items-center gap-4">
-              <label className="text-sm font-medium text-gray-700">
-                เลือกรายการนี้
-              </label>
-              <Checkbox
-                onChange={(e) => setChecked(e.checked ?? false)}
-                checked={checked}
-              ></Checkbox>
+            <div className="flex gap-4 flex-wrap">
+              <PrimaryButton
+                label="Toast Success"
+                icon="pi pi-check"
+                onClick={() => toast.success("Success")}
+              />
+              <PrimaryButton
+                label="Toast Error"
+                icon="pi pi-times"
+                onClick={() => toast.error("Error")}
+              />
+              <PrimaryButton
+                label="Toast Loading"
+                icon="pi pi-info-circle"
+                onClick={() => toast.loading("Loading")}
+              />
             </div>
           </div>
         </div>

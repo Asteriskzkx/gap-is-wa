@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 
 export interface Requirement {
   requirementId: number;
@@ -42,11 +42,7 @@ interface UseInspectionFormReturn {
     field: string,
     value: string
   ) => void;
-  updateOtherConditions: (
-    itemIndex: number,
-    field: string,
-    value: string
-  ) => void;
+  updateOtherConditions: (itemIndex: number, field: string, value: any) => void;
   validateCurrentItem: () => boolean;
   saveCurrentItem: (inspectionId: number) => Promise<boolean>;
   saveAllItems: (inspectionId: number) => Promise<boolean>;
@@ -111,7 +107,7 @@ export function useInspectionForm(): UseInspectionFormReturn {
   );
 
   const updateOtherConditions = useCallback(
-    (itemIndex: number, field: string, value: string) => {
+    (itemIndex: number, field: string, value: any) => {
       setInspectionItems((prev) => {
         const updated = [...prev];
         updated[itemIndex].otherConditions = {
@@ -257,34 +253,6 @@ export function useInspectionForm(): UseInspectionFormReturn {
     [inspectionItems, currentItemIndex, setInspectionItems]
   );
 
-  const completeInspection = useCallback(
-    async (inspectionId: number): Promise<boolean> => {
-      try {
-        const response = await fetch(
-          `/api/v1/inspections/${inspectionId}/status`,
-          {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              status: "ตรวจประเมินแล้ว",
-            }),
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("จบการตรวจประเมินไม่สำเร็จ");
-        }
-
-        return true;
-      } catch (error) {
-        console.error("Error completing inspection:", error);
-        alert("เกิดข้อผิดพลาดในการจบการตรวจประเมิน");
-        return false;
-      }
-    },
-    []
-  );
-
   // ฟังก์ชันบันทึกทุกรายการที่มีการแก้ไข
   const saveAllItems = useCallback(
     async (inspectionId: number): Promise<boolean> => {
@@ -325,7 +293,9 @@ export function useInspectionForm(): UseInspectionFormReturn {
                 break;
               }
             }
-            if (hasIncompleteReq) continue;
+            if (hasIncompleteReq) {
+              continue;
+            }
           }
 
           try {
@@ -414,7 +384,7 @@ export function useInspectionForm(): UseInspectionFormReturn {
           alert(
             `บันทึกสำเร็จ ${savedCount} รายการ, มีข้อผิดพลาด ${errorCount} รายการ`
           );
-        } else {
+        } else if (savedCount > 0) {
           alert(`บันทึกสำเร็จทั้งหมด ${savedCount} รายการ`);
         }
 
@@ -428,6 +398,40 @@ export function useInspectionForm(): UseInspectionFormReturn {
       }
     },
     [inspectionItems, setInspectionItems]
+  );
+
+  const completeInspection = useCallback(
+    async (inspectionId: number): Promise<boolean> => {
+      try {
+        const saved = await saveAllItems(inspectionId);
+
+        if (!saved) {
+          return false;
+        }
+
+        const response = await fetch(
+          `/api/v1/inspections/${inspectionId}/status`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              status: "ตรวจประเมินแล้ว",
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("จบการตรวจประเมินไม่สำเร็จ");
+        }
+
+        return true;
+      } catch (error) {
+        console.error("Error completing inspection:", error);
+        alert("เกิดข้อผิดพลาดในการจบการตรวจประเมิน");
+        return false;
+      }
+    },
+    [saveAllItems]
   );
 
   return {
@@ -451,6 +455,14 @@ function determineItemResult(item: InspectionItem): string {
   if (!item.requirements || item.requirements.length === 0) {
     return "ผ่าน";
   }
+
+  // If any requirement is still pending / not evaluated, treat the whole item as NOT_EVALUATED
+  const hasNotEvaluated = item.requirements.some(
+    (req) =>
+      req.evaluationMethod === "PENDING" &&
+      req.evaluationResult === "NOT_EVALUATED"
+  );
+  if (hasNotEvaluated) return "NOT_EVALUATED";
 
   // กรองเฉพาะข้อกำหนดหลัก
   const mainRequirements = item.requirements.filter(
