@@ -1167,6 +1167,7 @@ export default function AuditorScheduleInspectionPage() {
               loading={loading}
               paginator
               rows={auditorsPagination.rows}
+              rowsPerPageOptions={[10, 25, 50]}
               totalRecords={auditorsPagination.totalRecords}
               lazy
               onPage={onAuditorPageChange}
