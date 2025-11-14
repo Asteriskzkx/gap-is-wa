@@ -14,7 +14,7 @@ interface LazyParams {
   multiSortMeta: Array<{ field: string; order: SortOrder }>;
 }
 
-export function useReadyToIssueInspections(initialRows = 5) {
+export function useReadyToIssueInspections(initialRows = 10) {
   const router = useRouter();
   const { status } = useSession();
 

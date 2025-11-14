@@ -23,7 +23,7 @@ export default function Page() {
     setToDate,
     handlePageChange,
     handleSort,
-  } = useReadyToIssueInspections(5);
+  } = useReadyToIssueInspections(10);
 
   const [selectedInspection, setSelectedInspection] = useState<Record<
     string,
@@ -40,6 +40,7 @@ export default function Page() {
         sortable: true,
         headerAlign: "center" as const,
         bodyAlign: "center" as const,
+        style: { width: "16%" },
       },
       {
         field: "inspectionDateAndTime",
@@ -48,7 +49,14 @@ export default function Page() {
         headerAlign: "center" as const,
         bodyAlign: "center" as const,
         body: (row: any) =>
-          new Date(row.inspectionDateAndTime).toLocaleString(),
+          new Date(row.inspectionDateAndTime).toLocaleString("th-TH", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        style: { width: "18%" },
       },
       {
         field: "rubberFarm.villageName",
@@ -62,9 +70,33 @@ export default function Page() {
           ]
             .filter(Boolean)
             .join(" ") || "-",
+        style: { width: "28%" },
       },
-      { field: "inspectionStatus", header: "สถานะ" },
-      { field: "inspectionResult", header: "ผลการตรวจ" },
+      {
+        field: "rubberFarm.farmer.firstName",
+        header: "เกษตรกร",
+        body: (r: any) =>
+          (() => {
+            const prefix = r.rubberFarm?.farmer?.namePrefix || "";
+            const first = r.rubberFarm?.farmer?.firstName || "";
+            const last = r.rubberFarm?.farmer?.lastName || "";
+            const firstWithPrefix = prefix ? `${prefix}${first}` : first;
+            return [firstWithPrefix, last].filter(Boolean).join(" ") || "-";
+          })(),
+        style: { width: "19%" },
+      },
+      {
+        field: "auditorChief.firstName",
+        header: "หัวหน้าผู้ตรวจประเมิน",
+        body: (r: any) => {
+          const prefix = r.auditorChief?.namePrefix || "";
+          const first = r.auditorChief?.firstName || "";
+          const last = r.auditorChief?.lastName || "";
+          const firstWithPrefix = prefix ? `${prefix}${first}` : first;
+          return [firstWithPrefix, last].filter(Boolean).join(" ") || "-";
+        },
+        style: { width: "19%" },
+      },
     ],
     []
   );
@@ -106,7 +138,7 @@ export default function Page() {
                   loading={loading}
                   paginator
                   rows={lazyParams.rows}
-                  rowsPerPageOptions={[5, 10, 25]}
+                  rowsPerPageOptions={[10, 25, 50]}
                   totalRecords={totalRecords}
                   lazy
                   onPage={handlePageChange}
