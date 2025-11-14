@@ -830,12 +830,6 @@ button {
   padding: 0.75rem;
 }
 
-/* .primary-upload .p-fileupload-choose,
-.primary-upload .p-fileupload-upload,
-.primary-upload .p-fileupload-cancel {
-  display: none;
-} */
-
 .primary-upload .p-fileupload-files {
   width: 100%;
 }

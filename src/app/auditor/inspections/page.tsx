@@ -580,9 +580,6 @@ export default function AuditorInspectionsPage() {
   const areAllRequiredFieldsFilled = (): boolean => {
     // ตรวจสอบทุก item
     for (const item of inspectionItems) {
-      // If this is itemNo 3 (hazardous fertilizer usage) and the
-      // "ไม่ได้ใช้วัตถุอันตรายทางการเกษตรในการผลิต" checkbox is checked,
-      // skip validation for this item.
       const itemNo = item.inspectionItemMaster?.itemNo;
       const otherConditions = item.otherConditions || {};
       if (itemNo === 3 && otherConditions.notUsingHazardous) {
@@ -685,6 +682,7 @@ export default function AuditorInspectionsPage() {
       body: (rowData: Inspection) => rowData.inspectionNo,
       headerAlign: "center" as const,
       bodyAlign: "center" as const,
+      style: { width: "12%" },
     },
     {
       field: "inspectionDateAndTime",
@@ -698,6 +696,7 @@ export default function AuditorInspectionsPage() {
         }),
       headerAlign: "center" as const,
       bodyAlign: "center" as const,
+      style: { width: "10%" },
     },
     {
       field: "inspectionType.typeName",
@@ -707,6 +706,7 @@ export default function AuditorInspectionsPage() {
         rowData.inspectionType?.typeName || "ไม่ระบุ",
       headerAlign: "center" as const,
       bodyAlign: "left" as const,
+      style: { width: "32%" },
     },
     {
       field: "rubberFarm.farmer",
@@ -720,6 +720,7 @@ export default function AuditorInspectionsPage() {
       },
       headerAlign: "center" as const,
       bodyAlign: "left" as const,
+      style: { width: "14%" },
     },
     {
       field: "rubberFarm.province",
@@ -728,6 +729,7 @@ export default function AuditorInspectionsPage() {
       body: (rowData: Inspection) => rowData.rubberFarm?.province || "ไม่ระบุ",
       headerAlign: "center" as const,
       bodyAlign: "left" as const,
+      style: { width: "9%" },
     },
     {
       field: "inspectionStatus",
@@ -740,6 +742,7 @@ export default function AuditorInspectionsPage() {
       bodyAlign: "center" as const,
       mobileAlign: "right" as const,
       mobileHideLabel: false,
+      style: { width: "13%" },
     },
     {
       field: "actions",
@@ -772,6 +775,7 @@ export default function AuditorInspectionsPage() {
       bodyAlign: "center" as const,
       mobileAlign: "right" as const,
       mobileHideLabel: true,
+      style: { width: "10%" },
     },
   ];
 

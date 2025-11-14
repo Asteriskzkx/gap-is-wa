@@ -108,7 +108,7 @@ export const InspectionItemForm: React.FC<InspectionItemFormProps> = ({
                     options={[
                       { label: "ใช่ (ผ่าน)", value: "ใช่" },
                       { label: "ไม่ใช่ (ไม่ผ่าน)", value: "ไม่ใช่" },
-                      { label: "ไม่เกี่ยวข้อง (NA)", value: "N/A" },
+                      { label: "ไม่เกี่ยวข้อง (NA)", value: "ไม่เกี่ยวข้อง" },
                     ]}
                     onChange={(value) =>
                       updateRequirementEvaluation(

@@ -13,7 +13,7 @@ export default function RequirementCard({ requirement }: Props) {
     bgClass = "bg-green-50 border-green-200 text-green-700";
   else if (requirement.evaluationResult === "ไม่ใช่")
     bgClass = "bg-red-50 border-red-200 text-red-700";
-  else if (requirement.evaluationResult === "NA")
+  else if (requirement.evaluationResult === "ไม่เกี่ยวข้อง")
     bgClass = "bg-gray-100 border-gray-200 text-gray-700";
 
   return (
@@ -47,7 +47,13 @@ export default function RequirementCard({ requirement }: Props) {
           <div
             className={`w-full ${SPACING.px3} ${SPACING.py2} border rounded-md ${bgClass}`}
           >
-            {requirement.evaluationResult || "ไม่มีข้อมูล"}
+            {(() => {
+              const val = requirement.evaluationResult;
+              if (val === "ใช่") return "ใช่ (ผ่าน)";
+              if (val === "ไม่ใช่") return "ไม่ใช่ (ไม่ผ่าน)";
+              if (val === "ไม่เกี่ยวข้อง") return "ไม่เกี่ยวข้อง (NA)";
+              return val || "ไม่มีข้อมูล";
+            })()}
           </div>
         </div>
 

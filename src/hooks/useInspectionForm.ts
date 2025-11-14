@@ -452,6 +452,13 @@ export function useInspectionForm(): UseInspectionFormReturn {
 
 // Helper function - กำหนดผลการตรวจของรายการตรวจ
 function determineItemResult(item: InspectionItem): string {
+  if (
+    item.inspectionItemMaster?.itemNo === 3 &&
+    item.otherConditions?.notUsingHazardous
+  ) {
+    return "ผ่าน";
+  }
+
   if (!item.requirements || item.requirements.length === 0) {
     return "ผ่าน";
   }

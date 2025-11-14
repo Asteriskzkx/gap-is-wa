@@ -12,6 +12,7 @@ interface Props {
   readonly cacheKey?: string;
   readonly accept?: string;
   readonly maxFileSize?: number;
+  readonly multiple?: boolean;
 }
 
 const buildCacheKey = (tableReference: string, cacheKey?: string) => {
@@ -24,6 +25,7 @@ export default function PrimaryUpload({
   cacheKey,
   accept = ".pdf",
   maxFileSize = 10 * 1024 * 1024,
+  multiple = true,
 }: Props) {
   const fuRef = React.useRef<any>(null);
 
@@ -35,8 +37,15 @@ export default function PrimaryUpload({
   const cacheFiles = React.useCallback(
     async (files: File[]) => {
       const key = buildKey();
-      const existingJson = localStorage.getItem(key);
-      const existing = existingJson ? JSON.parse(existingJson) : [];
+      console.info("PrimaryUpload: caching files -> key=", key);
+
+      let existing: any[] = [];
+      if (multiple) {
+        const existingJson = localStorage.getItem(key);
+        existing = existingJson ? JSON.parse(existingJson) : [];
+      } else {
+        existing = [];
+      }
 
       for (const f of files) {
         const dataUrl = await new Promise<string>((res, rej) => {
@@ -61,29 +70,83 @@ export default function PrimaryUpload({
 
       localStorage.setItem(key, JSON.stringify(existing));
     },
-    [buildKey]
+    [buildKey, multiple]
   );
 
   const flush = React.useCallback(
     async (idToUse?: number) => {
       const key = buildKey();
       const cached = localStorage.getItem(key);
-      if (!cached) return;
+      if (!cached) {
+        console.info("PrimaryUpload.flush: no cached files for key", key);
+        return;
+      }
+
+      console.info(
+        "PrimaryUpload.flush: found cached files, uploading -> key=",
+        key,
+        "idToUse=",
+        idToUse ?? idReference
+      );
+
       try {
         const items = JSON.parse(cached) as any[];
-        for (const item of items) {
-          const res = await fetch(item.dataUrl);
-          const blob = await res.blob();
-          const file = new File([blob], item.name, { type: item.type });
 
-          const form = new FormData();
-          form.append("tableReference", tableReference);
-          form.append("idReference", String(idToUse ?? idReference));
-          form.append("file", file, file.name);
+        const files: File[] = await Promise.all(
+          items.map(async (item) => {
+            try {
+              const res = await fetch(item.dataUrl);
+              const blob = await res.blob();
+              return new File([blob], item.name, { type: item.type });
+            } catch (err) {
+              console.error(
+                "PrimaryUpload.flush: error converting dataUrl to blob for",
+                item.name,
+                err
+              );
+              return null as any;
+            }
+          })
+        );
 
-          await fetch("/api/v1/files/upload", { method: "POST", body: form });
+        const validFiles = files.filter(Boolean);
+        if (!validFiles.length) {
+          console.info(
+            "PrimaryUpload.flush: no valid files to upload for key",
+            key
+          );
+          return;
         }
-        localStorage.removeItem(key);
+
+        const form = new FormData();
+        form.append("tableReference", tableReference);
+        form.append("idReference", String(idToUse ?? idReference));
+        for (const f of validFiles) form.append("file", f, f.name);
+
+        console.info(
+          "PrimaryUpload.flush: uploading",
+          validFiles.map((f) => f.name),
+          "for id",
+          idToUse ?? idReference
+        );
+
+        const upl = await fetch("/api/v1/files/upload", {
+          method: "POST",
+          body: form,
+        });
+
+        if (upl.ok) {
+          console.info("PrimaryUpload.flush: upload succeeded for key", key);
+          localStorage.removeItem(key);
+          fuRef.current?.clear();
+          console.info("PrimaryUpload.flush: cleared cache for key", key);
+        } else {
+          const text = await upl.text().catch(() => "");
+          console.error("PrimaryUpload.flush: upload failed", {
+            status: upl.status,
+            body: text,
+          });
+        }
       } catch (err) {
         console.error("PrimaryUpload flush error:", err);
       }
@@ -106,16 +169,60 @@ export default function PrimaryUpload({
       form.append("tableReference", tableReference);
       form.append("idReference", String(idReference));
       for (const f of asFiles) form.append("file", f, f.name);
-      await fetch("/api/v1/files/upload", { method: "POST", body: form });
-      fuRef.current?.clear();
+      const resp = await fetch("/api/v1/files/upload", {
+        method: "POST",
+        body: form,
+      });
+      if (resp.ok) {
+        fuRef.current?.clear();
+      }
       return;
     }
 
     try {
       await cacheFiles(asFiles);
-      fuRef.current?.clear();
     } catch (err) {
       console.error("PrimaryUpload cache error:", err);
+    }
+  };
+
+  const onSelect = async (event: any) => {
+    const asFiles: File[] = Array.isArray(event?.files) ? event.files : [];
+    if (!asFiles.length) return;
+
+    console.info(
+      "PrimaryUpload.onSelect: user selected files",
+      asFiles.map((f) => f.name)
+    );
+
+    if (idReference) {
+      const form = new FormData();
+      form.append("tableReference", tableReference);
+      form.append("idReference", String(idReference));
+      for (const f of asFiles) form.append("file", f, f.name);
+      try {
+        const resp = await fetch("/api/v1/files/upload", {
+          method: "POST",
+          body: form,
+        });
+        if (resp.ok) {
+          console.info("PrimaryUpload.onSelect: immediate upload succeeded");
+          fuRef.current?.clear();
+        } else
+          console.error(
+            "PrimaryUpload.onSelect: immediate upload failed",
+            await resp.text().catch(() => "")
+          );
+      } catch (err) {
+        console.error("PrimaryUpload.onSelect: immediate upload error", err);
+      }
+      return;
+    }
+
+    try {
+      await cacheFiles(asFiles);
+    } catch (err) {
+      console.error("PrimaryUpload onSelect cache error:", err);
     }
   };
 
@@ -138,11 +245,12 @@ export default function PrimaryUpload({
           name="file"
           url={"/api/v1/files/upload"}
           mode="advanced"
-          multiple
+          multiple={multiple}
           accept={accept}
           maxFileSize={maxFileSize}
           customUpload={true}
           uploadHandler={uploadHandler}
+          onSelect={onSelect}
           emptyTemplate={emptyTemplate}
           chooseLabel="เลือกไฟล์"
           cancelLabel="ยกเลิก"
