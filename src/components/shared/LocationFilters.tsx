@@ -41,7 +41,6 @@ export default function LocationFilters({
   const [districts, setDistricts] = useState<any[]>([]);
   const [subDistricts, setSubDistricts] = useState<any[]>([]);
 
-  // build options for PrimaryAutoComplete
   const provinceOptions = provinces.map((p) => ({
     label: p.name_th,
     value: p.id,
@@ -136,43 +135,47 @@ export default function LocationFilters({
             disabled={!districtId}
           />
         </div>
-
-        {/* tabs intentionally removed from first row to let inputs occupy full grid */}
       </div>
 
       {/* Second row: centered search/reset buttons */}
-      <div className="mt-3 flex justify-center space-x-2">
-        <PrimaryButton
-          label="ค้นหา"
-          icon="pi pi-search"
-          onClick={() => onSearch({ provinceId, districtId, subDistrictId })}
-        />
-        <PrimaryButton
-          label="ล้างค่า"
-          icon="pi pi-refresh"
-          color="secondary"
-          onClick={onReset}
-        />
+      <div className="mt-3 grid grid-cols-2 gap-3">
+        <div className="justify-self-end">
+          <PrimaryButton
+            label="ค้นหา"
+            icon="pi pi-search"
+            onClick={() => onSearch({ provinceId, districtId, subDistrictId })}
+          />
+        </div>
+        <div>
+          <PrimaryButton
+            label="ล้างค่า"
+            icon="pi pi-refresh"
+            color="secondary"
+            onClick={onReset}
+          />
+        </div>
       </div>
 
-      {/* Third row: tab buttons (center on small, right on sm+) */}
+      {/* Third row: tab buttons */}
       {!isCommittee && (
-        <div className="mt-3 flex justify-center sm:justify-end">
-          <div className="flex items-center space-x-2">
-            <PrimaryButton
-              label="รอสรุปผล"
-              icon="pi pi-clock"
-              color={currentTab === "pending" ? "success" : "secondary"}
-              onClick={() => onTabChange("pending")}
-            />
-
-            <PrimaryButton
-              label="เสร็จสิ้น"
-              icon="pi pi-check-circle"
-              color={currentTab === "completed" ? "success" : "secondary"}
-              onClick={() => onTabChange("completed")}
-            />
-          </div>
+        // <div className="mt-3 flex justify-center sm:justify-end gap-3">
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          {/* <div className="justify-self-end"> */}
+          <PrimaryButton
+            label="รอสรุปผล"
+            icon="pi pi-clock"
+            color={currentTab === "pending" ? "success" : "secondary"}
+            onClick={() => onTabChange("pending")}
+          />
+          {/* </div> */}
+          {/* <div> */}
+          <PrimaryButton
+            label="เสร็จสิ้น"
+            icon="pi pi-check-circle"
+            color={currentTab === "completed" ? "success" : "secondary"}
+            onClick={() => onTabChange("completed")}
+          />
+          {/* </div> */}
         </div>
       )}
     </div>

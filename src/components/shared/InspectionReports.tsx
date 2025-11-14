@@ -31,8 +31,6 @@ export default function InspectionReports({
     handleTabChange,
     handleViewDetails,
   } = useInspectionReports(defaultTab);
-  // NOTE: we now pass `defaultTab` into the hook so the initial tab is
-  // set before the first render and we don't need a separate effect here.
 
   // Local ids for LocationFilters
   const [selectedProvinceId, setSelectedProvinceId] = React.useState<
@@ -54,6 +52,7 @@ export default function InspectionReports({
         headerAlign: "center" as const,
         bodyAlign: "center" as const,
         body: (row: any) => <span>{row.inspectionNo}</span>,
+        style: { width: "15%" },
       },
       {
         field: "farmer",
@@ -68,6 +67,7 @@ export default function InspectionReports({
               : "ไม่มีข้อมูล"}
           </span>
         ),
+        style: { width: "15%" },
       },
       {
         field: "location",
@@ -87,6 +87,7 @@ export default function InspectionReports({
               .join(" ") || "-"}
           </span>
         ),
+        style: { width: "30%" },
       },
       {
         field: "inspectionDateAndTime",
@@ -103,6 +104,7 @@ export default function InspectionReports({
             })}
           </span>
         ),
+        style: { width: "15%" },
       },
       {
         field: "inspectionResult",
@@ -113,6 +115,7 @@ export default function InspectionReports({
         mobileAlign: "right" as const,
         mobileHideLabel: false,
         body: (row: any) => <StatusBadge result={row.inspectionResult} />,
+        style: { width: "15%" },
       },
       {
         field: "actions",
@@ -141,6 +144,7 @@ export default function InspectionReports({
             />
           </div>
         ),
+        style: { width: "10%" },
       },
     ],
     [handleViewDetails]
