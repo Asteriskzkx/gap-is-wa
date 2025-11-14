@@ -38,6 +38,7 @@ interface Inspection {
   rubberFarmId: number;
   rubberFarm?: {
     villageName: string;
+    subDistrict: string;
     district: string;
     province: string;
     farmer?: {
@@ -62,6 +63,18 @@ const renderFarmerName = (rowData: Inspection) => {
     ? `${rowData.rubberFarm.farmer.namePrefix}${rowData.rubberFarm.farmer.firstName} ${rowData.rubberFarm.farmer.lastName}`
     : "ไม่มีข้อมูล";
   return <span>{farmerName}</span>;
+};
+
+const renderRubberFarmLocation = (rowData: Inspection) => {
+  const location = [
+    rowData.rubberFarm?.villageName,
+    rowData.rubberFarm?.subDistrict,
+    rowData.rubberFarm?.district,
+    rowData.rubberFarm?.province,
+  ]
+    .filter(Boolean)
+    .join(" ");
+  return <span>{location || "ไม่มีข้อมูล"}</span>;
 };
 
 const renderInspectionDate = (rowData: Inspection) => (
@@ -517,6 +530,7 @@ export default function AuditorDashboardPage() {
                 header: "รหัสการตรวจ",
                 headerAlign: "center",
                 bodyAlign: "center",
+                style: { width: "15%" },
               },
               {
                 field: "farmerName",
@@ -524,13 +538,23 @@ export default function AuditorDashboardPage() {
                 headerAlign: "center",
                 bodyAlign: "left",
                 body: renderFarmerName,
+                style: { width: "15%" },
+              },
+              {
+                field: "rubberFarmLocation",
+                header: "สถานที่สวนยาง",
+                headerAlign: "center",
+                bodyAlign: "left",
+                body: renderRubberFarmLocation,
+                style: { width: "30%" },
               },
               {
                 field: "inspectionDateAndTime",
-                header: "วันที่",
+                header: "วันที่ตรวจ",
                 headerAlign: "center",
                 bodyAlign: "center",
                 body: renderInspectionDate,
+                style: { width: "15%" },
               },
               {
                 field: "inspectionResult",
@@ -540,6 +564,7 @@ export default function AuditorDashboardPage() {
                 body: renderInspectionStatus,
                 mobileAlign: "right",
                 mobileHideLabel: false,
+                style: { width: "15%" },
               },
               {
                 field: "action",
@@ -549,6 +574,7 @@ export default function AuditorDashboardPage() {
                 body: renderActionLink,
                 mobileAlign: "right",
                 mobileHideLabel: true,
+                style: { width: "10%" },
               },
             ]}
           />
