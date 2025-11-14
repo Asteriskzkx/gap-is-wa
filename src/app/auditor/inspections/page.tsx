@@ -685,6 +685,7 @@ export default function AuditorInspectionsPage() {
       body: (rowData: Inspection) => rowData.inspectionNo,
       headerAlign: "center" as const,
       bodyAlign: "center" as const,
+      style: { width: "12%" },
     },
     {
       field: "inspectionDateAndTime",
@@ -698,6 +699,7 @@ export default function AuditorInspectionsPage() {
         }),
       headerAlign: "center" as const,
       bodyAlign: "center" as const,
+      style: { width: "10%" },
     },
     {
       field: "inspectionType.typeName",
@@ -707,6 +709,7 @@ export default function AuditorInspectionsPage() {
         rowData.inspectionType?.typeName || "ไม่ระบุ",
       headerAlign: "center" as const,
       bodyAlign: "left" as const,
+      style: { width: "32%" },
     },
     {
       field: "rubberFarm.farmer",
@@ -720,6 +723,7 @@ export default function AuditorInspectionsPage() {
       },
       headerAlign: "center" as const,
       bodyAlign: "left" as const,
+      style: { width: "14%" },
     },
     {
       field: "rubberFarm.province",
@@ -728,6 +732,7 @@ export default function AuditorInspectionsPage() {
       body: (rowData: Inspection) => rowData.rubberFarm?.province || "ไม่ระบุ",
       headerAlign: "center" as const,
       bodyAlign: "left" as const,
+      style: { width: "9%" },
     },
     {
       field: "inspectionStatus",
@@ -740,6 +745,7 @@ export default function AuditorInspectionsPage() {
       bodyAlign: "center" as const,
       mobileAlign: "right" as const,
       mobileHideLabel: false,
+      style: { width: "13%" },
     },
     {
       field: "actions",
@@ -772,6 +778,7 @@ export default function AuditorInspectionsPage() {
       bodyAlign: "center" as const,
       mobileAlign: "right" as const,
       mobileHideLabel: true,
+      style: { width: "10%" },
     },
   ];
 
