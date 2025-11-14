@@ -3,6 +3,7 @@
 import RequirementCard from "@/components/shared/RequirementCard";
 import StatusBadge from "@/components/shared/StatusBadge";
 import { PrimaryButton } from "@/components/ui";
+import PrimaryCheckbox from "@/components/ui/PrimaryCheckbox";
 import { useInspectionDetail } from "@/hooks/useInspectionDetail";
 import {
   CONTAINER,
@@ -96,21 +97,14 @@ function renderAdditionalFields(inspectionItem: any) {
         <div className={FIELD.wrapper}>
           <h3 className={FIELD.title}>ข้อมูลเพิ่มเติม</h3>
           <div className={SPACING.mb4}>
-            <div className={FLEX.itemsCenter}>
-              <input
-                id="no-hazardous-materials"
-                type="checkbox"
-                className={FIELD.checkbox}
-                checked={otherConditions.noHazardousMaterials === "true"}
-                disabled
-              />
-              <label
-                htmlFor="no-hazardous-materials"
-                className={FIELD.checkboxLabel}
-              >
-                ไม่ได้ใช้วัตถุอันตรายทางการเกษตรในการผลิต
-              </label>
-            </div>
+            <PrimaryCheckbox
+              id="no-hazardous-materials"
+              checked={Boolean(otherConditions.notUsingHazardous)}
+              onChange={() => {}}
+              disabled
+              label="ไม่ได้ใช้วัตถุอันตรายทางการเกษตรในการผลิต"
+              className={FIELD.checkbox}
+            />
           </div>
         </div>
       );
@@ -201,6 +195,8 @@ export default function InspectionDetailContent(props: Readonly<Props>) {
             </div>
           </div>
 
+          {renderAdditionalFields(inspectionItem)}
+
           {inspectionItem.requirements &&
           inspectionItem.requirements.length > 0 ? (
             <div className={REQ.spaceY}>
@@ -219,8 +215,6 @@ export default function InspectionDetailContent(props: Readonly<Props>) {
           ) : (
             <p className={TEXT.secondary}>ไม่พบข้อกำหนดสำหรับรายการนี้</p>
           )}
-
-          {renderAdditionalFields(inspectionItem)}
 
           <div className={`${FLEX.justifyCenter} ${SPACING.mt8}`}>
             <PrimaryButton
