@@ -75,6 +75,7 @@ export type NormalizedUser = {
   userId: number;
   email: string;
   role: string;
+  name?: string;
   createdAt: Date;
   updatedAt: Date;
   admin?: AdminInfo;

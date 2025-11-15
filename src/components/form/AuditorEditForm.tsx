@@ -1,8 +1,9 @@
 import { InputText } from "primereact/inputtext";
 import React from "react";
+import { NormalizedUser } from "@/types/UserType";
 
 type Props = {
-  user: { userId: string; name: string; email: string; role: string };
+  user: NormalizedUser;
 };
 
 export default function AuditorEditForm(props: Props) {

@@ -13,7 +13,7 @@ import { useUserDetail } from "@/hooks/useUserDetail";
 
 export default function EditUserPage() {
   const { id } = useParams();
-    const { user, loading, error } = useUserDetail(id as string);
+    const { user, loading, error } = useUserDetail(id ? parseInt(id as string, 10) : 0);
     
   if (loading)
     return (
@@ -24,10 +24,12 @@ export default function EditUserPage() {
 
   if (!user) return <p>User not found</p>;
 
+
   return (
     <AdminLayout>
       <div className="p-6">
         {/* Render UI based on role */}
+        {/* TODO: Add Form into all component and integrate the ui :D */}
         {user.role === "ADMIN" && <AdminEditForm user={user} />}
         {user.role === "FARMER" && <FarmerEditForm user={user}/>}
         {user.role === "AUDITOR" && <AuditorEditForm user={user} />}
