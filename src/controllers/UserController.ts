@@ -176,7 +176,10 @@ export class UserController extends BaseController<UserModel> {
     return UserModel.create(data.email, data.password, data.name, data.role);
   }
 
-  async changeRole(req: NextRequest, params: {userId:string}): Promise<NextResponse> {
+  async changeRole(
+    req: NextRequest,
+    params: { userId: string }
+  ): Promise<NextResponse> {
     try {
       const userId = parseInt(params.userId);
       const data = await req.json();
@@ -192,6 +195,29 @@ export class UserController extends BaseController<UserModel> {
       return NextResponse.json(userJson, { status: 200 });
     } catch (error) {
       return this.handleControllerError(error);
-    } 
+    }
   }
+
+  async getUsersNormalized(req: NextRequest, userId?: number): Promise<NextResponse> {
+    const { authorized, session, error } = await checkAuthorization(req, [
+        "ADMIN",
+        "FARMER",
+        "AUDITOR",
+        "COMMITTEE",
+      ]);
+
+      if (!authorized || !session) {
+        return NextResponse.json(
+          { message: error || "Unauthorized" },
+          { status: 401 }
+        );
+      }
+    try {
+      const data = await this.userService.getUsersNormalizedById(userId);
+      return NextResponse.json(data, { status: 200 });
+    } catch (error) {
+      return this.handleControllerError(error);
+    }
+  }
+
 }
