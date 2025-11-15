@@ -89,10 +89,9 @@ export default function AdminEditForm({ user }: Props) {
         </p>
 
         <form onSubmit={handleSubmit} onReset={handleReset} className="space-y-4">
-          <div className="flex flex-col md:flex-row md:items-center md:space-x-4">
-            <div className="w-full flex flex-col md:flex-row items-center gap-4">
+          <div className="w-full items-center gap-4">
               <label htmlFor="namePrefix" className="w-28">
-                คำนำหน้า
+                คำนำหน้า <span className="text-red-500">*</span>
               </label>
               <Dropdown
                 inputId="namePrefix"
@@ -103,12 +102,15 @@ export default function AdminEditForm({ user }: Props) {
                 optionLabel="name"
                 optionValue="value"
                 className="w-full"
+                placeholder="คำนำหน้า"
               />
             </div>
+          <div className="flex flex-col md:flex-row md:items-center md:space-x-4">
+            
 
-            <div className="w-full flex flex-col md:flex-row items-center gap-4">
+            <div className="w-full items-center gap-4">
               <label htmlFor="firstName" className="w-28">
-                ชื่อ
+                ชื่อ <span className="text-red-500">*</span>
               </label>
               <InputText
                 id="firstName"
@@ -116,12 +118,13 @@ export default function AdminEditForm({ user }: Props) {
                 value={formData.firstName}
                 onChange={handleChange}
                 className="w-full"
+                placeholder="ชื่อ"
               />
             </div>
 
-            <div className="w-full flex flex-col md:flex-row items-center gap-4">
+            <div className="w-full items-center gap-4">
               <label htmlFor="lastName" className="w-28">
-                นามสกุล
+                นามสกุล <span className="text-red-500">*</span>
               </label>
               <InputText
                 id="lastName"
@@ -129,12 +132,15 @@ export default function AdminEditForm({ user }: Props) {
                 value={formData.lastName}
                 onChange={handleChange}
                 className="w-full"
+                placeholder="นามสกุล"
               />
             </div>
 
-            <div className="w-full flex flex-col md:flex-row items-center gap-4">
+            
+          </div>
+          <div className="w-full items-center gap-4">
               <label htmlFor="email" className="w-28">
-                อีเมล
+                อีเมล <span className="text-red-500">*</span>
               </label>
               <InputText
                 id="email"
@@ -142,9 +148,9 @@ export default function AdminEditForm({ user }: Props) {
                 value={formData.email}
                 onChange={handleChange}
                 className="w-full"
+                placeholder="อีเมล"
               />
             </div>
-          </div>
           <div className="flex gap-4 mt-4 inset-0 w-full justify-end">
             <Button
               type="submit"
