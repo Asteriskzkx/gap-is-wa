@@ -1,7 +1,8 @@
 import { NormalizedUser } from "@/types/UserType";
+import { Button } from "primereact/button";
 import { Dropdown } from "primereact/dropdown";
 import { InputText } from "primereact/inputtext";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 type Props = {
   user: NormalizedUser;
@@ -13,7 +14,6 @@ export default function AdminEditForm({ user }: Props) {
     firstName: "",
     lastName: "",
     email: "",
-    password: "",
   });
 
   const namePrefixOptions = [
@@ -22,18 +22,31 @@ export default function AdminEditForm({ user }: Props) {
     { name: "นาง", value: "นาง" },
   ];
 
-  // เมื่อ user เปลี่ยนค่า ให้เซ็ตค่าเริ่มต้นใน form
+  // ค่าฟอร์มเริ่มต้น อ้างอิงจาก props.user (memoized)
+  const initialFormData = useMemo(
+    () => ({
+      namePrefix: user.admin?.namePrefix ?? "",
+      firstName: user.admin?.firstName ?? "",
+      lastName: user.admin?.lastName ?? "",
+      email: user.email ?? "",
+    }),
+    [user]
+  );
+
+  // ตั้งค่าเริ่มต้นเมื่อ user เปลี่ยน
   useEffect(() => {
-    if (user.admin) {
-      setFormData({
-        namePrefix: user.admin.namePrefix ?? "",
-        firstName: user.admin.firstName ?? "",
-        lastName: user.admin.lastName ?? "",
-        email: user.email ?? "",
-        password: "",
-      });
-    }
-  }, [user]);
+    setFormData(initialFormData);
+  }, [initialFormData]);
+
+  const isDirty = useMemo(
+    () => JSON.stringify(formData) !== JSON.stringify(initialFormData),
+    [formData, initialFormData]
+  );
+
+  const handleReset = () => {
+    // รีเซ็ตกลับเป็นค่าเริ่มต้นก่อนแก้ไข
+    setFormData(initialFormData);
+  };
 
   const handleChange = (e: any) => {
     const name = e.target?.name;
@@ -67,9 +80,7 @@ export default function AdminEditForm({ user }: Props) {
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">
-          แก้ไขผู้ดูแลระบบ
-        </h1>
+        <h1 className="text-2xl font-bold text-gray-900">แก้ไขผู้ดูแลระบบ</h1>
       </div>
 
       <div className="bg-white rounded-lg shadow p-6">
@@ -77,7 +88,7 @@ export default function AdminEditForm({ user }: Props) {
           ชื่อ: {user.admin?.firstName} (UserID: {user.userId})
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} onReset={handleReset} className="space-y-4">
           <div className="flex flex-col md:flex-row md:items-center md:space-x-4">
             <div className="w-full flex flex-col md:flex-row items-center gap-4">
               <label htmlFor="namePrefix" className="w-28">
@@ -134,13 +145,24 @@ export default function AdminEditForm({ user }: Props) {
               />
             </div>
           </div>
-
-          <button
-            type="submit"
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
-            บันทึก
-          </button>
+          <div className="flex gap-4 mt-4 inset-0 w-full justify-end">
+            <Button
+              type="submit"
+              label="บันทึก"
+              icon="pi pi-save"
+              className="px-3 py-2"
+              severity="success"
+              disabled={!isDirty}
+            />
+            <Button
+              type="reset"
+              label="รีเซ็ต"
+              icon="pi pi-times"
+              className="px-3 py-2"
+              severity="danger"
+              disabled={!isDirty}
+            />
+          </div>
         </form>
       </div>
     </div>
