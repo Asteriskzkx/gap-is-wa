@@ -1,6 +1,6 @@
-import { BaseRepository } from "./BaseRepository";
 import { BaseMapper } from "@/mappers/BaseMapper";
 import { CertificateModel } from "@/models/CertificateModel";
+import { BaseRepository } from "./BaseRepository";
 
 export class CertificateRepository extends BaseRepository<CertificateModel> {
   constructor(mapper: BaseMapper<any, CertificateModel>) {
@@ -47,6 +47,7 @@ export class CertificateRepository extends BaseRepository<CertificateModel> {
     toDate?: string;
     sortField?: string;
     sortOrder?: "asc" | "desc";
+    multiSortMeta?: Array<{ field: string; order: number }>;
     limit?: number;
     offset?: number;
     activeFlag?: boolean;
@@ -68,12 +69,33 @@ export class CertificateRepository extends BaseRepository<CertificateModel> {
         where.activeFlag = options?.activeFlag;
       }
 
-      const orderBy: any = {};
-      if (options?.sortField) {
-        orderBy[options.sortField] =
-          options.sortOrder === "desc" ? "desc" : "asc";
+      const mapSortFieldToPrisma = (field: string, order: "asc" | "desc") => {
+        const parts = field.split(".");
+        if (parts.length === 1) {
+          return { [field]: order } as any;
+        }
+
+        return parts.reduceRight((acc: any, part: string) => {
+          if (Object.keys(acc).length === 0) {
+            return { [part]: order };
+          }
+          return { [part]: acc };
+        }, {} as any);
+      };
+
+      let orderBy: any = {};
+      if (options?.multiSortMeta && options.multiSortMeta.length > 0) {
+        orderBy = options.multiSortMeta.map((sort) => {
+          const order = sort.order === 1 ? "asc" : "desc";
+          return mapSortFieldToPrisma(sort.field, order);
+        });
+      } else if (options?.sortField) {
+        orderBy = mapSortFieldToPrisma(
+          options.sortField,
+          options.sortOrder === "desc" ? "desc" : "asc"
+        );
       } else {
-        orderBy.createdAt = "desc";
+        orderBy = { createdAt: "desc" };
       }
 
       const limit = options?.limit ?? 10;

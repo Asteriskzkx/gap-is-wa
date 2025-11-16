@@ -1,6 +1,6 @@
-import { BaseService } from "./BaseService";
 import { CertificateModel } from "@/models/CertificateModel";
 import { CertificateRepository } from "@/repositories/CertificateRepository";
+import { BaseService } from "./BaseService";
 
 export class CertificateService extends BaseService<CertificateModel> {
   private certificateRepository: CertificateRepository;
@@ -44,6 +44,7 @@ export class CertificateService extends BaseService<CertificateModel> {
     toDate?: string;
     sortField?: string;
     sortOrder?: "asc" | "desc";
+    multiSortMeta?: Array<{ field: string; order: number }>;
     limit?: number;
     offset?: number;
     activeFlag?: boolean;

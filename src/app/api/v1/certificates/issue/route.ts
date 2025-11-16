@@ -1,14 +1,19 @@
-import { NextRequest, NextResponse } from "next/server";
+import { checkAuthorization } from "@/lib/session";
 import { certificateController } from "@/utils/dependencyInjections";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
-  try {
-    return await certificateController.createCertificate(req);
-  } catch (err: any) {
-    console.error("/api/v1/certificates/issue error", err);
+  const { authorized, error } = await checkAuthorization(req, [
+    "COMMITTEE",
+    "ADMIN",
+  ]);
+
+  if (!authorized) {
     return NextResponse.json(
-      { message: err?.message || "Server error" },
-      { status: 500 }
+      { message: error || "Unauthorized" },
+      { status: 401 }
     );
   }
+
+  return certificateController.createCertificate(req);
 }

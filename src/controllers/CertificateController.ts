@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
-import { BaseController } from "./BaseController";
+import { checkAuthorization } from "@/lib/session";
 import { CertificateModel } from "@/models/CertificateModel";
 import { CertificateService } from "@/services/CertificateService";
-import { checkAuthorization } from "@/lib/session";
+import { NextRequest, NextResponse } from "next/server";
+import { BaseController } from "./BaseController";
 
 export class CertificateController extends BaseController<CertificateModel> {
   private certificateService: CertificateService;
@@ -80,6 +80,7 @@ export class CertificateController extends BaseController<CertificateModel> {
       const sortField = params.get("sortField") || undefined;
       const sortOrder =
         (params.get("sortOrder") as "asc" | "desc") || undefined;
+      const multiSortMeta = params.get("multiSortMeta") || undefined;
       const limit = params.get("limit")
         ? Number(params.get("limit"))
         : undefined;
@@ -98,6 +99,7 @@ export class CertificateController extends BaseController<CertificateModel> {
         toDate,
         sortField,
         sortOrder,
+        multiSortMeta: multiSortMeta ? JSON.parse(multiSortMeta) : undefined,
         limit: usedLimit,
         offset: usedOffset,
         activeFlag,
