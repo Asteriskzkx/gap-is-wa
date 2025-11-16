@@ -22,10 +22,7 @@ export default function AdminUserManagementPage() {
   const [roleFilter, setRoleFilter] = React.useState<string | null>(null);
   const [deleteVisible, setDeleteVisible] = React.useState(false);
   const [selectedId, setSelectedId] = React.useState<number | null>(null);
-
-
-
-  const router = useRouter();
+  const [visibleAddUserDialog, setVisibleAddUserDialog] = React.useState(false);
 
   type User = {
     userId: number;
@@ -42,6 +39,30 @@ export default function AdminUserManagementPage() {
     COMMITTEE = "COMMITTEE",
     ADMIN = "ADMIN",
   }
+
+  const router = useRouter();
+  const toast = useRef<Toast | null>(null);
+
+  const showSuccess = () => {
+    if (!toast.current) return; // guard for initial render/unmount
+    toast.current.show({
+      severity: "success",
+      summary: "Success delete user",
+      detail: "ลบผู้ใช้สำเร็จ",
+      life: 3000,
+    });
+  };
+
+  const showError = () => {
+    if (!toast.current) return; // guard for initial render/unmount
+    toast.current.show({
+      severity: "error",
+      summary: "Error delete user",
+      detail: "ลบผู้ใช้ไม่สำเร็จ",
+      life: 3000,
+    });
+  }
+
 
   const fetchUsers = React.useCallback(async () => {
     setLoading(true);
@@ -70,19 +91,19 @@ export default function AdminUserManagementPage() {
     });
   };
 
-  const handleRoleChange = async (userId: number, newRole: string) => {
-    try {
-      const res = await fetch(`/api/v1/users/${userId}/role`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role: newRole }),
-      });
-      if (!res.ok) throw new Error("Failed to update user role");
-      await fetchUsers(); // refresh หลังอัปเดต role
-    } catch (error) {
-      console.error("Error updating user role:", error);
-    }
-  };
+  // const handleRoleChange = async (userId: number, newRole: string) => {
+  //   try {
+  //     const res = await fetch(`/api/v1/users/${userId}/role`, {
+  //       method: "PUT",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ role: newRole }),
+  //     });
+  //     if (!res.ok) throw new Error("Failed to update user role");
+  //     await fetchUsers(); // refresh หลังอัปเดต role
+  //   } catch (error) {
+  //     console.error("Error updating user role:", error);
+  //   }
+  // };
 
   const roleOptions = [
     ...Object.values(UserRole).map((role) => ({
@@ -173,33 +194,13 @@ export default function AdminUserManagementPage() {
         <Button
           label="เพิ่มผู้ใช้"
           icon="pi pi-plus"
-          onClick={fetchUsers}
+          onClick={() => setVisibleAddUserDialog(true)}
           className="w-full p-button-sm px-4 text-nowrap p-button-success"
         />
       </div>
     </div>
   );
-  const toast = useRef<Toast | null>(null);
-
-   const showSuccess = () => {
-    if (!toast.current) return; // guard for initial render/unmount
-    toast.current.show({
-      severity: "success",
-      summary: "Success delete user",
-      detail: "ลบผู้ใช้สำเร็จ",
-      life: 3000,
-    });
-  };
-
-  const showError = () => {
-    if (!toast.current) return; // guard for initial render/unmount
-    toast.current.show({
-      severity: "error",
-      summary: "Error delete user",
-      detail: "ลบผู้ใช้ไม่สำเร็จ",
-      life: 3000,
-    });
-  }
+  
 
 
   return (
@@ -316,6 +317,19 @@ export default function AdminUserManagementPage() {
                   }}
                 />
               </div>
+            </Dialog>
+
+            <Dialog
+              header="เพิ่มผู้ใช้ใหม่"
+              visible={visibleAddUserDialog}
+              style={{ width: "40rem" }}
+              onHide={() => setVisibleAddUserDialog(false)}
+            >
+              {/* AddUserForm component */}
+              <div className="w-full h-96 flex items-center justify-center text-gray-500">
+                กำลังพัฒนาฟีเจอร์นี้... สำหรับ 4 User 
+              </div>
+
             </Dialog>
           </div>
         </div>
