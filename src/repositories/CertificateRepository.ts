@@ -70,9 +70,10 @@ export class CertificateRepository extends BaseRepository<CertificateModel> {
       }
 
       const mapSortFieldToPrisma = (field: string, order: "asc" | "desc") => {
-        const parts = field.split(".");
+        const cleanField = field.replaceAll("?", "");
+        const parts = cleanField.split(".");
         if (parts.length === 1) {
-          return { [field]: order } as any;
+          return { [parts[0]]: order } as any;
         }
 
         return parts.reduceRight((acc: any, part: string) => {

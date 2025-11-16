@@ -9,6 +9,9 @@ export class CertificateModel extends BaseModel {
   activeFlag: boolean;
   version?: number;
 
+  // Relations
+  inspection?: any;
+
   constructor(
     certificateId: number,
     inspectionId: number,
@@ -113,6 +116,7 @@ export class CertificateModel extends BaseModel {
       version: this.version,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
+      inspection: this.inspection || null,
     };
   }
 }
