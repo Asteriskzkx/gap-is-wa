@@ -38,4 +38,21 @@ export class CertificateService extends BaseService<CertificateModel> {
       throw error;
     }
   }
+
+  async getAlreadyIssued(options?: {
+    fromDate?: string;
+    toDate?: string;
+    sortField?: string;
+    sortOrder?: "asc" | "desc";
+    limit?: number;
+    offset?: number;
+    activeFlag?: boolean;
+  }): Promise<{ data: CertificateModel[]; total: number }> {
+    try {
+      return await this.certificateRepository.findAllWithPagination(options);
+    } catch (error) {
+      this.handleServiceError(error);
+      throw error;
+    }
+  }
 }

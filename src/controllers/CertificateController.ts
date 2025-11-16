@@ -57,6 +57,68 @@ export class CertificateController extends BaseController<CertificateModel> {
     }
   }
 
+  // GET /api/v1/certificates/already-issue
+  async getAlreadyIssued(req: NextRequest): Promise<NextResponse> {
+    try {
+      const { authorized, error } = await checkAuthorization(req, [
+        "COMMITTEE",
+        "ADMIN",
+      ]);
+
+      if (!authorized) {
+        return NextResponse.json(
+          { message: error || "Unauthorized" },
+          { status: 401 }
+        );
+      }
+
+      const url = new URL(req.url);
+      const params = url.searchParams;
+
+      const fromDate = params.get("fromDate") || undefined;
+      const toDate = params.get("toDate") || undefined;
+      const sortField = params.get("sortField") || undefined;
+      const sortOrder =
+        (params.get("sortOrder") as "asc" | "desc") || undefined;
+      const limit = params.get("limit")
+        ? Number(params.get("limit"))
+        : undefined;
+      const offset = params.get("offset")
+        ? Number(params.get("offset"))
+        : undefined;
+      const activeFlag = params.has("activeFlag")
+        ? params.get("activeFlag") === "true"
+        : undefined;
+
+      const usedLimit = limit ?? 10;
+      const usedOffset = offset ?? 0;
+
+      const result = await this.certificateService.getAlreadyIssued({
+        fromDate,
+        toDate,
+        sortField,
+        sortOrder,
+        limit: usedLimit,
+        offset: usedOffset,
+        activeFlag,
+      });
+
+      return NextResponse.json(
+        {
+          results: result.data,
+          paginator: {
+            limit: usedLimit,
+            offset: usedOffset,
+            total: result.total,
+          },
+        },
+        { status: 200 }
+      );
+    } catch (error: any) {
+      return this.handleControllerError(error);
+    }
+  }
+
   protected async createModel(data: any): Promise<CertificateModel> {
     return CertificateModel.createCertificate(
       Number(data.inspectionId),

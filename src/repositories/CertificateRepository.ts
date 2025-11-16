@@ -42,6 +42,69 @@ export class CertificateRepository extends BaseRepository<CertificateModel> {
     }
   }
 
+  async findAllWithPagination(options?: {
+    fromDate?: string;
+    toDate?: string;
+    sortField?: string;
+    sortOrder?: "asc" | "desc";
+    limit?: number;
+    offset?: number;
+    activeFlag?: boolean;
+  }): Promise<{ data: CertificateModel[]; total: number }> {
+    try {
+      const where: any = {};
+
+      if (options?.fromDate || options?.toDate) {
+        where.effectiveDate = {} as any;
+        if (options?.fromDate) {
+          where.effectiveDate.gte = new Date(options.fromDate);
+        }
+        if (options?.toDate) {
+          where.effectiveDate.lte = new Date(options.toDate);
+        }
+      }
+
+      if (typeof options?.activeFlag === "boolean") {
+        where.activeFlag = options?.activeFlag;
+      }
+
+      const orderBy: any = {};
+      if (options?.sortField) {
+        orderBy[options.sortField] =
+          options.sortOrder === "desc" ? "desc" : "asc";
+      } else {
+        orderBy.createdAt = "desc";
+      }
+
+      const limit = options?.limit ?? 10;
+      const offset = options?.offset ?? 0;
+
+      const [items, total] = await Promise.all([
+        this.prisma.certificate.findMany({
+          where,
+          orderBy,
+          skip: offset,
+          take: limit,
+          include: {
+            inspection: {
+              include: {
+                rubberFarm: true,
+                auditorChief: true,
+              },
+            },
+            committeeCertificates: true,
+          },
+        }),
+        this.prisma.certificate.count({ where }),
+      ]);
+
+      return { data: items.map((c) => this.mapper.toDomain(c)), total };
+    } catch (error) {
+      console.error("Error finding certificates with pagination:", error);
+      return { data: [], total: 0 };
+    }
+  }
+
   async update(
     id: number,
     data: Partial<CertificateModel>
