@@ -1,17 +1,20 @@
 "use client";
 
-// Link not needed in this file (cards are separate components)
+// Layout
 import CommitteeLayout from "@/components/layout/CommitteeLayout";
 
-// Icons
+// Components
 import CommitteeActionCard from "@/components/committee/CommitteeActionCard";
 import CommitteeStatusCard from "@/components/committee/CommitteeStatusCard";
+
+// Icons
 import {
   AssignmentIcon,
   CancelIcon,
   CheckCircleIcon,
   EditIcon,
   HomeIcon,
+  StacksIcon,
   TextClipboardIcon,
 } from "@/components/icons";
 
@@ -27,6 +30,11 @@ export default function CommitteeDashboardPage() {
       title: "พิจารณาผลการตรวจประเมิน",
       href: "/committee/assessments",
       icon: <TextClipboardIcon className="h-6 w-6" />,
+    },
+    {
+      title: "ใบรับรองแหล่งผลิตจีเอพีในระบบ",
+      href: "/committee/certifications/list",
+      icon: <StacksIcon className="h-6 w-6" />,
     },
     {
       title: "ออกใบรับรองแหล่งผลิตจีเอพี",
@@ -66,10 +74,13 @@ export default function CommitteeDashboardPage() {
                 description =
                   "พิจารณาผลการตรวจประเมินสวนยางพาราจากผู้ตรวจประเมิน";
               } else if (index === 1) {
+                colorClass = "bg-amber-100 text-amber-600";
+                description = "ใบรับรองแหล่งผลิตยางพาราที่อยู่ในระบบทั้งหมด";
+              } else if (index === 2) {
                 colorClass = "bg-emerald-100 text-emerald-600";
                 description =
                   "ออกใบรับรองแหล่งผลิตยางพาราที่ผ่านการตรวจประเมิน";
-              } else if (index === 2) {
+              } else if (index === 3) {
                 colorClass = "bg-red-100 text-red-600";
                 description = "ยกเลิกใบรับรองแหล่งผลิต";
               }
@@ -95,7 +106,7 @@ export default function CommitteeDashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <CommitteeStatusCard
               title="รายการที่รอการพิจารณา"
-              count={12}
+              count={0}
               icon={
                 <AssignmentIcon className="h-6 w-6 text-indigo-500 mr-3 mt-0.5" />
               }
@@ -109,7 +120,7 @@ export default function CommitteeDashboardPage() {
 
             <CommitteeStatusCard
               title="ใบรับรองที่ออกแล้ว"
-              count={85}
+              count={0}
               icon={
                 <CheckCircleIcon className="h-6 w-6 text-green-500 mr-3 mt-0.5" />
               }
@@ -123,7 +134,7 @@ export default function CommitteeDashboardPage() {
 
             <CommitteeStatusCard
               title="ใบรับรองที่ถูกยกเลิก"
-              count={5}
+              count={0}
               icon={<CancelIcon className="h-6 w-6 text-red-500 mr-3 mt-0.5" />}
               bgColor="bg-red-50"
               borderColor="border-red-100"

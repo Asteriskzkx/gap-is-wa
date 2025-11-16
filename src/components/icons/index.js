@@ -22,6 +22,7 @@ export { default as PlusIcon } from "./PlusIcon";
 export { default as RefreshIcon } from "./RefreshIcon";
 export { default as SearchIcon } from "./SearchIcon";
 export { default as SettingsIcon } from "./SettingsIcon";
+export { default as StacksIcon } from "./StacksIcon";
 export { default as TestIcon } from "./TestIcon";
 export { default as TextClipboardIcon } from "./TextClipboardIcon";
 export { default as TrashIcon } from "./TrashIcon";

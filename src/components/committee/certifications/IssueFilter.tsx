@@ -37,7 +37,7 @@ export default function IssueFilter({ from, to, onSearch }: Props) {
               htmlFor={startId}
               className="block text-sm text-gray-600 mb-1"
             >
-              จาก (ตั้งแต่)
+              ตั้งแต่
             </label>
             <PrimaryCalendar
               id={startId}
@@ -51,7 +51,7 @@ export default function IssueFilter({ from, to, onSearch }: Props) {
         <div className="w-full sm:w-full">
           <div>
             <label htmlFor={endId} className="block text-sm text-gray-600 mb-1">
-              ถึง (วันที่)
+              ถึง
             </label>
             <PrimaryCalendar
               id={endId}

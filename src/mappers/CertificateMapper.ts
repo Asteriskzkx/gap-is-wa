@@ -3,7 +3,7 @@ import { CertificateModel } from "@/models/CertificateModel";
 
 export class CertificateMapper implements BaseMapper<any, CertificateModel> {
   toDomain(prismaEntity: any): CertificateModel {
-    return new CertificateModel(
+    const model = new CertificateModel(
       prismaEntity.certificateId,
       prismaEntity.inspectionId,
       new Date(prismaEntity.effectiveDate),
@@ -16,6 +16,12 @@ export class CertificateMapper implements BaseMapper<any, CertificateModel> {
         version: prismaEntity.version,
       }
     );
+
+    if (prismaEntity.inspection) {
+      model.inspection = prismaEntity.inspection;
+    }
+
+    return model;
   }
 
   toPrisma(domainEntity: CertificateModel): any {

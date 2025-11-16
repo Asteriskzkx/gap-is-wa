@@ -25,8 +25,10 @@ import {
   LoadingIndicator,
   StatusCard,
 } from "@/components/auditor";
-import { getInspectionSummaryRoute } from "@/lib/routeHelpers";
 import PrimaryDataTable from "@/components/ui/PrimaryDataTable";
+
+// Routes
+import { getInspectionSummaryRoute } from "@/lib/routeHelpers";
 
 interface Inspection {
   inspectionId: number;

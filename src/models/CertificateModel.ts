@@ -9,6 +9,9 @@ export class CertificateModel extends BaseModel {
   activeFlag: boolean;
   version?: number;
 
+  // Relations
+  inspection?: any;
+
   constructor(
     certificateId: number,
     inspectionId: number,
@@ -34,8 +37,6 @@ export class CertificateModel extends BaseModel {
     this.version = meta?.version;
   }
 
-  // Create a certificate with sensible defaults: effectiveDate defaults to now,
-  // expiryDate defaults to effectiveDate + 2 years (max allowed).
   static createCertificate(
     inspectionId: number,
     effectiveDate?: Date | string,
@@ -87,7 +88,6 @@ export class CertificateModel extends BaseModel {
       return false;
     }
 
-    // expiryDate must be >= effectiveDate and <= effectiveDate + 2 years
     const eff = this.effectiveDate;
     const exp = this.expiryDate;
     if (exp < eff) return false;
@@ -113,6 +113,7 @@ export class CertificateModel extends BaseModel {
       version: this.version,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
+      inspection: this.inspection || null,
     };
   }
 }

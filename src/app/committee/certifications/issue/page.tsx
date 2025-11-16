@@ -61,6 +61,8 @@ export default function Page() {
       {
         field: "rubberFarm.villageName",
         header: "สถานที่",
+        headerAlign: "center" as const,
+        bodyAlign: "left" as const,
         body: (r: any) =>
           [
             r.rubberFarm?.villageName,
@@ -75,6 +77,8 @@ export default function Page() {
       {
         field: "rubberFarm.farmer.firstName",
         header: "เกษตรกร",
+        headerAlign: "center" as const,
+        bodyAlign: "left" as const,
         body: (r: any) =>
           (() => {
             const prefix = r.rubberFarm?.farmer?.namePrefix || "";
@@ -88,6 +92,8 @@ export default function Page() {
       {
         field: "auditorChief.firstName",
         header: "หัวหน้าผู้ตรวจประเมิน",
+        headerAlign: "center" as const,
+        bodyAlign: "left" as const,
         body: (r: any) => {
           const prefix = r.auditorChief?.namePrefix || "";
           const first = r.auditorChief?.firstName || "";

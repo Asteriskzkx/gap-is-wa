@@ -2,7 +2,7 @@ import { checkAuthorization } from "@/lib/session";
 import { certificateController } from "@/utils/dependencyInjections";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req: NextRequest) {
+export async function GET(req: NextRequest) {
   const { authorized, error } = await checkAuthorization(req, [
     "COMMITTEE",
     "ADMIN",
@@ -15,5 +15,5 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  return certificateController.createCertificate(req);
+  return certificateController.getAlreadyIssued(req);
 }
