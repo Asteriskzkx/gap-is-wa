@@ -284,24 +284,22 @@ export default function AdminUserManagementPage() {
               style={{ width: "25rem" }}
               onHide={() => setDeleteVisible(false)}
             >
-              <p className="m-0">ต้องการลบผู้ใช้ ID: {selectedId} ใช่ไหมคะ?</p>
+              <p className="m-0">ต้องการลบผู้ใช้ชื่อ : <span className="text-red font-bold">{users.find(u => u.userId === selectedId)?.name ?? "-"}</span> ใช่ไหม?</p>
 
               <div className="flex justify-end gap-3 mt-4">
                 <Button
                   label="ยกเลิก"
                   icon="pi pi-times"
                   severity="secondary"
-                  className="m-2"
+                  className="p-2 flex-1"
                   onClick={() => setDeleteVisible(false)}
-                  rounded
                 />
 
                 <Button
                   label="ลบ"
                   icon="pi pi-trash"
                   severity="danger"
-                  rounded
-                  className="m-2"
+                  className="p-2 flex-1"
                   onClick={async () => {
                     try {
                       await fetch(`/api/v1/users/${selectedId}`, {
