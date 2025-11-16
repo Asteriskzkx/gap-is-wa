@@ -9,14 +9,22 @@ import { Dropdown } from "primereact/dropdown";
 import { InputText } from "primereact/inputtext";
 import { Tag } from "primereact/tag";
 import { Menu } from "primereact/menu";
+import { Toast } from "primereact/toast";
 import React, { useEffect, useRef } from "react";
+import { Button } from "primereact/button";
+import { Dialog } from "primereact/dialog";
 
 export default function AdminUserManagementPage() {
   const [users, setUsers] = React.useState<User[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<Error | null>(null);
   const [globalFilter, setGlobalFilter] = React.useState<string>("");
-  const [roleFilter, setRoleFilter] = React.useState<string | null>(null); // added
+  const [roleFilter, setRoleFilter] = React.useState<string | null>(null);
+  const [deleteVisible, setDeleteVisible] = React.useState(false);
+  const [selectedId, setSelectedId] = React.useState<number | null>(null);
+
+
+
   const router = useRouter();
 
   type User = {
@@ -35,21 +43,22 @@ export default function AdminUserManagementPage() {
     ADMIN = "ADMIN",
   }
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const res = await fetch("/api/v1/users");
-        const data = await res.json();
-        console.log("Fetched users:", data);
-        setUsers(data);
-      } catch (err) {
-        setError(err as Error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUsers();
+  const fetchUsers = React.useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/v1/users", { cache: "no-store" });
+      const data = await res.json();
+      setUsers(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setError(err as Error);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   const dateTemplate = (rowData: User) => {
     if (!rowData.createdAt) return "";
@@ -65,27 +74,15 @@ export default function AdminUserManagementPage() {
     try {
       const res = await fetch(`/api/v1/users/${userId}/role`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ role: newRole }),
       });
-
-      if (!res.ok) {
-        throw new Error("Failed to update user role");
-      }
-      // Update local state after success
-      setUsers((prevUsers: User[]) =>
-        prevUsers.map((user) =>
-          user.userId === userId ? { ...user, role: newRole } : user
-        )
-      );
+      if (!res.ok) throw new Error("Failed to update user role");
+      await fetchUsers(); // refresh หลังอัปเดต role
     } catch (error) {
       console.error("Error updating user role:", error);
     }
   };
-
-  // TODO: Working on this part to implement role tag instead of dropdown
 
   const roleOptions = [
     ...Object.values(UserRole).map((role) => ({
@@ -113,25 +110,6 @@ export default function AdminUserManagementPage() {
     <Tag severity={getRoleSeverity(rowData.role)} value={rowData.role}></Tag>
   );
 
-  // const roleTemplate = (rowData: User) => (
-  //   <Dropdown
-  //     value={users.find((user) => user.userId === rowData.userId)?.role}
-  //     options={["ADMIN", "FARMER", "AUDITOR", "COMMITTEE"]}
-  //     onChange={(e) => handleRoleChange(rowData.userId, e.value)}
-  //     placeholder="Select a Role"
-  //     filter
-  //   ></Dropdown>
-  // );
-    // <Dropdown
-    
-    //   value={users.find((user) => user.userId === rowData.userId)?.role}
-    //   options={["ADMIN", "FARMER", "AUDITOR", "COMMITTEE"]}
-    //   onChange={(e) => handleRoleChange(rowData.userId, e.value)}
-    //   placeholder="Select a Role"
-    //   filter
-    // ></Dropdown>
-  // );
-  
   const MoreVertMenu = ({ rowData }: { rowData: User }) => {
     const rowMenuRef = React.useRef<Menu | null>(null);
 
@@ -145,7 +123,10 @@ export default function AdminUserManagementPage() {
       {
         label: "Delete",
         icon: "pi pi-trash",
-        command: () => console.log("Delete clicked", rowData.userId),
+        command: () => {
+          setSelectedId(rowData.userId);
+          setDeleteVisible(true);
+        },
       },
     ];
 
@@ -167,10 +148,8 @@ export default function AdminUserManagementPage() {
     );
   };
 
-
   const tableHeader = (
-    <div className="flex items-center justify-between gap-2">
-      <i className="pi pi-search" />
+    <div className="flex items-center flex-col md:flex-row justify-between gap-2">
       <InputText
         value={globalFilter}
         onChange={(e) => setGlobalFilter((e.target as HTMLInputElement).value)}
@@ -184,11 +163,48 @@ export default function AdminUserManagementPage() {
         placeholder="Filter by role"
         showClear
       ></Dropdown>
+      <div className="flex gap-2 w-auto h-10">
+        <Button
+          label="รีเฟรช"
+          icon="pi pi-refresh"
+          onClick={fetchUsers}
+          className="w-full hover:bg-gray-200 p-button-sm px-4 text-nowrap "
+        />
+        <Button
+          label="เพิ่มผู้ใช้"
+          icon="pi pi-plus"
+          onClick={fetchUsers}
+          className="w-full p-button-sm px-4 text-nowrap p-button-success"
+        />
+      </div>
     </div>
   );
+  const toast = useRef<Toast | null>(null);
+
+   const showSuccess = () => {
+    if (!toast.current) return; // guard for initial render/unmount
+    toast.current.show({
+      severity: "success",
+      summary: "Success delete user",
+      detail: "ลบผู้ใช้สำเร็จ",
+      life: 3000,
+    });
+  };
+
+  const showError = () => {
+    if (!toast.current) return; // guard for initial render/unmount
+    toast.current.show({
+      severity: "error",
+      summary: "Error delete user",
+      detail: "ลบผู้ใช้ไม่สำเร็จ",
+      life: 3000,
+    });
+  }
+
 
   return (
     <>
+    <Toast ref={toast} />
       <AdminLayout>
         <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
           {/* Page Title */}
@@ -262,6 +278,47 @@ export default function AdminUserManagementPage() {
                 header=""
               />
             </DataTable>
+            <Dialog
+              header="ยืนยันการลบ"
+              visible={deleteVisible}
+              style={{ width: "25rem" }}
+              onHide={() => setDeleteVisible(false)}
+            >
+              <p className="m-0">ต้องการลบผู้ใช้ ID: {selectedId} ใช่ไหมคะ?</p>
+
+              <div className="flex justify-end gap-3 mt-4">
+                <Button
+                  label="ยกเลิก"
+                  icon="pi pi-times"
+                  severity="secondary"
+                  className="m-2"
+                  onClick={() => setDeleteVisible(false)}
+                  rounded
+                />
+
+                <Button
+                  label="ลบ"
+                  icon="pi pi-trash"
+                  severity="danger"
+                  rounded
+                  className="m-2"
+                  onClick={async () => {
+                    try {
+                      await fetch(`/api/v1/users/${selectedId}`, {
+                        method: "DELETE",
+                      });
+                      setDeleteVisible(false);
+                      await fetchUsers(); 
+                      showSuccess();
+                      
+                    } catch (error) {
+                      console.error("Delete failed:", error);
+                      showError();
+                    }
+                  }}
+                />
+              </div>
+            </Dialog>
           </div>
         </div>
       </AdminLayout>
