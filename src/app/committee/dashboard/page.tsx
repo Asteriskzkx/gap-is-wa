@@ -14,6 +14,7 @@ import {
   CheckCircleIcon,
   EditIcon,
   HomeIcon,
+  StacksIcon,
   TextClipboardIcon,
 } from "@/components/icons";
 
@@ -29,6 +30,11 @@ export default function CommitteeDashboardPage() {
       title: "พิจารณาผลการตรวจประเมิน",
       href: "/committee/assessments",
       icon: <TextClipboardIcon className="h-6 w-6" />,
+    },
+    {
+      title: "ใบรับรองแหล่งผลิตจีเอพีในระบบ",
+      href: "/committee/certifications/list",
+      icon: <StacksIcon className="h-6 w-6" />,
     },
     {
       title: "ออกใบรับรองแหล่งผลิตจีเอพี",
@@ -68,10 +74,13 @@ export default function CommitteeDashboardPage() {
                 description =
                   "พิจารณาผลการตรวจประเมินสวนยางพาราจากผู้ตรวจประเมิน";
               } else if (index === 1) {
+                colorClass = "bg-amber-100 text-amber-600";
+                description = "ใบรับรองแหล่งผลิตยางพาราที่อยู่ในระบบทั้งหมด";
+              } else if (index === 2) {
                 colorClass = "bg-emerald-100 text-emerald-600";
                 description =
                   "ออกใบรับรองแหล่งผลิตยางพาราที่ผ่านการตรวจประเมิน";
-              } else if (index === 2) {
+              } else if (index === 3) {
                 colorClass = "bg-red-100 text-red-600";
                 description = "ยกเลิกใบรับรองแหล่งผลิต";
               }

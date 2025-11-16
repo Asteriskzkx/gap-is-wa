@@ -12,6 +12,7 @@ import {
   CancelIcon,
   EditIcon,
   HomeIcon,
+  StacksIcon,
   TextClipboardIcon,
 } from "@/components/icons";
 
@@ -49,6 +50,11 @@ export default function CommitteeLayout({ children }: CommitteeLayoutProps) {
       title: "พิจารณาผลการตรวจประเมิน",
       href: "/committee/assessments",
       icon: <TextClipboardIcon className="h-6 w-6" />,
+    },
+    {
+      title: "ใบรับรองแหล่งผลิตจีเอพีในระบบ",
+      href: "/committee/certifications/list",
+      icon: <StacksIcon className="h-6 w-6" />,
     },
     {
       title: "ออกใบรับรองแหล่งผลิตจีเอพี",
