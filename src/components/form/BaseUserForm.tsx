@@ -121,6 +121,7 @@ export default function BaseUserForm({
             optionValue="value"
             className="w-full"
             placeholder="คำนำหน้า"
+            required
           />
         </div>
 
@@ -136,6 +137,8 @@ export default function BaseUserForm({
               onChange={handleChange}
               className="w-full"
               placeholder="ชื่อ"
+              maxLength={100}
+              required
             />
           </div>
 
@@ -150,6 +153,8 @@ export default function BaseUserForm({
               onChange={handleChange}
               className="w-full"
               placeholder="นามสกุล"
+              maxLength={100}
+              required
             />
           </div>
         </div>
@@ -165,6 +170,8 @@ export default function BaseUserForm({
             onChange={handleChange}
             className="w-full"
             placeholder="อีเมล"
+            maxLength={100}
+            required
           />
         </div>
 

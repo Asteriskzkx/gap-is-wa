@@ -220,11 +220,6 @@ export default function AdminUserManagementPage() {
 
           {/* Content Area */}
           <div className="bg-white rounded-lg shadow p-6">
-            <p className="text-gray-700">
-              ที่นี่คุณสามารถจัดการข้อมูลผู้ใช้ในระบบได้อย่างมีประสิทธิภาพ เช่น
-              การเพิ่มผู้ใช้ใหม่ การลบผู้ใช้ที่ไม่ใช้งาน
-              หรือการแก้ไขข้อมูลผู้ใช้ที่มีอยู่
-            </p>
             <DataTable
               value={users}
               header={tableHeader}
