@@ -1,13 +1,16 @@
 import { useState, useEffect } from "react";
 import { NormalizedUser } from "@/types/UserType";
 
-export function useUserDetail(userId: number) {
+export function useUserDetail(userId: number | null) {
   const [user, setUser] = useState<NormalizedUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
 
     const controller = new AbortController();
 
@@ -21,7 +24,8 @@ export function useUserDetail(userId: number) {
         const data: NormalizedUser[] = await res.json();
         setUser(data[0] ?? null); // เอา element แรกมาใช้
       } catch (err: any) {
-        setError(err?.message ?? "Unknown error");
+        if (err.name === "AbortError") return; // ❗ IGNORE abort
+        setError(err?.message ?? "Unknown error"); 
       } finally {
         setLoading(false);
       }
