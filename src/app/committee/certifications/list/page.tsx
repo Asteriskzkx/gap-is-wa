@@ -29,6 +29,7 @@ export default function Page() {
       {
         field: "certificateId",
         header: "รหัสใบรับรอง",
+        sortable: true,
         headerAlign: "center" as const,
         bodyAlign: "center" as const,
         style: { width: "12%" },
@@ -36,14 +37,33 @@ export default function Page() {
       {
         field: "inspection?.inspectionNo",
         header: "รหัสการตรวจ",
+        sortable: true,
         headerAlign: "center" as const,
         bodyAlign: "center" as const,
         body: (r: any) => r.inspection?.inspectionNo || "-",
-        style: { width: "14%" },
+        style: { width: "12%" },
+      },
+      {
+        field: "inspection?.inspectionDateAndTime",
+        header: "วันที่ตรวจ",
+        sortable: true,
+        headerAlign: "center" as const,
+        bodyAlign: "center" as const,
+        body: (r: any) =>
+          new Date(r.inspection?.inspectionDateAndTime).toLocaleString(
+            "th-TH",
+            {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            }
+          ),
+        style: { width: "15%" },
       },
       {
         field: "inspection?.rubberFarm?.villageName",
         header: "สถานที่",
+        sortable: true,
         headerAlign: "center" as const,
         bodyAlign: "left" as const,
         body: (r: any) =>
@@ -55,11 +75,12 @@ export default function Page() {
           ]
             .filter(Boolean)
             .join(" ") || "-",
-        style: { width: "34%" },
+        style: { width: "31%" },
       },
       {
         field: "effectiveDate",
         header: "วันที่มีผล",
+        sortable: true,
         headerAlign: "center" as const,
         bodyAlign: "center" as const,
         body: (r: any) =>
@@ -70,11 +91,12 @@ export default function Page() {
                 day: "numeric",
               })
             : "-",
-        style: { width: "16%" },
+        style: { width: "15%" },
       },
       {
         field: "expiryDate",
         header: "วันที่หมดอายุ",
+        sortable: true,
         headerAlign: "center" as const,
         bodyAlign: "center" as const,
         body: (r: any) =>
@@ -85,7 +107,7 @@ export default function Page() {
                 day: "numeric",
               })
             : "-",
-        style: { width: "16%" },
+        style: { width: "15%" },
       },
     ],
     []
@@ -97,7 +119,8 @@ export default function Page() {
         <div className={SPACING.mb8}>
           <h1 className={HEADER.title}>ใบรับรองแหล่งผลิตจีเอพีในระบบ</h1>
           <p className={HEADER.subtitle}>
-            ใบรับรองแหล่งผลิตยางพาราที่อยู่ในระบบทั้งหมด
+            ใบรับรองแหล่งผลิตยางพาราที่อยู่ในระบบทั้งหมด //รอทำ pdf viewer
+            หรืออื่น ๆ
           </p>
         </div>
 
@@ -117,6 +140,7 @@ export default function Page() {
                       id="fromDate"
                       value={fromDate}
                       onChange={(d) => setFromDate(d)}
+                      placeholder="เลือกวันที่มีผล"
                     />
                   </div>
                 </div>
@@ -133,6 +157,7 @@ export default function Page() {
                       id="toDate"
                       value={toDate}
                       onChange={(d) => setToDate(d)}
+                      placeholder="เลือกวันที่หมดอายุ"
                     />
                   </div>
                 </div>

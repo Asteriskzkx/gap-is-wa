@@ -37,8 +37,6 @@ export class CertificateModel extends BaseModel {
     this.version = meta?.version;
   }
 
-  // Create a certificate with sensible defaults: effectiveDate defaults to now,
-  // expiryDate defaults to effectiveDate + 2 years (max allowed).
   static createCertificate(
     inspectionId: number,
     effectiveDate?: Date | string,
@@ -90,7 +88,6 @@ export class CertificateModel extends BaseModel {
       return false;
     }
 
-    // expiryDate must be >= effectiveDate and <= effectiveDate + 2 years
     const eff = this.effectiveDate;
     const exp = this.expiryDate;
     if (exp < eff) return false;
