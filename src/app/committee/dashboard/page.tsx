@@ -1,11 +1,13 @@
 "use client";
 
-// Link not needed in this file (cards are separate components)
+// Layout
 import CommitteeLayout from "@/components/layout/CommitteeLayout";
 
-// Icons
+// Components
 import CommitteeActionCard from "@/components/committee/CommitteeActionCard";
 import CommitteeStatusCard from "@/components/committee/CommitteeStatusCard";
+
+// Icons
 import {
   AssignmentIcon,
   CancelIcon,
@@ -95,7 +97,7 @@ export default function CommitteeDashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <CommitteeStatusCard
               title="รายการที่รอการพิจารณา"
-              count={12}
+              count={0}
               icon={
                 <AssignmentIcon className="h-6 w-6 text-indigo-500 mr-3 mt-0.5" />
               }
@@ -109,7 +111,7 @@ export default function CommitteeDashboardPage() {
 
             <CommitteeStatusCard
               title="ใบรับรองที่ออกแล้ว"
-              count={85}
+              count={0}
               icon={
                 <CheckCircleIcon className="h-6 w-6 text-green-500 mr-3 mt-0.5" />
               }
@@ -123,7 +125,7 @@ export default function CommitteeDashboardPage() {
 
             <CommitteeStatusCard
               title="ใบรับรองที่ถูกยกเลิก"
-              count={5}
+              count={0}
               icon={<CancelIcon className="h-6 w-6 text-red-500 mr-3 mt-0.5" />}
               bgColor="bg-red-50"
               borderColor="border-red-100"
