@@ -58,6 +58,7 @@ export class CertificateController extends BaseController<CertificateModel> {
   }
 
   // GET /api/v1/certificates/already-issue
+  // GET /api/v1/certificates/revoke-list
   async getAlreadyIssued(req: NextRequest): Promise<NextResponse> {
     try {
       const { authorized, error } = await checkAuthorization(req, [
@@ -91,6 +92,10 @@ export class CertificateController extends BaseController<CertificateModel> {
         ? params.get("activeFlag") === "true"
         : undefined;
 
+      const cancelRequestFlag = params.has("cancelRequestFlag")
+        ? params.get("cancelRequestFlag") === "true"
+        : undefined;
+
       const usedLimit = limit ?? 10;
       const usedOffset = offset ?? 0;
 
@@ -103,11 +108,18 @@ export class CertificateController extends BaseController<CertificateModel> {
         limit: usedLimit,
         offset: usedOffset,
         activeFlag,
+        cancelRequestFlag,
+      });
+
+      const results = result.data.map((m) => {
+        const json = m.toJSON();
+        json.cancelRequestDetail = m.cancelRequestDetail ?? null;
+        return json;
       });
 
       return NextResponse.json(
         {
-          results: result.data,
+          results,
           paginator: {
             limit: usedLimit,
             offset: usedOffset,

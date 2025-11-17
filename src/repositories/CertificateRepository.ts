@@ -51,6 +51,7 @@ export class CertificateRepository extends BaseRepository<CertificateModel> {
     limit?: number;
     offset?: number;
     activeFlag?: boolean;
+    cancelRequestFlag?: boolean;
   }): Promise<{ data: CertificateModel[]; total: number }> {
     try {
       const where: any = {};
@@ -67,6 +68,10 @@ export class CertificateRepository extends BaseRepository<CertificateModel> {
 
       if (typeof options?.activeFlag === "boolean") {
         where.activeFlag = options?.activeFlag;
+      }
+
+      if (typeof options?.cancelRequestFlag === "boolean") {
+        where.cancelRequestFlag = options?.cancelRequestFlag;
       }
 
       const mapSortFieldToPrisma = (field: string, order: "asc" | "desc") => {
