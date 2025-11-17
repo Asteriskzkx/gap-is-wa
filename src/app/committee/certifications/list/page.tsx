@@ -141,8 +141,7 @@ export default function Page() {
         <div className={SPACING.mb8}>
           <h1 className={HEADER.title}>ใบรับรองแหล่งผลิตจีเอพีในระบบ</h1>
           <p className={HEADER.subtitle}>
-            ใบรับรองแหล่งผลิตยางพาราที่อยู่ในระบบทั้งหมด //รอทำ pdf viewer
-            หรืออื่น ๆ
+            ใบรับรองแหล่งผลิตยางพาราที่อยู่ในระบบทั้งหมด
           </p>
         </div>
 
