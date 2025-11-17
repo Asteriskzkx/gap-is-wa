@@ -21,6 +21,7 @@ import { useRouter } from "next/navigation";
 import PrimaryCheckbox from "@/components/ui/PrimaryCheckbox";
 import { DataTablePageEvent, DataTableSortEvent } from "primereact/datatable";
 import React, { useCallback, useEffect, useState } from "react";
+import { toast } from "react-hot-toast";
 
 interface Inspection {
   inspectionId: number;
@@ -618,7 +619,7 @@ export default function AuditorInspectionsPage() {
           `inspection_${selectedInspection.inspectionId}_position`,
           currentItemIndex.toString()
         );
-        alert("บันทึกข้อมูลสำเร็จ");
+        toast.success("บันทึกข้อมูลสำเร็จ");
       }
     }
   };
@@ -646,7 +647,7 @@ export default function AuditorInspectionsPage() {
         localStorage.removeItem(
           `inspection_${selectedInspection.inspectionId}_position`
         );
-        alert("จบการตรวจประเมินสำเร็จ");
+        toast.success("จบการตรวจประเมินสำเร็จ");
         setShowInspectionForm(false);
         // Reload inspections
         if (session?.user?.roleData?.auditorId) {

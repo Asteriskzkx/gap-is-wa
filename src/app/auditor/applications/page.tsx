@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 import { DataTablePageEvent, DataTableSortEvent } from "primereact/datatable";
 import React, { useEffect, useState } from "react";
 import DynamicMapViewer from "@/components/maps/DynamicMapViewer";
+import { toast } from "react-hot-toast";
 
 // Interface สำหรับข้อมูลจังหวัด อำเภอ ตำบล
 interface Tambon {
@@ -183,11 +184,11 @@ export default function AuditorScheduleInspectionPage() {
         setSelectedFarmDetails(data);
         setShowFarmDetails(true);
       } else {
-        alert("ไม่สามารถดึงข้อมูลสวนยางได้");
+        toast.error("ไม่สามารถดึงข้อมูลสวนยางได้");
       }
     } catch (error) {
       console.error("Error fetching farm details:", error);
-      alert("เกิดข้อผิดพลาดในการดึงข้อมูล");
+      toast.error("เกิดข้อผิดพลาดในการดึงข้อมูล");
     } finally {
       setLoadingFarmDetails(false);
     }
