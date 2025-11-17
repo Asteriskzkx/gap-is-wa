@@ -6,6 +6,7 @@ export class CertificateModel extends BaseModel {
   effectiveDate: Date;
   expiryDate: Date;
   cancelRequestFlag: boolean;
+  cancelRequestDetail?: string;
   activeFlag: boolean;
   version?: number;
 
@@ -21,6 +22,7 @@ export class CertificateModel extends BaseModel {
       createdAt?: Date;
       updatedAt?: Date;
       cancelRequestFlag?: boolean;
+      cancelRequestDetail?: string;
       activeFlag?: boolean;
       version?: number;
     }
@@ -33,6 +35,7 @@ export class CertificateModel extends BaseModel {
     this.effectiveDate = effectiveDate;
     this.expiryDate = expiryDate;
     this.cancelRequestFlag = meta?.cancelRequestFlag ?? false;
+    this.cancelRequestDetail = meta?.cancelRequestDetail;
     this.activeFlag = meta?.activeFlag ?? true;
     this.version = meta?.version;
   }
@@ -41,6 +44,7 @@ export class CertificateModel extends BaseModel {
     inspectionId: number,
     effectiveDate?: Date | string,
     expiryDate?: Date | string,
+    cancelRequestDetail?: string,
     cancelRequestFlag?: boolean,
     activeFlag?: boolean
   ): CertificateModel {
@@ -65,6 +69,7 @@ export class CertificateModel extends BaseModel {
       createdAt: new Date(),
       updatedAt: new Date(),
       cancelRequestFlag: cancelRequestFlag ?? false,
+      cancelRequestDetail: cancelRequestDetail,
       activeFlag: activeFlag ?? true,
     });
   }
@@ -97,6 +102,10 @@ export class CertificateModel extends BaseModel {
     if (exp > max) return false;
 
     if (typeof this.cancelRequestFlag !== "boolean") return false;
+    if (this.cancelRequestDetail !== undefined) {
+      if (typeof this.cancelRequestDetail !== "string") return false;
+      if (this.cancelRequestDetail.length > 255) return false;
+    }
     if (typeof this.activeFlag !== "boolean") return false;
 
     return true;
@@ -106,6 +115,7 @@ export class CertificateModel extends BaseModel {
     return {
       certificateId: this.certificateId,
       inspectionId: this.inspectionId,
+      cancelRequestDetail: this.cancelRequestDetail,
       effectiveDate: this.effectiveDate,
       expiryDate: this.expiryDate,
       cancelRequestFlag: this.cancelRequestFlag,

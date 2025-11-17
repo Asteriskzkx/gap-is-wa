@@ -12,6 +12,7 @@ export class CertificateMapper implements BaseMapper<any, CertificateModel> {
         createdAt: prismaEntity.createdAt,
         updatedAt: prismaEntity.updatedAt,
         cancelRequestFlag: prismaEntity.cancelRequestFlag ?? false,
+        cancelRequestDetail: prismaEntity.cancelRequestDetail ?? undefined,
         activeFlag: prismaEntity.activeFlag ?? true,
         version: prismaEntity.version,
       }
@@ -27,6 +28,7 @@ export class CertificateMapper implements BaseMapper<any, CertificateModel> {
   toPrisma(domainEntity: CertificateModel): any {
     return {
       inspectionId: domainEntity.inspectionId,
+      cancelRequestDetail: domainEntity.cancelRequestDetail,
       effectiveDate: domainEntity.effectiveDate,
       expiryDate: domainEntity.expiryDate,
       cancelRequestFlag: domainEntity.cancelRequestFlag,

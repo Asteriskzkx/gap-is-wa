@@ -325,16 +325,17 @@ model AdviceAndDefect {
 }
 
 model Certificate {
-  certificateId     Int        @id @default(autoincrement())
-  inspectionId      Int        @unique
-  inspection        Inspection @relation(fields: [inspectionId], references: [inspectionId], onDelete: Cascade)
-  effectiveDate     DateTime   @default(now())
-  expiryDate        DateTime
-  cancelRequestFlag Boolean    @default(false)
-  activeFlag        Boolean    @default(true)
-  version           Int        @default(0)
-  createdAt         DateTime   @default(now())
-  updatedAt         DateTime   @updatedAt
+  certificateId       Int        @id @default(autoincrement())
+  inspectionId        Int        @unique
+  inspection          Inspection @relation(fields: [inspectionId], references: [inspectionId], onDelete: Cascade)
+  effectiveDate       DateTime   @default(now())
+  expiryDate          DateTime
+  cancelRequestFlag   Boolean    @default(false)
+  cancelRequestDetail String?    @db.VarChar(255)
+  activeFlag          Boolean    @default(true)
+  version             Int        @default(0)
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
 
   // Relation to CommitteeCertificate (many-to-many)
   committeeCertificates CommitteeCertificate[]
