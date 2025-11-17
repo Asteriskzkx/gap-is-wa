@@ -48,6 +48,7 @@ export class CertificateService extends BaseService<CertificateModel> {
     limit?: number;
     offset?: number;
     activeFlag?: boolean;
+    cancelRequestFlag?: boolean;
   }): Promise<{ data: CertificateModel[]; total: number }> {
     try {
       return await this.certificateRepository.findAllWithPagination(options);

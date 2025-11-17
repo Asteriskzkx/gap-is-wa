@@ -132,10 +132,6 @@ export class FileController {
           { status: 401 }
         );
 
-      // Try to delete remote file first (best-effort). Prefer using the
-      // stored provider file key (`fileKey`) if available because it's the
-      // deterministic identifier UploadThing's API expects. If that fails,
-      // fall back to the URL-based delete helper.
       let remoteDeleted = false;
       try {
         if (existing.fileKey) {

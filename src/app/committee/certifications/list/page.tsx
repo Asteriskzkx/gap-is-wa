@@ -22,6 +22,7 @@ export default function Page() {
     clearFilters,
     handlePageChange,
     handleSort,
+    openFiles,
   } = useAlreadyIssuedCertificates(10);
 
   const columns = useMemo(
@@ -58,7 +59,7 @@ export default function Page() {
               day: "numeric",
             }
           ),
-        style: { width: "15%" },
+        style: { width: "12%" },
       },
       {
         field: "inspection?.rubberFarm?.villageName",
@@ -75,7 +76,7 @@ export default function Page() {
           ]
             .filter(Boolean)
             .join(" ") || "-",
-        style: { width: "31%" },
+        style: { width: "30%" },
       },
       {
         field: "effectiveDate",
@@ -91,7 +92,7 @@ export default function Page() {
                 day: "numeric",
               })
             : "-",
-        style: { width: "15%" },
+        style: { width: "12%" },
       },
       {
         field: "expiryDate",
@@ -107,10 +108,31 @@ export default function Page() {
                 day: "numeric",
               })
             : "-",
-        style: { width: "15%" },
+        style: { width: "12%" },
+      },
+      {
+        field: "actions",
+        header: "",
+        sortable: false,
+        headerAlign: "center" as const,
+        bodyAlign: "center" as const,
+        mobileAlign: "right" as const,
+        mobileHideLabel: true,
+        body: (r: any) => (
+          <div className="flex justify-center gap-2">
+            <PrimaryButton
+              icon="pi pi-eye"
+              color="info"
+              onClick={() => openFiles?.(r.certificateId)}
+              rounded
+              text
+            />
+          </div>
+        ),
+        style: { width: "10%" },
       },
     ],
-    []
+    [openFiles]
   );
 
   return (
@@ -119,8 +141,7 @@ export default function Page() {
         <div className={SPACING.mb8}>
           <h1 className={HEADER.title}>ใบรับรองแหล่งผลิตจีเอพีในระบบ</h1>
           <p className={HEADER.subtitle}>
-            ใบรับรองแหล่งผลิตยางพาราที่อยู่ในระบบทั้งหมด //รอทำ pdf viewer
-            หรืออื่น ๆ
+            ใบรับรองแหล่งผลิตยางพาราที่อยู่ในระบบทั้งหมด
           </p>
         </div>
 

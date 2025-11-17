@@ -82,7 +82,7 @@ export default function CommitteeDashboardPage() {
                   "ออกใบรับรองแหล่งผลิตยางพาราที่ผ่านการตรวจประเมิน";
               } else if (index === 3) {
                 colorClass = "bg-red-100 text-red-600";
-                description = "ยกเลิกใบรับรองแหล่งผลิต";
+                description = "ยกเลิกใบรับรองแหล่งผลิตยางพารา";
               }
 
               return (

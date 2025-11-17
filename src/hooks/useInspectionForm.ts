@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { toast } from "react-hot-toast";
 
 export interface Requirement {
   requirementId: number;
@@ -126,7 +127,7 @@ export function useInspectionForm(): UseInspectionFormReturn {
 
     for (const req of item.requirements) {
       if (!req.evaluationResult || !req.evaluationMethod) {
-        alert(
+        toast.error(
           `กรุณากรอกข้อมูลให้ครบถ้วน: ${
             req.requirementMaster?.requirementName || "ข้อกำหนด"
           }`
@@ -162,7 +163,7 @@ export function useInspectionForm(): UseInspectionFormReturn {
       if (currentItem.requirements) {
         for (const req of currentItem.requirements) {
           if (!req.evaluationResult || !req.evaluationMethod) {
-            alert(
+            toast.error(
               `กรุณากรอกข้อมูลให้ครบถ้วน: ${
                 req.requirementMaster?.requirementName || "ข้อกำหนด"
               }`
@@ -244,7 +245,7 @@ export function useInspectionForm(): UseInspectionFormReturn {
         return true;
       } catch (error) {
         console.error("Error saving item:", error);
-        alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+        toast.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
         return false;
       } finally {
         setSaving(false);
@@ -376,22 +377,24 @@ export function useInspectionForm(): UseInspectionFormReturn {
         console.log(`Save summary: ${savedCount} saved, ${errorCount} errors`);
 
         if (savedCount === 0) {
-          alert("ไม่มีรายการที่สามารถบันทึกได้ กรุณากรอกข้อมูลให้ครบถ้วน");
+          toast.error(
+            "ไม่มีรายการที่สามารถบันทึกได้ กรุณากรอกข้อมูลให้ครบถ้วน"
+          );
           return false;
         }
 
         if (errorCount > 0) {
-          alert(
+          toast.error(
             `บันทึกสำเร็จ ${savedCount} รายการ, มีข้อผิดพลาด ${errorCount} รายการ`
           );
         } else if (savedCount > 0) {
-          alert(`บันทึกสำเร็จทั้งหมด ${savedCount} รายการ`);
+          toast.success(`บันทึกสำเร็จทั้งหมด ${savedCount} รายการ`);
         }
 
         return true;
       } catch (error) {
         console.error("Error in saveAllItems:", error);
-        alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+        toast.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
         return false;
       } finally {
         setSaving(false);
@@ -427,7 +430,7 @@ export function useInspectionForm(): UseInspectionFormReturn {
         return true;
       } catch (error) {
         console.error("Error completing inspection:", error);
-        alert("เกิดข้อผิดพลาดในการจบการตรวจประเมิน");
+        toast.error("เกิดข้อผิดพลาดในการจบการตรวจประเมิน");
         return false;
       }
     },

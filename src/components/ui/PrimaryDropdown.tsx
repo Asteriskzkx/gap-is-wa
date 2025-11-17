@@ -22,6 +22,10 @@ interface PrimaryDropdownProps {
   readonly showClear?: boolean;
   readonly invalid?: boolean;
   readonly errorMessage?: string;
+  readonly filter?: boolean;
+  readonly filterBy?: string;
+  readonly emptyMessage?: string;
+  readonly emptyFilterMessage?: string;
 }
 
 export default function PrimaryDropdown({
@@ -37,6 +41,10 @@ export default function PrimaryDropdown({
   showClear = false,
   invalid = false,
   errorMessage = "",
+  filter = false,
+  filterBy = "label",
+  emptyMessage = "No options",
+  emptyFilterMessage = "No results",
 }: PrimaryDropdownProps) {
   const handleChange = (e: DropdownChangeEvent) => {
     onChange(e.value);
@@ -62,6 +70,10 @@ export default function PrimaryDropdown({
         invalid={invalid}
         className={`w-full primary-dropdown ${className}`}
         panelClassName="dropdown-panel"
+        filter={filter}
+        filterBy={filterBy}
+        emptyMessage={emptyMessage}
+        emptyFilterMessage={emptyFilterMessage}
       />
       {invalid && errorMessage && (
         <Message

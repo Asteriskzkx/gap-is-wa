@@ -15,7 +15,7 @@ interface LazyParams {
   multiSortMeta: Array<{ field: string; order: SortOrder }>;
 }
 
-export function useAlreadyIssuedCertificates(initialRows = 10) {
+export function useRevokeCertificate(initialRows = 10) {
   const router = useRouter();
   const { status } = useSession();
 
@@ -50,6 +50,7 @@ export function useAlreadyIssuedCertificates(initialRows = 10) {
       const params = new URLSearchParams();
       params.set("limit", String(rows));
       params.set("offset", String(first));
+      params.set("cancelRequestFlag", "true");
       if (appliedFromDate)
         params.set("fromDate", appliedFromDate.toISOString());
       if (appliedToDate) params.set("toDate", appliedToDate.toISOString());
@@ -60,15 +61,14 @@ export function useAlreadyIssuedCertificates(initialRows = 10) {
         params.set("multiSortMeta", JSON.stringify(multiSortMeta));
 
       const resp = await fetch(
-        `/api/v1/certificates/already-issue?${params.toString()}`
+        `/api/v1/certificates/revoke-list?${params.toString()}`
       );
-      if (!resp.ok)
-        throw new Error("Failed to fetch already-issue certificates");
+      if (!resp.ok) throw new Error("Failed to fetch revoke-list certificates");
       const data = await resp.json();
       setItems(data.results || []);
       setTotalRecords(data.paginator?.total ?? (data.results || []).length);
     } catch (err) {
-      console.error("useAlreadyIssuedCertificates fetch error:", err);
+      console.error("useRevokeCertificate fetch error:", err);
       setItems([]);
       setTotalRecords(0);
     } finally {

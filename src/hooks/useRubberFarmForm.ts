@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { toast } from "react-hot-toast";
 
 // Interfaces
 export interface PlantingDetail {
@@ -88,7 +89,7 @@ export const useRubberFarmForm = () => {
       if (roleData.farmerId) {
         setFarmerId(roleData.farmerId);
       } else {
-        alert("ไม่พบข้อมูล farmerId ในระบบ กรุณาติดต่อผู้ดูแลระบบ");
+        toast.error("ไม่พบข้อมูลในระบบ กรุณาติดต่อผู้ดูแลระบบ");
       }
     }
   }, [status, session, router]);

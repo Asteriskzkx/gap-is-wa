@@ -13,17 +13,20 @@ import { useUserDetail } from "@/hooks/useUserDetail";
 
 export default function EditUserPage() {
   const { id } = useParams();
-    const { user, loading, error } = useUserDetail(id ? parseInt(id as string, 10) : 0);
+  const userId = id ? parseInt(id as string, 10) : null;
+  
+  const { user, loading, error } = useUserDetail(userId);
     
-  if (loading)
+  if (!id || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <ProgressSpinner className="w-20 h-20" />
       </div>
     );
-
+  }
+  
+  if (error) return <p>Error: {error}</p>;
   if (!user) return <p>User not found</p>;
-
 
   return (
     <AdminLayout>
