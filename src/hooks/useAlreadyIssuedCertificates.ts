@@ -2,6 +2,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { DataTablePageEvent, DataTableSortEvent } from "primereact/datatable";
 import { useCallback, useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 type SortOrder = 1 | -1 | 0 | null;
 
@@ -114,6 +115,36 @@ export function useAlreadyIssuedCertificates(initialRows = 10) {
     setLazyParams((p) => ({ ...p, first: 0 }));
   }, []);
 
+  const openFiles = useCallback(async (certificateId: number) => {
+    try {
+      const params = new URLSearchParams();
+      params.set("tableReference", "Certificate");
+      params.set("idReference", String(certificateId));
+
+      const resp = await fetch(`/api/v1/files/get-files?${params.toString()}`);
+      if (!resp.ok) throw new Error("Failed to fetch files");
+      const data = await resp.json();
+      const files = data.files || [];
+      if (!files.length) {
+        if (typeof window !== "undefined")
+          toast.error("ไม่พบไฟล์สำหรับใบรับรองนี้");
+        return;
+      }
+
+      const url = files[0].url;
+      if (url && typeof window !== "undefined") {
+        const w = window.open(url, "_blank", "noopener,noreferrer");
+        if (w) w.focus();
+      } else {
+        if (typeof window !== "undefined") toast.error("ไม่พบ URL ของไฟล์");
+      }
+    } catch (err) {
+      console.error("openFiles error:", err);
+      if (typeof window !== "undefined")
+        toast.error("เกิดข้อผิดพลาดขณะดึงไฟล์");
+    }
+  }, []);
+
   return {
     items,
     loading,
@@ -128,5 +159,6 @@ export function useAlreadyIssuedCertificates(initialRows = 10) {
     handlePageChange,
     handleSort,
     setRows: (rows: number) => setLazyParams((p) => ({ ...p, rows })),
+    openFiles,
   };
 }
