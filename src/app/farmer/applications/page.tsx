@@ -325,7 +325,7 @@ export default function FarmerApplicationsPage() {
                   sortable: true,
                   headerAlign: "center" as const,
                   bodyAlign: "center" as const,
-                  style: { width: "10%" },
+                  style: { width: "12%" },
                 },
                 {
                   field: "location",
@@ -339,7 +339,7 @@ export default function FarmerApplicationsPage() {
                   sortable: true,
                   headerAlign: "center" as const,
                   bodyAlign: "left" as const,
-                  style: { width: "20%" },
+                  style: { width: "15%" },
                 },
                 {
                   field: "province",
@@ -349,7 +349,7 @@ export default function FarmerApplicationsPage() {
                   sortable: true,
                   headerAlign: "center" as const,
                   bodyAlign: "left" as const,
-                  style: { width: "10%" },
+                  style: { width: "15%" },
                 },
                 {
                   field: "district",
@@ -359,7 +359,7 @@ export default function FarmerApplicationsPage() {
                   sortable: true,
                   headerAlign: "center" as const,
                   bodyAlign: "left" as const,
-                  style: { width: "10%" },
+                  style: { width: "15%" },
                 },
                 {
                   field: "subDistrict",
@@ -369,7 +369,7 @@ export default function FarmerApplicationsPage() {
                   sortable: true,
                   headerAlign: "center" as const,
                   bodyAlign: "left" as const,
-                  style: { width: "10%" },
+                  style: { width: "15%" },
                 },
                 {
                   field: "inspectionDateAndTime",
@@ -381,7 +381,7 @@ export default function FarmerApplicationsPage() {
                   sortable: true,
                   headerAlign: "center" as const,
                   bodyAlign: "center" as const,
-                  style: { width: "20%" },
+                  style: { width: "13%" },
                 },
                 {
                   field: "status",
@@ -399,7 +399,7 @@ export default function FarmerApplicationsPage() {
                   sortable: false,
                   headerAlign: "center" as const,
                   bodyAlign: "center" as const,
-                  style: { width: "20%" },
+                  style: { width: "15%" },
                 },
               ]}
               loading={loading}
