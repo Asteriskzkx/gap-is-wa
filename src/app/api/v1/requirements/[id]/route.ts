@@ -40,13 +40,6 @@ export async function PUT(
     );
   }
 
-  // ตรวจสอบว่าเป็นการอัพเดทผลการประเมิน
-  const path = req.nextUrl.pathname;
-  if (path.endsWith("/evaluation")) {
-    return requirementController.updateRequirementEvaluation(req, { params });
-  }
-
-  // Default path สำหรับการอัพเดทข้อกำหนดทั่วไป
   return requirementController.update(req, { params });
 }
 

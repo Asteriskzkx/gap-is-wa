@@ -2,11 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requirementController } from "@/utils/dependencyInjections";
 import { checkAuthorization } from "@/lib/session";
 
-// Route handler สำหรับอัพเดทผลการประเมินข้อกำหนด
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(req: NextRequest) {
   const { authorized, error } = await checkAuthorization(req, [
     "AUDITOR",
     "ADMIN",
@@ -19,5 +15,5 @@ export async function PUT(
     );
   }
 
-  return requirementController.updateRequirementEvaluation(req, { params });
+  return requirementController.updateRequirementsEvaluations(req);
 }

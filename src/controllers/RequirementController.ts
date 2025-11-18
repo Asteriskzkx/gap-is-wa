@@ -90,50 +90,70 @@ export class RequirementController extends BaseController<RequirementModel> {
     }
   }
 
-  async updateRequirementEvaluation(
-    req: NextRequest,
-    { params }: { params: { id: string } }
-  ): Promise<NextResponse> {
+  async updateRequirementsEvaluations(req: NextRequest): Promise<NextResponse> {
     try {
-      let requirementId: number;
-      try {
-        requirementId = requireValidId(params.id, "requirementId");
-      } catch (error: any) {
-        return NextResponse.json({ message: error.message }, { status: 400 });
-      }
-
       const data = await req.json();
-      const { evaluationResult, evaluationMethod, note, version } = data;
 
-      if (!evaluationResult || !evaluationMethod) {
+      if (!Array.isArray(data)) {
         return NextResponse.json(
-          { message: "Evaluation result and method are required" },
+          { message: "Payload must be an array" },
           { status: 400 }
         );
       }
 
-      const updatedRequirement =
-        await this.requirementService.updateRequirementEvaluation(
+      const results: any[] = [];
+      const errors: any[] = [];
+
+      for (const entry of data) {
+        const {
           requirementId,
           evaluationResult,
           evaluationMethod,
-          note || "",
-          version
-        );
+          note,
+          version,
+        } = entry;
 
-      if (!updatedRequirement) {
-        return NextResponse.json(
-          { message: "Requirement not found or update failed" },
-          { status: 404 }
-        );
+        if (!requirementId || !evaluationResult || !evaluationMethod) {
+          errors.push({ requirementId, message: "Missing fields" });
+          continue;
+        }
+
+        try {
+          const updated =
+            await this.requirementService.updateRequirementEvaluation(
+              requirementId,
+              evaluationResult,
+              evaluationMethod,
+              note || "",
+              version
+            );
+
+          if (updated) {
+            results.push(updated.toJSON());
+          } else {
+            errors.push({
+              requirementId,
+              message: "Not found or update failed",
+            });
+          }
+        } catch (err: any) {
+          if (err instanceof OptimisticLockError) {
+            errors.push({
+              requirementId,
+              message: "optimistic_lock",
+              details: err.toJSON(),
+            });
+          } else {
+            errors.push({
+              requirementId,
+              message: err?.message || String(err),
+            });
+          }
+        }
       }
 
-      return NextResponse.json(updatedRequirement.toJSON(), { status: 200 });
+      return NextResponse.json({ updated: results, errors }, { status: 200 });
     } catch (error: any) {
-      // Handle optimistic lock error
-      if (error instanceof OptimisticLockError) {
-        return NextResponse.json(error.toJSON(), { status: 409 });
-      }
       return this.handleControllerError(error);
     }
   }

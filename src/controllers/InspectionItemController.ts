@@ -133,6 +133,68 @@ export class InspectionItemController extends BaseController<InspectionItemModel
     }
   }
 
+  async updateInspectionItemResultsBulk(
+    req: NextRequest
+  ): Promise<NextResponse> {
+    try {
+      const data = await req.json();
+
+      if (!Array.isArray(data)) {
+        return NextResponse.json(
+          { message: "Payload must be an array" },
+          { status: 400 }
+        );
+      }
+
+      const results: any[] = [];
+      const errors: any[] = [];
+
+      for (const entry of data) {
+        const { inspectionItemId, result, version } = entry;
+
+        if (!inspectionItemId || !result) {
+          errors.push({ inspectionItemId, message: "Missing fields" });
+          continue;
+        }
+
+        try {
+          const updated =
+            await this.inspectionItemService.updateInspectionItemResult(
+              inspectionItemId,
+              result,
+              version
+            );
+
+          if (updated) {
+            results.push(updated.toJSON());
+          } else {
+            errors.push({
+              inspectionItemId,
+              message: "Not found or update failed",
+            });
+          }
+        } catch (err: any) {
+          if (err instanceof OptimisticLockError) {
+            errors.push({
+              inspectionItemId,
+              message: "optimistic_lock",
+              details: err.toJSON(),
+            });
+          } else {
+            errors.push({
+              inspectionItemId,
+              message: err?.message || String(err),
+            });
+          }
+        }
+      }
+
+      return NextResponse.json({ updated: results, errors }, { status: 200 });
+    } catch (error: any) {
+      return this.handleControllerError(error);
+    }
+  }
+
   protected async createModel(data: any): Promise<InspectionItemModel> {
     return InspectionItemModel.create(
       data.inspectionId,
