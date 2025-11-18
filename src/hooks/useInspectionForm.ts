@@ -47,7 +47,10 @@ interface UseInspectionFormReturn {
   validateCurrentItem: () => boolean;
   saveCurrentItem: (inspectionId: number) => Promise<boolean>;
   saveAllItems: (inspectionId: number) => Promise<boolean>;
-  completeInspection: (inspectionId: number) => Promise<boolean>;
+  completeInspection: (
+    inspectionId: number,
+    version?: number
+  ) => Promise<boolean>;
 }
 
 export function useInspectionForm(): UseInspectionFormReturn {
@@ -406,7 +409,7 @@ export function useInspectionForm(): UseInspectionFormReturn {
   );
 
   const completeInspection = useCallback(
-    async (inspectionId: number): Promise<boolean> => {
+    async (inspectionId: number, version?: number): Promise<boolean> => {
       try {
         const saved = await saveAllItems(inspectionId);
 
@@ -421,6 +424,7 @@ export function useInspectionForm(): UseInspectionFormReturn {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               status: "ตรวจประเมินแล้ว",
+              version: version,
             }),
           }
         );
