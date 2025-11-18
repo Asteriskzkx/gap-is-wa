@@ -202,23 +202,23 @@ export function useInspectionForm(): UseInspectionFormReturn {
 
           const json = await response.json();
           // Update versions from returned updated array
-          (json.updated || []).forEach((u: any) => {
+          for (const u of json.updated || []) {
             setInspectionItems((prev) => {
               const updated = [...prev];
               const idx = updated.findIndex(
                 (it) => it.inspectionItemId === currentItem.inspectionItemId
               );
               if (idx !== -1 && updated[idx].requirements) {
-                const rIdx = updated[idx].requirements!.findIndex(
+                const rIdx = updated[idx].requirements.findIndex(
                   (rr) => rr.requirementId === u.requirementId
                 );
                 if (rIdx !== -1) {
-                  updated[idx].requirements![rIdx].version = u.version;
+                  updated[idx].requirements[rIdx].version = u.version;
                 }
               }
               return updated;
             });
-          });
+          }
 
           if (json.errors && json.errors.length > 0) {
             console.warn("Some requirement updates had errors:", json.errors);
@@ -250,7 +250,7 @@ export function useInspectionForm(): UseInspectionFormReturn {
         }
 
         const itemJson = await itemResponse.json();
-        (itemJson.updated || []).forEach((u: any) => {
+        for (const u of itemJson.updated || []) {
           setInspectionItems((prev) => {
             const updated = [...prev];
             const idx = updated.findIndex(
@@ -261,7 +261,7 @@ export function useInspectionForm(): UseInspectionFormReturn {
             }
             return updated;
           });
-        });
+        }
 
         console.log("Save completed successfully");
         return true;
@@ -287,13 +287,7 @@ export function useInspectionForm(): UseInspectionFormReturn {
         const itemPayload: any[] = [];
 
         // Build payloads by validating each item
-        for (
-          let itemIndex = 0;
-          itemIndex < inspectionItems.length;
-          itemIndex++
-        ) {
-          const item = inspectionItems[itemIndex];
-
+        for (const item of inspectionItems) {
           // Validate requirements
           if (item.requirements && item.requirements.length > 0) {
             const hasIncomplete = item.requirements.some(
@@ -344,7 +338,7 @@ export function useInspectionForm(): UseInspectionFormReturn {
 
           const json = await resp.json();
           // Update versions for requirements
-          (json.updated || []).forEach((u: any) => {
+          for (const u of json.updated || []) {
             setInspectionItems((prev) => {
               const updated = prev.map((it) => ({ ...it }));
               for (const it of updated) {
@@ -358,7 +352,7 @@ export function useInspectionForm(): UseInspectionFormReturn {
               }
               return updated;
             });
-          });
+          }
 
           if (json.errors && json.errors.length > 0) {
             console.warn("Some requirement updates failed:", json.errors);
@@ -379,7 +373,7 @@ export function useInspectionForm(): UseInspectionFormReturn {
           }
 
           const json2 = await resp2.json();
-          (json2.updated || []).forEach((u: any) => {
+          for (const u of json2.updated || []) {
             setInspectionItems((prev) => {
               const updated = prev.map((it) => ({ ...it }));
               const idx = updated.findIndex(
@@ -390,7 +384,7 @@ export function useInspectionForm(): UseInspectionFormReturn {
               }
               return updated;
             });
-          });
+          }
 
           if (json2.errors && json2.errors.length > 0) {
             console.warn("Some inspection item updates failed:", json2.errors);
