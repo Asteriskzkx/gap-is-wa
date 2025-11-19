@@ -50,6 +50,7 @@ export function useRevokeCertificate(initialRows = 10) {
       const params = new URLSearchParams();
       params.set("limit", String(rows));
       params.set("offset", String(first));
+      params.set("activeFlag", "true");
       params.set("cancelRequestFlag", "true");
       if (appliedFromDate)
         params.set("fromDate", appliedFromDate.toISOString());
@@ -145,6 +146,39 @@ export function useRevokeCertificate(initialRows = 10) {
     }
   }, []);
 
+  const revokeCertificate = useCallback(
+    async (certificateId: number, cancelRequestDetail?: string) => {
+      try {
+        const body: any = { certificateId };
+        if (cancelRequestDetail !== undefined)
+          body.cancelRequestDetail = cancelRequestDetail;
+
+        const resp = await fetch(`/api/v1/certificates/revoke`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+
+        if (!resp.ok) {
+          const err = await resp.text();
+          throw new Error(err || "Failed to revoke certificate");
+        }
+
+        // Refresh the list after successful revoke
+        await fetchItems();
+        if (typeof window !== "undefined")
+          toast.success("ยกเลิกใบรับรองเรียบร้อยแล้ว");
+        return true;
+      } catch (err) {
+        console.error("revokeCertificate error:", err);
+        if (typeof window !== "undefined")
+          toast.error("เกิดข้อผิดพลาดขณะยกเลิกใบรับรอง");
+        return false;
+      }
+    },
+    [fetchItems]
+  );
+
   return {
     items,
     loading,
@@ -160,5 +194,6 @@ export function useRevokeCertificate(initialRows = 10) {
     handleSort,
     setRows: (rows: number) => setLazyParams((p) => ({ ...p, rows })),
     openFiles,
+    revokeCertificate,
   };
 }

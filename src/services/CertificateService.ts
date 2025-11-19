@@ -57,4 +57,22 @@ export class CertificateService extends BaseService<CertificateModel> {
       throw error;
     }
   }
+
+  async revokeCertificate(
+    certificateId: number,
+    cancelRequestDetail?: string
+  ): Promise<CertificateModel | null> {
+    try {
+      const updated = await this.certificateRepository.update(certificateId, {
+        cancelRequestFlag: true,
+        cancelRequestDetail: cancelRequestDetail,
+        activeFlag: false,
+      } as any);
+
+      return updated;
+    } catch (error) {
+      this.handleServiceError(error);
+      throw error;
+    }
+  }
 }

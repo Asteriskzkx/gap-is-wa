@@ -1,15 +1,15 @@
 "use client";
 
+import CertificationStepIndicator from "@/components/committee/certifications/CertificationStepIndicator";
 import CommitteeLayout from "@/components/layout/CommitteeLayout";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import PrimaryCalendar from "@/components/ui/PrimaryCalendar";
 import PrimaryDataTable from "@/components/ui/PrimaryDataTable";
-import CertificationStepIndicator from "@/components/committee/certifications/CertificationStepIndicator";
 import PrimaryInputTextarea from "@/components/ui/PrimaryInputTextarea";
+import { useFormStepper } from "@/hooks/useFormStepper";
+import { useRevokeCertificate } from "@/hooks/useRevokeCertificate";
 import { CONTAINER, HEADER, SPACING } from "@/styles/auditorClasses";
 import { useMemo, useState } from "react";
-import { useRevokeCertificate } from "@/hooks/useRevokeCertificate";
-import { useFormStepper } from "@/hooks/useFormStepper";
 
 export default function Page() {
   const {
@@ -26,12 +26,15 @@ export default function Page() {
     handlePageChange,
     handleSort,
     openFiles,
+    revokeCertificate,
   } = useRevokeCertificate(10);
 
   const [selectedCertificate, setSelectedCertificate] = useState<Record<
     string,
     any
   > | null>(null);
+
+  const [cancelRequestDetail, setCancelRequestDetail] = useState<string>("");
 
   const { step, nextStep, prevStep } = useFormStepper(2);
 
@@ -278,12 +281,24 @@ export default function Page() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
                   />
                 </div>
-
-                <div className="mb-4 text-gray-600">
-                  ฟังก์ชันยกเลิกยังไม่ได้ถูกสร้าง (กำลังพัฒนา)
-                </div>
-                <div className="flex justify-start gap-2">
+                <div className="flex justify-between gap-2">
                   <PrimaryButton label="ย้อนกลับ" onClick={() => prevStep()} />
+                  <PrimaryButton
+                    label="ยืนยันยกเลิกใบรับรอง"
+                    onClick={async () => {
+                      if (!selectedCertificate) return;
+                      const ok = await revokeCertificate(
+                        selectedCertificate.certificateId,
+                        selectedCertificate?.cancelRequestDetail ??
+                          cancelRequestDetail
+                      );
+                      if (ok) {
+                        setSelectedCertificate(null);
+                        setCancelRequestDetail("");
+                        prevStep();
+                      }
+                    }}
+                  />
                 </div>
               </div>
             )}
