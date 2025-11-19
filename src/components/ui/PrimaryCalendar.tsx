@@ -19,8 +19,8 @@ interface PrimaryCalendarProps {
   readonly showTime?: boolean;
   readonly hourFormat?: "12" | "24";
   readonly timeOnly?: boolean;
-  readonly minDate?: Date;
-  readonly maxDate?: Date;
+  readonly minDate?: Date | null;
+  readonly maxDate?: Date | null;
   readonly invalid?: boolean;
   readonly errorMessage?: string;
 }
@@ -68,8 +68,8 @@ export default function PrimaryCalendar({
         showTime={showTime}
         hourFormat={hourFormat}
         timeOnly={timeOnly}
-        minDate={minDate}
-        maxDate={maxDate}
+        minDate={minDate ?? undefined}
+        maxDate={maxDate ?? undefined}
         invalid={invalid}
         className={`w-full primary-calendar ${className}`}
         inputClassName="w-full"

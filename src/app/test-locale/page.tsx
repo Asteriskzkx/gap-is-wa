@@ -1,15 +1,18 @@
 "use client";
 
 import PrimaryButton from "@/components/ui/PrimaryButton";
+import PrimaryInputTextarea from "@/components/ui/PrimaryInputTextarea";
 import { Button } from "primereact/button";
 import { Calendar } from "primereact/calendar";
 import { Dialog } from "primereact/dialog";
+import { InputTextarea } from "primereact/inputtextarea";
 import { useState } from "react";
 import toast from "react-hot-toast";
 
 export default function LocaleTestPage() {
   const [date, setDate] = useState<Date | null>(null);
   const [visible, setVisible] = useState(false);
+  const [textAreaValue, setTextAreaValue] = useState("");
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
@@ -177,6 +180,22 @@ export default function LocaleTestPage() {
                 label="Toast Loading"
                 icon="pi pi-info-circle"
                 onClick={() => toast.loading("Loading")}
+              />
+            </div>
+          </div>
+
+          {/* InputTextarea */}
+          <div className="mb-8">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">
+              5. InputTextarea (กล่องข้อความหลายบรรทัด)
+            </h2>
+            <div className="w-full ">
+              <PrimaryInputTextarea
+                value={textAreaValue}
+                onChange={(val) => setTextAreaValue(val)}
+                placeholder="พิมพ์ข้อความที่นี่..."
+                rows={5}
+                className="border border-gray-300"
               />
             </div>
           </div>

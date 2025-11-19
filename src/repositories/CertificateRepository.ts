@@ -160,6 +160,19 @@ export class CertificateRepository extends BaseRepository<CertificateModel> {
     }
   }
 
+  async updateWithLock(
+    id: number,
+    data: Partial<CertificateModel>,
+    currentVersion: number
+  ): Promise<CertificateModel> {
+    return this.updateWithOptimisticLock(
+      id,
+      data,
+      currentVersion,
+      "certificate"
+    );
+  }
+
   async delete(id: number): Promise<boolean> {
     try {
       await this.prisma.certificate.delete({ where: { certificateId: id } });

@@ -47,7 +47,10 @@ interface UseInspectionFormReturn {
   validateCurrentItem: () => boolean;
   saveCurrentItem: (inspectionId: number) => Promise<boolean>;
   saveAllItems: (inspectionId: number) => Promise<boolean>;
-  completeInspection: (inspectionId: number) => Promise<boolean>;
+  completeInspection: (
+    inspectionId: number,
+    version?: number
+  ) => Promise<boolean>;
 }
 
 export function useInspectionForm(): UseInspectionFormReturn {
@@ -175,55 +178,73 @@ export function useInspectionForm(): UseInspectionFormReturn {
 
       setSaving(true);
       try {
-        // Save requirements using evaluation endpoint และ update version
-        if (currentItem.requirements) {
-          for (let i = 0; i < currentItem.requirements.length; i++) {
-            const req = currentItem.requirements[i];
-            console.log(`Saving requirement ${i + 1}:`, req.requirementId);
+        // Batch save requirements for current item
+        if (currentItem.requirements && currentItem.requirements.length > 0) {
+          const reqPayload = currentItem.requirements.map((r) => ({
+            requirementId: r.requirementId,
+            evaluationResult: r.evaluationResult,
+            evaluationMethod: r.evaluationMethod,
+            note: r.note || "",
+            version: r.version,
+          }));
 
-            const response = await fetch(
-              `/api/v1/requirements/${req.requirementId}/evaluation`,
-              {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  evaluationResult: req.evaluationResult,
-                  evaluationMethod: req.evaluationMethod,
-                  note: req.note || "",
-                  version: req.version || 0,
-                }),
-              }
-            );
+          console.log(
+            "Sending batch requirements payload for current item:",
+            reqPayload
+          );
 
-            if (!response.ok) {
-              throw new Error("บันทึกข้อกำหนดไม่สำเร็จ");
-            }
+          const response = await fetch(`/api/v1/requirements/evaluation`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(reqPayload),
+          });
 
-            // Update version จาก response
-            const updatedReq = await response.json();
+          if (!response.ok) {
+            throw new Error("บันทึกข้อกำหนดไม่สำเร็จ");
+          }
+
+          const json = await response.json();
+          // Update versions from returned updated array
+          for (const u of json.updated || []) {
             setInspectionItems((prev) => {
               const updated = [...prev];
-              if (updated[currentItemIndex]?.requirements?.[i]) {
-                updated[currentItemIndex].requirements[i].version =
-                  updatedReq.version;
+              const idx = updated.findIndex(
+                (it) => it.inspectionItemId === currentItem.inspectionItemId
+              );
+              if (idx !== -1 && updated[idx].requirements) {
+                const rIdx = updated[idx].requirements.findIndex(
+                  (rr) => rr.requirementId === u.requirementId
+                );
+                if (rIdx !== -1) {
+                  updated[idx].requirements[rIdx].version = u.version;
+                }
               }
               return updated;
             });
           }
+
+          if (json.errors && json.errors.length > 0) {
+            console.warn("Some requirement updates had errors:", json.errors);
+            toast.error("มีข้อผิดพลาดในการบันทึกข้อกำหนดบางรายการ");
+            // proceed but notify
+          }
         }
 
-        // Save inspection item
-        console.log(`Saving inspection item:`, currentItem.inspectionItemId);
+        // Save inspection item via batch endpoint (single-element array)
+        const itemPayload = [
+          {
+            inspectionItemId: currentItem.inspectionItemId,
+            result: determineItemResult(currentItem),
+            version: currentItem.version,
+          },
+        ];
+
         const itemResponse = await fetch(
-          `/api/v1/inspection-items/${currentItem.inspectionItemId}`,
+          `/api/v1/inspection-items/evaluation`,
           {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              otherConditions: currentItem.otherConditions,
-              inspectionItemResult: determineItemResult(currentItem),
-              version: currentItem.version,
-            }),
+            body: JSON.stringify(itemPayload),
           }
         );
 
@@ -231,15 +252,19 @@ export function useInspectionForm(): UseInspectionFormReturn {
           throw new Error("บันทึกรายการตรวจไม่สำเร็จ");
         }
 
-        // Update inspection item version
-        const updatedItem = await itemResponse.json();
-        setInspectionItems((prev) => {
-          const updated = [...prev];
-          if (updated[currentItemIndex]) {
-            updated[currentItemIndex].version = updatedItem.version;
-          }
-          return updated;
-        });
+        const itemJson = await itemResponse.json();
+        for (const u of itemJson.updated || []) {
+          setInspectionItems((prev) => {
+            const updated = [...prev];
+            const idx = updated.findIndex(
+              (it) => it.inspectionItemId === u.inspectionItemId
+            );
+            if (idx !== -1) {
+              updated[idx].version = u.version;
+            }
+            return updated;
+          });
+        }
 
         console.log("Save completed successfully");
         return true;
@@ -261,136 +286,116 @@ export function useInspectionForm(): UseInspectionFormReturn {
       setSaving(true);
 
       try {
-        let savedCount = 0;
-        let errorCount = 0;
+        const reqPayload: any[] = [];
+        const itemPayload: any[] = [];
 
-        // วนลูปบันทึกทุกรายการตรวจ
-        for (
-          let itemIndex = 0;
-          itemIndex < inspectionItems.length;
-          itemIndex++
-        ) {
-          const item = inspectionItems[itemIndex];
-
-          console.log(
-            `Processing item ${itemIndex + 1}/${inspectionItems.length}:`,
-            {
-              inspectionItemId: item.inspectionItemId,
-              itemNo: item.inspectionItemMaster?.itemNo,
-            }
-          );
-
+        // Build payloads by validating each item
+        for (const item of inspectionItems) {
           // Validate requirements
-          if (item.requirements) {
-            let hasIncompleteReq = false;
-            for (const req of item.requirements) {
-              if (!req.evaluationResult || !req.evaluationMethod) {
-                console.warn(
-                  `Item ${
-                    itemIndex + 1
-                  } has incomplete requirements, skipping...`
-                );
-                hasIncompleteReq = true;
-                break;
-              }
-            }
-            if (hasIncompleteReq) {
+          if (item.requirements && item.requirements.length > 0) {
+            const hasIncomplete = item.requirements.some(
+              (r) => !r.evaluationResult || !r.evaluationMethod
+            );
+            if (hasIncomplete) {
+              // skip this item
               continue;
             }
+
+            for (const r of item.requirements) {
+              reqPayload.push({
+                requirementId: r.requirementId,
+                evaluationResult: r.evaluationResult,
+                evaluationMethod: r.evaluationMethod,
+                note: r.note || "",
+                version: r.version,
+              });
+            }
           }
 
-          try {
-            // Save requirements
-            if (item.requirements) {
-              for (let i = 0; i < item.requirements.length; i++) {
-                const req = item.requirements[i];
-
-                const response = await fetch(
-                  `/api/v1/requirements/${req.requirementId}/evaluation`,
-                  {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      evaluationResult: req.evaluationResult,
-                      evaluationMethod: req.evaluationMethod,
-                      note: req.note || "",
-                      version: req.version || 0,
-                    }),
-                  }
-                );
-
-                if (!response.ok) {
-                  throw new Error(
-                    `บันทึกข้อกำหนดไม่สำเร็จ (item ${itemIndex + 1})`
-                  );
-                }
-
-                const updatedReq = await response.json();
-                setInspectionItems((prev) => {
-                  const updated = [...prev];
-                  if (updated[itemIndex]?.requirements?.[i]) {
-                    updated[itemIndex].requirements![i].version =
-                      updatedReq.version;
-                  }
-                  return updated;
-                });
-              }
-            }
-
-            // Save inspection item
-            const itemResponse = await fetch(
-              `/api/v1/inspection-items/${item.inspectionItemId}`,
-              {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  otherConditions: item.otherConditions,
-                  inspectionItemResult: determineItemResult(item),
-                  version: item.version,
-                }),
-              }
-            );
-
-            if (!itemResponse.ok) {
-              throw new Error(
-                `บันทึกรายการตรวจไม่สำเร็จ (item ${itemIndex + 1})`
-              );
-            }
-
-            const updatedItem = await itemResponse.json();
-            setInspectionItems((prev) => {
-              const updated = [...prev];
-              if (updated[itemIndex]) {
-                updated[itemIndex].version = updatedItem.version;
-              }
-              return updated;
-            });
-
-            savedCount++;
-            console.log(`✓ Item ${itemIndex + 1} saved successfully`);
-          } catch (error) {
-            console.error(`✗ Error saving item ${itemIndex + 1}:`, error);
-            errorCount++;
-          }
+          // Add inspection item update
+          itemPayload.push({
+            inspectionItemId: item.inspectionItemId,
+            result: determineItemResult(item),
+            version: item.version,
+          });
         }
 
-        console.log(`Save summary: ${savedCount} saved, ${errorCount} errors`);
-
-        if (savedCount === 0) {
+        if (reqPayload.length === 0 && itemPayload.length === 0) {
           toast.error(
             "ไม่มีรายการที่สามารถบันทึกได้ กรุณากรอกข้อมูลให้ครบถ้วน"
           );
           return false;
         }
 
-        if (errorCount > 0) {
-          toast.error(
-            `บันทึกสำเร็จ ${savedCount} รายการ, มีข้อผิดพลาด ${errorCount} รายการ`
-          );
-        } else if (savedCount > 0) {
-          toast.success(`บันทึกสำเร็จทั้งหมด ${savedCount} รายการ`);
+        // Send requirements batch first
+        if (reqPayload.length > 0) {
+          const resp = await fetch(`/api/v1/requirements/evaluation`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(reqPayload),
+          });
+
+          if (!resp.ok) {
+            throw new Error("บันทึกข้อกำหนดไม่สำเร็จ");
+          }
+
+          const json = await resp.json();
+          // Update versions for requirements
+          for (const u of json.updated || []) {
+            setInspectionItems((prev) => {
+              const updated = prev.map((it) => ({ ...it }));
+              for (const it of updated) {
+                if (!it.requirements) continue;
+                const rIdx = it.requirements.findIndex(
+                  (rr) => rr.requirementId === u.requirementId
+                );
+                if (rIdx !== -1) {
+                  it.requirements[rIdx].version = u.version;
+                }
+              }
+              return updated;
+            });
+          }
+
+          if (json.errors && json.errors.length > 0) {
+            console.warn("Some requirement updates failed:", json.errors);
+            toast.error("มีข้อผิดพลาดในการบันทึกข้อกำหนดบางรายการ");
+          }
         }
 
+        // Send inspection items batch
+        if (itemPayload.length > 0) {
+          const resp2 = await fetch(`/api/v1/inspection-items/evaluation`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(itemPayload),
+          });
+
+          if (!resp2.ok) {
+            throw new Error("บันทึกรายการตรวจไม่สำเร็จ");
+          }
+
+          const json2 = await resp2.json();
+          for (const u of json2.updated || []) {
+            setInspectionItems((prev) => {
+              const updated = prev.map((it) => ({ ...it }));
+              const idx = updated.findIndex(
+                (it) => it.inspectionItemId === u.inspectionItemId
+              );
+              if (idx !== -1) {
+                updated[idx].version = u.version;
+              }
+              return updated;
+            });
+          }
+
+          if (json2.errors && json2.errors.length > 0) {
+            console.warn("Some inspection item updates failed:", json2.errors);
+            toast.error("มีข้อผิดพลาดในการบันทึกรายการตรวจบางรายการ");
+          }
+        }
+
+        toast.success("บันทึกข้อมูลเรียบร้อยแล้ว");
         return true;
       } catch (error) {
         console.error("Error in saveAllItems:", error);
@@ -404,7 +409,7 @@ export function useInspectionForm(): UseInspectionFormReturn {
   );
 
   const completeInspection = useCallback(
-    async (inspectionId: number): Promise<boolean> => {
+    async (inspectionId: number, version?: number): Promise<boolean> => {
       try {
         const saved = await saveAllItems(inspectionId);
 
@@ -419,6 +424,7 @@ export function useInspectionForm(): UseInspectionFormReturn {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               status: "ตรวจประเมินแล้ว",
+              version: version,
             }),
           }
         );

@@ -57,4 +57,37 @@ export class CertificateService extends BaseService<CertificateModel> {
       throw error;
     }
   }
+
+  async revokeCertificate(
+    certificateId: number,
+    cancelRequestDetail?: string,
+    version?: number
+  ): Promise<CertificateModel | null> {
+    try {
+      const payload: any = {
+        cancelRequestFlag: true,
+        cancelRequestDetail: cancelRequestDetail,
+        activeFlag: false,
+      };
+
+      // If a version is provided, use optimistic locking update
+      if (version !== undefined && !Number.isNaN(Number(version))) {
+        return await this.certificateRepository.updateWithLock(
+          certificateId,
+          payload,
+          Number(version)
+        );
+      }
+
+      const updated = await this.certificateRepository.update(
+        certificateId,
+        payload
+      );
+
+      return updated;
+    } catch (error) {
+      this.handleServiceError(error);
+      throw error;
+    }
+  }
 }

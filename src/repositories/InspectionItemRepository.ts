@@ -147,7 +147,9 @@ export class InspectionItemRepository extends BaseRepository<InspectionItemModel
     );
   }
 
-  private mapToModel(prismaInspectionItem: any): InspectionItemModel {
+  private mapToModel(
+    prismaInspectionItem: PrismaInspectionItem
+  ): InspectionItemModel {
     return this.mapper.toDomain(prismaInspectionItem);
   }
 }

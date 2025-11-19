@@ -7,7 +7,7 @@ interface PrimaryCardProps extends Omit<CardProps, "className"> {
   hoverable?: boolean;
 }
 
-export const PrimaryCard: React.FC<PrimaryCardProps> = ({
+const PrimaryCard: React.FC<PrimaryCardProps> = ({
   className = "",
   variant = "default",
   hoverable = false,
@@ -31,3 +31,5 @@ export const PrimaryCard: React.FC<PrimaryCardProps> = ({
     </Card>
   );
 };
+
+export default PrimaryCard;

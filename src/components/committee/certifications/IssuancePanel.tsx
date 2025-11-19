@@ -87,6 +87,20 @@ export default function IssuancePanel({
     }
   };
 
+  // compute maximum allowed expiry date (2 years from effectiveDate)
+  const expiryMax: Date | null = effectiveDate
+    ? (() => {
+        const d = new Date(effectiveDate);
+        d.setFullYear(d.getFullYear() + 2);
+        return d;
+      })()
+    : null;
+
+  // minimum allowed effective date: use inspection date if available
+  const effectiveMin: Date | null = inspection?.inspectionDateAndTime
+    ? new Date(inspection.inspectionDateAndTime)
+    : null;
+
   return (
     <div className="p-4 bg-white rounded-md shadow-sm">
       {showStepIndicator ? (
@@ -108,19 +122,42 @@ export default function IssuancePanel({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
         <div>
-          <label className="block text-sm text-gray-600 mb-1">วันที่มีผล</label>
-          <PrimaryCalendar value={effectiveDate} onChange={setEffectiveDate} />
+          <label
+            className="block text-sm text-gray-600 mb-1"
+            htmlFor="effectiveDate"
+          >
+            วันที่มีผล
+          </label>
+          <PrimaryCalendar
+            value={effectiveDate}
+            onChange={setEffectiveDate}
+            minDate={effectiveMin}
+            maxDate={expiryDate}
+            id="effectiveDate"
+          />
         </div>
         <div>
-          <label className="block text-sm text-gray-600 mb-1">
+          <label
+            className="block text-sm text-gray-600 mb-1"
+            htmlFor="expiryDate"
+          >
             วันที่หมดอายุ
           </label>
-          <PrimaryCalendar value={expiryDate} onChange={setExpiryDate} />
+          <PrimaryCalendar
+            value={expiryDate}
+            onChange={setExpiryDate}
+            minDate={effectiveDate}
+            maxDate={expiryMax}
+            id="expiryDate"
+          />
         </div>
       </div>
 
       <div className="mt-4">
-        <label className="block text-sm text-gray-600 mb-2">
+        <label
+          className="block text-sm text-gray-600 mb-2"
+          htmlFor="certificateUpload"
+        >
           ไฟล์ใบรับรอง (PDF)
         </label>
         <PrimaryUpload

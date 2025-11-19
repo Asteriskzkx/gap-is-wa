@@ -641,7 +641,10 @@ export default function AuditorInspectionsPage() {
   // Handle complete
   const handleComplete = async () => {
     if (selectedInspection) {
-      const success = await completeInspection(selectedInspection.inspectionId);
+      const success = await completeInspection(
+        selectedInspection.inspectionId,
+        selectedInspection.version
+      );
       if (success) {
         // Clear saved position
         localStorage.removeItem(
