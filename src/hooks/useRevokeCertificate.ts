@@ -127,31 +127,36 @@ export function useRevokeCertificate(initialRows = 10) {
       const data = await resp.json();
       const files = data.files || [];
       if (!files.length) {
-        if (typeof window !== "undefined")
+        if (globalThis.window !== undefined)
           toast.error("ไม่พบไฟล์สำหรับใบรับรองนี้");
         return;
       }
 
       const url = files[0].url;
-      if (url && typeof window !== "undefined") {
-        const w = window.open(url, "_blank", "noopener,noreferrer");
+      if (url && globalThis.window !== undefined) {
+        const w = globalThis.window.open(url, "_blank", "noopener,noreferrer");
         if (w) w.focus();
       } else {
-        if (typeof window !== "undefined") toast.error("ไม่พบ URL ของไฟล์");
+        if (globalThis.window !== undefined) toast.error("ไม่พบ URL ของไฟล์");
       }
     } catch (err) {
       console.error("openFiles error:", err);
-      if (typeof window !== "undefined")
+      if (globalThis.window !== undefined)
         toast.error("เกิดข้อผิดพลาดขณะดึงไฟล์");
     }
   }, []);
 
   const revokeCertificate = useCallback(
-    async (certificateId: number, cancelRequestDetail?: string) => {
+    async (
+      certificateId: number,
+      cancelRequestDetail?: string,
+      version?: number
+    ) => {
       try {
         const body: any = { certificateId };
         if (cancelRequestDetail !== undefined)
           body.cancelRequestDetail = cancelRequestDetail;
+        if (version !== undefined) body.version = version;
 
         const resp = await fetch(`/api/v1/certificates/revoke`, {
           method: "POST",
@@ -166,12 +171,12 @@ export function useRevokeCertificate(initialRows = 10) {
 
         // Refresh the list after successful revoke
         await fetchItems();
-        if (typeof window !== "undefined")
+        if (globalThis.window !== undefined)
           toast.success("ยกเลิกใบรับรองเรียบร้อยแล้ว");
         return true;
       } catch (err) {
         console.error("revokeCertificate error:", err);
-        if (typeof window !== "undefined")
+        if (globalThis.window !== undefined)
           toast.error("เกิดข้อผิดพลาดขณะยกเลิกใบรับรอง");
         return false;
       }

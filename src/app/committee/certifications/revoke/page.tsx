@@ -290,7 +290,8 @@ export default function Page() {
                       const ok = await revokeCertificate(
                         selectedCertificate.certificateId,
                         selectedCertificate?.cancelRequestDetail ??
-                          cancelRequestDetail
+                          cancelRequestDetail,
+                        selectedCertificate.version
                       );
                       if (ok) {
                         setSelectedCertificate(null);

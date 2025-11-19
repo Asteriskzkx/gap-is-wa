@@ -126,21 +126,21 @@ export function useAlreadyIssuedCertificates(initialRows = 10) {
       const data = await resp.json();
       const files = data.files || [];
       if (!files.length) {
-        if (typeof window !== "undefined")
+        if (globalThis.window !== undefined)
           toast.error("ไม่พบไฟล์สำหรับใบรับรองนี้");
         return;
       }
 
       const url = files[0].url;
-      if (url && typeof window !== "undefined") {
-        const w = window.open(url, "_blank", "noopener,noreferrer");
+      if (url && globalThis.window !== undefined) {
+        const w = globalThis.window.open(url, "_blank", "noopener,noreferrer");
         if (w) w.focus();
-      } else {
-        if (typeof window !== "undefined") toast.error("ไม่พบ URL ของไฟล์");
+      } else if (globalThis.window !== undefined) {
+        toast.error("ไม่พบ URL ของไฟล์");
       }
     } catch (err) {
       console.error("openFiles error:", err);
-      if (typeof window !== "undefined")
+      if (globalThis.window !== undefined)
         toast.error("เกิดข้อผิดพลาดขณะดึงไฟล์");
     }
   }, []);

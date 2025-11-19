@@ -150,6 +150,8 @@ export class CertificateController extends BaseController<CertificateModel> {
       const data = await req.json();
       const certificateId = Number(data.certificateId || data.id);
       const cancelRequestDetail = data.cancelRequestDetail;
+      const version =
+        data.version === undefined ? undefined : Number(data.version);
 
       if (!certificateId || Number.isNaN(certificateId)) {
         return NextResponse.json(
@@ -160,7 +162,8 @@ export class CertificateController extends BaseController<CertificateModel> {
 
       const updated = await this.certificateService.revokeCertificate(
         certificateId,
-        cancelRequestDetail
+        cancelRequestDetail,
+        version
       );
 
       if (!updated) {

@@ -60,14 +60,29 @@ export class CertificateService extends BaseService<CertificateModel> {
 
   async revokeCertificate(
     certificateId: number,
-    cancelRequestDetail?: string
+    cancelRequestDetail?: string,
+    version?: number
   ): Promise<CertificateModel | null> {
     try {
-      const updated = await this.certificateRepository.update(certificateId, {
+      const payload: any = {
         cancelRequestFlag: true,
         cancelRequestDetail: cancelRequestDetail,
         activeFlag: false,
-      } as any);
+      };
+
+      // If a version is provided, use optimistic locking update
+      if (version !== undefined && !Number.isNaN(Number(version))) {
+        return await this.certificateRepository.updateWithLock(
+          certificateId,
+          payload,
+          Number(version)
+        );
+      }
+
+      const updated = await this.certificateRepository.update(
+        certificateId,
+        payload
+      );
 
       return updated;
     } catch (error) {
