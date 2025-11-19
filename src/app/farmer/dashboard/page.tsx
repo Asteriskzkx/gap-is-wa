@@ -24,7 +24,7 @@ import {
   EmptyApplicationsState,
 } from "@/components/farmer";
 
-import { PrimaryCard } from "@/components/ui/PrimaryCard";
+import { PrimaryCard } from "@/components/ui";
 import PrimaryDataTable from "@/components/ui/PrimaryDataTable";
 
 interface RubberFarm {
