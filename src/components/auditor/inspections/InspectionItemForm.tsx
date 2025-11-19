@@ -1,5 +1,6 @@
-import React from "react";
 import PrimaryDropdown from "@/components/ui/PrimaryDropdown";
+import PrimaryInputTextarea from "@/components/ui/PrimaryInputTextarea";
+import React from "react";
 
 export interface Requirement {
   requirementId: number;
@@ -158,18 +159,19 @@ export const InspectionItemForm: React.FC<InspectionItemFormProps> = ({
                 >
                   หมายเหตุ
                 </label>
-                <textarea
+                <PrimaryInputTextarea
                   id={`note-${req.requirementId}`}
                   value={req.note || ""}
-                  onChange={(e) =>
+                  onChange={(value: string) =>
                     updateRequirementEvaluation(
                       itemIndex,
                       reqIndex,
                       "note",
-                      e.target.value
+                      value
                     )
                   }
                   rows={2}
+                  maxLength={255}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
                   placeholder="เพิ่มหมายเหตุ (ถ้ามี)"
                 />

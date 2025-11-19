@@ -5,6 +5,7 @@ import PrimaryButton from "@/components/ui/PrimaryButton";
 import PrimaryCalendar from "@/components/ui/PrimaryCalendar";
 import PrimaryDataTable from "@/components/ui/PrimaryDataTable";
 import CertificationStepIndicator from "@/components/committee/certifications/CertificationStepIndicator";
+import PrimaryInputTextarea from "@/components/ui/PrimaryInputTextarea";
 import { CONTAINER, HEADER, SPACING } from "@/styles/auditorClasses";
 import { useMemo, useState } from "react";
 import { useRevokeCertificate } from "@/hooks/useRevokeCertificate";
@@ -260,6 +261,24 @@ export default function Page() {
 
             {step === 2 && (
               <div>
+                <div className="mb-4">
+                  <label
+                    htmlFor="cancelRequestDetail"
+                    className="block text-sm text-gray-600 mb-1"
+                  >
+                    รายละเอียดคำขอยกเลิกใบรับรอง
+                  </label>
+                  <PrimaryInputTextarea
+                    id="cancelRequestDetail"
+                    value={selectedCertificate?.cancelRequestDetail ?? ""}
+                    onChange={(v: string) => {}}
+                    disabled={true}
+                    rows={5}
+                    maxLength={255}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                  />
+                </div>
+
                 <div className="mb-4 text-gray-600">
                   ฟังก์ชันยกเลิกยังไม่ได้ถูกสร้าง (กำลังพัฒนา)
                 </div>
