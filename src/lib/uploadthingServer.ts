@@ -41,10 +41,6 @@ export async function uploadBufferToUploadThing(
   return { url, fileKey };
 }
 
-// Attempt to delete a previously-uploaded file from UploadThing via UTApi.
-// We try a few method names defensively because the SDK surface can differ
-// between versions. The function accepts a URL (ufsUrl or public url) and
-// returns true when deletion was attempted successfully, false otherwise.
 export async function deleteUploadThingFile(
   urlOrUfsUrl: string
 ): Promise<boolean> {

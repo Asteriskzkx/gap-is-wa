@@ -136,8 +136,8 @@ export function useRevokeCertificate(initialRows = 10) {
       if (url && globalThis.window !== undefined) {
         const w = globalThis.window.open(url, "_blank", "noopener,noreferrer");
         if (w) w.focus();
-      } else {
-        if (globalThis.window !== undefined) toast.error("ไม่พบ URL ของไฟล์");
+      } else if (globalThis.window !== undefined) {
+        toast.error("ไม่พบ URL ของไฟล์");
       }
     } catch (err) {
       console.error("openFiles error:", err);
@@ -169,10 +169,43 @@ export function useRevokeCertificate(initialRows = 10) {
           throw new Error(err || "Failed to revoke certificate");
         }
 
+        // After revoking the certificate, delete any related files
+        try {
+          const delParams = new URLSearchParams();
+          delParams.set("tableReference", "Certificate");
+          delParams.set("idReference", String(certificateId));
+
+          const delResp = await fetch(
+            `/api/v1/files/delete?${delParams.toString()}`,
+            {
+              method: "DELETE",
+            }
+          );
+
+          if (!delResp.ok) {
+            // Log but don't fail the whole operation for a file-delete error
+            const txt = await delResp.text().catch(() => "");
+            console.warn(
+              "Failed deleting certificate files:",
+              delResp.status,
+              txt
+            );
+            if (globalThis.window !== undefined) {
+              toast.success(
+                "ยกเลิกใบรับรองเรียบร้อยแล้ว (แต่ไม่สามารถลบไฟล์ได้)"
+              );
+            }
+          } else if (globalThis.window !== undefined) {
+            toast.success("ยกเลิกใบรับรองเรียบร้อยแล้ว");
+          }
+        } catch (err) {
+          console.error("Error deleting certificate files:", err);
+          if (globalThis.window !== undefined)
+            toast.success("ยกเลิกใบรับรองเรียบร้อยแล้ว (ไฟล์อาจยังอยู่)");
+        }
+
         // Refresh the list after successful revoke
         await fetchItems();
-        if (globalThis.window !== undefined)
-          toast.success("ยกเลิกใบรับรองเรียบร้อยแล้ว");
         return true;
       } catch (err) {
         console.error("revokeCertificate error:", err);

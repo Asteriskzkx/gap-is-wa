@@ -105,6 +105,108 @@ export class FileController {
     }
   }
 
+  // Delete all files for a given tableReference and idReference
+  async deleteFilesByReference(req: NextRequest): Promise<NextResponse> {
+    try {
+      const url = new URL(req.url);
+      const tableReference =
+        url.searchParams.get("tableReference") || undefined;
+      const idReferenceStr = url.searchParams.get("idReference") || undefined;
+
+      if (!tableReference || !idReferenceStr)
+        return NextResponse.json(
+          { message: "tableReference and idReference are required" },
+          { status: 400 }
+        );
+
+      const idReference = Number(idReferenceStr);
+      if (Number.isNaN(idReference))
+        return NextResponse.json(
+          { message: "idReference must be a number" },
+          { status: 400 }
+        );
+
+      // authorization based on table
+      const allowedRoles = this.getAllowedRolesForTable(tableReference);
+      const { authorized, error } = await checkAuthorization(req, allowedRoles);
+      if (!authorized)
+        return NextResponse.json(
+          { message: error || "Unauthorized" },
+          { status: 401 }
+        );
+
+      const files = await this.fileService.findByReference(
+        tableReference,
+        idReference
+      );
+
+      if (!files || !files.length)
+        return NextResponse.json(
+          { message: "No files found" },
+          { status: 404 }
+        );
+
+      const results: Array<Record<string, any>> = [];
+
+      for (const f of files) {
+        let remoteDeleted = false;
+        try {
+          if (f.fileKey) {
+            try {
+              const { UTApi } = await import("uploadthing/server");
+              const utapi: any = new UTApi();
+              if (typeof utapi.deleteFiles === "function") {
+                const resp = await utapi.deleteFiles([f.fileKey]);
+                remoteDeleted = !!(resp && resp.success);
+              } else if (typeof utapi.delete === "function") {
+                await utapi.delete(f.fileKey);
+                remoteDeleted = true;
+              } else if (typeof utapi.deleteFile === "function") {
+                await utapi.deleteFile(f.fileKey);
+                remoteDeleted = true;
+              }
+            } catch (e) {
+              console.warn(
+                "delete by fileKey failed, will try URL-based delete",
+                e
+              );
+              remoteDeleted = false;
+            }
+          }
+
+          if (!remoteDeleted) {
+            const { deleteUploadThingFile } = await import(
+              "@/lib/uploadthingServer"
+            );
+            if (f.url) {
+              remoteDeleted = await deleteUploadThingFile(f.url);
+            }
+          }
+        } catch (err) {
+          console.error("Failed to delete remote file:", err);
+          remoteDeleted = false;
+        }
+
+        const dbDeleted = await this.fileService.delete(f.fileId);
+
+        results.push({
+          fileId: f.fileId,
+          fileKey: f.fileKey,
+          remoteDeleted,
+          dbDeleted,
+        });
+      }
+
+      return NextResponse.json({ deleted: results }, { status: 200 });
+    } catch (err: any) {
+      console.error("FileController.deleteFilesByReference error:", err);
+      return NextResponse.json(
+        { message: err?.message || "Internal server error" },
+        { status: 500 }
+      );
+    }
+  }
+
   // Delete a file by its fileId. Returns deleted record (if existed) and boolean success
   async deleteFileById(
     fileId: number,
