@@ -56,14 +56,12 @@ export class CertificateRepository extends BaseRepository<CertificateModel> {
     try {
       const where: any = {};
 
-      if (options?.fromDate || options?.toDate) {
-        where.effectiveDate = {} as any;
-        if (options?.fromDate) {
-          where.effectiveDate.gte = new Date(options.fromDate);
-        }
-        if (options?.toDate) {
-          where.effectiveDate.lte = new Date(options.toDate);
-        }
+      if (options?.fromDate) {
+        where.effectiveDate = { gte: new Date(options.fromDate) } as any;
+      }
+
+      if (options?.toDate) {
+        where.expiryDate = { lte: new Date(options.toDate) } as any;
       }
 
       if (typeof options?.activeFlag === "boolean") {
