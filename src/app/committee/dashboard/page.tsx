@@ -17,8 +17,22 @@ import {
   StacksIcon,
   TextClipboardIcon,
 } from "@/components/icons";
+import { useEffect, useState } from "react";
+
+interface CommitteeSummary {
+  pendingAssessments: number;
+  issuedCertifications: number;
+  revocationRequests: number;
+}
 
 export default function CommitteeDashboardPage() {
+  // Summary state
+  const [summary, setSummary] = useState<CommitteeSummary>({
+    pendingAssessments: 0,
+    issuedCertifications: 0,
+    revocationRequests: 0,
+  });
+
   // Navigation menu items for dashboard content
   const navItems = [
     {
@@ -47,6 +61,56 @@ export default function CommitteeDashboardPage() {
       icon: <CancelIcon className="h-6 w-6" />,
     },
   ];
+
+  const processSummaryData = async () => {
+    try {
+      // Fetch counts in parallel (use small limit to get paginator.total)
+      const readyUrl = `/api/v1/inspections/ready-to-issue?limit=1&offset=0`;
+
+      const issuedUrl = `/api/v1/certificates/already-issue?activeFlag=true&limit=1&offset=0`;
+
+      const revokeUrl = `/api/v1/certificates/revoke-list?activeFlag=true&cancelRequestFlag=true&limit=1&offset=0`;
+
+      const [readyRes, issuedRes, revokeRes] = await Promise.all([
+        fetch(readyUrl),
+        fetch(issuedUrl),
+        fetch(revokeUrl),
+      ]);
+
+      const readyJson = readyRes.ok ? await readyRes.json() : null;
+      const issuedJson = issuedRes.ok ? await issuedRes.json() : null;
+      const revokeJson = revokeRes.ok ? await revokeRes.json() : null;
+
+      const pendingAssessments =
+        readyJson?.paginator?.total ??
+        (Array.isArray(readyJson?.results) ? readyJson.results.length : 0);
+
+      const issuedCertifications =
+        issuedJson?.paginator?.total ??
+        (Array.isArray(issuedJson?.results) ? issuedJson.results.length : 0);
+
+      const revocationRequests =
+        revokeJson?.paginator?.total ??
+        (Array.isArray(revokeJson?.results) ? revokeJson.results.length : 0);
+
+      setSummary({
+        pendingAssessments,
+        issuedCertifications,
+        revocationRequests,
+      });
+    } catch (error) {
+      console.error("processSummaryData error:", error);
+      setSummary({
+        pendingAssessments: 0,
+        issuedCertifications: 0,
+        revocationRequests: 0,
+      });
+    }
+  };
+
+  useEffect(() => {
+    processSummaryData();
+  }, []);
 
   return (
     <CommitteeLayout>
@@ -106,21 +170,21 @@ export default function CommitteeDashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <CommitteeStatusCard
               title="รายการที่รอการพิจารณา"
-              count={0}
+              count={summary.pendingAssessments}
               icon={
                 <AssignmentIcon className="h-6 w-6 text-indigo-500 mr-3 mt-0.5" />
               }
               bgColor="bg-indigo-50"
               borderColor="border-indigo-100"
               textColor="text-indigo-700"
-              linkHref="/committee/assessments"
+              linkHref="/committee/certifications/issue"
               linkText="ดูรายการ"
               linkTextColor="text-indigo-600"
             />
 
             <CommitteeStatusCard
               title="ใบรับรองที่ออกแล้ว"
-              count={0}
+              count={summary.issuedCertifications}
               icon={
                 <CheckCircleIcon className="h-6 w-6 text-green-500 mr-3 mt-0.5" />
               }
@@ -134,7 +198,7 @@ export default function CommitteeDashboardPage() {
 
             <CommitteeStatusCard
               title="ใบรับรองที่มีคำขอยกเลิก"
-              count={0}
+              count={summary.revocationRequests}
               icon={<CancelIcon className="h-6 w-6 text-red-500 mr-3 mt-0.5" />}
               bgColor="bg-red-50"
               borderColor="border-red-100"
