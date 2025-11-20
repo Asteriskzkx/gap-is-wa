@@ -27,6 +27,10 @@ export function useAlreadyIssuedCertificates(initialRows = 10) {
 
   const [appliedFromDate, setAppliedFromDate] = useState<Date | null>(null);
   const [appliedToDate, setAppliedToDate] = useState<Date | null>(null);
+  const [activeFlag, setActiveFlag] = useState<string | null>("true");
+  const [appliedActiveFlag, setAppliedActiveFlag] = useState<string | null>(
+    "true"
+  );
 
   const [lazyParams, setLazyParams] = useState<LazyParams>({
     first: 0,
@@ -50,6 +54,9 @@ export function useAlreadyIssuedCertificates(initialRows = 10) {
       const params = new URLSearchParams();
       params.set("limit", String(rows));
       params.set("offset", String(first));
+      if (appliedActiveFlag !== undefined && appliedActiveFlag !== null) {
+        params.set("activeFlag", String(appliedActiveFlag));
+      }
       if (appliedFromDate)
         params.set("fromDate", appliedFromDate.toISOString());
       if (appliedToDate) params.set("toDate", appliedToDate.toISOString());
@@ -74,7 +81,14 @@ export function useAlreadyIssuedCertificates(initialRows = 10) {
     } finally {
       setLoading(false);
     }
-  }, [status, router, lazyParams, appliedFromDate, appliedToDate]);
+  }, [
+    status,
+    router,
+    lazyParams,
+    appliedFromDate,
+    appliedToDate,
+    appliedActiveFlag,
+  ]);
 
   useEffect(() => {
     fetchItems();
@@ -113,6 +127,15 @@ export function useAlreadyIssuedCertificates(initialRows = 10) {
     setAppliedFromDate(null);
     setAppliedToDate(null);
     setLazyParams((p) => ({ ...p, first: 0 }));
+  }, []);
+
+  const onTabChange = useCallback((field: string, value: string) => {
+    // only support activeFlag for now
+    if (field === "activeFlag") {
+      setActiveFlag(value);
+      setAppliedActiveFlag(value);
+      setLazyParams((p) => ({ ...p, first: 0 }));
+    }
   }, []);
 
   const openFiles = useCallback(async (certificateId: number) => {
@@ -160,5 +183,7 @@ export function useAlreadyIssuedCertificates(initialRows = 10) {
     handleSort,
     setRows: (rows: number) => setLazyParams((p) => ({ ...p, rows })),
     openFiles,
+    currentTab: activeFlag === "true" ? "in-use" : "not-in-use",
+    onTabChange,
   };
 }

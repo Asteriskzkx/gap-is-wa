@@ -6,7 +6,7 @@ import PrimaryCalendar from "@/components/ui/PrimaryCalendar";
 import PrimaryDataTable from "@/components/ui/PrimaryDataTable";
 import { useAlreadyIssuedCertificates } from "@/hooks/useAlreadyIssuedCertificates";
 import { CONTAINER, HEADER, SPACING } from "@/styles/auditorClasses";
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 
 export default function Page() {
   const {
@@ -23,10 +23,27 @@ export default function Page() {
     handlePageChange,
     handleSort,
     openFiles,
+    currentTab,
+    onTabChange,
   } = useAlreadyIssuedCertificates(10);
 
-  const columns = useMemo(
-    () => [
+  const renderActions = useCallback(
+    (r: any) => (
+      <div className="flex justify-center gap-2">
+        <PrimaryButton
+          icon="pi pi-eye"
+          color="info"
+          onClick={() => openFiles?.(r.certificateId)}
+          rounded
+          text
+        />
+      </div>
+    ),
+    [openFiles]
+  );
+
+  const columns = useMemo(() => {
+    const cols: any[] = [
       {
         field: "certificateId",
         header: "รหัสใบรับรอง",
@@ -110,7 +127,10 @@ export default function Page() {
             : "-",
         style: { width: "12%" },
       },
-      {
+    ];
+
+    if (currentTab === "in-use") {
+      cols.push({
         field: "actions",
         header: "",
         sortable: false,
@@ -118,22 +138,13 @@ export default function Page() {
         bodyAlign: "center" as const,
         mobileAlign: "right" as const,
         mobileHideLabel: true,
-        body: (r: any) => (
-          <div className="flex justify-center gap-2">
-            <PrimaryButton
-              icon="pi pi-eye"
-              color="info"
-              onClick={() => openFiles?.(r.certificateId)}
-              rounded
-              text
-            />
-          </div>
-        ),
+        body: renderActions,
         style: { width: "10%" },
-      },
-    ],
-    [openFiles]
-  );
+      });
+    }
+
+    return cols;
+  }, [renderActions, currentTab]);
 
   return (
     <CommitteeLayout>
@@ -204,6 +215,21 @@ export default function Page() {
                     }}
                   />
                 </div>
+              </div>
+
+              <div className="mt-3 flex justify-between gap-3">
+                <PrimaryButton
+                  label="ใช้งาน"
+                  fullWidth
+                  color={currentTab === "in-use" ? "success" : "secondary"}
+                  onClick={() => onTabChange("activeFlag", "true")}
+                />
+                <PrimaryButton
+                  label="ไม่ใช้งาน"
+                  fullWidth
+                  color={currentTab === "not-in-use" ? "success" : "secondary"}
+                  onClick={() => onTabChange("activeFlag", "false")}
+                />
               </div>
             </div>
 

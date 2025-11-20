@@ -158,24 +158,19 @@ export default function LocationFilters({
 
       {/* Third row: tab buttons */}
       {!isCommittee && (
-        // <div className="mt-3 flex justify-center sm:justify-end gap-3">
         <div className="mt-3 grid grid-cols-2 gap-3">
-          {/* <div className="justify-self-end"> */}
           <PrimaryButton
             label="รอสรุปผล"
             icon="pi pi-clock"
             color={currentTab === "pending" ? "success" : "secondary"}
             onClick={() => onTabChange("pending")}
           />
-          {/* </div> */}
-          {/* <div> */}
           <PrimaryButton
             label="เสร็จสิ้น"
             icon="pi pi-check-circle"
             color={currentTab === "completed" ? "success" : "secondary"}
             onClick={() => onTabChange("completed")}
           />
-          {/* </div> */}
         </div>
       )}
     </div>
