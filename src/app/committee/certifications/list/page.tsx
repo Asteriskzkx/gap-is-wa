@@ -219,13 +219,13 @@ export default function Page() {
 
               <div className="mt-3 flex justify-between gap-3">
                 <PrimaryButton
-                  label="ใช้งาน"
+                  label="ใบรับรองที่ใช้งานอยู่"
                   fullWidth
                   color={currentTab === "in-use" ? "success" : "secondary"}
                   onClick={() => onTabChange("activeFlag", "true")}
                 />
                 <PrimaryButton
-                  label="ไม่ใช้งาน"
+                  label="ใบรับรองที่ยกเลิกแล้ว"
                   fullWidth
                   color={currentTab === "not-in-use" ? "success" : "secondary"}
                   onClick={() => onTabChange("activeFlag", "false")}
