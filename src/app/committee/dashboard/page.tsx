@@ -113,7 +113,7 @@ export default function CommitteeDashboardPage() {
               bgColor="bg-indigo-50"
               borderColor="border-indigo-100"
               textColor="text-indigo-700"
-              linkHref="#"
+              linkHref="/committee/assessments"
               linkText="ดูรายการ"
               linkTextColor="text-indigo-600"
             />
@@ -127,19 +127,19 @@ export default function CommitteeDashboardPage() {
               bgColor="bg-emerald-50"
               borderColor="border-emerald-100"
               textColor="text-emerald-700"
-              linkHref="#"
+              linkHref="/committee/certifications/list"
               linkText="ดูรายการ"
               linkTextColor="text-emerald-600"
             />
 
             <CommitteeStatusCard
-              title="ใบรับรองที่ถูกยกเลิก"
+              title="ใบรับรองที่มีคำขอยกเลิก"
               count={0}
               icon={<CancelIcon className="h-6 w-6 text-red-500 mr-3 mt-0.5" />}
               bgColor="bg-red-50"
               borderColor="border-red-100"
               textColor="text-red-700"
-              linkHref="#"
+              linkHref="/committee/certifications/revoke"
               linkText="ดูรายการ"
               linkTextColor="text-red-600"
             />

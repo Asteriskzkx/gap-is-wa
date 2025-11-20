@@ -11,7 +11,6 @@ import {
   CheckCircleIcon,
   FileIcon,
   HomeIcon,
-  LandFrameIcon,
   NaturePeopleIcon,
   TextClipboardIcon,
 } from "@/components/icons";
