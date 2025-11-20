@@ -282,9 +282,14 @@ export default function Page() {
                   />
                 </div>
                 <div className="flex justify-between gap-2">
-                  <PrimaryButton label="ย้อนกลับ" onClick={() => prevStep()} />
+                  <PrimaryButton
+                    label="ย้อนกลับ"
+                    color="secondary"
+                    onClick={() => prevStep()}
+                  />
                   <PrimaryButton
                     label="ยืนยันยกเลิกใบรับรอง"
+                    color="success"
                     onClick={async () => {
                       if (!selectedCertificate) return;
                       const ok = await revokeCertificate(
