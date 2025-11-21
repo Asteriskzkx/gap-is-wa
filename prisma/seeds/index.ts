@@ -1,10 +1,11 @@
 import { PrismaClient } from "@prisma/client";
+import { getPrismaClientOptions } from "../../prisma.config";
 import { seedAdmin } from "./admin";
 import { seedInspectionItems } from "./inspection-items";
 import { seedInspectionTypes } from "./inspection-types";
 import { seedRequirements } from "./requirements";
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient(getPrismaClientOptions());
 
 async function main() {
   console.log(`Start seeding...`);
