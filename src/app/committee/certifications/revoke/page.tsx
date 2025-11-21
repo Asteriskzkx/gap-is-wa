@@ -155,7 +155,9 @@ export default function Page() {
       <div className={CONTAINER.page}>
         <div className={SPACING.mb8}>
           <h1 className={HEADER.title}>ยกเลิกใบรับรองแหล่งผลิตจีเอพี</h1>
-          <p className={HEADER.subtitle}>ยกเลิกใบรับรองแหล่งผลิตยางพารา</p>
+          <p className={HEADER.subtitle}>
+            ยกเลิกใบรับรองแหล่งผลิตยางพาราที่มีคำขอยกเลิก
+          </p>
         </div>
 
         <div className={SPACING.mb6}>
