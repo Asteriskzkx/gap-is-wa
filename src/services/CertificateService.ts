@@ -44,11 +44,12 @@ export class CertificateService extends BaseService<CertificateModel> {
     toDate?: string;
     sortField?: string;
     sortOrder?: "asc" | "desc";
-    multiSortMeta?: Array<{ field: string; order: number }>;
+    multiSortMeta?: string | Array<{ field: string; order: number }>;
     limit?: number;
     offset?: number;
     activeFlag?: boolean;
     cancelRequestFlag?: boolean;
+    farmerId?: number;
   }): Promise<{ data: CertificateModel[]; total: number }> {
     try {
       return await this.certificateRepository.findAllWithPagination(options);
@@ -85,6 +86,28 @@ export class CertificateService extends BaseService<CertificateModel> {
       );
 
       return updated;
+    } catch (error) {
+      this.handleServiceError(error);
+      throw error;
+    }
+  }
+
+  async updateCancelRequestDetail(
+    certificateId: number,
+    cancelRequestDetail: string,
+    version: number
+  ): Promise<CertificateModel | null> {
+    try {
+      const payload: any = {
+        cancelRequestFlag: true,
+        cancelRequestDetail: cancelRequestDetail,
+      };
+
+      return await this.certificateRepository.updateWithLock(
+        certificateId,
+        payload,
+        Number(version)
+      );
     } catch (error) {
       this.handleServiceError(error);
       throw error;

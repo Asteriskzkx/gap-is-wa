@@ -47,11 +47,12 @@ export class CertificateRepository extends BaseRepository<CertificateModel> {
     toDate?: string;
     sortField?: string;
     sortOrder?: "asc" | "desc";
-    multiSortMeta?: Array<{ field: string; order: number }>;
+    multiSortMeta?: string | Array<{ field: string; order: number }>;
     limit?: number;
     offset?: number;
     activeFlag?: boolean;
     cancelRequestFlag?: boolean;
+    farmerId?: number;
   }): Promise<{ data: CertificateModel[]; total: number }> {
     try {
       const where: any = {};
@@ -72,6 +73,14 @@ export class CertificateRepository extends BaseRepository<CertificateModel> {
         where.cancelRequestFlag = options?.cancelRequestFlag;
       }
 
+      if (typeof options?.farmerId === "number") {
+        where.inspection = {
+          rubberFarm: {
+            farmerId: Number(options.farmerId),
+          },
+        };
+      }
+
       const mapSortFieldToPrisma = (field: string, order: "asc" | "desc") => {
         const cleanField = field.replaceAll("?", "");
         const parts = cleanField.split(".");
@@ -87,9 +96,22 @@ export class CertificateRepository extends BaseRepository<CertificateModel> {
         }, {} as any);
       };
 
+      let multiSortArr: Array<{ field: string; order: number }> | undefined;
+      if (typeof options?.multiSortMeta === "string") {
+        try {
+          multiSortArr = JSON.parse(options.multiSortMeta as string);
+        } catch (e) {
+          multiSortArr = undefined;
+        }
+      } else {
+        multiSortArr = options?.multiSortMeta as
+          | Array<{ field: string; order: number }>
+          | undefined;
+      }
+
       let orderBy: any = {};
-      if (options?.multiSortMeta && options.multiSortMeta.length > 0) {
-        orderBy = options.multiSortMeta.map((sort) => {
+      if (multiSortArr && multiSortArr.length > 0) {
+        orderBy = multiSortArr.map((sort) => {
           const order = sort.order === 1 ? "asc" : "desc";
           return mapSortFieldToPrisma(sort.field, order);
         });

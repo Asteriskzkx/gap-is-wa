@@ -289,7 +289,7 @@ export class FileController {
   // ---------------- helpers ----------------
   private getAllowedRolesForTable(tableReference: string) {
     const policy: Record<string, string[]> = {
-      Certificate: ["COMMITTEE", "ADMIN"],
+      Certificate: ["FARMER", "COMMITTEE", "ADMIN"],
       Inspection: ["AUDITOR", "COMMITTEE", "ADMIN"],
       RubberFarm: ["FARMER", "ADMIN"],
       DataRecord: ["AUDITOR", "ADMIN"],
