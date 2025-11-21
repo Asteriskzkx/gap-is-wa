@@ -104,11 +104,97 @@ export class CertificateController extends BaseController<CertificateModel> {
         toDate,
         sortField,
         sortOrder,
-        multiSortMeta: multiSortMeta ? JSON.parse(multiSortMeta) : undefined,
+        multiSortMeta: multiSortMeta,
         limit: usedLimit,
         offset: usedOffset,
         activeFlag,
         cancelRequestFlag,
+      });
+
+      const results = result.data.map((m) => {
+        const json = m.toJSON();
+        json.cancelRequestDetail = m.cancelRequestDetail ?? null;
+        return json;
+      });
+
+      return NextResponse.json(
+        {
+          results,
+          paginator: {
+            limit: usedLimit,
+            offset: usedOffset,
+            total: result.total,
+          },
+        },
+        { status: 200 }
+      );
+    } catch (error: any) {
+      return this.handleControllerError(error);
+    }
+  }
+
+  // GET /api/v1/certificates/revoke-list-for-farmer
+  async getAlreadyIssuedForFarmer(req: NextRequest): Promise<NextResponse> {
+    try {
+      const { authorized, session, error } = await checkAuthorization(req, [
+        "FARMER",
+      ]);
+
+      if (!authorized) {
+        return NextResponse.json(
+          { message: error || "Unauthorized" },
+          { status: 401 }
+        );
+      }
+
+      const farmerId =
+        (session as any)?.user?.roleData?.farmerId ||
+        (session as any)?.user?.roleData?.id;
+
+      if (!farmerId) {
+        return NextResponse.json(
+          { message: "Farmer identification not found in session" },
+          { status: 400 }
+        );
+      }
+
+      const url = new URL(req.url);
+      const params = url.searchParams;
+
+      const fromDate = params.get("fromDate") || undefined;
+      const toDate = params.get("toDate") || undefined;
+      const sortField = params.get("sortField") || undefined;
+      const sortOrder =
+        (params.get("sortOrder") as "asc" | "desc") || undefined;
+      const multiSortMeta = params.get("multiSortMeta") || undefined;
+      const limit = params.get("limit")
+        ? Number(params.get("limit"))
+        : undefined;
+      const offset = params.get("offset")
+        ? Number(params.get("offset"))
+        : undefined;
+      const activeFlag = params.has("activeFlag")
+        ? params.get("activeFlag") === "true"
+        : undefined;
+
+      const cancelRequestFlag = params.has("cancelRequestFlag")
+        ? params.get("cancelRequestFlag") === "true"
+        : undefined;
+
+      const usedLimit = limit ?? 10;
+      const usedOffset = offset ?? 0;
+
+      const result = await this.certificateService.getAlreadyIssued({
+        fromDate,
+        toDate,
+        sortField,
+        sortOrder,
+        multiSortMeta: multiSortMeta,
+        limit: usedLimit,
+        offset: usedOffset,
+        activeFlag,
+        cancelRequestFlag,
+        farmerId: Number(farmerId),
       });
 
       const results = result.data.map((m) => {

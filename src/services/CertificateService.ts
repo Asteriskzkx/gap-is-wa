@@ -44,11 +44,12 @@ export class CertificateService extends BaseService<CertificateModel> {
     toDate?: string;
     sortField?: string;
     sortOrder?: "asc" | "desc";
-    multiSortMeta?: Array<{ field: string; order: number }>;
+    multiSortMeta?: string | Array<{ field: string; order: number }>;
     limit?: number;
     offset?: number;
     activeFlag?: boolean;
     cancelRequestFlag?: boolean;
+    farmerId?: number;
   }): Promise<{ data: CertificateModel[]; total: number }> {
     try {
       return await this.certificateRepository.findAllWithPagination(options);
