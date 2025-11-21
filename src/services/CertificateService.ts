@@ -99,6 +99,7 @@ export class CertificateService extends BaseService<CertificateModel> {
   ): Promise<CertificateModel | null> {
     try {
       const payload: any = {
+        cancelRequestFlag: true,
         cancelRequestDetail: cancelRequestDetail,
       };
 
