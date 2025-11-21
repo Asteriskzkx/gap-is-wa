@@ -27,6 +27,8 @@ export default function Page() {
     handleSort,
     openFiles,
     revokeCertificate,
+    currentTab,
+    onTabChange,
   } = useRevokeCertificate(10);
 
   const [selectedCertificate, setSelectedCertificate] = useState<Record<
@@ -37,6 +39,13 @@ export default function Page() {
   const [cancelRequestDetail, setCancelRequestDetail] = useState<string>("");
 
   const { step, nextStep, prevStep } = useFormStepper(2);
+
+  const handleTabChange = (value: string) => {
+    onTabChange("cancelRequestFlag", value);
+    // clear any selected certificate when switching tabs
+    setSelectedCertificate(null);
+    setCancelRequestDetail("");
+  };
 
   const columns = useMemo(
     () => [
@@ -155,7 +164,9 @@ export default function Page() {
       <div className={CONTAINER.page}>
         <div className={SPACING.mb8}>
           <h1 className={HEADER.title}>ยกเลิกใบรับรองแหล่งผลิตจีเอพี</h1>
-          <p className={HEADER.subtitle}>ยกเลิกใบรับรองแหล่งผลิตยางพารา</p>
+          <p className={HEADER.subtitle}>
+            ยกเลิกใบรับรองแหล่งผลิตยางพาราที่มีคำขอยกเลิก
+          </p>
         </div>
 
         <div className={SPACING.mb6}>
@@ -221,6 +232,25 @@ export default function Page() {
                       onClick={() => clearFilters()}
                     />
                   </div>
+                </div>
+
+                <div className="mt-3 flex justify-between gap-3">
+                  <PrimaryButton
+                    label="ใบรับรองที่มีคำขอยกเลิก"
+                    fullWidth
+                    color={
+                      currentTab === "revocation-requests"
+                        ? "success"
+                        : "secondary"
+                    }
+                    onClick={() => handleTabChange("true")}
+                  />
+                  <PrimaryButton
+                    label="ใบรับรองที่ไม่มีคำขอยกเลิก"
+                    fullWidth
+                    color={currentTab === "other" ? "success" : "secondary"}
+                    onClick={() => handleTabChange("false")}
+                  />
                 </div>
               </div>
             )}

@@ -146,7 +146,7 @@ export default function CommitteeDashboardPage() {
                   "ออกใบรับรองแหล่งผลิตยางพาราที่ผ่านการตรวจประเมิน";
               } else if (index === 3) {
                 colorClass = "bg-red-100 text-red-600";
-                description = "ยกเลิกใบรับรองแหล่งผลิตยางพารา";
+                description = "ยกเลิกใบรับรองแหล่งผลิตยางพาราที่มีคำขอยกเลิก";
               }
 
               return (
@@ -183,7 +183,7 @@ export default function CommitteeDashboardPage() {
             />
 
             <CommitteeStatusCard
-              title="ใบรับรองที่ออกแล้ว"
+              title="ใบรับรองที่ใช้งานอยู่"
               count={summary.issuedCertifications}
               icon={
                 <CheckCircleIcon className="h-6 w-6 text-green-500 mr-3 mt-0.5" />
