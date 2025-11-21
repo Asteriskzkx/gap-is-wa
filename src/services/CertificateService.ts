@@ -91,4 +91,25 @@ export class CertificateService extends BaseService<CertificateModel> {
       throw error;
     }
   }
+
+  async updateCancelRequestDetail(
+    certificateId: number,
+    cancelRequestDetail: string,
+    version: number
+  ): Promise<CertificateModel | null> {
+    try {
+      const payload: any = {
+        cancelRequestDetail: cancelRequestDetail,
+      };
+
+      return await this.certificateRepository.updateWithLock(
+        certificateId,
+        payload,
+        Number(version)
+      );
+    } catch (error) {
+      this.handleServiceError(error);
+      throw error;
+    }
+  }
 }

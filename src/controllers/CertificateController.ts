@@ -262,6 +262,50 @@ export class CertificateController extends BaseController<CertificateModel> {
     }
   }
 
+  async updateCancelRequestDetail(req: NextRequest): Promise<NextResponse> {
+    try {
+      const { authorized, error } = await checkAuthorization(req, [
+        "FARMER",
+        "ADMIN",
+      ]);
+      if (!authorized) {
+        return NextResponse.json(
+          { message: error || "Unauthorized" },
+          { status: 401 }
+        );
+      }
+      const data = await req.json();
+      const certificateId = Number(data.certificateId || data.id);
+      const cancelRequestDetail = data.cancelRequestDetail;
+      const version = Number(data.version);
+      if (!certificateId || Number.isNaN(certificateId)) {
+        return NextResponse.json(
+          { message: "certificateId is required" },
+          { status: 400 }
+        );
+      }
+      if (!cancelRequestDetail) {
+        return NextResponse.json(
+          { message: "cancelRequestDetail is required" },
+          { status: 400 }
+        );
+      }
+      const updated = await this.certificateService.updateCancelRequestDetail(
+        certificateId,
+        cancelRequestDetail,
+        version
+      );
+
+      if (!updated) {
+        return NextResponse.json({ message: "Not found" }, { status: 404 });
+      }
+
+      return NextResponse.json(updated.toJSON(), { status: 200 });
+    } catch (error: any) {
+      return this.handleControllerError(error);
+    }
+  }
+
   protected async createModel(data: any): Promise<CertificateModel> {
     return CertificateModel.createCertificate(
       Number(data.inspectionId),
