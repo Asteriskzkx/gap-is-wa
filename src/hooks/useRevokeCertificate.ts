@@ -27,6 +27,9 @@ export function useRevokeCertificate(initialRows = 10) {
 
   const [appliedFromDate, setAppliedFromDate] = useState<Date | null>(null);
   const [appliedToDate, setAppliedToDate] = useState<Date | null>(null);
+  const [appliedCancelRequestFlag, setAppliedCancelRequestFlag] = useState<
+    string | null
+  >("true");
 
   const [lazyParams, setLazyParams] = useState<LazyParams>({
     first: 0,
@@ -51,7 +54,12 @@ export function useRevokeCertificate(initialRows = 10) {
       params.set("limit", String(rows));
       params.set("offset", String(first));
       params.set("activeFlag", "true");
-      params.set("cancelRequestFlag", "true");
+      if (
+        appliedCancelRequestFlag !== undefined &&
+        appliedCancelRequestFlag !== null
+      ) {
+        params.set("cancelRequestFlag", String(appliedCancelRequestFlag));
+      }
       if (appliedFromDate)
         params.set("fromDate", appliedFromDate.toISOString());
       if (appliedToDate) params.set("toDate", appliedToDate.toISOString());
@@ -75,7 +83,14 @@ export function useRevokeCertificate(initialRows = 10) {
     } finally {
       setLoading(false);
     }
-  }, [status, router, lazyParams, appliedFromDate, appliedToDate]);
+  }, [
+    status,
+    router,
+    lazyParams,
+    appliedFromDate,
+    appliedToDate,
+    appliedCancelRequestFlag,
+  ]);
 
   useEffect(() => {
     fetchItems();
@@ -107,6 +122,14 @@ export function useRevokeCertificate(initialRows = 10) {
     setAppliedFromDate(fromDate);
     setAppliedToDate(toDate);
   }, [fromDate, toDate]);
+
+  const onTabChange = useCallback((field: string, value: string) => {
+    // only support cancelRequestFlag for now
+    if (field === "cancelRequestFlag") {
+      setAppliedCancelRequestFlag(value);
+      setLazyParams((p) => ({ ...p, first: 0 }));
+    }
+  }, []);
 
   const clearFilters = useCallback(() => {
     setFromDate(null);
@@ -233,5 +256,8 @@ export function useRevokeCertificate(initialRows = 10) {
     setRows: (rows: number) => setLazyParams((p) => ({ ...p, rows })),
     openFiles,
     revokeCertificate,
+    currentTab:
+      appliedCancelRequestFlag === "true" ? "revocation-requests" : "other",
+    onTabChange,
   };
 }
