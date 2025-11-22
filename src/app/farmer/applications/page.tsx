@@ -145,16 +145,19 @@ export default function FarmerApplicationsPage() {
                   body: (rowData: ApplicationItem) => {
                     const statusInfo = getStatusInfo(rowData);
                     return (
-                      <span
-                        className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${statusInfo.color}`}
-                      >
-                        {statusInfo.text}
-                      </span>
+                      <div className="inline-flex justify-center w-full">
+                        <span
+                          className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${statusInfo.color}`}
+                        >
+                          {statusInfo.text}
+                        </span>
+                      </div>
                     );
                   },
                   sortable: false,
                   headerAlign: "center" as const,
                   bodyAlign: "center" as const,
+                  mobileAlign: "right" as const,
                   style: { width: "15%" },
                 },
               ]}
