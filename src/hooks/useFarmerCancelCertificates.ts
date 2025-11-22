@@ -27,6 +27,9 @@ export function useFarmerCancelCertificates(initialRows = 10) {
 
   const [appliedFromDate, setAppliedFromDate] = useState<Date | null>(null);
   const [appliedToDate, setAppliedToDate] = useState<Date | null>(null);
+  const [appliedCancelRequestFlag, setAppliedCancelRequestFlag] = useState<
+    string | null
+  >("false");
 
   const [lazyParams, setLazyParams] = useState<LazyParams>({
     first: 0,
@@ -50,8 +53,16 @@ export function useFarmerCancelCertificates(initialRows = 10) {
       const params = new URLSearchParams();
       params.set("limit", String(rows));
       params.set("offset", String(first));
-      params.set("activeFlag", "true");
-      params.set("cancelRequestFlag", "false");
+      // If we are showing "in-use" (cancelRequestFlag === "false") then
+      // include activeFlag=true and cancelRequestFlag=false. If showing
+      // cancel-request (cancelRequestFlag === "true") then only include
+      // cancelRequestFlag=true and do not set activeFlag.
+      if (appliedCancelRequestFlag === "false") {
+        params.set("activeFlag", "true");
+        params.set("cancelRequestFlag", "false");
+      } else if (appliedCancelRequestFlag === "true") {
+        params.set("cancelRequestFlag", "true");
+      }
       if (appliedFromDate)
         params.set("fromDate", appliedFromDate.toISOString());
       if (appliedToDate) params.set("toDate", appliedToDate.toISOString());
@@ -76,7 +87,14 @@ export function useFarmerCancelCertificates(initialRows = 10) {
     } finally {
       setLoading(false);
     }
-  }, [status, router, lazyParams, appliedFromDate, appliedToDate]);
+  }, [
+    status,
+    router,
+    lazyParams,
+    appliedFromDate,
+    appliedToDate,
+    appliedCancelRequestFlag,
+  ]);
 
   useEffect(() => {
     fetchItems();
@@ -115,6 +133,14 @@ export function useFarmerCancelCertificates(initialRows = 10) {
     setAppliedFromDate(null);
     setAppliedToDate(null);
     setLazyParams((p) => ({ ...p, first: 0 }));
+  }, []);
+
+  const onTabChange = useCallback((field: string, value: string) => {
+    // only support cancelRequestFlag for now
+    if (field === "cancelRequestFlag") {
+      setAppliedCancelRequestFlag(value);
+      setLazyParams((p) => ({ ...p, first: 0 }));
+    }
   }, []);
 
   const openFiles = useCallback(async (certificateId: number) => {
@@ -205,5 +231,8 @@ export function useFarmerCancelCertificates(initialRows = 10) {
     setRows: (rows: number) => setLazyParams((p) => ({ ...p, rows })),
     openFiles,
     editCancelRequestDetail,
+    currentTab:
+      appliedCancelRequestFlag === "true" ? "cancel-request" : "in-use",
+    onTabChange,
   };
 }

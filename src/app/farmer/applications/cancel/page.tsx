@@ -33,6 +33,17 @@ function actionBody(row: any) {
   );
 }
 
+function statusBody(row: any) {
+  const active = !!row.activeFlag;
+  const cancelReq = !!row.cancelRequestFlag;
+
+  let text = "-";
+  if (cancelReq && active) text = "ยื่นขอยกเลิกแล้ว";
+  else if (cancelReq && !active) text = "ยกเลิกใบรับรองแล้ว";
+
+  return <div>{text}</div>;
+}
+
 export default function Page() {
   const {
     items,
@@ -49,6 +60,8 @@ export default function Page() {
     handleSort,
     openFiles,
     editCancelRequestDetail,
+    currentTab,
+    onTabChange,
   } = useFarmerCancelCertificates(10);
 
   const [selectedCertificate, setSelectedCertificate] = useState<Record<
@@ -58,6 +71,13 @@ export default function Page() {
   const [cancelRequestDetail, setCancelRequestDetail] = useState<string>("");
 
   const { step, nextStep, prevStep } = useFormStepper(2);
+
+  const handleTabChange = (value: string) => {
+    onTabChange("cancelRequestFlag", value);
+    // clear any selected certificate when switching tabs
+    setSelectedCertificate(null);
+    setCancelRequestDetail("");
+  };
 
   useEffect(() => {
     _openFiles = openFiles;
@@ -119,7 +139,7 @@ export default function Page() {
           ]
             .filter(Boolean)
             .join(" ") || "-",
-        style: { width: "30%" },
+        style: { width: "25%" },
       },
       {
         field: "effectiveDate",
@@ -153,19 +173,29 @@ export default function Page() {
             : "-",
         style: { width: "12%" },
       },
-      {
-        field: "actions",
-        header: "",
-        sortable: false,
-        headerAlign: "center" as const,
-        bodyAlign: "center" as const,
-        mobileAlign: "right" as const,
-        mobileHideLabel: true,
-        body: actionBody,
-        style: { width: "10%" },
-      },
+      currentTab === "cancel-request"
+        ? {
+            field: "status",
+            header: "สถานะ",
+            sortable: false,
+            headerAlign: "center" as const,
+            bodyAlign: "center" as const,
+            body: statusBody,
+            style: { width: "15%" },
+          }
+        : {
+            field: "actions",
+            header: "",
+            sortable: false,
+            headerAlign: "center" as const,
+            bodyAlign: "center" as const,
+            mobileAlign: "right" as const,
+            mobileHideLabel: true,
+            body: actionBody,
+            style: { width: "15%" },
+          },
     ],
-    []
+    [currentTab]
   );
 
   return (
@@ -243,6 +273,23 @@ export default function Page() {
                     />
                   </div>
                 </div>
+
+                <div className="mt-3 flex justify-between gap-3">
+                  <PrimaryButton
+                    label="ใบรับรองทั้งหมด"
+                    fullWidth
+                    color={currentTab === "in-use" ? "success" : "secondary"}
+                    onClick={() => handleTabChange("false")}
+                  />
+                  <PrimaryButton
+                    label="ใบรับรองที่ขอยกเลิก"
+                    fullWidth
+                    color={
+                      currentTab === "cancel-request" ? "success" : "secondary"
+                    }
+                    onClick={() => handleTabChange("true")}
+                  />
+                </div>
               </div>
             )}
 
@@ -273,20 +320,22 @@ export default function Page() {
                   }}
                 />
 
-                <div className="mt-4 flex justify-end gap-2">
-                  <PrimaryButton
-                    label="ถัดไป"
-                    onClick={() => {
-                      if (selectedCertificate) {
-                        setCancelRequestDetail(
-                          selectedCertificate?.cancelRequestDetail ?? ""
-                        );
-                        nextStep();
-                      }
-                    }}
-                    disabled={!selectedCertificate}
-                  />
-                </div>
+                {currentTab !== "cancel-request" && (
+                  <div className="mt-4 flex justify-end gap-2">
+                    <PrimaryButton
+                      label="ถัดไป"
+                      onClick={() => {
+                        if (selectedCertificate) {
+                          setCancelRequestDetail(
+                            selectedCertificate?.cancelRequestDetail ?? ""
+                          );
+                          nextStep();
+                        }
+                      }}
+                      disabled={!selectedCertificate}
+                    />
+                  </div>
+                )}
               </div>
             )}
 
