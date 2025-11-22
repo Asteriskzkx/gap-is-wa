@@ -148,9 +148,7 @@ export default function PrimaryDataTable({
         lazy={lazy}
         onPage={handlePageChange}
         paginatorTemplate={paginatorTemplate}
-        emptyMessage={
-          <div className="text-center py-8 text-gray-500">{emptyMessage}</div>
-        }
+        emptyMessage={<div className="text-gray-500">{emptyMessage}</div>}
         rowClassName={rowClassName}
         onRowClick={onRowClick}
         selectionMode={selectionMode as any}
