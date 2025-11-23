@@ -1438,7 +1438,7 @@ input.p-inputtext:disabled {
 
 .primary-datatable-wrapper .p-datatable-emptymessage > td {
   text-align: center;
-  padding: 2rem;
+  /* padding: 2rem; */
 }
 
 .primary-datatable-wrapper .p-datatable-loading-icon {

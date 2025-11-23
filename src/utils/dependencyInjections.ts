@@ -102,7 +102,8 @@ const plantingDetailService = new PlantingDetailService(
 );
 const rubberFarmService = new RubberFarmService(
   rubberFarmRepository,
-  plantingDetailRepository
+  plantingDetailRepository,
+  inspectionRepository
 );
 const auditorService = new AuditorService(
   auditorRepository,

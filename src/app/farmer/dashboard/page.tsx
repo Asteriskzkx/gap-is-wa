@@ -133,11 +133,13 @@ const renderInspectionDate = (rowData: ApplicationItem) =>
 const renderStatus = (rowData: ApplicationItem) => {
   const statusInfo = getStatusInfo(rowData);
   return (
-    <span
-      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusInfo.color}`}
-    >
-      {statusInfo.text}
-    </span>
+    <div className="inline-flex justify-center w-full">
+      <span
+        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusInfo.color}`}
+      >
+        {statusInfo.text}
+      </span>
+    </div>
   );
 };
 
@@ -349,6 +351,7 @@ export default function FarmerDashboardPage() {
                       header: "สถานะ",
                       headerAlign: "center",
                       bodyAlign: "center",
+                      mobileAlign: "right",
                       body: renderStatus,
                     },
                   ]}

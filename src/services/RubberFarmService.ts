@@ -1,10 +1,9 @@
-import { BaseService } from "./BaseService";
-import { RubberFarmModel } from "../models/RubberFarmModel";
 import { PlantingDetailModel } from "../models/PlantingDetailModel";
-import { RubberFarmRepository } from "../repositories/RubberFarmRepository";
+import { RubberFarmModel } from "../models/RubberFarmModel";
+import { InspectionRepository } from "../repositories/InspectionRepository";
 import { PlantingDetailRepository } from "../repositories/PlantingDetailRepository";
-import { OptimisticLockError } from "../errors/OptimisticLockError";
-import { prisma } from "../utils/db";
+import { RubberFarmRepository } from "../repositories/RubberFarmRepository";
+import { BaseService } from "./BaseService";
 
 // ประกาศ interface สำหรับข้อมูลที่ใช้ในการอัปเดต PlantingDetail
 interface PlantingDetailUpdateData {
@@ -22,14 +21,17 @@ interface PlantingDetailUpdateData {
 export class RubberFarmService extends BaseService<RubberFarmModel> {
   private rubberFarmRepository: RubberFarmRepository;
   private plantingDetailRepository: PlantingDetailRepository;
+  private inspectionRepository: InspectionRepository;
 
   constructor(
     rubberFarmRepository: RubberFarmRepository,
-    plantingDetailRepository: PlantingDetailRepository
+    plantingDetailRepository: PlantingDetailRepository,
+    inspectionRepository: InspectionRepository
   ) {
     super(rubberFarmRepository);
     this.rubberFarmRepository = rubberFarmRepository;
     this.plantingDetailRepository = plantingDetailRepository;
+    this.inspectionRepository = inspectionRepository;
   }
 
   async createRubberFarmWithDetails(
@@ -145,31 +147,37 @@ export class RubberFarmService extends BaseService<RubberFarmModel> {
       // ดึงข้อมูลทั้งหมดของเกษตรกรคนนี้
       const allFarms = await this.rubberFarmRepository.findByFarmerId(farmerId);
 
-      // ถ้าต้องการข้อมูล inspections ด้วย ให้ดึงมาทั้งหมด
-      let farmsWithInspections: any[] = [];
+      // ถ้าต้องการข้อมูล inspections ด้วย ให้ดึง inspections ผ่าน repository
+      // สร้าง row แยกสำหรับแต่ละ inspection (ทำให้ rubber farm ปรากฏซ้ำได้)
+      // และรวมฟาร์มที่ไม่มีการตรวจด้วย (จะมีไม่มีฟิลด์ `inspection`)
+      let farmsToProcess: any[] = [];
       if (includeInspections) {
-        const farmsData = await prisma.rubberFarm.findMany({
-          where: { farmerId },
-          include: {
-            inspections: {
-              orderBy: {
-                inspectionDateAndTime: "desc",
-              },
-              take: 1, // เอาเฉพาะการตรวจล่าสุด
-            },
-          },
+        // ดึง inspections ทั้งหมด แล้วกรองเฉพาะที่สัมพันธ์กับฟาร์มของเกษตรกรนี้
+        const allInspections = await this.inspectionRepository.findAll();
+        const inspectionsForFarmer = allInspections.filter((insp) => {
+          const rfId = insp.rubberFarm?.rubberFarmId || insp.rubberFarmId;
+          return rfId && allFarms.some((f) => f.rubberFarmId === rfId);
         });
 
-        farmsWithInspections = farmsData.map((farm: any) => ({
-          ...farm,
-          latestInspection: farm.inspections[0] || null,
-        }));
-      }
+        // สำหรับแต่ละฟาร์ม: ถ้ามี inspections ให้สร้างแถวแยกต่อ inspection
+        // ถ้าไม่มี inspections ให้เพิ่มแถวฟาร์มปกติ (ไม่มี field `inspection`)
+        for (const farm of allFarms) {
+          const farmInspections = inspectionsForFarmer.filter((insp) => {
+            const rfId = insp.rubberFarm?.rubberFarmId || insp.rubberFarmId;
+            return rfId === farm.rubberFarmId;
+          });
 
-      // ใช้ข้อมูลที่มี inspection ถ้า includeInspections = true
-      const farmsToProcess = includeInspections
-        ? farmsWithInspections
-        : allFarms;
+          if (farmInspections.length > 0) {
+            for (const insp of farmInspections) {
+              farmsToProcess.push({ ...farm, inspection: insp });
+            }
+          } else {
+            farmsToProcess.push({ ...farm });
+          }
+        }
+      } else {
+        farmsToProcess = allFarms;
+      }
 
       // Filter ตามเงื่อนไข
       let filteredFarms = farmsToProcess.filter((farm) => {
@@ -198,11 +206,11 @@ export class RubberFarmService extends BaseService<RubberFarmModel> {
               includeInspections
             ) {
               // Sort by inspection date
-              aValue = a.latestInspection?.inspectionDateAndTime
-                ? new Date(a.latestInspection.inspectionDateAndTime).getTime()
+              aValue = a.inspection?.inspectionDateAndTime
+                ? new Date(a.inspection.inspectionDateAndTime).getTime()
                 : 0;
-              bValue = b.latestInspection?.inspectionDateAndTime
-                ? new Date(b.latestInspection.inspectionDateAndTime).getTime()
+              bValue = b.inspection?.inspectionDateAndTime
+                ? new Date(b.inspection.inspectionDateAndTime).getTime()
                 : 0;
             } else if (
               sortMeta.field.startsWith("inspection.") &&
@@ -210,8 +218,8 @@ export class RubberFarmService extends BaseService<RubberFarmModel> {
             ) {
               // Sort by other inspection fields
               const inspectionField = sortMeta.field.replace("inspection.", "");
-              aValue = a.latestInspection?.[inspectionField] || "";
-              bValue = b.latestInspection?.[inspectionField] || "";
+              aValue = a.inspection?.[inspectionField] || "";
+              bValue = b.inspection?.[inspectionField] || "";
             } else {
               aValue = this.getNestedValue(a, sortMeta.field);
               bValue = this.getNestedValue(b, sortMeta.field);
@@ -253,8 +261,8 @@ export class RubberFarmService extends BaseService<RubberFarmModel> {
           ) {
             // Sort by other inspection fields
             const inspectionField = sortField.replace("inspection.", "");
-            aValue = a.latestInspection?.[inspectionField] || "";
-            bValue = b.latestInspection?.[inspectionField] || "";
+            aValue = a.inspection?.[inspectionField] || "";
+            bValue = b.inspection?.[inspectionField] || "";
           } else {
             aValue = this.getNestedValue(a, sortField);
             bValue = this.getNestedValue(b, sortField);
@@ -269,18 +277,15 @@ export class RubberFarmService extends BaseService<RubberFarmModel> {
       // เรียงลำดับตาม priorityStatus ถ้ามีการระบุ (แสดงสถานะที่ต้องการก่อน)
       if (priorityStatus && includeInspections) {
         filteredFarms.sort((a, b) => {
-          const statusA = a.latestInspection?.inspectionStatus || "";
-          const statusB = b.latestInspection?.inspectionStatus || "";
+          const statusA = a.inspection?.inspectionStatus || "";
+          const statusB = b.inspection?.inspectionStatus || "";
 
-          // ถ้า a มีสถานะตรงกับ priorityStatus ให้ a อยู่ก่อน
           if (statusA === priorityStatus && statusB !== priorityStatus) {
             return -1;
           }
-          // ถ้า b มีสถานะตรงกับ priorityStatus ให้ b อยู่ก่อน
           if (statusA !== priorityStatus && statusB === priorityStatus) {
             return 1;
           }
-          // ถ้าทั้งคู่มีหรือไม่มีสถานะ priorityStatus ให้เรียงตาม createdAt (ล่าสุดก่อน)
           return (
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
           );
@@ -308,16 +313,15 @@ export class RubberFarmService extends BaseService<RubberFarmModel> {
         };
 
         // ถ้ามี inspection ให้เพิ่มข้อมูล inspection ด้วย
-        if (includeInspections && farm.latestInspection) {
+        if (includeInspections && farm.inspection) {
           return {
             ...baseData,
             inspection: {
-              inspectionId: farm.latestInspection.inspectionId,
-              inspectionNo: farm.latestInspection.inspectionNo,
-              inspectionDateAndTime:
-                farm.latestInspection.inspectionDateAndTime,
-              inspectionStatus: farm.latestInspection.inspectionStatus,
-              inspectionResult: farm.latestInspection.inspectionResult,
+              inspectionId: farm.inspection.inspectionId,
+              inspectionNo: farm.inspection.inspectionNo,
+              inspectionDateAndTime: farm.inspection.inspectionDateAndTime,
+              inspectionStatus: farm.inspection.inspectionStatus,
+              inspectionResult: farm.inspection.inspectionResult,
             },
           };
         }
