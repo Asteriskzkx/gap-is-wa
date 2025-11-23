@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Dialog } from "primereact/dialog";
 import { Button } from "primereact/button";
 import PrimaryCalendar from "@/components/ui/PrimaryCalendar";
@@ -18,13 +18,26 @@ export enum UserRole {
   ADMIN = "ADMIN",
 }
 
+// Consolidated address state (Issue #7)
+type AddressState = {
+  houseNo: string;
+  villageName: string;
+  moo: string; // Will validate > 0
+  road: string;
+  alley: string;
+  subDistrict: string;
+  district: string;
+  provinceName: string;
+  zipCode: string;
+};
+
 type Props = {
   namePrefixOptions?: Option[];
   visible: boolean;
   onHide: () => void;
   onCreated: () => Promise<void>;
   showSuccess: () => void;
-  showError: () => void;
+  showError: (message?: string) => void;
 };
 
 export const AddUserDialog: React.FC<Props> = ({
@@ -35,35 +48,59 @@ export const AddUserDialog: React.FC<Props> = ({
   showSuccess,
   showError,
 }) => {
+  // User role and basic info
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
   const [loading, setLoading] = useState(false);
   const [namePrefix, setNamePrefix] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+
+  // Farmer-specific personal info
   const [identificationNumber, setIdentificationNumber] = useState("");
   const [birthDate, setBirthDate] = useState<Date | null>(null);
   const [gender, setGender] = useState("ชาย");
-  const [houseNo, setHouseNo] = useState("");
-  const [villageName, setVillageName] = useState("");
-  const [moo, setMoo] = useState("");
-  const [road, setRoad] = useState("");
-  const [alley, setAlley] = useState("");
-  const [subDistrict, setSubDistrict] = useState("");
-  const [district, setDistrict] = useState("");
-  const [provinceName, setProvinceName] = useState("");
-  const [zipCode, setZipCode] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [mobilePhoneNumber, setMobilePhoneNumber] = useState("");
+
+  // Consolidated address state (Issue #7 - reduces re-renders)
+  const [address, setAddress] = useState<AddressState>({
+    houseNo: "",
+    villageName: "",
+    moo: "",
+    road: "",
+    alley: "",
+    subDistrict: "",
+    district: "",
+    provinceName: "",
+    zipCode: "",
+  });
+
+  // Location hierarchy with proper type safety (Issue #4)
   const [provinceId, setProvinceId] = useState<number | "">("");
   const [amphureId, setAmphureId] = useState<number | "">("");
   const [tambonId, setTambonId] = useState<number | "">("");
   const [provinces, setProvinces] = useState<any[]>([]);
   const [amphures, setAmphures] = useState<any[]>([]);
   const [tambons, setTambons] = useState<any[]>([]);
-  // Track per-field dirtiness (value changed) and touched (blurred/focused)
+
+  // Form state tracking (Issues #1, #2)
   const [dirty, setDirty] = useState<Record<string, boolean>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+  // Helper to update address field
+  const updateAddress = useCallback(
+    (field: keyof AddressState, value: string) => {
+      setAddress((prev) => ({ ...prev, [field]: value }));
+      setDirty((d) => ({ ...d, [field]: true }));
+    },
+    []
+  );
+
+  // Helper to mark field touched (Issue #1)
+  const markTouched = useCallback((field: string) => {
+    setTouched((t) => ({ ...t, [field]: true }));
+  }, []);
 
   const reset = () => {
     setSelectedRole(null);
@@ -74,17 +111,19 @@ export const AddUserDialog: React.FC<Props> = ({
     setIdentificationNumber("");
     setBirthDate(null);
     setGender("ชาย");
-    setHouseNo("");
-    setVillageName("");
-    setMoo("");
-    setRoad("");
-    setAlley("");
-    setSubDistrict("");
-    setDistrict("");
-    setProvinceName("");
-    setZipCode("");
     setPhoneNumber("");
     setMobilePhoneNumber("");
+    setAddress({
+      houseNo: "",
+      villageName: "",
+      moo: "",
+      road: "",
+      alley: "",
+      subDistrict: "",
+      district: "",
+      provinceName: "",
+      zipCode: "",
+    });
     setProvinceId("");
     setAmphureId("");
     setTambonId("");
@@ -98,6 +137,7 @@ export const AddUserDialog: React.FC<Props> = ({
     { name: "นาง", value: "นาง" },
   ];
 
+  // Load provinces on mount
   useEffect(() => {
     const formattedProvinces = (thaiProvinceData as any[]).map(
       (province: any) => ({
@@ -117,17 +157,28 @@ export const AddUserDialog: React.FC<Props> = ({
     setProvinces(formattedProvinces);
   }, []);
 
+  // When province changes, update amphures and reset dependent fields (Issue #2)
   useEffect(() => {
     if (provinceId !== "") {
       const p = provinces.find((p) => p.id === provinceId);
       if (p) {
         setAmphures(p.amphures);
-        setProvinceName(p.name_th);
+        setAddress((prev) => ({ ...prev, provinceName: p.name_th }));
         setAmphureId("");
         setTambonId("");
-        setDistrict("");
-        setSubDistrict("");
-        setZipCode("");
+        // Reset touched for cascading fields (Issue #2)
+        setTouched((t) => ({
+          ...t,
+          amphureId: false,
+          tambonId: false,
+          zipCode: false,
+        }));
+        setAddress((prev) => ({
+          ...prev,
+          district: "",
+          subDistrict: "",
+          zipCode: "",
+        }));
       }
     } else {
       setAmphures([]);
@@ -135,27 +186,41 @@ export const AddUserDialog: React.FC<Props> = ({
     }
   }, [provinceId, provinces]);
 
+  // When amphure changes, update tambons and reset dependent fields (Issue #2)
   useEffect(() => {
     if (amphureId !== "") {
       const a = amphures.find((a) => a.id === amphureId);
       if (a) {
         setTambons(a.tambons);
-        setDistrict(a.name_th);
+        setAddress((prev) => ({ ...prev, district: a.name_th }));
         setTambonId("");
-        setSubDistrict("");
-        setZipCode("");
+        // Reset touched for cascading fields (Issue #2)
+        setTouched((t) => ({
+          ...t,
+          tambonId: false,
+          zipCode: false,
+        }));
+        setAddress((prev) => ({
+          ...prev,
+          subDistrict: "",
+          zipCode: "",
+        }));
       }
     } else {
       setTambons([]);
     }
   }, [amphureId, amphures]);
 
+  // When tambon changes, auto-fill zipCode
   useEffect(() => {
     if (tambonId !== "") {
       const t = tambons.find((t) => t.id === tambonId);
       if (t) {
-        setSubDistrict(t.name_th);
-        setZipCode(String(t.zip_code));
+        setAddress((prev) => ({
+          ...prev,
+          subDistrict: t.name_th,
+          zipCode: String(t.zip_code),
+        }));
       }
     }
   }, [tambonId, tambons]);
@@ -173,7 +238,13 @@ export const AddUserDialog: React.FC<Props> = ({
     [tambons]
   );
 
-  const canSubmit = () => {
+  // Validation helpers
+  const isValidId = (id: string) => id.replaceAll("-", "").length === 13;
+  const isValidMobile = (mobile: string) => mobile.replaceAll("-", "").length === 10;
+  const isValidMoo = (moo: string) => moo !== "" && Number(moo) > 0; // Issue #3
+
+  // Memoized canSubmit to prevent recalculation (Issue #5)
+  const canSubmit = useMemo(() => {
     if (!selectedRole) return false;
     if (
       !namePrefix ||
@@ -183,25 +254,60 @@ export const AddUserDialog: React.FC<Props> = ({
       !email.includes("@")
     )
       return false;
+
     if (selectedRole === UserRole.FARMER) {
-      const idClean = identificationNumber.replaceAll("-", "");
       return (
-        idClean.length === 13 &&
+        isValidId(identificationNumber) &&
         birthDate !== null &&
         gender &&
-        houseNo &&
-        moo !== "" &&
+        address.houseNo &&
+        isValidMoo(address.moo) &&
         provinceId !== "" &&
         amphureId !== "" &&
         tambonId !== "" &&
-        mobilePhoneNumber.replaceAll("-", "").length === 10
+        isValidMobile(mobilePhoneNumber)
       );
     }
     return true;
+  }, [
+    selectedRole,
+    namePrefix,
+    firstName,
+    lastName,
+    email,
+    identificationNumber,
+    birthDate,
+    gender,
+    address,
+    provinceId,
+    amphureId,
+    tambonId,
+    mobilePhoneNumber,
+  ]);
+
+  // Build farmer payload with clean data
+  const buildFarmerPayload = () => {
+    return {
+      identificationNumber: identificationNumber.replaceAll("-", ""),
+      birthDate: birthDate ? birthDate.toISOString().split("T")[0] : null,
+      gender,
+      houseNo: address.houseNo,
+      villageName: address.villageName,
+      moo: Number(address.moo),
+      road: address.road,
+      alley: address.alley,
+      subDistrict: address.subDistrict,
+      district: address.district,
+      provinceName: address.provinceName,
+      zipCode: address.zipCode,
+      phoneNumber: phoneNumber.replaceAll("-", ""),
+      mobilePhoneNumber: mobilePhoneNumber.replaceAll("-", ""),
+    };
   };
 
+  // Submit with improved error handling (Issue #6)
   const submit = async () => {
-    if (!canSubmit()) return;
+    if (!canSubmit) return;
     setLoading(true);
     try {
       const payload: any = {
@@ -211,38 +317,35 @@ export const AddUserDialog: React.FC<Props> = ({
         lastName,
         email,
       };
+
       if (selectedRole === UserRole.FARMER) {
-        const idClean = identificationNumber.replaceAll("-", "");
-        payload.identificationNumber = idClean;
-        payload.birthDate = birthDate
-          ? birthDate.toISOString().split("T")[0]
-          : null;
-        payload.gender = gender;
-        payload.houseNo = houseNo;
-        payload.villageName = villageName;
-        payload.moo = moo === "" ? null : Number(moo);
-        payload.road = road;
-        payload.alley = alley;
-        payload.subDistrict = subDistrict;
-        payload.district = district;
-        payload.provinceName = provinceName;
-        payload.zipCode = zipCode;
-        payload.phoneNumber = phoneNumber.replaceAll("-", "");
-        payload.mobilePhoneNumber = mobilePhoneNumber.replaceAll("-", "");
+        Object.assign(payload, buildFarmerPayload());
       }
+
       const res = await fetch("/api/v1/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error("create failed");
+
+      if (!res.ok) {
+        // Issue #6: Extract error message from backend
+        try {
+          const errorData = await res.json();
+          throw new Error(errorData.message || `Error: ${res.status}`);
+        } catch {
+          throw new Error(`Create failed: ${res.status} ${res.statusText}`);
+        }
+      }
+
       await onCreated();
       showSuccess();
       onHide();
       reset();
     } catch (e) {
       console.error(e);
-      showError();
+      const errorMsg = e instanceof Error ? e.message : "Unknown error";
+      showError(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -259,6 +362,7 @@ export const AddUserDialog: React.FC<Props> = ({
       }}
     >
       <div className="flex flex-col gap-4">
+        {/* Role Selection */}
         <PrimaryDropdown
           value={selectedRole}
           options={Object.values(UserRole).map((r) => ({ label: r, value: r }))}
@@ -266,6 +370,7 @@ export const AddUserDialog: React.FC<Props> = ({
             setSelectedRole(v);
             setDirty((d) => ({ ...d, selectedRole: true }));
           }}
+          onBlur={() => markTouched("selectedRole")}
           placeholder="เลือกบทบาท (Role)"
           required
           invalid={
@@ -286,6 +391,7 @@ export const AddUserDialog: React.FC<Props> = ({
 
         {selectedRole && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Basic Info */}
             <span className="flex flex-col">
               <label className="text-sm mb-1">
                 คำนำหน้า <span className="text-red-500">*</span>
@@ -300,6 +406,7 @@ export const AddUserDialog: React.FC<Props> = ({
                   setNamePrefix(v);
                   setDirty((d) => ({ ...d, namePrefix: true }));
                 }}
+                onBlur={() => markTouched("namePrefix")}
                 placeholder="คำนำหน้า"
                 required
                 invalid={
@@ -312,6 +419,7 @@ export const AddUserDialog: React.FC<Props> = ({
                 }
               />
             </span>
+
             <span className="flex flex-col">
               <label className="text-sm mb-1">
                 ชื่อ <span className="text-red-500">*</span>
@@ -322,6 +430,7 @@ export const AddUserDialog: React.FC<Props> = ({
                   setFirstName(v);
                   setDirty((d) => ({ ...d, firstName: true }));
                 }}
+                onBlur={() => markTouched("firstName")}
                 required
                 invalid={(dirty.firstName || touched.firstName) && !firstName}
                 errorMessage={
@@ -331,6 +440,7 @@ export const AddUserDialog: React.FC<Props> = ({
                 }
               />
             </span>
+
             <span className="flex flex-col">
               <label className="text-sm mb-1">
                 นามสกุล <span className="text-red-500">*</span>
@@ -341,6 +451,7 @@ export const AddUserDialog: React.FC<Props> = ({
                   setLastName(v);
                   setDirty((d) => ({ ...d, lastName: true }));
                 }}
+                onBlur={() => markTouched("lastName")}
                 required
                 invalid={(dirty.lastName || touched.lastName) && !lastName}
                 errorMessage={
@@ -350,6 +461,7 @@ export const AddUserDialog: React.FC<Props> = ({
                 }
               />
             </span>
+
             <span className="flex flex-col">
               <label className="text-sm mb-1">
                 อีเมล <span className="text-red-500">*</span>
@@ -360,6 +472,7 @@ export const AddUserDialog: React.FC<Props> = ({
                   setEmail(v);
                   setDirty((d) => ({ ...d, email: true }));
                 }}
+                onBlur={() => markTouched("email")}
                 type="email"
                 required
                 invalid={
@@ -378,8 +491,10 @@ export const AddUserDialog: React.FC<Props> = ({
               />
             </span>
 
+            {/* Farmer-Specific Fields */}
             {selectedRole === UserRole.FARMER && (
               <>
+                {/* Personal Info */}
                 <span className="flex flex-col">
                   <label className="text-sm mb-1">
                     เลขบัตรประชาชน <span className="text-red-500">*</span>
@@ -390,18 +505,18 @@ export const AddUserDialog: React.FC<Props> = ({
                       setIdentificationNumber(v);
                       setDirty((d) => ({ ...d, identificationNumber: true }));
                     }}
+                    onBlur={() => markTouched("identificationNumber")}
                     mask="9-9999-99999-99-9"
                     required
                     invalid={
                       (dirty.identificationNumber ||
                         touched.identificationNumber) &&
-                      identificationNumber.replaceAll("-", "").length !== 13
+                      !isValidId(identificationNumber)
                     }
                     errorMessage={
                       dirty.identificationNumber || touched.identificationNumber
                         ? identificationNumber
-                          ? identificationNumber.replaceAll("-", "").length !==
-                            13
+                          ? !isValidId(identificationNumber)
                             ? "ต้องมี 13 หลัก"
                             : ""
                           : "กรุณากรอกเลขบัตร"
@@ -410,6 +525,7 @@ export const AddUserDialog: React.FC<Props> = ({
                     placeholder="X-XXXX-XXXXX-XX-X"
                   />
                 </span>
+
                 <span className="flex flex-col">
                   <label className="text-sm mb-1">
                     วันเดือนปีเกิด <span className="text-red-500">*</span>
@@ -422,6 +538,7 @@ export const AddUserDialog: React.FC<Props> = ({
                       setBirthDate(v);
                       setDirty((d) => ({ ...d, birthDate: true }));
                     }}
+                    onBlur={() => markTouched("birthDate")}
                     placeholder="เลือกวันเกิด"
                     dateFormat="dd/mm/yy"
                     showIcon
@@ -440,6 +557,7 @@ export const AddUserDialog: React.FC<Props> = ({
                     }
                   />
                 </span>
+
                 <span className="flex flex-col">
                   <label className="text-sm mb-1">
                     เพศ <span className="text-red-500">*</span>
@@ -450,6 +568,7 @@ export const AddUserDialog: React.FC<Props> = ({
                       setGender(v);
                       setDirty((d) => ({ ...d, gender: true }));
                     }}
+                    onBlur={() => markTouched("gender")}
                     options={[
                       { label: "ชาย", value: "ชาย" },
                       { label: "หญิง", value: "หญิง" },
@@ -465,77 +584,85 @@ export const AddUserDialog: React.FC<Props> = ({
                     }
                   />
                 </span>
+
+                {/* Address Section - using consolidated state */}
                 <span className="flex flex-col">
                   <label className="text-sm mb-1">
                     บ้านเลขที่ <span className="text-red-500">*</span>
                   </label>
                   <PrimaryInputText
-                    value={houseNo}
-                    onChange={(v) => {
-                      setHouseNo(v);
-                      setDirty((d) => ({ ...d, houseNo: true }));
-                    }}
+                    value={address.houseNo}
+                    onChange={(v) => updateAddress("houseNo", v)}
+                    onBlur={() => markTouched("houseNo")}
                     required
-                    invalid={(dirty.houseNo || touched.houseNo) && !houseNo}
+                    invalid={
+                      (dirty.houseNo || touched.houseNo) && !address.houseNo
+                    }
                     errorMessage={
-                      (dirty.houseNo || touched.houseNo) && !houseNo
+                      (dirty.houseNo || touched.houseNo) && !address.houseNo
                         ? "กรุณากรอกบ้านเลขที่"
                         : ""
                     }
                   />
                 </span>
+
                 <span className="flex flex-col">
                   <label className="text-sm mb-1">ชื่อหมู่บ้าน</label>
                   <PrimaryInputText
-                    value={villageName}
-                    onChange={(v) => {
-                      setVillageName(v);
-                      setDirty((d) => ({ ...d, villageName: true }));
-                    }}
+                    value={address.villageName}
+                    onChange={(v) => updateAddress("villageName", v)}
+                    onBlur={() => markTouched("villageName")}
                   />
                 </span>
+
                 <span className="flex flex-col">
                   <label className="text-sm mb-1">
                     หมู่ที่ (Moo) <span className="text-red-500">*</span>
                   </label>
                   <PrimaryInputText
                     type="number"
-                    value={String(moo)}
+                    value={address.moo}
                     onChange={(v) => {
                       if (v === "" || /^\d+$/.test(v)) {
-                        setMoo(v);
-                        setDirty((d) => ({ ...d, moo: true }));
+                        updateAddress("moo", v);
                       }
                     }}
+                    onBlur={() => markTouched("moo")}
                     required
-                    invalid={(dirty.moo || touched.moo) && moo === ""}
+                    invalid={
+                      (dirty.moo || touched.moo) && !isValidMoo(address.moo)
+                    }
                     errorMessage={
-                      (dirty.moo || touched.moo) && moo === ""
-                        ? "กรุณากรอกหมู่ที่"
+                      dirty.moo || touched.moo
+                        ? !address.moo
+                          ? "กรุณากรอกหมู่ที่"
+                          : Number(address.moo) <= 0
+                          ? "หมู่ที่ต้องเป็นตัวเลขบวก"
+                          : ""
                         : ""
                     }
                   />
                 </span>
+
                 <span className="flex flex-col">
                   <label className="text-sm mb-1">ถนน</label>
                   <PrimaryInputText
-                    value={road}
-                    onChange={(v) => {
-                      setRoad(v);
-                      setDirty((d) => ({ ...d, road: true }));
-                    }}
+                    value={address.road}
+                    onChange={(v) => updateAddress("road", v)}
+                    onBlur={() => markTouched("road")}
                   />
                 </span>
+
                 <span className="flex flex-col">
                   <label className="text-sm mb-1">ซอย</label>
                   <PrimaryInputText
-                    value={alley}
-                    onChange={(v) => {
-                      setAlley(v);
-                      setDirty((d) => ({ ...d, alley: true }));
-                    }}
+                    value={address.alley}
+                    onChange={(v) => updateAddress("alley", v)}
+                    onBlur={() => markTouched("alley")}
                   />
                 </span>
+
+                {/* Location Selection */}
                 <span className="flex flex-col">
                   <label className="text-sm mb-1">
                     จังหวัด <span className="text-red-500">*</span>
@@ -544,9 +671,11 @@ export const AddUserDialog: React.FC<Props> = ({
                     value={provinceId}
                     options={provinceOptions}
                     onChange={(v) => {
-                      setProvinceId(v);
+                      // Issue #4: Type safety for IDs
+                      setProvinceId(Number(v));
                       setDirty((d) => ({ ...d, provinceId: true }));
                     }}
+                    onBlur={() => markTouched("provinceId")}
                     placeholder="เลือกหรือค้นหาจังหวัด"
                     required
                     invalid={
@@ -561,6 +690,7 @@ export const AddUserDialog: React.FC<Props> = ({
                     }
                   />
                 </span>
+
                 <span className="flex flex-col">
                   <label className="text-sm mb-1">
                     อำเภอ/เขต <span className="text-red-500">*</span>
@@ -569,9 +699,10 @@ export const AddUserDialog: React.FC<Props> = ({
                     value={amphureId}
                     options={amphureOptions}
                     onChange={(v) => {
-                      setAmphureId(v);
+                      setAmphureId(Number(v));
                       setDirty((d) => ({ ...d, amphureId: true }));
                     }}
+                    onBlur={() => markTouched("amphureId")}
                     placeholder="เลือกหรือค้นหาอำเภอ/เขต"
                     disabled={amphureOptions.length === 0}
                     required
@@ -585,6 +716,7 @@ export const AddUserDialog: React.FC<Props> = ({
                     }
                   />
                 </span>
+
                 <span className="flex flex-col">
                   <label className="text-sm mb-1">
                     ตำบล/แขวง <span className="text-red-500">*</span>
@@ -593,9 +725,10 @@ export const AddUserDialog: React.FC<Props> = ({
                     value={tambonId}
                     options={tambonOptions}
                     onChange={(v) => {
-                      setTambonId(v);
+                      setTambonId(Number(v));
                       setDirty((d) => ({ ...d, tambonId: true }));
                     }}
+                    onBlur={() => markTouched("tambonId")}
                     placeholder="เลือกหรือค้นหาตำบล/แขวง"
                     disabled={tambonOptions.length === 0}
                     required
@@ -609,25 +742,28 @@ export const AddUserDialog: React.FC<Props> = ({
                     }
                   />
                 </span>
+
                 <span className="flex flex-col">
                   <label className="text-sm mb-1">
                     รหัสไปรษณีย์ <span className="text-red-500">*</span>
                   </label>
                   <PrimaryInputText
-                    value={zipCode}
+                    value={address.zipCode}
                     onChange={() => {}}
                     disabled
                     required
                     invalid={
-                      (dirty.tambonId || touched.zipCode) && zipCode === ""
+                      (dirty.tambonId || touched.zipCode) && address.zipCode === ""
                     }
                     errorMessage={
-                      (dirty.tambonId || touched.zipCode) && zipCode === ""
+                      (dirty.tambonId || touched.zipCode) && address.zipCode === ""
                         ? "เลือกตำบลเพื่อเติมรหัสไปรษณีย์"
                         : ""
                     }
                   />
                 </span>
+
+                {/* Phone Numbers */}
                 <span className="flex flex-col">
                   <label className="text-sm mb-1">เบอร์โทรศัพท์บ้าน</label>
                   <PrimaryInputMask
@@ -636,10 +772,12 @@ export const AddUserDialog: React.FC<Props> = ({
                       setPhoneNumber(v);
                       setDirty((d) => ({ ...d, phoneNumber: true }));
                     }}
+                    onBlur={() => markTouched("phoneNumber")}
                     mask="99-999-9999"
                     placeholder="0X-XXX-XXXX"
                   />
                 </span>
+
                 <span className="flex flex-col">
                   <label className="text-sm mb-1">
                     เบอร์โทรศัพท์มือถือ <span className="text-red-500">*</span>
@@ -650,16 +788,18 @@ export const AddUserDialog: React.FC<Props> = ({
                       setMobilePhoneNumber(v);
                       setDirty((d) => ({ ...d, mobilePhoneNumber: true }));
                     }}
+                    onBlur={() => markTouched("mobilePhoneNumber")}
                     mask="999-999-9999"
                     required
                     invalid={
-                      (dirty.mobilePhoneNumber || touched.mobilePhoneNumber) &&
-                      mobilePhoneNumber.replaceAll("-", "").length !== 10
+                      (dirty.mobilePhoneNumber ||
+                        touched.mobilePhoneNumber) &&
+                      !isValidMobile(mobilePhoneNumber)
                     }
                     errorMessage={
                       dirty.mobilePhoneNumber || touched.mobilePhoneNumber
                         ? mobilePhoneNumber
-                          ? mobilePhoneNumber.replaceAll("-", "").length !== 10
+                          ? !isValidMobile(mobilePhoneNumber)
                             ? "ต้องเป็น 10 หลัก"
                             : ""
                           : "กรุณากรอกเบอร์มือถือ"
@@ -673,6 +813,7 @@ export const AddUserDialog: React.FC<Props> = ({
           </div>
         )}
 
+        {/* Dialog Actions */}
         <div className="flex justify-end gap-3 mt-4">
           <Button
             label="ยกเลิก"
@@ -687,7 +828,7 @@ export const AddUserDialog: React.FC<Props> = ({
           <Button
             label="บันทึก"
             icon="pi pi-save"
-            disabled={!canSubmit() || loading}
+            disabled={!canSubmit || loading}
             loading={loading}
             onClick={submit}
             className="px-4"

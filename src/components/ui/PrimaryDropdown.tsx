@@ -13,6 +13,7 @@ interface PrimaryDropdownProps {
   readonly value: any;
   readonly options: Option[];
   readonly onChange: (value: any) => void;
+  readonly onBlur?: () => void;
   readonly placeholder?: string;
   readonly disabled?: boolean;
   readonly required?: boolean;
@@ -32,6 +33,7 @@ export default function PrimaryDropdown({
   value,
   options,
   onChange,
+  onBlur,
   placeholder = "",
   disabled = false,
   required = false,
@@ -61,6 +63,7 @@ export default function PrimaryDropdown({
         value={value}
         options={options}
         onChange={handleChange}
+        onBlur={onBlur}
         optionLabel="label"
         optionValue="value"
         placeholder={placeholder}

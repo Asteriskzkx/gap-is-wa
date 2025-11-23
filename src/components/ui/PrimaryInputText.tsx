@@ -7,6 +7,7 @@ import { Message } from "primereact/message";
 interface PrimaryInputTextProps {
   readonly value: string;
   readonly onChange: (value: string) => void;
+  readonly onBlur?: () => void;
   readonly placeholder?: string;
   readonly disabled?: boolean;
   readonly required?: boolean;
@@ -23,6 +24,7 @@ interface PrimaryInputTextProps {
 export default function PrimaryInputText({
   value,
   onChange,
+  onBlur,
   placeholder = "",
   disabled = false,
   required = false,
@@ -49,6 +51,7 @@ export default function PrimaryInputText({
         type={type}
         value={value}
         onChange={handleChange}
+        onBlur={onBlur}
         placeholder={placeholder}
         disabled={disabled}
         required={required}

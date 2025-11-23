@@ -7,6 +7,7 @@ import { Message } from "primereact/message";
 interface PrimaryInputMaskProps {
   readonly value: string;
   readonly onChange: (value: string) => void;
+  readonly onBlur?: () => void;
   readonly mask?: string;
   readonly placeholder?: string;
   readonly disabled?: boolean;
@@ -24,6 +25,7 @@ interface PrimaryInputMaskProps {
 export default function PrimaryInputMask({
   value,
   onChange,
+  onBlur,
   mask,
   placeholder = "",
   disabled = false,
@@ -51,6 +53,7 @@ export default function PrimaryInputMask({
         name={name}
         value={value}
         onChange={handleChange}
+        onBlur={onBlur}
         mask={mask}
         placeholder={placeholder}
         disabled={disabled}

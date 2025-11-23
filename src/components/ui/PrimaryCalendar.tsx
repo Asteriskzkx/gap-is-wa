@@ -7,6 +7,7 @@ import { Message } from "primereact/message";
 interface PrimaryCalendarProps {
   readonly value: Date | null;
   readonly onChange: (value: Date | null) => void;
+  readonly onBlur?: () => void;
   readonly placeholder?: string;
   readonly disabled?: boolean;
   readonly required?: boolean;
@@ -28,6 +29,7 @@ interface PrimaryCalendarProps {
 export default function PrimaryCalendar({
   value,
   onChange,
+  onBlur,
   placeholder = "",
   disabled = false,
   required = false,
@@ -59,6 +61,7 @@ export default function PrimaryCalendar({
         name={name}
         value={value}
         onChange={handleChange}
+        onBlur={onBlur}
         placeholder={placeholder}
         disabled={disabled}
         required={required}

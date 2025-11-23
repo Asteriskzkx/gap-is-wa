@@ -17,6 +17,7 @@ interface PrimaryAutoCompleteProps {
   readonly value: any;
   readonly options: Option[];
   readonly onChange: (value: any) => void;
+  readonly onBlur?: () => void;
   readonly placeholder?: string;
   readonly disabled?: boolean;
   readonly required?: boolean;
@@ -31,6 +32,7 @@ export default function PrimaryAutoComplete({
   value,
   options,
   onChange,
+  onBlur,
   placeholder = "",
   disabled = false,
   required = false,
@@ -41,7 +43,7 @@ export default function PrimaryAutoComplete({
   errorMessage = "",
 }: PrimaryAutoCompleteProps) {
   const [filteredOptions, setFilteredOptions] = React.useState<Option[]>([]);
-  const [inputValue, setInputValue] = React.useState<string>("");
+  const [inputText, setInputText] = React.useState<string>("");
 
   const inputId =
     id || `autocomplete-${Math.random().toString(36).substring(2, 11)}`;
@@ -52,9 +54,9 @@ export default function PrimaryAutoComplete({
   // Update input value when selected option changes
   React.useEffect(() => {
     if (selectedOption) {
-      setInputValue(selectedOption.label);
+      setInputText(selectedOption.label);
     } else if (value === "" || value === null || value === undefined) {
-      setInputValue("");
+      setInputText("");
     }
   }, [value, selectedOption]);
 
@@ -80,12 +82,12 @@ export default function PrimaryAutoComplete({
       typeof newValue === "object" &&
       newValue.value !== undefined
     ) {
-      setInputValue(newValue.label);
+      setInputText(newValue.label);
       onChange(newValue.value);
     }
     // If user is typing (string input)
     else if (typeof newValue === "string") {
-      setInputValue(newValue);
+      setInputText(newValue);
       // Check if the typed text matches any option exactly
       const matchedOption = options.find(
         (opt) => opt.label.toLowerCase() === newValue.toLowerCase()
@@ -96,7 +98,7 @@ export default function PrimaryAutoComplete({
     }
     // If cleared
     else if (newValue === null || newValue === undefined) {
-      setInputValue("");
+      setInputText("");
       onChange("");
     }
   };
@@ -104,7 +106,7 @@ export default function PrimaryAutoComplete({
   const handleBlur = () => {
     // On blur, check if current input matches any option
     const matchedOption = options.find(
-      (opt) => opt.label.toLowerCase() === inputValue.toLowerCase()
+      (opt) => opt.label.toLowerCase() === inputText.toLowerCase()
     );
 
     if (matchedOption) {
@@ -112,14 +114,14 @@ export default function PrimaryAutoComplete({
       if (value !== matchedOption.value) {
         onChange(matchedOption.value);
       }
-      setInputValue(matchedOption.label);
-    } else if (inputValue && !selectedOption) {
+      setInputText(matchedOption.label);
+    } else if (inputText && !selectedOption) {
       // Input doesn't match any option and no valid selection, clear it
-      setInputValue("");
+      setInputText("");
       onChange("");
     } else if (selectedOption) {
       // Restore the selected option's label if user modified input
-      setInputValue(selectedOption.label);
+      setInputText(selectedOption.label);
     }
   };
 
@@ -128,11 +130,11 @@ export default function PrimaryAutoComplete({
       <AutoComplete
         id={inputId}
         name={name}
-        value={inputValue}
+        value={inputText}
         suggestions={filteredOptions}
         completeMethod={searchOptions}
         onChange={handleChange}
-        onBlur={handleBlur}
+        onBlur={() => { handleBlur(); if (onBlur) onBlur(); }}
         field="label"
         placeholder={placeholder}
         disabled={disabled}
