@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useSession, signOut } from "next-auth/react";
+import { useEffect, useState } from "react";
 import FooterNew from "./FooterNew";
 import HeaderNew from "./HeaderNew";
 import SidebarComponent from "./SidebarNew";
@@ -12,6 +12,7 @@ import {
   EditIcon,
   HomeIcon,
   PlusIcon,
+  StacksIcon,
   TextClipboardIcon,
   TrashIcon,
 } from "@/components/icons";
@@ -54,6 +55,11 @@ export default function FarmerLayout({ children }: FarmerLayoutProps) {
       title: "ติดตามสถานะการรับรอง",
       href: "/farmer/applications",
       icon: <TextClipboardIcon className="h-6 w-6" />,
+    },
+    {
+      title: "ใบรับรองแหล่งผลิตที่ได้รับ",
+      href: "/farmer/certificates",
+      icon: <StacksIcon className="h-6 w-6" />,
     },
     {
       title: "ขอแก้ไขข้อมูลใบรับรองแหล่งผลิต",

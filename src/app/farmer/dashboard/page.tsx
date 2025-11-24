@@ -10,6 +10,7 @@ import {
   EditIcon,
   HomeIcon,
   PlusIcon,
+  StacksIcon,
   TextClipboardIcon,
   TrashIcon,
 } from "@/components/icons";
@@ -152,7 +153,8 @@ export default function FarmerDashboardPage() {
   const getActionCardColorClass = (index: number): string => {
     if (index === 0) return "bg-green-100 text-green-600";
     if (index === 1) return "bg-orange-100 text-orange-600";
-    if (index === 2) return "bg-blue-100 text-blue-600";
+    if (index === 2) return "bg-amber-100 text-amber-600";
+    if (index === 3) return "bg-blue-100 text-blue-600";
     return "bg-red-100 text-red-600";
   };
 
@@ -160,7 +162,8 @@ export default function FarmerDashboardPage() {
   const getActionCardDescription = (index: number): string => {
     if (index === 0) return "ยื่นคำขอรับรองแหล่งผลิตยางพาราตามมาตรฐานจีเอพี";
     if (index === 1) return "ตรวจสอบสถานะคำขอและผลการรับรองแหล่งผลิต";
-    if (index === 2)
+    if (index === 2) return "รายละเอียดใบรับรองแหล่งผลิตที่ได้รับทั้งหมด";
+    if (index === 3)
       return "ขอแก้ไขข้อมูลใบรับรองแหล่งผลิตที่ต้องการปรับปรุงข้อมูล";
     return "ขอยกเลิกใบรับรองแหล่งผลิตที่ไม่ประสงค์จะรับรองต่อ";
   };
@@ -181,6 +184,11 @@ export default function FarmerDashboardPage() {
       title: "ติดตามสถานะการรับรอง",
       href: "/farmer/applications",
       icon: <TextClipboardIcon className="h-6 w-6" />,
+    },
+    {
+      title: "ใบรับรองแหล่งผลิตที่ได้รับ",
+      href: "/farmer/certificates",
+      icon: <StacksIcon className="h-6 w-6" />,
     },
     {
       title: "ขอแก้ไขข้อมูลใบรับรองแหล่งผลิต",
