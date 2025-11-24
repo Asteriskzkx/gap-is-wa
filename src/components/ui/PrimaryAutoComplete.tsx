@@ -55,20 +55,29 @@ export default function PrimaryAutoComplete({
   // Update input value only when value actually changes (not on every render)
   React.useEffect(() => {
     if (value !== prevValueRef.current) {
+      // value changed (controlled from parent) -> update prev ref and input text
       prevValueRef.current = value;
       if (selectedOption) {
         setInputText(selectedOption.label);
       } else if (value === "" || value === null || value === undefined) {
         setInputText("");
       }
+      return;
     }
-  }, [value, selectedOption]);
+
+    // If value did not change but selectedOption became available (for example
+    // options were loaded asynchronously), ensure inputText shows the option's
+    // label. We compare with current inputText to avoid unnecessary state updates.
+    if (selectedOption && inputText !== selectedOption.label) {
+      setInputText(selectedOption.label);
+    }
+  }, [value, selectedOption, inputText]);
 
   const searchOptions = (event: AutoCompleteCompleteEvent) => {
     const query = event.query?.toLowerCase().trim() || "";
-    setFilteredOptions(options.filter((option) =>
-      option.label.toLowerCase().includes(query)
-    ));
+    setFilteredOptions(
+      options.filter((option) => option.label.toLowerCase().includes(query))
+    );
   };
 
   const handleChange = (e: AutoCompleteChangeEvent) => {
