@@ -227,7 +227,7 @@ export default function Page() {
                         htmlFor="fromDate"
                         className="block text-sm text-gray-600 mb-1"
                       >
-                        ตั้งแต่
+                        วันที่มีผล (จาก)
                       </label>
                       <PrimaryCalendar
                         id="fromDate"
@@ -244,7 +244,7 @@ export default function Page() {
                         htmlFor="toDate"
                         className="block text-sm text-gray-600 mb-1"
                       >
-                        ถึง
+                        วันที่หมดอายุ (ถึง)
                       </label>
                       <PrimaryCalendar
                         id="toDate"

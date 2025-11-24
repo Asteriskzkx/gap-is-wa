@@ -208,7 +208,7 @@ export default function FarmerEditForm({ user }: Props) {
     const payload = {
       ...values,
       ...extra,
-      moo: extra.moo ? Number(extra.moo) : null,
+      moo: Number(extra.moo) ,
       birthDate: extra.birthDate
         ? new Date(extra.birthDate).toISOString().split("T")[0]
         : null,
@@ -218,9 +218,10 @@ export default function FarmerEditForm({ user }: Props) {
       ),
       phoneNumber: (extra.phoneNumber || "").replaceAll("-", ""),
       mobilePhoneNumber: (extra.mobilePhoneNumber || "").replaceAll("-", ""),
+      version: user.farmer?.version || 0,
     };
 
-    const res = await fetch(`/api/farmers/${user.userId}`, {
+    const res = await fetch(`/api/v1/farmers/${user.userId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

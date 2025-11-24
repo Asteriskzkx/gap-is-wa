@@ -17,6 +17,7 @@ interface PrimaryAutoCompleteProps {
   readonly value: any;
   readonly options: Option[];
   readonly onChange: (value: any) => void;
+  readonly onBlur?: () => void;
   readonly placeholder?: string;
   readonly disabled?: boolean;
   readonly required?: boolean;
@@ -31,6 +32,7 @@ export default function PrimaryAutoComplete({
   value,
   options,
   onChange,
+  onBlur,
   placeholder = "",
   disabled = false,
   required = false,
@@ -41,7 +43,8 @@ export default function PrimaryAutoComplete({
   errorMessage = "",
 }: PrimaryAutoCompleteProps) {
   const [filteredOptions, setFilteredOptions] = React.useState<Option[]>([]);
-  const [inputValue, setInputValue] = React.useState<string>("");
+  const [inputText, setInputText] = React.useState<string>("");
+  const prevValueRef = React.useRef(value);
 
   const inputId =
     id || `autocomplete-${Math.random().toString(36).substring(2, 11)}`;
@@ -49,44 +52,55 @@ export default function PrimaryAutoComplete({
   // Find the selected option to display its label
   const selectedOption = options.find((opt) => opt.value === value);
 
-  // Update input value when selected option changes
+  // Update input value only when value actually changes (not on every render)
   React.useEffect(() => {
-    if (selectedOption) {
-      setInputValue(selectedOption.label);
-    } else if (value === "" || value === null || value === undefined) {
-      setInputValue("");
+    if (value !== prevValueRef.current) {
+      // value changed (controlled from parent) -> update prev ref and input text
+      prevValueRef.current = value;
+      if (selectedOption) {
+        setInputText(selectedOption.label);
+      } else if (value === "" || value === null || value === undefined) {
+        setInputText("");
+      }
+      return;
     }
-  }, [value, selectedOption]);
+
+    // If value did not change but selectedOption became available (for example
+    // options were loaded asynchronously), ensure inputText shows the option's
+    // label. We compare with current inputText to avoid unnecessary state updates.
+    if (selectedOption && inputText !== selectedOption.label) {
+      setInputText(selectedOption.label);
+    }
+  }, [value, selectedOption, inputText]);
 
   const searchOptions = (event: AutoCompleteCompleteEvent) => {
-    const query = event.query.toLowerCase().trim();
-
-    if (query === "") {
-      setFilteredOptions(options);
-    } else {
-      const filtered = options.filter((option) =>
-        option.label.toLowerCase().includes(query)
-      );
-      setFilteredOptions(filtered);
-    }
+    const query = event.query?.toLowerCase().trim() || "";
+    setFilteredOptions(
+      options.filter((option) => option.label.toLowerCase().includes(query))
+    );
   };
 
   const handleChange = (e: AutoCompleteChangeEvent) => {
     const newValue = e.value;
 
-    // If user selected an option from dropdown (object with value property)
-    if (
-      newValue &&
-      typeof newValue === "object" &&
-      newValue.value !== undefined
-    ) {
-      setInputValue(newValue.label);
+    // ถ้าเลือกจาก dropdown → newValue เป็น object ที่มี label + value
+    if (newValue && typeof newValue === "object" && "value" in newValue) {
+      setInputText(newValue.label);
       onChange(newValue.value);
+      return;
     }
-    // If user is typing (string input)
-    else if (typeof newValue === "string") {
-      setInputValue(newValue);
-      // Check if the typed text matches any option exactly
+
+    // ถ้าล้างค่า (null/undefined)
+    if (newValue === null || newValue === undefined) {
+      setInputText("");
+      onChange("");
+      return;
+    }
+
+    // ถ้ากำลังพิมพ์ → newValue เป็น string
+    if (typeof newValue === "string") {
+      setInputText(newValue);
+      // ถ้ามี option ที่ตรงแบบ exact match ให้ set value ไปเลย
       const matchedOption = options.find(
         (opt) => opt.label.toLowerCase() === newValue.toLowerCase()
       );
@@ -94,33 +108,35 @@ export default function PrimaryAutoComplete({
         onChange(matchedOption.value);
       }
     }
-    // If cleared
-    else if (newValue === null || newValue === undefined) {
-      setInputValue("");
-      onChange("");
-    }
   };
 
   const handleBlur = () => {
-    // On blur, check if current input matches any option
+    // ถ้า inputText ไม่ว่าง และมี selected option ให้ ensure ว่า value ถูก set
+    if (inputText && selectedOption) {
+      onChange(selectedOption.value);
+      return;
+    }
+
+    // ถ้า inputText ว่าง ให้ล้างค่า
+    if (!inputText) {
+      onChange("");
+      return;
+    }
+
+    // ถ้า inputText มีแต่ไม่ match option ใด → ค้นหา exact match
     const matchedOption = options.find(
-      (opt) => opt.label.toLowerCase() === inputValue.toLowerCase()
+      (opt) => opt.label.toLowerCase() === inputText.toLowerCase()
     );
 
     if (matchedOption) {
-      // Input matches an option, ensure value is set
-      if (value !== matchedOption.value) {
-        onChange(matchedOption.value);
-      }
-      setInputValue(matchedOption.label);
-    } else if (inputValue && !selectedOption) {
-      // Input doesn't match any option and no valid selection, clear it
-      setInputValue("");
+      onChange(matchedOption.value);
+    } else {
+      // ไม่มี match → ล้างค่า
+      setInputText("");
       onChange("");
-    } else if (selectedOption) {
-      // Restore the selected option's label if user modified input
-      setInputValue(selectedOption.label);
     }
+
+    if (onBlur) onBlur();
   };
 
   return (
@@ -128,7 +144,7 @@ export default function PrimaryAutoComplete({
       <AutoComplete
         id={inputId}
         name={name}
-        value={inputValue}
+        value={inputText}
         suggestions={filteredOptions}
         completeMethod={searchOptions}
         onChange={handleChange}

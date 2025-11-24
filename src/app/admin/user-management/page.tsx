@@ -13,6 +13,7 @@ import { Toast } from "primereact/toast";
 import React, { useEffect, useRef } from "react";
 import { Button } from "primereact/button";
 import { Dialog } from "primereact/dialog";
+import { AddUserDialog } from "@/components/admin/AddUserDialog";
 
 export default function AdminUserManagementPage() {
   const [users, setUsers] = React.useState<User[]>([]);
@@ -314,18 +315,13 @@ export default function AdminUserManagementPage() {
               </div>
             </Dialog>
 
-            <Dialog
-              header="เพิ่มผู้ใช้ใหม่"
+            <AddUserDialog
               visible={visibleAddUserDialog}
-              style={{ width: "40rem" }}
               onHide={() => setVisibleAddUserDialog(false)}
-            >
-              {/* AddUserForm component */}
-              <div className="w-full h-96 flex items-center justify-center text-gray-500">
-                กำลังพัฒนาฟีเจอร์นี้... สำหรับ 4 User 
-              </div>
-
-            </Dialog>
+              onCreated={fetchUsers}
+              showSuccess={showSuccess}
+              showError={showError}
+            />
           </div>
         </div>
       </AdminLayout>
