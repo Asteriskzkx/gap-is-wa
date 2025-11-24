@@ -216,7 +216,7 @@ export default function Page() {
                       htmlFor="toDate"
                       className="block text-sm text-gray-600 mb-1"
                     >
-                      วันที่มีผล (ถึง)
+                      วันที่หมดอายุ (ถึง)
                     </label>
                     <PrimaryCalendar
                       id="toDate"
