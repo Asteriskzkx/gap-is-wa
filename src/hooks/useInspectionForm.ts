@@ -236,6 +236,7 @@ export function useInspectionForm(): UseInspectionFormReturn {
             inspectionItemId: currentItem.inspectionItemId,
             result: determineItemResult(currentItem),
             version: currentItem.version,
+            otherConditions: currentItem.otherConditions,
           },
         ];
 
@@ -317,6 +318,7 @@ export function useInspectionForm(): UseInspectionFormReturn {
             inspectionItemId: item.inspectionItemId,
             result: determineItemResult(item),
             version: item.version,
+            otherConditions: item.otherConditions,
           });
         }
 
