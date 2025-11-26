@@ -1376,6 +1376,14 @@ input.p-inputtext:disabled {
     margin-bottom: 0.5rem !important;
   }
 
+  .primary-datatable-wrapper .p-datatable-tbody > tr.bg-green-50,
+  .primary-datatable-wrapper .p-datatable-tbody > tr.p-highlight {
+    background-color: #f0fdf4 !important;
+    border-color: #d1fae5 !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+  }
+
   /* Override PrimeReact inline styles */
   .primary-datatable-wrapper .p-datatable-tbody > tr > td[style] {
     width: 100% !important;
