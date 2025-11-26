@@ -100,7 +100,7 @@ export class InspectionItemController extends BaseController<InspectionItemModel
       }
 
       const data = await req.json();
-      const { result, version } = data;
+      const { result, version, otherConditions } = data;
 
       if (!result) {
         return NextResponse.json(
@@ -113,7 +113,8 @@ export class InspectionItemController extends BaseController<InspectionItemModel
         await this.inspectionItemService.updateInspectionItemResult(
           itemId,
           result,
-          version
+          version,
+          otherConditions
         );
 
       if (!updatedItem) {
@@ -150,7 +151,7 @@ export class InspectionItemController extends BaseController<InspectionItemModel
       const errors: any[] = [];
 
       for (const entry of data) {
-        const { inspectionItemId, result, version } = entry;
+        const { inspectionItemId, result, version, otherConditions } = entry;
 
         if (!inspectionItemId || !result) {
           errors.push({ inspectionItemId, message: "Missing fields" });
@@ -162,7 +163,8 @@ export class InspectionItemController extends BaseController<InspectionItemModel
             await this.inspectionItemService.updateInspectionItemResult(
               inspectionItemId,
               result,
-              version
+              version,
+              otherConditions
             );
 
           if (updated) {

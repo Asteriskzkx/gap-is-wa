@@ -92,19 +92,25 @@ export class InspectionItemService extends BaseService<InspectionItemModel> {
   async updateInspectionItemResult(
     itemId: number,
     result: string,
-    currentVersion?: number
+    currentVersion?: number,
+    otherConditions?: any
   ): Promise<InspectionItemModel | null> {
     try {
+      const updateData: any = { inspectionItemResult: result };
+      if (otherConditions !== undefined) {
+        updateData.otherConditions = otherConditions;
+      }
+
       if (currentVersion !== undefined) {
         // Use optimistic locking
         return await this.inspectionItemRepository.updateWithLock(
           itemId,
-          { inspectionItemResult: result },
+          updateData,
           currentVersion
         );
       } else {
         // Fallback to regular update
-        return await this.update(itemId, { inspectionItemResult: result });
+        return await this.update(itemId, updateData);
       }
     } catch (error) {
       this.handleServiceError(error);
