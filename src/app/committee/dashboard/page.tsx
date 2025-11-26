@@ -169,7 +169,7 @@ export default function CommitteeDashboardPage() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <CommitteeStatusCard
-              title="รายการที่รอการพิจารณา"
+              title="รอการออกใบรับรอง"
               count={summary.pendingAssessments}
               icon={
                 <AssignmentIcon className="h-6 w-6 text-indigo-500 mr-3 mt-0.5" />
@@ -178,7 +178,7 @@ export default function CommitteeDashboardPage() {
               borderColor="border-indigo-100"
               textColor="text-indigo-700"
               linkHref="/committee/certifications/issue"
-              linkText="ดูรายการ"
+              linkText="ออกใบรับรอง"
               linkTextColor="text-indigo-600"
             />
 
