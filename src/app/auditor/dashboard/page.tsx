@@ -424,7 +424,7 @@ export default function AuditorDashboardPage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               <StatusCard
-                title="รอการนัดหมาย"
+                title="รอกำหนดการวันที่ตรวจประเมิน"
                 count={availableFarms}
                 icon={
                   <CalendarIcon className="h-6 w-6 text-amber-500 mr-3 mt-0.5" />
@@ -432,7 +432,7 @@ export default function AuditorDashboardPage() {
                 bgColor="bg-amber-50"
                 borderColor="border-amber-100"
                 textColor="text-amber-700"
-                linkText="จัดการนัดหมาย"
+                linkText="แจ้งกำหนดการ"
                 linkHref="/auditor/applications"
                 linkTextColor="text-amber-600"
               />
@@ -452,7 +452,7 @@ export default function AuditorDashboardPage() {
               />
 
               <StatusCard
-                title="รอสรุปผล"
+                title="รอสรุปผลการตรวจประเมิน"
                 count={inspectionSummary.pendingResult}
                 icon={
                   <FileIcon className="h-6 w-6 text-purple-500 mr-3 mt-0.5" />
@@ -460,7 +460,7 @@ export default function AuditorDashboardPage() {
                 bgColor="bg-purple-50"
                 borderColor="border-purple-100"
                 textColor="text-purple-700"
-                linkText="จัดการรายงาน"
+                linkText="สรุปผลการตรวจ"
                 linkHref="/auditor/reports"
                 linkTextColor="text-purple-600"
               />
