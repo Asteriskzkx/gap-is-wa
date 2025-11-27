@@ -1442,7 +1442,7 @@ export default function AuditorScheduleInspectionPage() {
                 </div>
                 <div className="bg-white p-4 rounded-lg">
                   <h4 className="font-semibold text-gray-800 mb-2">
-                    แผนที่ที่ตั้งสวน
+                    แผนที่ตั้งสวน
                   </h4>
                   <div className="w-full">
                     <DynamicMapViewer

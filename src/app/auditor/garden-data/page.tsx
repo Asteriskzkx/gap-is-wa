@@ -2,6 +2,7 @@
 
 import { StepIndicator } from "@/components/farmer/StepIndicator";
 import AuditorLayout from "@/components/layout/AuditorLayout";
+import DynamicMapViewer from "@/components/maps/DynamicMapViewer";
 import PrimaryAutoComplete from "@/components/ui/PrimaryAutoComplete";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import PrimaryDataTable from "@/components/ui/PrimaryDataTable";
@@ -327,10 +328,18 @@ export default function Page() {
 
             {step === 2 && (
               <div>
-                <p className="text-sm text-gray-600">
-                  หน้าสำหรับบันทึกข้อมูลประจำสวนยางยังไม่ถูกสร้าง
-                </p>
-                <div className="mt-4 flex justify-between gap-2">
+                <div className="mb-4">
+                  <h4 className="text-sm text-gray-600 mb-2">แผนที่ตั้งสวน</h4>
+                  <div className="w-full">
+                    <DynamicMapViewer
+                      location={selectedInspection?.rubberFarm?.location}
+                      height="500px"
+                      width="100%"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-between gap-2">
                   <PrimaryButton
                     label="ย้อนกลับ"
                     color="secondary"
