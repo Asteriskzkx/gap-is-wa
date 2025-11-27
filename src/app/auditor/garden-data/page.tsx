@@ -6,8 +6,10 @@ import DynamicMapViewer from "@/components/maps/DynamicMapViewer";
 import PrimaryAutoComplete from "@/components/ui/PrimaryAutoComplete";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import PrimaryCalendar from "@/components/ui/PrimaryCalendar";
+import PrimaryCheckbox from "@/components/ui/PrimaryCheckbox";
 import PrimaryDataTable from "@/components/ui/PrimaryDataTable";
 import PrimaryInputNumber from "@/components/ui/PrimaryInputNumber";
+import PrimaryInputTextarea from "@/components/ui/PrimaryInputTextarea";
 import thaiProvinceData from "@/data/thai-provinces.json";
 import { useAuditorGardenData } from "@/hooks/useAuditorGardenData";
 import { useFormStepper } from "@/hooks/useFormStepper";
@@ -103,6 +105,10 @@ export default function Page() {
 
   const removePlantingDetail = (id: string) =>
     setPlantingDetails((prev) => prev.filter((p) => p.id !== id));
+
+  // Water system state (step 2 - section 2)
+  const [waterSystemHas, setWaterSystemHas] = useState<boolean | null>(null);
+  const [waterSystemDetails, setWaterSystemDetails] = useState<string>("");
 
   const handleTabChange = (value: string) => {
     onTabChange("inspectionTab", value);
@@ -512,6 +518,45 @@ export default function Page() {
                   <h4 className="text-sm text-gray-600 mb-2">
                     2. ระบบการให้น้ำ
                   </h4>
+                  <div className="p-3 border rounded-md mb-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3">
+                      <div className="flex justify-between items-start">
+                        <PrimaryCheckbox
+                          checked={waterSystemHas === false}
+                          label="ไม่มี"
+                          onChange={(_checked: boolean) => {
+                            setWaterSystemHas(false);
+                            setWaterSystemDetails("");
+                          }}
+                        />
+                        <PrimaryCheckbox
+                          checked={waterSystemHas === true}
+                          label="มี"
+                          onChange={(_checked: boolean) => {
+                            setWaterSystemHas(true);
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor={"water-system-details"}
+                          className="block text-sm text-gray-600 mb-1"
+                        >
+                          ระบุ
+                        </label>
+                        <PrimaryInputTextarea
+                          id={"water-system-details"}
+                          value={waterSystemDetails}
+                          onChange={(v: string) => setWaterSystemDetails(v)}
+                          rows={5}
+                          maxLength={255}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                          placeholder="ระบุรายละเอียดระบบการให้น้ำ"
+                          disabled={waterSystemHas !== true}
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="mb-4">
