@@ -5,14 +5,29 @@ import AuditorLayout from "@/components/layout/AuditorLayout";
 import DynamicMapViewer from "@/components/maps/DynamicMapViewer";
 import PrimaryAutoComplete from "@/components/ui/PrimaryAutoComplete";
 import PrimaryButton from "@/components/ui/PrimaryButton";
+import PrimaryCalendar from "@/components/ui/PrimaryCalendar";
 import PrimaryDataTable from "@/components/ui/PrimaryDataTable";
+import PrimaryInputNumber from "@/components/ui/PrimaryInputNumber";
 import thaiProvinceData from "@/data/thai-provinces.json";
 import { useAuditorGardenData } from "@/hooks/useAuditorGardenData";
 import { useFormStepper } from "@/hooks/useFormStepper";
 import { CONTAINER, HEADER, SPACING } from "@/styles/auditorClasses";
 import { useMemo, useState } from "react";
 
+const rubberSpeciesOptions = [
+  { label: "RRIT 251", value: "RRIT 251" },
+  { label: "RRIM 600", value: "RRIM 600" },
+  { label: "BPM 24", value: "BPM 24" },
+  { label: "PB 235", value: "PB 235" },
+  { label: "RRIT 408", value: "RRIT 408" },
+  { label: "RRIT 226", value: "RRIT 226" },
+  { label: "อื่นๆ", value: "อื่นๆ" },
+];
+
 export default function Page() {
+  const genId = () =>
+    `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
+
   const {
     items,
     loading,
@@ -48,6 +63,46 @@ export default function Page() {
   const [subDistricts, setSubDistricts] = useState<any[]>([]);
 
   const { step, nextStep, prevStep } = useFormStepper(2);
+
+  // Planting details for step 2
+  const [plantingDetails, setPlantingDetails] = useState<
+    Array<{
+      id: string;
+      specie: string;
+      spacing: number | null;
+      numberOfTrees: number | null;
+      plantingDate: Date | null;
+    }>
+  >([
+    {
+      id: genId(),
+      specie: "",
+      spacing: null,
+      numberOfTrees: null,
+      plantingDate: null,
+    },
+  ]);
+
+  const updatePlantingDetail = (id: string, field: string, value: any) => {
+    setPlantingDetails((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, [field]: value } : p))
+    );
+  };
+
+  const addPlantingDetail = () =>
+    setPlantingDetails((prev) => [
+      ...prev,
+      {
+        id: genId(),
+        specie: "",
+        spacing: null,
+        numberOfTrees: null,
+        plantingDate: null,
+      },
+    ]);
+
+  const removePlantingDetail = (id: string) =>
+    setPlantingDetails((prev) => prev.filter((p) => p.id !== id));
 
   const handleTabChange = (value: string) => {
     onTabChange("inspectionTab", value);
@@ -333,10 +388,160 @@ export default function Page() {
                   <div className="w-full">
                     <DynamicMapViewer
                       location={selectedInspection?.rubberFarm?.location}
-                      height="500px"
+                      height="400px"
                       width="100%"
                     />
                   </div>
+                </div>
+
+                <div className="mb-4">
+                  <h4 className="text-sm text-gray-600 mb-2">
+                    1. พันธุ์ยางพาราที่ปลูก
+                  </h4>
+
+                  {plantingDetails.map((detail, index) => (
+                    <div key={detail.id} className="p-3 border rounded-md mb-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                        <div>
+                          <label
+                            htmlFor={`specie-${detail.id}`}
+                            className="block text-sm text-gray-600 mb-1"
+                          >
+                            พันธุ์ยางพารา
+                          </label>
+                          <PrimaryAutoComplete
+                            id={`specie-${detail.id}`}
+                            name={`specie-${detail.id}`}
+                            value={detail.specie}
+                            options={rubberSpeciesOptions}
+                            onChange={(value) =>
+                              updatePlantingDetail(detail.id, "specie", value)
+                            }
+                            placeholder="เลือกพันธุ์ยางพารา"
+                          />
+                        </div>
+
+                        <div>
+                          <label
+                            htmlFor={`spacing-${detail.id}`}
+                            className="block text-sm text-gray-600 mb-1"
+                          >
+                            ระยะปลูก (เมตร)
+                          </label>
+                          <PrimaryInputNumber
+                            id={`spacing-${detail.id}`}
+                            name={`spacing-${detail.id}`}
+                            value={detail.spacing}
+                            onChange={(v) =>
+                              updatePlantingDetail(detail.id, "spacing", v)
+                            }
+                            min={0}
+                            max={100000}
+                            placeholder="ระยะปลูก (เมตร)"
+                          />
+                        </div>
+
+                        <div>
+                          <label
+                            htmlFor={`numberOfTrees-${detail.id}`}
+                            className="block text-sm text-gray-600 mb-1"
+                          >
+                            จำนวนต้น
+                          </label>
+                          <PrimaryInputNumber
+                            id={`numberOfTrees-${detail.id}`}
+                            name={`numberOfTrees-${detail.id}`}
+                            value={detail.numberOfTrees}
+                            onChange={(v) =>
+                              updatePlantingDetail(
+                                detail.id,
+                                "numberOfTrees",
+                                v
+                              )
+                            }
+                            min={0}
+                            max={100000}
+                            placeholder="จำนวนต้น"
+                          />
+                        </div>
+
+                        <div>
+                          <label
+                            htmlFor={`plantingDate-${detail.id}`}
+                            className="block text-sm text-gray-600 mb-1"
+                          >
+                            วันที่ปลูก
+                          </label>
+                          <PrimaryCalendar
+                            id={`plantingDate-${detail.id}`}
+                            value={detail.plantingDate}
+                            onChange={(d) =>
+                              updatePlantingDetail(detail.id, "plantingDate", d)
+                            }
+                            placeholder="เลือกวันที่ปลูก"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="mt-2 flex justify-end">
+                        {plantingDetails.length > 1 && (
+                          <PrimaryButton
+                            label="ลบรายการ"
+                            icon="pi pi-trash"
+                            color="danger"
+                            variant="outlined"
+                            size="small"
+                            onClick={() => removePlantingDetail(detail.id)}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  ))}
+
+                  <div className="mt-2 flex justify-end">
+                    <PrimaryButton
+                      label="เพิ่มรายการปลูก"
+                      icon="pi pi-plus"
+                      color="success"
+                      onClick={addPlantingDetail}
+                    />
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <h4 className="text-sm text-gray-600 mb-2">
+                    2. ระบบการให้น้ำ
+                  </h4>
+                </div>
+
+                <div className="mb-4">
+                  <h4 className="text-sm text-gray-600 mb-2">
+                    3. การใช้ปุ๋ย/สารปรับปรุงดิน
+                  </h4>
+                </div>
+
+                <div className="mb-4">
+                  <h4 className="text-sm text-gray-600 mb-2">
+                    4. ประวัติการใช้พื้นที่การผลิต ย้อนหลัง 2 ปี
+                  </h4>
+                </div>
+
+                <div className="mb-4">
+                  <h4 className="text-sm text-gray-600 mb-2">
+                    5. การแพร่ระบาดของศัตรูพืช/โรค/อาการผิดปกติ และการจัดการ
+                  </h4>
+                </div>
+
+                <div className="mb-4">
+                  <h4 className="text-sm text-gray-600 mb-2">
+                    6. ชนิดของพืชที่ปลูกข้างเคียงสวนยาง
+                  </h4>
+                </div>
+
+                <div className="mb-4">
+                  <h4 className="text-sm text-gray-600 mb-2">
+                    7. ข้อมูลอื่น ๆ (เช่น ชนิดพืชร่วม พืชแซม ฯลฯ)
+                  </h4>
                 </div>
 
                 <div className="flex justify-between gap-2">
