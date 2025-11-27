@@ -122,7 +122,7 @@ export const RubberFarmDetailsModal: React.FC<RubberFarmDetailsModalProps> = ({
               {/* แผนที่ */}
               <div className="bg-white p-4 rounded-lg">
                 <h4 className="font-semibold text-gray-900 mb-3">
-                  แผนที่ที่ตั้งสวน
+                  แผนที่ตั้งสวน
                 </h4>
                 <div className="w-full">
                   <DynamicMapViewer
