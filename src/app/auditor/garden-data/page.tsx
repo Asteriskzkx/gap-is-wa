@@ -11,32 +11,12 @@ import { useFormStepper } from "@/hooks/useFormStepper";
 import { CONTAINER, HEADER, SPACING } from "@/styles/auditorClasses";
 import { useMemo, useState } from "react";
 
-const ActionButtons = ({ row, onOpen }: { row: any; onOpen: () => void }) => {
-  return (
-    <div className="flex justify-center gap-2">
-      <PrimaryButton
-        icon="pi pi-eye"
-        color="info"
-        onClick={onOpen}
-        rounded
-        text
-      />
-    </div>
-  );
-};
-
-function statusBody(row: any) {
-  const status = row.inspectionStatus || row.inspectionResult || "-";
-  return <div>{status}</div>;
-}
-
 export default function Page() {
   const {
     items,
     loading,
     totalRecords,
     lazyParams,
-    // date filters not used here
     applyFilters,
     clearFilters,
     handlePageChange,
