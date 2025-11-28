@@ -600,6 +600,9 @@ button {
 
 .p-calendar .p-inputtext::placeholder {
   color: #9ca3af !important;
+  padding: 0.5rem 0rem !important;
+  line-height: inherit !important;
+  vertical-align: middle !important;
 }
 
 .p-calendar.p-calendar-w-btn .p-inputtext {
@@ -681,6 +684,9 @@ button {
 
 .primary-password .p-password-input::placeholder {
   color: #9ca3af !important;
+  padding: 0.5rem 0rem !important;
+  line-height: inherit !important;
+  vertical-align: middle !important;
 }
 
 .primary-password .p-input-icon-right {
@@ -723,6 +729,9 @@ button {
 
 .p-inputmask::placeholder {
   color: #9ca3af !important;
+  padding: 0.5rem 0rem !important;
+  line-height: inherit !important;
+  vertical-align: middle !important;
 }
 
 .p-inputmask:disabled {
@@ -870,6 +879,9 @@ button {
 
 .p-autocomplete .p-autocomplete-input::placeholder {
   color: #9ca3af !important;
+  padding: 0.5rem 0rem !important;
+  line-height: inherit !important;
+  vertical-align: middle !important;
 }
 
 /* AutoComplete Dropdown Button */
@@ -986,6 +998,9 @@ button {
 
 .p-dropdown .p-dropdown-label.p-placeholder {
   color: #9ca3af !important;
+  padding: 0.5rem 0rem !important;
+  line-height: inherit !important;
+  vertical-align: middle !important;
 }
 
 /* Dropdown Trigger Button */
@@ -1097,6 +1112,9 @@ input.p-inputtext:focus {
 
 input.p-inputtext::placeholder {
   color: #9ca3af !important;
+  padding: 0.5rem 0rem !important;
+  line-height: inherit !important;
+  vertical-align: middle !important;
 }
 
 input.p-inputtext:disabled {
@@ -1136,6 +1154,9 @@ input.p-inputtext:disabled {
 
 .p-inputnumber .p-inputnumber-input::placeholder {
   color: #9ca3af !important;
+  padding: 0.5rem 0rem !important;
+  line-height: inherit !important;
+  vertical-align: middle !important;
 }
 
 /* InputNumber Buttons */
@@ -1598,6 +1619,9 @@ input.p-inputtext:disabled {
 
 .p-multiselect .p-multiselect-label.p-placeholder {
   color: #9ca3af;
+  padding: 0.5rem 0rem !important;
+  line-height: inherit !important;
+  vertical-align: middle !important;
 }
 
 .p-multiselect .p-multiselect-trigger {
