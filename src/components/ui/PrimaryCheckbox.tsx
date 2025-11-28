@@ -37,7 +37,7 @@ export default function PrimaryCheckbox({
         onChange={(e) => onChange(e.target.checked)}
         disabled={disabled}
         className={`
-          h-5 w-5
+          h-5 w-5 min-w-[20px] min-h-[20px]
           bg-white
           border-2 border-gray-300
           rounded
@@ -49,6 +49,7 @@ export default function PrimaryCheckbox({
           accent-green-600
           ${className}
         `}
+        style={{ width: 20, height: 20 }}
       />
     );
   }
@@ -63,7 +64,7 @@ export default function PrimaryCheckbox({
         onChange={(e) => onChange(e.target.checked)}
         disabled={disabled}
         className={`
-          h-5 w-5
+          h-5 w-5 min-w-[20px] min-h-[20px]
           bg-white
           border-2 border-gray-300
           rounded
@@ -75,6 +76,7 @@ export default function PrimaryCheckbox({
           accent-green-600
           ${className}
         `}
+        style={{ width: 20, height: 20 }}
       />
       <label
         htmlFor={id}

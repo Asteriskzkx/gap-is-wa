@@ -9,12 +9,14 @@ import PrimaryCalendar from "@/components/ui/PrimaryCalendar";
 import PrimaryCheckbox from "@/components/ui/PrimaryCheckbox";
 import PrimaryDataTable from "@/components/ui/PrimaryDataTable";
 import PrimaryInputNumber from "@/components/ui/PrimaryInputNumber";
+import PrimaryInputText from "@/components/ui/PrimaryInputText";
 import PrimaryInputTextarea from "@/components/ui/PrimaryInputTextarea";
 import thaiProvinceData from "@/data/thai-provinces.json";
 import { useAuditorGardenData } from "@/hooks/useAuditorGardenData";
 import { useFormStepper } from "@/hooks/useFormStepper";
 import { CONTAINER, HEADER, SPACING } from "@/styles/auditorClasses";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "react-hot-toast";
 
 const rubberSpeciesOptions = [
   { label: "RRIT 251", value: "RRIT 251" },
@@ -47,12 +49,20 @@ export default function Page() {
     setSelectedProvinceId,
     setSelectedDistrictId,
     setSelectedSubDistrictId,
+    createDataRecord,
+    updateDataRecord,
   } = useAuditorGardenData(10);
 
   const [selectedInspection, setSelectedInspection] = useState<Record<
     string,
     any
   > | null>(null);
+
+  // data record id/version for optimistic update
+  const [dataRecordId, setDataRecordId] = useState<number | null>(null);
+  const [dataRecordVersion, setDataRecordVersion] = useState<
+    number | undefined
+  >(undefined);
 
   // location autocomplete state
   const [provinces] = useState<any[]>(
@@ -65,6 +75,9 @@ export default function Page() {
   const [subDistricts, setSubDistricts] = useState<any[]>([]);
 
   const { step, nextStep, prevStep } = useFormStepper(2);
+
+  // map location state (GeoJSON)
+  const [mapLocation, setMapLocation] = useState<any>(null);
 
   // Planting details for step 2
   const [plantingDetails, setPlantingDetails] = useState<
@@ -110,9 +123,364 @@ export default function Page() {
   const [waterSystemHas, setWaterSystemHas] = useState<boolean | null>(null);
   const [waterSystemDetails, setWaterSystemDetails] = useState<string>("");
 
+  // Fertilizer usage state (step 2 - section 3)
+  // ปุ๋ยเคมี
+  const [chemicalFertilizers, setChemicalFertilizers] = useState<
+    Array<{
+      id: string;
+      formula: string;
+      rate: string;
+      frequencyPerYear: string;
+    }>
+  >([{ id: genId(), formula: "", rate: "", frequencyPerYear: "" }]);
+
+  // ปุ๋ยอินทรีย์/น้ำหมัก
+  const [organicFertilizers, setOrganicFertilizers] = useState<
+    Array<{
+      id: string;
+      formula: string;
+      rate: string;
+      frequencyPerYear: string;
+    }>
+  >([{ id: genId(), formula: "", rate: "", frequencyPerYear: "" }]);
+
+  //อื่นๆ
+  const [otherFertilizers, setOtherFertilizers] = useState<
+    Array<{
+      id: string;
+      formula: string;
+      rate: string;
+      frequencyPerYear: string;
+    }>
+  >([{ id: genId(), formula: "", rate: "", frequencyPerYear: "" }]);
+
+  // Fertilizer handlers
+  const updateChemicalFertilizer = (id: string, field: string, value: any) => {
+    setChemicalFertilizers((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, [field]: value } : p))
+    );
+  };
+
+  const addChemicalFertilizer = () =>
+    setChemicalFertilizers((prev) => [
+      ...prev,
+      { id: genId(), formula: "", rate: "", frequencyPerYear: "" },
+    ]);
+
+  const removeChemicalFertilizer = (id: string) =>
+    setChemicalFertilizers((prev) => prev.filter((p) => p.id !== id));
+
+  const updateOrganicFertilizer = (id: string, field: string, value: any) => {
+    setOrganicFertilizers((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, [field]: value } : p))
+    );
+  };
+
+  const addOrganicFertilizer = () =>
+    setOrganicFertilizers((prev) => [
+      ...prev,
+      { id: genId(), formula: "", rate: "", frequencyPerYear: "" },
+    ]);
+
+  const removeOrganicFertilizer = (id: string) =>
+    setOrganicFertilizers((prev) => prev.filter((p) => p.id !== id));
+
+  const updateOtherFertilizer = (id: string, field: string, value: any) => {
+    setOtherFertilizers((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, [field]: value } : p))
+    );
+  };
+
+  const addOtherFertilizer = () =>
+    setOtherFertilizers((prev) => [
+      ...prev,
+      { id: genId(), formula: "", rate: "", frequencyPerYear: "" },
+    ]);
+
+  const removeOtherFertilizer = (id: string) =>
+    setOtherFertilizers((prev) => prev.filter((p) => p.id !== id));
+
+  // previouslyCultivated (step 2 - section 4)
+  const [previouslyNeverUsed, setPreviouslyNeverUsed] =
+    useState<boolean>(false);
+  const [previouslyUsed, setPreviouslyUsed] = useState<boolean>(false);
+  const [previousCropsYear1, setPreviousCropsYear1] = useState<string>("");
+  const [previousCropsYear2, setPreviousCropsYear2] = useState<string>("");
+
+  // plantDiseases (step 2 - section 5)
+  const [plantDiseases, setPlantDiseases] = useState<
+    Array<{
+      id: string;
+      name: string;
+      outbreakPeriod: string;
+      preventionAndControl: string;
+    }>
+  >([{ id: genId(), name: "", outbreakPeriod: "", preventionAndControl: "" }]);
+
+  const updatePlantDisease = (id: string, field: string, value: any) => {
+    setPlantDiseases((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, [field]: value } : p))
+    );
+  };
+
+  const addPlantDisease = () =>
+    setPlantDiseases((prev) => [
+      ...prev,
+      { id: genId(), name: "", outbreakPeriod: "", preventionAndControl: "" },
+    ]);
+
+  const removePlantDisease = (id: string) =>
+    setPlantDiseases((prev) => prev.filter((p) => p.id !== id));
+
+  // relatedPlants (step 2 - section 6)
+  const [relatedPlantHasnot, setRelatedPlantHasnot] = useState<boolean>(false);
+  const [relatedPlantHas, setRelatedPlantHas] = useState<boolean>(false);
+  const [relatedPlants, setRelatedPlants] = useState<
+    Array<{
+      id: string;
+      name: string;
+    }>
+  >([{ id: genId(), name: "" }]);
+
+  const updateRelatedPlant = (id: string, value: string) => {
+    setRelatedPlants((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, name: value } : p))
+    );
+  };
+
+  const addRelatedPlant = () =>
+    setRelatedPlants((prev) => [...prev, { id: genId(), name: "" }]);
+
+  const removeRelatedPlant = (id: string) =>
+    setRelatedPlants((prev) => prev.filter((p) => p.id !== id));
+
+  // moreInfo (step 2 - section 7)
+  const [moreInfo, setMoreInfo] = useState<string>("");
+
   const handleTabChange = (value: string) => {
     onTabChange("inspectionTab", value);
     setSelectedInspection(null);
+  };
+
+  // initialize form state when a selected inspection has an existing dataRecord
+  useEffect(() => {
+    const dr = selectedInspection?.dataRecord;
+    if (dr) {
+      // species -> plantingDetails
+      try {
+        const species = dr.species || {};
+        if (Array.isArray(species.plantingDetails)) {
+          setPlantingDetails(
+            species.plantingDetails.map((p: any) => ({
+              id: genId(),
+              specie: p.specie || "",
+              spacing: p.spacing ?? null,
+              numberOfTrees: p.numberOfTrees ?? null,
+              plantingDate: p.plantingDate ? new Date(p.plantingDate) : null,
+            }))
+          );
+        }
+
+        // water system
+        const ws = dr.waterSystem || {};
+        setWaterSystemHas(ws.has ?? null);
+        setWaterSystemDetails(ws.details || "");
+
+        // fertilizers
+        const fert = dr.fertilizers || {};
+        setChemicalFertilizers(
+          Array.isArray(fert.chemical) && fert.chemical.length
+            ? fert.chemical.map((f: any) => ({ id: genId(), ...f }))
+            : [{ id: genId(), formula: "", rate: "", frequencyPerYear: "" }]
+        );
+        setOrganicFertilizers(
+          Array.isArray(fert.organic) && fert.organic.length
+            ? fert.organic.map((f: any) => ({ id: genId(), ...f }))
+            : [{ id: genId(), formula: "", rate: "", frequencyPerYear: "" }]
+        );
+        setOtherFertilizers(
+          Array.isArray(fert.other) && fert.other.length
+            ? fert.other.map((f: any) => ({ id: genId(), ...f }))
+            : [{ id: genId(), formula: "", rate: "", frequencyPerYear: "" }]
+        );
+
+        // previouslyCultivated
+        const pc = dr.previouslyCultivated || {};
+        setPreviouslyNeverUsed(!!pc.neverUsed);
+        setPreviouslyUsed(!!pc.used);
+        setPreviousCropsYear1(pc.year1 || "");
+        setPreviousCropsYear2(pc.year2 || "");
+
+        // plant diseases
+        const pd = dr.plantDisease || [];
+        setPlantDiseases(
+          Array.isArray(pd) && pd.length
+            ? pd.map((d: any) => ({ id: genId(), ...d }))
+            : [
+                {
+                  id: genId(),
+                  name: "",
+                  outbreakPeriod: "",
+                  preventionAndControl: "",
+                },
+              ]
+        );
+
+        // related plants
+        const rp = dr.relatedPlants || [];
+        if (Array.isArray(rp) && rp.length) {
+          setRelatedPlantHas(true);
+          setRelatedPlantHasnot(false);
+          setRelatedPlants(
+            rp.map((r: any) => ({ id: genId(), name: r.name || "" }))
+          );
+        } else {
+          setRelatedPlantHas(false);
+          setRelatedPlantHasnot(true);
+          setRelatedPlants([{ id: genId(), name: "" }]);
+        }
+
+        // more info
+        setMoreInfo(dr.moreInfo || "");
+
+        setDataRecordId(dr.dataRecordId ?? null);
+        setDataRecordVersion(dr.version ?? undefined);
+        // prefer stored map in dataRecord, otherwise use the inspection rubberFarm location
+        setMapLocation(
+          dr.map ?? selectedInspection?.rubberFarm?.location ?? null
+        );
+      } catch (e) {
+        console.error("Failed to populate data record to form", e);
+      }
+    } else {
+      // reset form to defaults when no existing dataRecord
+      setPlantingDetails([
+        {
+          id: genId(),
+          specie: "",
+          spacing: null,
+          numberOfTrees: null,
+          plantingDate: null,
+        },
+      ]);
+      setWaterSystemHas(null);
+      setWaterSystemDetails("");
+      setChemicalFertilizers([
+        { id: genId(), formula: "", rate: "", frequencyPerYear: "" },
+      ]);
+      setOrganicFertilizers([
+        { id: genId(), formula: "", rate: "", frequencyPerYear: "" },
+      ]);
+      setOtherFertilizers([
+        { id: genId(), formula: "", rate: "", frequencyPerYear: "" },
+      ]);
+      setPreviouslyNeverUsed(false);
+      setPreviouslyUsed(false);
+      setPreviousCropsYear1("");
+      setPreviousCropsYear2("");
+      setPlantDiseases([
+        { id: genId(), name: "", outbreakPeriod: "", preventionAndControl: "" },
+      ]);
+      setRelatedPlants([{ id: genId(), name: "" }]);
+      setMoreInfo("");
+      setDataRecordId(null);
+      setDataRecordVersion(undefined);
+      setMapLocation(selectedInspection?.rubberFarm?.location ?? null);
+    }
+  }, [selectedInspection]);
+
+  // build payload for API from local form state
+  const buildPayload = useCallback(() => {
+    return {
+      inspectionId: selectedInspection?.inspectionId,
+      species: {
+        plantingDetails: plantingDetails.map((p) => ({
+          specie: p.specie,
+          spacing: p.spacing,
+          numberOfTrees: p.numberOfTrees,
+          plantingDate: p.plantingDate ? p.plantingDate.toISOString() : null,
+        })),
+      },
+      waterSystem: { has: waterSystemHas, details: waterSystemDetails },
+      fertilizers: {
+        chemical: chemicalFertilizers.map((f) => ({
+          formula: f.formula,
+          rate: f.rate,
+          frequencyPerYear: f.frequencyPerYear,
+        })),
+        organic: organicFertilizers.map((f) => ({
+          formula: f.formula,
+          rate: f.rate,
+          frequencyPerYear: f.frequencyPerYear,
+        })),
+        other: otherFertilizers.map((f) => ({
+          formula: f.formula,
+          rate: f.rate,
+          frequencyPerYear: f.frequencyPerYear,
+        })),
+      },
+      previouslyCultivated: {
+        neverUsed: previouslyNeverUsed,
+        used: previouslyUsed,
+        year1: previousCropsYear1,
+        year2: previousCropsYear2,
+      },
+      plantDisease: plantDiseases.map((d) => ({
+        name: d.name,
+        outbreakPeriod: d.outbreakPeriod,
+        preventionAndControl: d.preventionAndControl,
+      })),
+      relatedPlants: relatedPlants.map((r) => ({ name: r.name })),
+      moreInfo,
+      map: mapLocation ?? selectedInspection?.rubberFarm?.location ?? {},
+    };
+  }, [
+    selectedInspection,
+    plantingDetails,
+    mapLocation,
+    waterSystemHas,
+    waterSystemDetails,
+    chemicalFertilizers,
+    organicFertilizers,
+    otherFertilizers,
+    previouslyNeverUsed,
+    previouslyUsed,
+    previousCropsYear1,
+    previousCropsYear2,
+    plantDiseases,
+    relatedPlants,
+    moreInfo,
+  ]);
+
+  const handleSave = async () => {
+    if (!selectedInspection) return toast.error("ไม่มีการตรวจที่เลือก");
+    const payload = buildPayload();
+    try {
+      if (dataRecordId) {
+        const updatePayload: any = { ...payload };
+        if (dataRecordVersion !== undefined)
+          updatePayload.version = dataRecordVersion;
+        const res = await updateDataRecord(dataRecordId, updatePayload);
+        toast.success("บันทึกข้อมูลเรียบร้อย");
+        setDataRecordId(res?.dataRecordId ?? dataRecordId);
+        setDataRecordVersion(res?.version ?? dataRecordVersion);
+        setSelectedInspection((prev) =>
+          prev ? { ...prev, dataRecord: res } : prev
+        );
+      } else {
+        const res = await createDataRecord(payload);
+        toast.success("สร้างข้อมูลเรียบร้อย");
+        setDataRecordId(res?.dataRecordId ?? null);
+        setDataRecordVersion(res?.version ?? undefined);
+        setSelectedInspection((prev) =>
+          prev ? { ...prev, dataRecord: res } : prev
+        );
+      }
+    } catch (e) {
+      console.error("save data record error", e);
+      const msg = (e as any)?.message || "บันทึกข้อมูลไม่สำเร็จ";
+      toast.error(msg);
+    }
   };
 
   const columns = useMemo(
@@ -380,6 +748,7 @@ export default function Page() {
                     label="ถัดไป"
                     onClick={() => {
                       if (selectedInspection) nextStep();
+                      console.log(selectedInspection?.dataRecord);
                     }}
                     disabled={!selectedInspection}
                   />
@@ -393,7 +762,9 @@ export default function Page() {
                   <h4 className="text-sm text-gray-600 mb-2">แผนที่ตั้งสวน</h4>
                   <div className="w-full">
                     <DynamicMapViewer
-                      location={selectedInspection?.rubberFarm?.location}
+                      location={
+                        mapLocation ?? selectedInspection?.rubberFarm?.location
+                      }
                       height="400px"
                       width="100%"
                     />
@@ -405,7 +776,7 @@ export default function Page() {
                     1. พันธุ์ยางพาราที่ปลูก
                   </h4>
 
-                  {plantingDetails.map((detail, index) => (
+                  {plantingDetails.map((detail) => (
                     <div key={detail.id} className="p-3 border rounded-md mb-3">
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                         <div>
@@ -563,30 +934,554 @@ export default function Page() {
                   <h4 className="text-sm text-gray-600 mb-2">
                     3. การใช้ปุ๋ย/สารปรับปรุงดิน
                   </h4>
+
+                  <div className="mb-3">
+                    <h5 className="text-sm font-medium text-gray-600 mb-2">
+                      ปุ๋ยเคมี
+                    </h5>
+                    {(chemicalFertilizers || []).map((f) => (
+                      <div key={f.id} className="p-3 border rounded-md mb-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          <div>
+                            <label
+                              htmlFor={`chem-formula-${f.id}`}
+                              className="block text-sm text-gray-600 mb-1"
+                            >
+                              สูตร
+                            </label>
+                            <PrimaryInputText
+                              id={`chem-formula-${f.id}`}
+                              value={f.formula}
+                              onChange={(v: string) =>
+                                updateChemicalFertilizer(f.id, "formula", v)
+                              }
+                              placeholder="สูตร/ชื่อปุ๋ย"
+                              maxLength={255}
+                            />
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor={`chem-rate-${f.id}`}
+                              className="block text-sm text-gray-600 mb-1"
+                            >
+                              อัตรา
+                            </label>
+                            <PrimaryInputText
+                              id={`chem-rate-${f.id}`}
+                              value={f.rate}
+                              onChange={(v: string) =>
+                                updateChemicalFertilizer(f.id, "rate", v)
+                              }
+                              placeholder="เช่น 2 กก./ไร่ หรือ 200 ก./ต้น"
+                              maxLength={255}
+                            />
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor={`chem-freq-${f.id}`}
+                              className="block text-sm text-gray-600 mb-1"
+                            >
+                              จำนวน
+                            </label>
+                            <PrimaryInputText
+                              id={`chem-freq-${f.id}`}
+                              value={f.frequencyPerYear}
+                              onChange={(v: string) =>
+                                updateChemicalFertilizer(
+                                  f.id,
+                                  "frequencyPerYear",
+                                  v
+                                )
+                              }
+                              placeholder="ครั้ง/ปี"
+                              maxLength={10}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="mt-2 flex justify-end">
+                          {chemicalFertilizers.length > 1 && (
+                            <PrimaryButton
+                              label="ลบ"
+                              icon="pi pi-trash"
+                              color="danger"
+                              variant="outlined"
+                              size="small"
+                              onClick={() => removeChemicalFertilizer(f.id)}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+
+                    <div className="flex justify-end">
+                      <PrimaryButton
+                        label="เพิ่มปุ๋ยเคมี"
+                        icon="pi pi-plus"
+                        color="success"
+                        onClick={addChemicalFertilizer}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mb-3">
+                    <h5 className="text-sm font-medium text-gray-600 mb-2">
+                      ปุ๋ยอินทรีย์ / น้ำหมัก
+                    </h5>
+                    {(organicFertilizers || []).map((f) => (
+                      <div key={f.id} className="p-3 border rounded-md mb-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          <div>
+                            <label
+                              htmlFor={`org-formula-${f.id}`}
+                              className="block text-sm text-gray-600 mb-1"
+                            >
+                              สูตร
+                            </label>
+                            <PrimaryInputText
+                              id={`org-formula-${f.id}`}
+                              value={f.formula}
+                              onChange={(v: string) =>
+                                updateOrganicFertilizer(f.id, "formula", v)
+                              }
+                              placeholder="เช่น ปุ๋ยคอก, น้ำหมัก"
+                              maxLength={255}
+                            />
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor={`org-rate-${f.id}`}
+                              className="block text-sm text-gray-600 mb-1"
+                            >
+                              อัตรา
+                            </label>
+                            <PrimaryInputText
+                              id={`org-rate-${f.id}`}
+                              value={f.rate}
+                              onChange={(v: string) =>
+                                updateOrganicFertilizer(f.id, "rate", v)
+                              }
+                              placeholder="เช่น 2 กก./ไร่ หรือ 200 ก./ต้น"
+                              maxLength={255}
+                            />
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor={`org-freq-${f.id}`}
+                              className="block text-sm text-gray-600 mb-1"
+                            >
+                              จำนวน
+                            </label>
+                            <PrimaryInputText
+                              id={`org-freq-${f.id}`}
+                              value={f.frequencyPerYear}
+                              onChange={(v: string) =>
+                                updateOrganicFertilizer(
+                                  f.id,
+                                  "frequencyPerYear",
+                                  v
+                                )
+                              }
+                              placeholder="ครั้ง/ปี"
+                              maxLength={10}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="mt-2 flex justify-end">
+                          {organicFertilizers.length > 1 && (
+                            <PrimaryButton
+                              label="ลบ"
+                              icon="pi pi-trash"
+                              color="danger"
+                              variant="outlined"
+                              size="small"
+                              onClick={() => removeOrganicFertilizer(f.id)}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+
+                    <div className="flex justify-end">
+                      <PrimaryButton
+                        label="เพิ่มปุ๋ยอินทรีย์"
+                        icon="pi pi-plus"
+                        color="success"
+                        onClick={addOrganicFertilizer}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mb-3">
+                    <h5 className="text-sm font-medium text-gray-600 mb-2">
+                      อื่นๆ
+                    </h5>
+                    {(otherFertilizers || []).map((f) => (
+                      <div key={f.id} className="p-3 border rounded-md mb-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          <div>
+                            <label
+                              htmlFor={`other-formula-${f.id}`}
+                              className="block text-sm text-gray-600 mb-1"
+                            >
+                              สูตร
+                            </label>
+                            <PrimaryInputText
+                              id={`other-formula-${f.id}`}
+                              value={f.formula}
+                              onChange={(v: string) =>
+                                updateOtherFertilizer(f.id, "formula", v)
+                              }
+                              placeholder="ระบุรายการอื่นๆ"
+                              maxLength={255}
+                            />
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor={`other-rate-${f.id}`}
+                              className="block text-sm text-gray-600 mb-1"
+                            >
+                              อัตรา
+                            </label>
+                            <PrimaryInputText
+                              id={`other-rate-${f.id}`}
+                              value={f.rate}
+                              onChange={(v: string) =>
+                                updateOtherFertilizer(f.id, "rate", v)
+                              }
+                              placeholder="เช่น 2 กก./ไร่ หรือ 200 ก./ต้น"
+                              maxLength={255}
+                            />
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor={`other-freq-${f.id}`}
+                              className="block text-sm text-gray-600 mb-1"
+                            >
+                              จำนวน
+                            </label>
+                            <PrimaryInputText
+                              id={`other-freq-${f.id}`}
+                              value={f.frequencyPerYear}
+                              onChange={(v: string) =>
+                                updateOtherFertilizer(
+                                  f.id,
+                                  "frequencyPerYear",
+                                  v
+                                )
+                              }
+                              placeholder="ครั้ง/ปี"
+                              maxLength={10}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="mt-2 flex justify-end">
+                          {otherFertilizers.length > 1 && (
+                            <PrimaryButton
+                              label="ลบ"
+                              icon="pi pi-trash"
+                              color="danger"
+                              variant="outlined"
+                              size="small"
+                              onClick={() => removeOtherFertilizer(f.id)}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+
+                    <div className="flex justify-end">
+                      <PrimaryButton
+                        label="เพิ่มรายการอื่นๆ"
+                        icon="pi pi-plus"
+                        color="success"
+                        onClick={addOtherFertilizer}
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <div className="mb-4">
                   <h4 className="text-sm text-gray-600 mb-2">
                     4. ประวัติการใช้พื้นที่การผลิต ย้อนหลัง 2 ปี
                   </h4>
+
+                  <div className="p-3 border rounded-md mb-3">
+                    <div className="flex flex-col gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="flex items-center">
+                          <PrimaryCheckbox
+                            checked={previouslyNeverUsed}
+                            label="พื้นที่ไม่เคยใช้ประโยชน์ทางการเกษตร"
+                            onChange={(checked: boolean) => {
+                              setPreviouslyNeverUsed(checked);
+                              if (checked) {
+                                setPreviouslyUsed(false);
+                                setPreviousCropsYear1("");
+                                setPreviousCropsYear2("");
+                              }
+                            }}
+                          />
+                        </div>
+
+                        <div className="flex items-center">
+                          <PrimaryCheckbox
+                            checked={previouslyUsed}
+                            label="พื้นที่ใช้ประโยชน์ทางการเกษตร ชนิดของพืชที่เคยปลูกมาก่อน (นับถอยหลังจากปัจจุบัน)"
+                            onChange={(checked: boolean) => {
+                              setPreviouslyUsed(checked);
+                              if (checked) setPreviouslyNeverUsed(false);
+                              if (!checked) {
+                                setPreviousCropsYear1("");
+                                setPreviousCropsYear2("");
+                              }
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label
+                            htmlFor="previousCropsYear1"
+                            className="block text-sm text-gray-600 mb-1"
+                          >
+                            ปีที่ 1
+                          </label>
+                          <PrimaryInputText
+                            value={previousCropsYear1}
+                            onChange={(v: string) => setPreviousCropsYear1(v)}
+                            placeholder="ระบุพืชที่ปลูกในปีที่ 1"
+                            maxLength={255}
+                            disabled={!previouslyUsed}
+                          />
+                        </div>
+
+                        <div>
+                          <label
+                            htmlFor="previousCropsYear2"
+                            className="block text-sm text-gray-600 mb-1"
+                          >
+                            ปีที่ 2
+                          </label>
+                          <PrimaryInputText
+                            value={previousCropsYear2}
+                            onChange={(v: string) => setPreviousCropsYear2(v)}
+                            placeholder="ระบุพืชที่ปลูกในปีที่ 2"
+                            maxLength={255}
+                            disabled={!previouslyUsed}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="mb-4">
                   <h4 className="text-sm text-gray-600 mb-2">
                     5. การแพร่ระบาดของศัตรูพืช/โรค/อาการผิดปกติ และการจัดการ
                   </h4>
+
+                  {(plantDiseases || []).map((d) => (
+                    <div key={d.id} className="p-3 border rounded-md mb-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label
+                            htmlFor={`disease-name-${d.id}`}
+                            className="block text-sm text-gray-600 mb-1"
+                          >
+                            ชื่อศัตรูพืช/โรค/อาการ
+                          </label>
+                          <PrimaryInputText
+                            id={`disease-name-${d.id}`}
+                            value={d.name}
+                            onChange={(v: string) =>
+                              updatePlantDisease(d.id, "name", v)
+                            }
+                            placeholder="ชื่อศัตรูพืช/โรค/อาการ"
+                            maxLength={255}
+                          />
+                        </div>
+
+                        <div>
+                          <label
+                            htmlFor={`disease-outbreak-${d.id}`}
+                            className="block text-sm text-gray-600 mb-1"
+                          >
+                            ช่วงที่ระบาด
+                          </label>
+                          <PrimaryInputText
+                            id={`disease-outbreak-${d.id}`}
+                            value={d.outbreakPeriod}
+                            onChange={(v: string) =>
+                              updatePlantDisease(d.id, "outbreakPeriod", v)
+                            }
+                            placeholder="เช่น ฤดูฝน, ฤดูแล้ง"
+                            maxLength={255}
+                          />
+                        </div>
+
+                        <div className="sm:col-span-2">
+                          <label
+                            htmlFor={`disease-prevent-${d.id}`}
+                            className="block text-sm text-gray-600 mb-1"
+                          >
+                            วิธีการป้องกันและควบคุม
+                          </label>
+                          <PrimaryInputTextarea
+                            id={`disease-prevent-${d.id}`}
+                            value={d.preventionAndControl}
+                            onChange={(v: string) =>
+                              updatePlantDisease(
+                                d.id,
+                                "preventionAndControl",
+                                v
+                              )
+                            }
+                            rows={5}
+                            maxLength={1000}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                            placeholder="ระบุวิธีการป้องกันและการจัดการ"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="mt-2 flex justify-end">
+                        {plantDiseases.length > 1 && (
+                          <PrimaryButton
+                            label="ลบรายการ"
+                            icon="pi pi-trash"
+                            color="danger"
+                            variant="outlined"
+                            size="small"
+                            onClick={() => removePlantDisease(d.id)}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  ))}
+
+                  <div className="flex justify-end">
+                    <PrimaryButton
+                      label="เพิ่มรายการ"
+                      icon="pi pi-plus"
+                      color="success"
+                      onClick={addPlantDisease}
+                    />
+                  </div>
                 </div>
 
                 <div className="mb-4">
                   <h4 className="text-sm text-gray-600 mb-2">
                     6. ชนิดของพืชที่ปลูกข้างเคียงสวนยาง
                   </h4>
+
+                  <div className="p-3 border rounded-md mb-3">
+                    <div className="flex items-center gap-4 mb-3">
+                      <PrimaryCheckbox
+                        checked={relatedPlantHasnot}
+                        label="ไม่มี"
+                        onChange={(checked: boolean) => {
+                          setRelatedPlantHasnot(checked);
+                          if (checked) {
+                            setRelatedPlantHas(false);
+                            setRelatedPlants([{ id: genId(), name: "" }]);
+                          }
+                        }}
+                      />
+
+                      <PrimaryCheckbox
+                        checked={relatedPlantHas}
+                        label="มี"
+                        onChange={(checked: boolean) => {
+                          setRelatedPlantHas(checked);
+                          if (checked) setRelatedPlantHasnot(false);
+                          if (!checked)
+                            setRelatedPlants([{ id: genId(), name: "" }]);
+                        }}
+                      />
+                    </div>
+
+                    {(relatedPlants || []).map((r) => (
+                      <div key={r.id}>
+                        <div className="grid grid-cols-1 gap-3 items-end">
+                          <div>
+                            <label
+                              htmlFor={`related-plant-${r.id}`}
+                              className="block text-sm text-gray-600 mb-1"
+                            >
+                              ชนิดพืช
+                            </label>
+                            <PrimaryInputText
+                              id={`related-plant-${r.id}`}
+                              value={r.name}
+                              onChange={(v: string) =>
+                                updateRelatedPlant(r.id, v)
+                              }
+                              placeholder="ระบุชนิดพืชที่ปลูกข้างเคียง"
+                              maxLength={255}
+                              disabled={!relatedPlantHas}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="mt-2 flex justify-end">
+                          {relatedPlants.length > 1 && (
+                            <PrimaryButton
+                              label="ลบรายการ"
+                              icon="pi pi-trash"
+                              color="danger"
+                              variant="outlined"
+                              size="small"
+                              onClick={() => removeRelatedPlant(r.id)}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+
+                    <div className="mt-3 flex justify-end">
+                      <PrimaryButton
+                        label="เพิ่มรายการ"
+                        icon="pi pi-plus"
+                        color="success"
+                        onClick={addRelatedPlant}
+                        disabled={!relatedPlantHas}
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <div className="mb-4">
                   <h4 className="text-sm text-gray-600 mb-2">
                     7. ข้อมูลอื่น ๆ (เช่น ชนิดพืชร่วม พืชแซม ฯลฯ)
                   </h4>
+
+                  <div className="p-3 border rounded-md mb-3">
+                    <label
+                      htmlFor="more-info"
+                      className="block text-sm text-gray-600 mb-1"
+                    >
+                      ข้อมูลเพิ่มเติม
+                    </label>
+                    <PrimaryInputTextarea
+                      id="more-info"
+                      value={moreInfo}
+                      onChange={(v: string) => setMoreInfo(v)}
+                      rows={5}
+                      maxLength={255}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                      placeholder="ระบุข้อมูลอื่น ๆ เช่น ชนิดพืชร่วม พืชแซม หรือข้อมูลเพิ่มเติมอื่น ๆ"
+                    />
+                  </div>
                 </div>
 
                 <div className="flex justify-between gap-2">
@@ -594,6 +1489,11 @@ export default function Page() {
                     label="ย้อนกลับ"
                     color="secondary"
                     onClick={() => prevStep()}
+                  />
+                  <PrimaryButton
+                    label="บันทึกข้อมูล"
+                    onClick={handleSave}
+                    disabled={!selectedInspection}
                   />
                 </div>
               </div>
