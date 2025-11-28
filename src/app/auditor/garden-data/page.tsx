@@ -692,24 +692,18 @@ export default function Page() {
                             >
                               จำนวน
                             </label>
-                            <PrimaryInputNumber
+                            <PrimaryInputText
                               id={`chem-freq-${f.id}`}
-                              name={`chem-freq-${f.id}`}
-                              value={
-                                f.frequencyPerYear
-                                  ? Number(f.frequencyPerYear)
-                                  : null
-                              }
-                              onChange={(v) =>
+                              value={f.frequencyPerYear}
+                              onChange={(v: string) =>
                                 updateChemicalFertilizer(
                                   f.id,
                                   "frequencyPerYear",
-                                  v?.toString() ?? ""
+                                  v
                                 )
                               }
-                              min={0}
-                              max={100}
                               placeholder="ครั้ง/ปี"
+                              maxLength={10}
                             />
                           </div>
                         </div>
