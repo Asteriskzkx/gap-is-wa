@@ -220,6 +220,28 @@ export default function Page() {
   const removePlantDisease = (id: string) =>
     setPlantDiseases((prev) => prev.filter((p) => p.id !== id));
 
+  // relatedPlants (step 2 - section 6)
+  const [relatedPlantHasnot, setRelatedPlantHasnot] = useState<boolean>(false);
+  const [relatedPlantHas, setRelatedPlantHas] = useState<boolean>(false);
+  const [relatedPlants, setRelatedPlants] = useState<
+    Array<{
+      id: string;
+      name: string;
+    }>
+  >([{ id: genId(), name: "" }]);
+
+  const updateRelatedPlant = (id: string, value: string) => {
+    setRelatedPlants((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, name: value } : p))
+    );
+  };
+
+  const addRelatedPlant = () =>
+    setRelatedPlants((prev) => [...prev, { id: genId(), name: "" }]);
+
+  const removeRelatedPlant = (id: string) =>
+    setRelatedPlants((prev) => prev.filter((p) => p.id !== id));
+
   const handleTabChange = (value: string) => {
     onTabChange("inspectionTab", value);
     setSelectedInspection(null);
@@ -1122,6 +1144,81 @@ export default function Page() {
                   <h4 className="text-sm text-gray-600 mb-2">
                     6. ชนิดของพืชที่ปลูกข้างเคียงสวนยาง
                   </h4>
+
+                  <div className="p-3 border rounded-md mb-3">
+                    <div className="flex items-center gap-4 mb-3">
+                      <PrimaryCheckbox
+                        checked={relatedPlantHasnot}
+                        label="ไม่มี"
+                        onChange={(checked: boolean) => {
+                          setRelatedPlantHasnot(checked);
+                          if (checked) {
+                            setRelatedPlantHas(false);
+                            setRelatedPlants([{ id: genId(), name: "" }]);
+                          }
+                        }}
+                      />
+
+                      <PrimaryCheckbox
+                        checked={relatedPlantHas}
+                        label="มี"
+                        onChange={(checked: boolean) => {
+                          setRelatedPlantHas(checked);
+                          if (checked) setRelatedPlantHasnot(false);
+                          if (!checked)
+                            setRelatedPlants([{ id: genId(), name: "" }]);
+                        }}
+                      />
+                    </div>
+
+                    {(relatedPlants || []).map((r) => (
+                      <div key={r.id}>
+                        <div className="grid grid-cols-1 gap-3 items-end">
+                          <div>
+                            <label
+                              htmlFor={`related-plant-${r.id}`}
+                              className="block text-sm text-gray-600 mb-1"
+                            >
+                              ชนิดพืช
+                            </label>
+                            <PrimaryInputText
+                              id={`related-plant-${r.id}`}
+                              value={r.name}
+                              onChange={(v: string) =>
+                                updateRelatedPlant(r.id, v)
+                              }
+                              placeholder="ระบุชนิดพืชที่ปลูกข้างเคียง"
+                              maxLength={255}
+                              disabled={!relatedPlantHas}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="mt-2 flex justify-end">
+                          {relatedPlants.length > 1 && (
+                            <PrimaryButton
+                              label="ลบรายการ"
+                              icon="pi pi-trash"
+                              color="danger"
+                              variant="outlined"
+                              size="small"
+                              onClick={() => removeRelatedPlant(r.id)}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+
+                    <div className="mt-3 flex justify-end">
+                      <PrimaryButton
+                        label="เพิ่มรายการ"
+                        icon="pi pi-plus"
+                        color="success"
+                        onClick={addRelatedPlant}
+                        disabled={!relatedPlantHas}
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <div className="mb-4">
