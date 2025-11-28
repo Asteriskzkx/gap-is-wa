@@ -9,6 +9,7 @@ import PrimaryCalendar from "@/components/ui/PrimaryCalendar";
 import PrimaryCheckbox from "@/components/ui/PrimaryCheckbox";
 import PrimaryDataTable from "@/components/ui/PrimaryDataTable";
 import PrimaryInputNumber from "@/components/ui/PrimaryInputNumber";
+import PrimaryInputText from "@/components/ui/PrimaryInputText";
 import PrimaryInputTextarea from "@/components/ui/PrimaryInputTextarea";
 import thaiProvinceData from "@/data/thai-provinces.json";
 import { useAuditorGardenData } from "@/hooks/useAuditorGardenData";
@@ -109,6 +110,83 @@ export default function Page() {
   // Water system state (step 2 - section 2)
   const [waterSystemHas, setWaterSystemHas] = useState<boolean | null>(null);
   const [waterSystemDetails, setWaterSystemDetails] = useState<string>("");
+
+  // Fertilizer usage state (step 2 - section 3)
+  // ปุ๋ยเคมี
+  const [chemicalFertilizers, setChemicalFertilizers] = useState<
+    Array<{
+      id: string;
+      formula: string;
+      rate: string;
+      frequencyPerYear: string;
+    }>
+  >([{ id: genId(), formula: "", rate: "", frequencyPerYear: "" }]);
+
+  // ปุ๋ยอินทรีย์/น้ำหมัก
+  const [organicFertilizers, setOrganicFertilizers] = useState<
+    Array<{
+      id: string;
+      formula: string;
+      rate: string;
+      frequencyPerYear: string;
+    }>
+  >([{ id: genId(), formula: "", rate: "", frequencyPerYear: "" }]);
+
+  //อื่นๆ
+  const [otherFertilizers, setOtherFertilizers] = useState<
+    Array<{
+      id: string;
+      formula: string;
+      rate: string;
+      frequencyPerYear: string;
+    }>
+  >([{ id: genId(), formula: "", rate: "", frequencyPerYear: "" }]);
+
+  // Fertilizer handlers
+  const updateChemicalFertilizer = (id: string, field: string, value: any) => {
+    setChemicalFertilizers((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, [field]: value } : p))
+    );
+  };
+
+  const addChemicalFertilizer = () =>
+    setChemicalFertilizers((prev) => [
+      ...prev,
+      { id: genId(), formula: "", rate: "", frequencyPerYear: "" },
+    ]);
+
+  const removeChemicalFertilizer = (id: string) =>
+    setChemicalFertilizers((prev) => prev.filter((p) => p.id !== id));
+
+  const updateOrganicFertilizer = (id: string, field: string, value: any) => {
+    setOrganicFertilizers((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, [field]: value } : p))
+    );
+  };
+
+  const addOrganicFertilizer = () =>
+    setOrganicFertilizers((prev) => [
+      ...prev,
+      { id: genId(), formula: "", rate: "", frequencyPerYear: "" },
+    ]);
+
+  const removeOrganicFertilizer = (id: string) =>
+    setOrganicFertilizers((prev) => prev.filter((p) => p.id !== id));
+
+  const updateOtherFertilizer = (id: string, field: string, value: any) => {
+    setOtherFertilizers((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, [field]: value } : p))
+    );
+  };
+
+  const addOtherFertilizer = () =>
+    setOtherFertilizers((prev) => [
+      ...prev,
+      { id: genId(), formula: "", rate: "", frequencyPerYear: "" },
+    ]);
+
+  const removeOtherFertilizer = (id: string) =>
+    setOtherFertilizers((prev) => prev.filter((p) => p.id !== id));
 
   const handleTabChange = (value: string) => {
     onTabChange("inspectionTab", value);
@@ -405,7 +483,7 @@ export default function Page() {
                     1. พันธุ์ยางพาราที่ปลูก
                   </h4>
 
-                  {plantingDetails.map((detail, index) => (
+                  {plantingDetails.map((detail) => (
                     <div key={detail.id} className="p-3 border rounded-md mb-3">
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                         <div>
@@ -563,6 +641,285 @@ export default function Page() {
                   <h4 className="text-sm text-gray-600 mb-2">
                     3. การใช้ปุ๋ย/สารปรับปรุงดิน
                   </h4>
+
+                  <div className="mb-3">
+                    <h5 className="text-sm font-medium text-gray-600 mb-2">
+                      ปุ๋ยเคมี
+                    </h5>
+                    {(chemicalFertilizers || []).map((f) => (
+                      <div key={f.id} className="p-3 border rounded-md mb-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          <div>
+                            <label
+                              htmlFor={`chem-formula-${f.id}`}
+                              className="block text-sm text-gray-600 mb-1"
+                            >
+                              สูตร
+                            </label>
+                            <PrimaryInputText
+                              id={`chem-formula-${f.id}`}
+                              value={f.formula}
+                              onChange={(v: string) =>
+                                updateChemicalFertilizer(f.id, "formula", v)
+                              }
+                              placeholder="สูตร/ชื่อปุ๋ย"
+                              maxLength={255}
+                            />
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor={`chem-rate-${f.id}`}
+                              className="block text-sm text-gray-600 mb-1"
+                            >
+                              อัตรา
+                            </label>
+                            <PrimaryInputText
+                              id={`chem-rate-${f.id}`}
+                              value={f.rate}
+                              onChange={(v: string) =>
+                                updateChemicalFertilizer(f.id, "rate", v)
+                              }
+                              placeholder="เช่น 2 กก./ไร่ หรือ 200 ก./ต้น"
+                              maxLength={255}
+                            />
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor={`chem-freq-${f.id}`}
+                              className="block text-sm text-gray-600 mb-1"
+                            >
+                              จำนวน
+                            </label>
+                            <PrimaryInputNumber
+                              id={`chem-freq-${f.id}`}
+                              name={`chem-freq-${f.id}`}
+                              value={
+                                f.frequencyPerYear
+                                  ? Number(f.frequencyPerYear)
+                                  : null
+                              }
+                              onChange={(v) =>
+                                updateChemicalFertilizer(
+                                  f.id,
+                                  "frequencyPerYear",
+                                  v?.toString() ?? ""
+                                )
+                              }
+                              min={0}
+                              max={100}
+                              placeholder="ครั้ง/ปี"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="mt-2 flex justify-end">
+                          {chemicalFertilizers.length > 1 && (
+                            <PrimaryButton
+                              label="ลบ"
+                              icon="pi pi-trash"
+                              color="danger"
+                              variant="outlined"
+                              size="small"
+                              onClick={() => removeChemicalFertilizer(f.id)}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+
+                    <div className="flex justify-end">
+                      <PrimaryButton
+                        label="เพิ่มปุ๋ยเคมี"
+                        icon="pi pi-plus"
+                        color="success"
+                        onClick={addChemicalFertilizer}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mb-3">
+                    <h5 className="text-sm font-medium text-gray-600 mb-2">
+                      ปุ๋ยอินทรีย์ / น้ำหมัก
+                    </h5>
+                    {(organicFertilizers || []).map((f) => (
+                      <div key={f.id} className="p-3 border rounded-md mb-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          <div>
+                            <label
+                              htmlFor={`org-formula-${f.id}`}
+                              className="block text-sm text-gray-600 mb-1"
+                            >
+                              สูตร
+                            </label>
+                            <PrimaryInputText
+                              id={`org-formula-${f.id}`}
+                              value={f.formula}
+                              onChange={(v: string) =>
+                                updateOrganicFertilizer(f.id, "formula", v)
+                              }
+                              placeholder="เช่น ปุ๋ยคอก, น้ำหมัก"
+                              maxLength={255}
+                            />
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor={`org-rate-${f.id}`}
+                              className="block text-sm text-gray-600 mb-1"
+                            >
+                              อัตรา
+                            </label>
+                            <PrimaryInputText
+                              id={`org-rate-${f.id}`}
+                              value={f.rate}
+                              onChange={(v: string) =>
+                                updateOrganicFertilizer(f.id, "rate", v)
+                              }
+                              placeholder="เช่น 2 กก./ไร่ หรือ 200 ก./ต้น"
+                              maxLength={255}
+                            />
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor={`org-freq-${f.id}`}
+                              className="block text-sm text-gray-600 mb-1"
+                            >
+                              จำนวน
+                            </label>
+                            <PrimaryInputText
+                              id={`org-freq-${f.id}`}
+                              value={f.frequencyPerYear}
+                              onChange={(v: string) =>
+                                updateOrganicFertilizer(
+                                  f.id,
+                                  "frequencyPerYear",
+                                  v
+                                )
+                              }
+                              placeholder="ครั้ง/ปี"
+                              maxLength={10}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="mt-2 flex justify-end">
+                          {organicFertilizers.length > 1 && (
+                            <PrimaryButton
+                              label="ลบ"
+                              icon="pi pi-trash"
+                              color="danger"
+                              variant="outlined"
+                              size="small"
+                              onClick={() => removeOrganicFertilizer(f.id)}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+
+                    <div className="flex justify-end">
+                      <PrimaryButton
+                        label="เพิ่มปุ๋ยอินทรีย์"
+                        icon="pi pi-plus"
+                        color="success"
+                        onClick={addOrganicFertilizer}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mb-3">
+                    <h5 className="text-sm font-medium text-gray-600 mb-2">
+                      อื่นๆ
+                    </h5>
+                    {(otherFertilizers || []).map((f) => (
+                      <div key={f.id} className="p-3 border rounded-md mb-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          <div>
+                            <label
+                              htmlFor={`other-formula-${f.id}`}
+                              className="block text-sm text-gray-600 mb-1"
+                            >
+                              สูตร
+                            </label>
+                            <PrimaryInputText
+                              id={`other-formula-${f.id}`}
+                              value={f.formula}
+                              onChange={(v: string) =>
+                                updateOtherFertilizer(f.id, "formula", v)
+                              }
+                              placeholder="ระบุรายการอื่นๆ"
+                              maxLength={255}
+                            />
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor={`other-rate-${f.id}`}
+                              className="block text-sm text-gray-600 mb-1"
+                            >
+                              อัตรา
+                            </label>
+                            <PrimaryInputText
+                              id={`other-rate-${f.id}`}
+                              value={f.rate}
+                              onChange={(v: string) =>
+                                updateOtherFertilizer(f.id, "rate", v)
+                              }
+                              placeholder="เช่น 2 กก./ไร่ หรือ 200 ก./ต้น"
+                              maxLength={255}
+                            />
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor={`other-freq-${f.id}`}
+                              className="block text-sm text-gray-600 mb-1"
+                            >
+                              จำนวน
+                            </label>
+                            <PrimaryInputText
+                              id={`other-freq-${f.id}`}
+                              value={f.frequencyPerYear}
+                              onChange={(v: string) =>
+                                updateOtherFertilizer(
+                                  f.id,
+                                  "frequencyPerYear",
+                                  v
+                                )
+                              }
+                              placeholder="ครั้ง/ปี"
+                              maxLength={10}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="mt-2 flex justify-end">
+                          {otherFertilizers.length > 1 && (
+                            <PrimaryButton
+                              label="ลบ"
+                              icon="pi pi-trash"
+                              color="danger"
+                              variant="outlined"
+                              size="small"
+                              onClick={() => removeOtherFertilizer(f.id)}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+
+                    <div className="flex justify-end">
+                      <PrimaryButton
+                        label="เพิ่มรายการอื่นๆ"
+                        icon="pi pi-plus"
+                        color="success"
+                        onClick={addOtherFertilizer}
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <div className="mb-4">
