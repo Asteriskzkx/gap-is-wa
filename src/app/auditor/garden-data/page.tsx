@@ -188,6 +188,13 @@ export default function Page() {
   const removeOtherFertilizer = (id: string) =>
     setOtherFertilizers((prev) => prev.filter((p) => p.id !== id));
 
+  // previouslyCultivated (step 2 - section 4)
+  const [previouslyNeverUsed, setPreviouslyNeverUsed] =
+    useState<boolean>(false);
+  const [previouslyUsed, setPreviouslyUsed] = useState<boolean>(false);
+  const [previousCropsYear1, setPreviousCropsYear1] = useState<string>("");
+  const [previousCropsYear2, setPreviousCropsYear2] = useState<string>("");
+
   const handleTabChange = (value: string) => {
     onTabChange("inspectionTab", value);
     setSelectedInspection(null);
@@ -920,6 +927,76 @@ export default function Page() {
                   <h4 className="text-sm text-gray-600 mb-2">
                     4. ประวัติการใช้พื้นที่การผลิต ย้อนหลัง 2 ปี
                   </h4>
+
+                  <div className="p-3 border rounded-md mb-3">
+                    <div className="flex flex-col gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="flex items-center">
+                          <PrimaryCheckbox
+                            checked={previouslyNeverUsed}
+                            label="พื้นที่ไม่เคยใช้ประโยชน์ทางการเกษตร"
+                            onChange={(checked: boolean) => {
+                              setPreviouslyNeverUsed(checked);
+                              if (checked) {
+                                setPreviouslyUsed(false);
+                                setPreviousCropsYear1("");
+                                setPreviousCropsYear2("");
+                              }
+                            }}
+                          />
+                        </div>
+
+                        <div className="flex items-center">
+                          <PrimaryCheckbox
+                            checked={previouslyUsed}
+                            label="พื้นที่ใช้ประโยชน์ทางการเกษตร ชนิดของพืชที่เคยปลูกมาก่อน (นับถอยหลังจากปัจจุบัน)"
+                            onChange={(checked: boolean) => {
+                              setPreviouslyUsed(checked);
+                              if (checked) setPreviouslyNeverUsed(false);
+                              if (!checked) {
+                                setPreviousCropsYear1("");
+                                setPreviousCropsYear2("");
+                              }
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label
+                            htmlFor="previousCropsYear1"
+                            className="block text-sm text-gray-600 mb-1"
+                          >
+                            ปีที่ 1
+                          </label>
+                          <PrimaryInputText
+                            value={previousCropsYear1}
+                            onChange={(v: string) => setPreviousCropsYear1(v)}
+                            placeholder="ระบุพืชที่ปลูกในปีที่ 1"
+                            maxLength={255}
+                            disabled={!previouslyUsed}
+                          />
+                        </div>
+
+                        <div>
+                          <label
+                            htmlFor="previousCropsYear2"
+                            className="block text-sm text-gray-600 mb-1"
+                          >
+                            ปีที่ 2
+                          </label>
+                          <PrimaryInputText
+                            value={previousCropsYear2}
+                            onChange={(v: string) => setPreviousCropsYear2(v)}
+                            placeholder="ระบุพืชที่ปลูกในปีที่ 2"
+                            maxLength={255}
+                            disabled={!previouslyUsed}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="mb-4">
