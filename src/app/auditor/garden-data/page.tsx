@@ -195,6 +195,31 @@ export default function Page() {
   const [previousCropsYear1, setPreviousCropsYear1] = useState<string>("");
   const [previousCropsYear2, setPreviousCropsYear2] = useState<string>("");
 
+  // plantDiseases (step 2 - section 5)
+  const [plantDiseases, setPlantDiseases] = useState<
+    Array<{
+      id: string;
+      name: string;
+      outbreakPeriod: string;
+      preventionAndControl: string;
+    }>
+  >([{ id: genId(), name: "", outbreakPeriod: "", preventionAndControl: "" }]);
+
+  const updatePlantDisease = (id: string, field: string, value: any) => {
+    setPlantDiseases((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, [field]: value } : p))
+    );
+  };
+
+  const addPlantDisease = () =>
+    setPlantDiseases((prev) => [
+      ...prev,
+      { id: genId(), name: "", outbreakPeriod: "", preventionAndControl: "" },
+    ]);
+
+  const removePlantDisease = (id: string) =>
+    setPlantDiseases((prev) => prev.filter((p) => p.id !== id));
+
   const handleTabChange = (value: string) => {
     onTabChange("inspectionTab", value);
     setSelectedInspection(null);
@@ -1003,6 +1028,94 @@ export default function Page() {
                   <h4 className="text-sm text-gray-600 mb-2">
                     5. การแพร่ระบาดของศัตรูพืช/โรค/อาการผิดปกติ และการจัดการ
                   </h4>
+
+                  {(plantDiseases || []).map((d) => (
+                    <div key={d.id} className="p-3 border rounded-md mb-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label
+                            htmlFor={`disease-name-${d.id}`}
+                            className="block text-sm text-gray-600 mb-1"
+                          >
+                            ชื่อศัตรูพืช/โรค/อาการ
+                          </label>
+                          <PrimaryInputText
+                            id={`disease-name-${d.id}`}
+                            value={d.name}
+                            onChange={(v: string) =>
+                              updatePlantDisease(d.id, "name", v)
+                            }
+                            placeholder="ชื่อศัตรูพืช/โรค/อาการ"
+                            maxLength={255}
+                          />
+                        </div>
+
+                        <div>
+                          <label
+                            htmlFor={`disease-outbreak-${d.id}`}
+                            className="block text-sm text-gray-600 mb-1"
+                          >
+                            ช่วงที่ระบาด
+                          </label>
+                          <PrimaryInputText
+                            id={`disease-outbreak-${d.id}`}
+                            value={d.outbreakPeriod}
+                            onChange={(v: string) =>
+                              updatePlantDisease(d.id, "outbreakPeriod", v)
+                            }
+                            placeholder="เช่น ฤดูฝน, ฤดูแล้ง"
+                            maxLength={255}
+                          />
+                        </div>
+
+                        <div className="sm:col-span-2">
+                          <label
+                            htmlFor={`disease-prevent-${d.id}`}
+                            className="block text-sm text-gray-600 mb-1"
+                          >
+                            วิธีการป้องกันและควบคุม
+                          </label>
+                          <PrimaryInputTextarea
+                            id={`disease-prevent-${d.id}`}
+                            value={d.preventionAndControl}
+                            onChange={(v: string) =>
+                              updatePlantDisease(
+                                d.id,
+                                "preventionAndControl",
+                                v
+                              )
+                            }
+                            rows={5}
+                            maxLength={1000}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                            placeholder="ระบุวิธีการป้องกันและการจัดการ"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="mt-2 flex justify-end">
+                        {plantDiseases.length > 1 && (
+                          <PrimaryButton
+                            label="ลบรายการ"
+                            icon="pi pi-trash"
+                            color="danger"
+                            variant="outlined"
+                            size="small"
+                            onClick={() => removePlantDisease(d.id)}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  ))}
+
+                  <div className="flex justify-end">
+                    <PrimaryButton
+                      label="เพิ่มรายการ"
+                      icon="pi pi-plus"
+                      color="success"
+                      onClick={addPlantDisease}
+                    />
+                  </div>
                 </div>
 
                 <div className="mb-4">
