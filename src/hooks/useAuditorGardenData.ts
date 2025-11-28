@@ -1,10 +1,8 @@
+import thaiProvinceData from "@/data/thai-provinces.json";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { DataTablePageEvent, DataTableSortEvent } from "primereact/datatable";
 import { useCallback, useEffect, useState } from "react";
-import { toast } from "react-hot-toast";
-import thaiProvinceData from "@/data/thai-provinces.json";
-
 type SortOrder = 1 | -1 | 0 | null;
 
 interface LazyParams {
@@ -130,6 +128,58 @@ export function useAuditorGardenData(initialRows = 10) {
     fetchItems();
   }, [fetchItems]);
 
+  const refresh = useCallback(() => {
+    fetchItems();
+  }, [fetchItems]);
+
+  const createDataRecord = useCallback(
+    async (payload: any) => {
+      try {
+        const resp = await fetch(`/api/v1/data-records`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!resp.ok) {
+          const err = await resp.json().catch(() => null);
+          throw new Error(err?.message || "Failed to create data record");
+        }
+        const data = await resp.json();
+        // refresh list after create
+        fetchItems();
+        return data;
+      } catch (error: any) {
+        console.error("createDataRecord error:", error);
+        throw error;
+      }
+    },
+    [fetchItems]
+  );
+
+  const updateDataRecord = useCallback(
+    async (id: number | string, payload: any) => {
+      try {
+        const resp = await fetch(`/api/v1/data-records/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!resp.ok) {
+          const err = await resp.json().catch(() => null);
+          throw new Error(err?.message || "Failed to update data record");
+        }
+        const data = await resp.json();
+        // refresh list after update
+        fetchItems();
+        return data;
+      } catch (error: any) {
+        console.error("updateDataRecord error:", error);
+        throw error;
+      }
+    },
+    [fetchItems]
+  );
+
   const handlePageChange = useCallback((event: DataTablePageEvent) => {
     setLazyParams((prev) => ({
       ...prev,
@@ -251,5 +301,8 @@ export function useAuditorGardenData(initialRows = 10) {
     setRows: (rows: number) => setLazyParams((p) => ({ ...p, rows })),
     currentTab: appliedTab === "completed" ? "completed" : "in-progress",
     onTabChange,
+    refresh,
+    createDataRecord,
+    updateDataRecord,
   };
 }

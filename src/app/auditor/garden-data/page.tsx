@@ -15,7 +15,8 @@ import thaiProvinceData from "@/data/thai-provinces.json";
 import { useAuditorGardenData } from "@/hooks/useAuditorGardenData";
 import { useFormStepper } from "@/hooks/useFormStepper";
 import { CONTAINER, HEADER, SPACING } from "@/styles/auditorClasses";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "react-hot-toast";
 
 const rubberSpeciesOptions = [
   { label: "RRIT 251", value: "RRIT 251" },
@@ -48,12 +49,20 @@ export default function Page() {
     setSelectedProvinceId,
     setSelectedDistrictId,
     setSelectedSubDistrictId,
+    createDataRecord,
+    updateDataRecord,
   } = useAuditorGardenData(10);
 
   const [selectedInspection, setSelectedInspection] = useState<Record<
     string,
     any
   > | null>(null);
+
+  // data record id/version for optimistic update
+  const [dataRecordId, setDataRecordId] = useState<number | null>(null);
+  const [dataRecordVersion, setDataRecordVersion] = useState<
+    number | undefined
+  >(undefined);
 
   // location autocomplete state
   const [provinces] = useState<any[]>(
@@ -66,6 +75,9 @@ export default function Page() {
   const [subDistricts, setSubDistricts] = useState<any[]>([]);
 
   const { step, nextStep, prevStep } = useFormStepper(2);
+
+  // map location state (GeoJSON)
+  const [mapLocation, setMapLocation] = useState<any>(null);
 
   // Planting details for step 2
   const [plantingDetails, setPlantingDetails] = useState<
@@ -248,6 +260,227 @@ export default function Page() {
   const handleTabChange = (value: string) => {
     onTabChange("inspectionTab", value);
     setSelectedInspection(null);
+  };
+
+  // initialize form state when a selected inspection has an existing dataRecord
+  useEffect(() => {
+    const dr = selectedInspection?.dataRecord;
+    if (dr) {
+      // species -> plantingDetails
+      try {
+        const species = dr.species || {};
+        if (Array.isArray(species.plantingDetails)) {
+          setPlantingDetails(
+            species.plantingDetails.map((p: any) => ({
+              id: genId(),
+              specie: p.specie || "",
+              spacing: p.spacing ?? null,
+              numberOfTrees: p.numberOfTrees ?? null,
+              plantingDate: p.plantingDate ? new Date(p.plantingDate) : null,
+            }))
+          );
+        }
+
+        // water system
+        const ws = dr.waterSystem || {};
+        setWaterSystemHas(ws.has ?? null);
+        setWaterSystemDetails(ws.details || "");
+
+        // fertilizers
+        const fert = dr.fertilizers || {};
+        setChemicalFertilizers(
+          Array.isArray(fert.chemical) && fert.chemical.length
+            ? fert.chemical.map((f: any) => ({ id: genId(), ...f }))
+            : [{ id: genId(), formula: "", rate: "", frequencyPerYear: "" }]
+        );
+        setOrganicFertilizers(
+          Array.isArray(fert.organic) && fert.organic.length
+            ? fert.organic.map((f: any) => ({ id: genId(), ...f }))
+            : [{ id: genId(), formula: "", rate: "", frequencyPerYear: "" }]
+        );
+        setOtherFertilizers(
+          Array.isArray(fert.other) && fert.other.length
+            ? fert.other.map((f: any) => ({ id: genId(), ...f }))
+            : [{ id: genId(), formula: "", rate: "", frequencyPerYear: "" }]
+        );
+
+        // previouslyCultivated
+        const pc = dr.previouslyCultivated || {};
+        setPreviouslyNeverUsed(!!pc.neverUsed);
+        setPreviouslyUsed(!!pc.used);
+        setPreviousCropsYear1(pc.year1 || "");
+        setPreviousCropsYear2(pc.year2 || "");
+
+        // plant diseases
+        const pd = dr.plantDisease || [];
+        setPlantDiseases(
+          Array.isArray(pd) && pd.length
+            ? pd.map((d: any) => ({ id: genId(), ...d }))
+            : [
+                {
+                  id: genId(),
+                  name: "",
+                  outbreakPeriod: "",
+                  preventionAndControl: "",
+                },
+              ]
+        );
+
+        // related plants
+        const rp = dr.relatedPlants || [];
+        if (Array.isArray(rp) && rp.length) {
+          setRelatedPlantHas(true);
+          setRelatedPlantHasnot(false);
+          setRelatedPlants(
+            rp.map((r: any) => ({ id: genId(), name: r.name || "" }))
+          );
+        } else {
+          setRelatedPlantHas(false);
+          setRelatedPlantHasnot(true);
+          setRelatedPlants([{ id: genId(), name: "" }]);
+        }
+
+        // more info
+        setMoreInfo(dr.moreInfo || "");
+
+        setDataRecordId(dr.dataRecordId ?? null);
+        setDataRecordVersion(dr.version ?? undefined);
+        // prefer stored map in dataRecord, otherwise use the inspection rubberFarm location
+        setMapLocation(
+          dr.map ?? selectedInspection?.rubberFarm?.location ?? null
+        );
+      } catch (e) {
+        console.error("Failed to populate data record to form", e);
+      }
+    } else {
+      // reset form to defaults when no existing dataRecord
+      setPlantingDetails([
+        {
+          id: genId(),
+          specie: "",
+          spacing: null,
+          numberOfTrees: null,
+          plantingDate: null,
+        },
+      ]);
+      setWaterSystemHas(null);
+      setWaterSystemDetails("");
+      setChemicalFertilizers([
+        { id: genId(), formula: "", rate: "", frequencyPerYear: "" },
+      ]);
+      setOrganicFertilizers([
+        { id: genId(), formula: "", rate: "", frequencyPerYear: "" },
+      ]);
+      setOtherFertilizers([
+        { id: genId(), formula: "", rate: "", frequencyPerYear: "" },
+      ]);
+      setPreviouslyNeverUsed(false);
+      setPreviouslyUsed(false);
+      setPreviousCropsYear1("");
+      setPreviousCropsYear2("");
+      setPlantDiseases([
+        { id: genId(), name: "", outbreakPeriod: "", preventionAndControl: "" },
+      ]);
+      setRelatedPlants([{ id: genId(), name: "" }]);
+      setMoreInfo("");
+      setDataRecordId(null);
+      setDataRecordVersion(undefined);
+      setMapLocation(selectedInspection?.rubberFarm?.location ?? null);
+    }
+  }, [selectedInspection]);
+
+  // build payload for API from local form state
+  const buildPayload = useCallback(() => {
+    return {
+      inspectionId: selectedInspection?.inspectionId,
+      species: {
+        plantingDetails: plantingDetails.map((p) => ({
+          specie: p.specie,
+          spacing: p.spacing,
+          numberOfTrees: p.numberOfTrees,
+          plantingDate: p.plantingDate ? p.plantingDate.toISOString() : null,
+        })),
+      },
+      waterSystem: { has: waterSystemHas, details: waterSystemDetails },
+      fertilizers: {
+        chemical: chemicalFertilizers.map((f) => ({
+          formula: f.formula,
+          rate: f.rate,
+          frequencyPerYear: f.frequencyPerYear,
+        })),
+        organic: organicFertilizers.map((f) => ({
+          formula: f.formula,
+          rate: f.rate,
+          frequencyPerYear: f.frequencyPerYear,
+        })),
+        other: otherFertilizers.map((f) => ({
+          formula: f.formula,
+          rate: f.rate,
+          frequencyPerYear: f.frequencyPerYear,
+        })),
+      },
+      previouslyCultivated: {
+        neverUsed: previouslyNeverUsed,
+        used: previouslyUsed,
+        year1: previousCropsYear1,
+        year2: previousCropsYear2,
+      },
+      plantDisease: plantDiseases.map((d) => ({
+        name: d.name,
+        outbreakPeriod: d.outbreakPeriod,
+        preventionAndControl: d.preventionAndControl,
+      })),
+      relatedPlants: relatedPlants.map((r) => ({ name: r.name })),
+      moreInfo,
+      map: mapLocation ?? selectedInspection?.rubberFarm?.location ?? {},
+    };
+  }, [
+    selectedInspection,
+    plantingDetails,
+    mapLocation,
+    waterSystemHas,
+    waterSystemDetails,
+    chemicalFertilizers,
+    organicFertilizers,
+    otherFertilizers,
+    previouslyNeverUsed,
+    previouslyUsed,
+    previousCropsYear1,
+    previousCropsYear2,
+    plantDiseases,
+    relatedPlants,
+    moreInfo,
+  ]);
+
+  const handleSave = async () => {
+    if (!selectedInspection) return toast.error("ไม่มีการตรวจที่เลือก");
+    const payload = buildPayload();
+    try {
+      if (dataRecordId) {
+        const updatePayload: any = { ...payload };
+        if (dataRecordVersion !== undefined)
+          updatePayload.version = dataRecordVersion;
+        const res = await updateDataRecord(dataRecordId, updatePayload);
+        toast.success("บันทึกข้อมูลเรียบร้อย");
+        setDataRecordId(res?.dataRecordId ?? dataRecordId);
+        setDataRecordVersion(res?.version ?? dataRecordVersion);
+        setSelectedInspection((prev) =>
+          prev ? { ...prev, dataRecord: res } : prev
+        );
+      } else {
+        const res = await createDataRecord(payload);
+        toast.success("สร้างข้อมูลเรียบร้อย");
+        setDataRecordId(res?.dataRecordId ?? null);
+        setDataRecordVersion(res?.version ?? undefined);
+        setSelectedInspection((prev) =>
+          prev ? { ...prev, dataRecord: res } : prev
+        );
+      }
+    } catch (e) {
+      console.error("save data record error", e);
+      const msg = (e as any)?.message || "บันทึกข้อมูลไม่สำเร็จ";
+      toast.error(msg);
+    }
   };
 
   const columns = useMemo(
@@ -515,6 +748,7 @@ export default function Page() {
                     label="ถัดไป"
                     onClick={() => {
                       if (selectedInspection) nextStep();
+                      console.log(selectedInspection?.dataRecord);
                     }}
                     disabled={!selectedInspection}
                   />
@@ -528,7 +762,9 @@ export default function Page() {
                   <h4 className="text-sm text-gray-600 mb-2">แผนที่ตั้งสวน</h4>
                   <div className="w-full">
                     <DynamicMapViewer
-                      location={selectedInspection?.rubberFarm?.location}
+                      location={
+                        mapLocation ?? selectedInspection?.rubberFarm?.location
+                      }
                       height="400px"
                       width="100%"
                     />
@@ -1253,6 +1489,11 @@ export default function Page() {
                     label="ย้อนกลับ"
                     color="secondary"
                     onClick={() => prevStep()}
+                  />
+                  <PrimaryButton
+                    label="บันทึกข้อมูล"
+                    onClick={handleSave}
+                    disabled={!selectedInspection}
                   />
                 </div>
               </div>
