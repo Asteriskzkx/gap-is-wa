@@ -242,6 +242,9 @@ export default function Page() {
   const removeRelatedPlant = (id: string) =>
     setRelatedPlants((prev) => prev.filter((p) => p.id !== id));
 
+  // moreInfo (step 2 - section 7)
+  const [moreInfo, setMoreInfo] = useState<string>("");
+
   const handleTabChange = (value: string) => {
     onTabChange("inspectionTab", value);
     setSelectedInspection(null);
@@ -1225,6 +1228,24 @@ export default function Page() {
                   <h4 className="text-sm text-gray-600 mb-2">
                     7. ข้อมูลอื่น ๆ (เช่น ชนิดพืชร่วม พืชแซม ฯลฯ)
                   </h4>
+
+                  <div className="p-3 border rounded-md mb-3">
+                    <label
+                      htmlFor="more-info"
+                      className="block text-sm text-gray-600 mb-1"
+                    >
+                      ข้อมูลเพิ่มเติม
+                    </label>
+                    <PrimaryInputTextarea
+                      id="more-info"
+                      value={moreInfo}
+                      onChange={(v: string) => setMoreInfo(v)}
+                      rows={5}
+                      maxLength={255}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                      placeholder="ระบุข้อมูลอื่น ๆ เช่น ชนิดพืชร่วม พืชแซม หรือข้อมูลเพิ่มเติมอื่น ๆ"
+                    />
+                  </div>
                 </div>
 
                 <div className="flex justify-between gap-2">
