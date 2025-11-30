@@ -105,33 +105,51 @@ export default function LocationFilters({
       {/* First row: responsive grid - 3 columns on sm+ (province, district, subdistrict) */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full items-center">
         <div className="w-full sm:w-full">
+          <label
+            className="block text-sm text-gray-600 mb-1"
+            htmlFor="province-search"
+          >
+            จังหวัด
+          </label>
           <PrimaryAutoComplete
+            id="province-search"
             value={provinceId}
             options={provinceOptions}
             onChange={(v) => onProvinceChange(v || null)}
-            placeholder="จังหวัด"
-            className=""
+            placeholder="เลือกจังหวัด"
           />
         </div>
 
         <div className="w-full sm:w-full">
+          <label
+            className="block text-sm text-gray-600 mb-1"
+            htmlFor="district-search"
+          >
+            อำเภอ/เขต
+          </label>
           <PrimaryAutoComplete
+            id="district-search"
             value={districtId}
             options={districtOptions}
             onChange={(v) => onDistrictChange(v || null)}
-            placeholder="อำเภอ"
-            className=""
+            placeholder="เลือกอำเภอ/เขต"
             disabled={!provinceId}
           />
         </div>
 
         <div className="w-full sm:w-full">
+          <label
+            className="block text-sm text-gray-600 mb-1"
+            htmlFor="subdistrict-search"
+          >
+            ตำบล/แขวง
+          </label>
           <PrimaryAutoComplete
+            id="subdistrict-search"
             value={subDistrictId}
             options={subDistrictOptions}
             onChange={(v) => onSubDistrictChange(v || null)}
-            placeholder="ตำบล"
-            className=""
+            placeholder="เลือกตำบล/แขวง"
             disabled={!districtId}
           />
         </div>
