@@ -203,7 +203,7 @@ export default function Page() {
                         className="block text-sm text-gray-600 mb-1"
                         htmlFor="district-search"
                       >
-                        อำเภอ
+                        อำเภอ/เขต
                       </label>
                       <PrimaryAutoComplete
                         id="district-search"
@@ -228,7 +228,7 @@ export default function Page() {
                             setSubDistricts([]);
                           }
                         }}
-                        placeholder="เลือกอำเภอ"
+                        placeholder="เลือกอำเภอ/เขต"
                         disabled={!selectedProvinceId}
                       />
                     </div>
@@ -240,7 +240,7 @@ export default function Page() {
                         className="block text-sm text-gray-600 mb-1"
                         htmlFor="subdistrict-search"
                       >
-                        ตำบล
+                        ตำบล/แขวง
                       </label>
                       <PrimaryAutoComplete
                         id="subdistrict-search"
@@ -254,7 +254,7 @@ export default function Page() {
                           const id = v === "" ? null : Number(v);
                           setSelectedSubDistrictId(id);
                         }}
-                        placeholder="เลือกตำบล"
+                        placeholder="เลือกตำบล/แขวง"
                         disabled={!selectedDistrictId}
                       />
                     </div>

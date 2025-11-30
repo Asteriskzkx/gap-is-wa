@@ -832,7 +832,7 @@ export default function AuditorInspectionsPage() {
                 className="block text-sm font-medium text-gray-700 mb-1"
                 htmlFor="district-search"
               >
-                อำเภอ
+                อำเภอ/เขต
               </label>
               <PrimaryAutoComplete
                 id="district-search"
@@ -842,7 +842,7 @@ export default function AuditorInspectionsPage() {
                   value: district.id,
                 }))}
                 onChange={(value) => handleDistrictChange(value as number)}
-                placeholder="เลือกอำเภอ"
+                placeholder="เลือกอำเภอ/เขต"
                 disabled={!selectedProvinceId}
               />
             </div>
@@ -852,7 +852,7 @@ export default function AuditorInspectionsPage() {
                 className="block text-sm font-medium text-gray-700 mb-1"
                 htmlFor="subdistrict-search"
               >
-                ตำบล
+                ตำบล/แขวง
               </label>
               <PrimaryAutoComplete
                 id="subdistrict-search"
@@ -862,7 +862,7 @@ export default function AuditorInspectionsPage() {
                   value: subDistrict.id,
                 }))}
                 onChange={(value) => setSelectedSubDistrictId(value as number)}
-                placeholder="เลือกตำบล"
+                placeholder="เลือกตำบล/แขวง"
                 disabled={!selectedDistrictId}
               />
             </div>
