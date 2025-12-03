@@ -125,38 +125,6 @@ export class AuditorService extends BaseService<AuditorModel> {
     }
   }
 
-  // Additional auditor-specific business logic can be added here
-  async assignAuditorToRegion(
-    auditorId: number,
-    region: string
-  ): Promise<boolean> {
-    // เปลี่ยนจาก string เป็น number
-    // This would be implemented based on your specific business requirements
-    // For now, returning a placeholder implementation
-    try {
-      console.log(`Assigning auditor ${auditorId} to region ${region}`);
-      // In a real implementation, you would store this assignment in the database
-      return true;
-    } catch (error) {
-      this.handleServiceError(error);
-      return false;
-    }
-  }
-
-  async getAuditorAssignments(auditorId: number): Promise<string[]> {
-    // เปลี่ยนจาก string เป็น number
-    // This would be implemented based on your specific business requirements
-    // For now, returning a placeholder implementation
-    try {
-      console.log(`Getting assignments for auditor ${auditorId}`);
-      // In a real implementation, you would fetch assignments from the database
-      return ["Assignment 1", "Assignment 2"];
-    } catch (error) {
-      this.handleServiceError(error);
-      return [];
-    }
-  }
-
   /**
    * ดึงรายการ rubber farm ที่พร้อมใช้งาน (ไม่มี inspection ที่รอการตรวจประเมิน)
    * พร้อมรองรับการค้นหาและเรียงลำดับ
