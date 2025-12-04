@@ -667,7 +667,7 @@ export const AddUserDialog: React.FC<Props> = ({
                   <label className="text-sm mb-1">
                     จังหวัด <span className="text-red-500">*</span>
                   </label>
-                  <PrimaryAutoComplete
+                  <PrimaryDropdown
                     value={provinceId}
                     options={provinceOptions}
                     onChange={(v) => {
@@ -677,6 +677,7 @@ export const AddUserDialog: React.FC<Props> = ({
                     }}
                     onBlur={() => markTouched("provinceId")}
                     placeholder="เลือกหรือค้นหาจังหวัด"
+                    filter
                     required
                     invalid={
                       (dirty.provinceId || touched.provinceId) &&
@@ -695,7 +696,7 @@ export const AddUserDialog: React.FC<Props> = ({
                   <label className="text-sm mb-1">
                     อำเภอ/เขต <span className="text-red-500">*</span>
                   </label>
-                  <PrimaryAutoComplete
+                  <PrimaryDropdown
                     value={amphureId}
                     options={amphureOptions}
                     onChange={(v) => {
@@ -706,6 +707,7 @@ export const AddUserDialog: React.FC<Props> = ({
                     placeholder="เลือกหรือค้นหาอำเภอ/เขต"
                     disabled={amphureOptions.length === 0}
                     required
+                    filter
                     invalid={
                       (dirty.amphureId || touched.amphureId) && amphureId === ""
                     }
@@ -721,7 +723,7 @@ export const AddUserDialog: React.FC<Props> = ({
                   <label className="text-sm mb-1">
                     ตำบล/แขวง <span className="text-red-500">*</span>
                   </label>
-                  <PrimaryAutoComplete
+                  <PrimaryDropdown
                     value={tambonId}
                     options={tambonOptions}
                     onChange={(v) => {
@@ -732,6 +734,7 @@ export const AddUserDialog: React.FC<Props> = ({
                     placeholder="เลือกหรือค้นหาตำบล/แขวง"
                     disabled={tambonOptions.length === 0}
                     required
+                    filter
                     invalid={
                       (dirty.tambonId || touched.tambonId) && tambonId === ""
                     }
