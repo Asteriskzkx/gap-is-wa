@@ -103,7 +103,6 @@ export class FarmerService extends BaseService<FarmerModel> {
   }
 
   async getFarmerByUserId(userId: number): Promise<FarmerModel | null> {
-    // เปลี่ยนจากEstring เปแE��Enumber
     try {
       return await this.farmerRepository.findByUserId(userId);
     } catch (error) {
@@ -117,7 +116,6 @@ export class FarmerService extends BaseService<FarmerModel> {
     data: Partial<FarmerModel>,
     currentVersion?: number
   ): Promise<FarmerModel | null> {
-    // เปลี่ยนจากEstring เปแE��Enumber
     try {
       // If updating email, check if it's already in use
       if (data.email) {
