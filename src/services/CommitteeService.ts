@@ -106,43 +106,4 @@ export class CommitteeService extends BaseService<CommitteeModel> {
       throw error;
     }
   }
-
-  // Committee-specific business logic
-  async reviewAudit(
-    auditId: number,
-    committeeId: number,
-    decision: string,
-    comments: string
-  ): Promise<boolean> {
-    // This would be implemented based on your specific business requirements
-    // For now, returning a placeholder implementation
-    try {
-      console.log(
-        `Committee ${committeeId} reviewed audit ${auditId} with decision: ${decision}`
-      );
-      // In a real implementation, you would store this review in the database
-      return true;
-    } catch (error) {
-      this.handleServiceError(error);
-      return false;
-    }
-  }
-
-  async approveCertification(
-    applicationId: number,
-    committeeId: number
-  ): Promise<boolean> {
-    // This would be implemented based on your specific business requirements
-    // For now, returning a placeholder implementation
-    try {
-      console.log(
-        `Committee ${committeeId} approved certification for application ${applicationId}`
-      );
-      // In a real implementation, you would update the certification status in the database
-      return true;
-    } catch (error) {
-      this.handleServiceError(error);
-      return false;
-    }
-  }
 }

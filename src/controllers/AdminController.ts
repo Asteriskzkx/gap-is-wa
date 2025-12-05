@@ -196,37 +196,6 @@ export class AdminController extends BaseController<AdminModel> {
     }
   }
 
-  async getSystemConfig(req: NextRequest): Promise<NextResponse> {
-    try {
-      const config = await this.adminService.getSystemConfig();
-      return NextResponse.json(config, { status: 200 });
-    } catch (error) {
-      return this.handleControllerError(error);
-    }
-  }
-
-  async updateSystemConfig(req: NextRequest): Promise<NextResponse> {
-    try {
-      const config = await req.json();
-
-      const success = await this.adminService.updateSystemConfig(config);
-
-      if (!success) {
-        return NextResponse.json(
-          { message: "Failed to update system configuration" },
-          { status: 500 }
-        );
-      }
-
-      return NextResponse.json(
-        { message: "System configuration updated successfully" },
-        { status: 200 }
-      );
-    } catch (error) {
-      return this.handleControllerError(error);
-    }
-  }
-
   protected async createModel(data: any): Promise<AdminModel> {
     return AdminModel.createAdmin(
       data.email,

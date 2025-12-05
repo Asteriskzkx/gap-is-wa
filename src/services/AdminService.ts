@@ -156,31 +156,4 @@ export class AdminService extends BaseService<AdminModel> {
       return null;
     }
   }
-
-  // Get system configuration
-  async getSystemConfig(): Promise<Record<string, any>> {
-    // In a real implementation, this would read from a database or configuration file
-    return {
-      systemName: "GAP Certification System",
-      version: "1.0.0",
-      enabledFeatures: {
-        farmerRegistration: true,
-        auditManagement: true,
-        certificationApproval: true,
-      },
-      maintenanceMode: false,
-    };
-  }
-
-  // Update system configuration
-  async updateSystemConfig(config: Record<string, any>): Promise<boolean> {
-    try {
-      // In a real implementation, this would save to a database or configuration file
-      console.log("Updating system configuration:", config);
-      return true;
-    } catch (error) {
-      this.handleServiceError(error);
-      return false;
-    }
-  }
 }

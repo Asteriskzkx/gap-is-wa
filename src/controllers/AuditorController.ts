@@ -175,6 +175,79 @@ export class AuditorController extends BaseController<AuditorModel> {
   }
 
   /**
+   * ดึงรายชื่อ auditor อื่นๆ (ยกเว้น auditor ที่ login อยู่)
+   */
+  async getOtherAuditors(req: NextRequest): Promise<NextResponse> {
+    try {
+      // ตรวจสอบสิทธิ์ว่าเป็น Auditor จริงหรือไม่
+      const { authorized, session, error } = await checkAuthorization(req, [
+        "AUDITOR",
+      ]);
+
+      if (!authorized || !session) {
+        return NextResponse.json(
+          { message: error || "Unauthorized" },
+          { status: 401 }
+        );
+      }
+
+      const auditorId = session.user.roleData?.auditorId;
+      if (!auditorId) {
+        return NextResponse.json(
+          { message: "Auditor ID not found in session" },
+          { status: 403 }
+        );
+      }
+
+      // ดึง query parameters
+      const { searchParams } = new URL(req.url);
+      const limit = Number.parseInt(searchParams.get("limit") || "10");
+      const offset = Number.parseInt(searchParams.get("offset") || "0");
+      const search = searchParams.get("search") || "";
+      const sortField = searchParams.get("sortField") || undefined;
+      const sortOrder = searchParams.get("sortOrder") as
+        | "asc"
+        | "desc"
+        | undefined;
+
+      // Multi-sort
+      let multiSortMeta: Array<{ field: string; order: 1 | -1 }> | undefined;
+      const multiSortParam = searchParams.get("multiSortMeta");
+      if (multiSortParam) {
+        try {
+          multiSortMeta = JSON.parse(multiSortParam);
+        } catch (e) {
+          console.error("Failed to parse multiSortMeta:", e);
+        }
+      }
+
+      // ดึงรายชื่อ auditor อื่นๆ พร้อม pagination
+      const result = await this.auditorService.getAuditorListExcept(auditorId, {
+        limit,
+        offset,
+        search,
+        sortField,
+        sortOrder,
+        multiSortMeta,
+      });
+
+      return NextResponse.json(
+        {
+          results: result.data,
+          paginator: {
+            limit,
+            offset,
+            total: result.total,
+          },
+        },
+        { status: 200 }
+      );
+    } catch (error) {
+      return this.handleControllerError(error);
+    }
+  }
+
+  /**
    * ดึงรายการ rubber farm ที่พร้อมใช้งาน (ไม่มี inspection รอการตรวจประเมิน)
    */
   async getAvailableFarms(req: NextRequest): Promise<NextResponse> {
@@ -229,75 +302,6 @@ export class AuditorController extends BaseController<AuditorModel> {
         },
         { status: 200 }
       );
-    } catch (error) {
-      return this.handleControllerError(error);
-    }
-  }
-
-  async assignAuditorToRegion(
-    req: NextRequest,
-    { params }: { params: { id: string } }
-  ): Promise<NextResponse> {
-    try {
-      // แปลง auditorId จาก string เป็น number
-      let auditorId: number;
-      try {
-        auditorId = requireValidId(params.id, "auditorId");
-      } catch (error: any) {
-        return NextResponse.json({ message: error.message }, { status: 400 });
-      }
-
-      const data = await req.json();
-      const { region } = data;
-
-      if (!region) {
-        return NextResponse.json(
-          { message: "Region is required" },
-          { status: 400 }
-        );
-      }
-
-      const success = await this.auditorService.assignAuditorToRegion(
-        auditorId,
-        region
-      );
-
-      if (!success) {
-        return NextResponse.json(
-          { message: "Failed to assign auditor to region" },
-          { status: 500 }
-        );
-      }
-
-      return NextResponse.json(
-        {
-          message: `Auditor successfully assigned to region ${region}`,
-        },
-        { status: 200 }
-      );
-    } catch (error) {
-      return this.handleControllerError(error);
-    }
-  }
-
-  async getAuditorAssignments(
-    req: NextRequest,
-    { params }: { params: { id: string } }
-  ): Promise<NextResponse> {
-    try {
-      // แปลง auditorId จาก string เป็น number
-      let auditorId: number;
-      try {
-        auditorId = requireValidId(params.id, "auditorId");
-      } catch (error: any) {
-        return NextResponse.json({ message: error.message }, { status: 400 });
-      }
-
-      const assignments = await this.auditorService.getAuditorAssignments(
-        auditorId
-      );
-
-      return NextResponse.json({ assignments }, { status: 200 });
     } catch (error) {
       return this.handleControllerError(error);
     }

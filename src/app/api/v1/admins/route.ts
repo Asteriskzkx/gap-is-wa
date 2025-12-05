@@ -17,8 +17,6 @@ export async function GET(req: NextRequest) {
 
   if (path.endsWith("/statistics")) {
     return adminController.getUserStatistics(req);
-  } else if (path.endsWith("/config")) {
-    return adminController.getSystemConfig(req);
   }
 
   // Default to get all admins
@@ -43,8 +41,6 @@ export async function POST(req: NextRequest) {
     return adminController.login(req);
   } else if (path.endsWith("/change-role")) {
     return adminController.changeUserRole(req);
-  } else if (path.endsWith("/config")) {
-    return adminController.updateSystemConfig(req);
   }
 
   // Default to create a new admin
