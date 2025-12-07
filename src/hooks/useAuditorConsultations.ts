@@ -133,6 +133,60 @@ export function useAuditorConsultations(initialRows = 10) {
     fetchItems();
   }, [fetchItems]);
 
+  const createAdviceAndDefect = useCallback(
+    async (payload: any) => {
+      try {
+        const response = await fetch("/api/v1/advice-and-defects", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(
+            errorData.message || "Failed to create advice and defect"
+          );
+        }
+
+        const data = await response.json();
+        await fetchItems();
+        return data;
+      } catch (error: any) {
+        console.error("Error creating advice and defect:", error);
+        throw error;
+      }
+    },
+    [fetchItems]
+  );
+
+  const updateAdviceAndDefect = useCallback(
+    async (id: number | string, payload: any) => {
+      try {
+        const response = await fetch(`/api/v1/advice-and-defects/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(
+            errorData.message || "Failed to update advice and defect"
+          );
+        }
+
+        const data = await response.json();
+        await fetchItems();
+        return data;
+      } catch (error: any) {
+        console.error("Error updating advice and defect:", error);
+        throw error;
+      }
+    },
+    [fetchItems]
+  );
+
   const handlePageChange = useCallback((event: DataTablePageEvent) => {
     setLazyParams((prev) => ({
       ...prev,
@@ -255,5 +309,7 @@ export function useAuditorConsultations(initialRows = 10) {
     currentTab: appliedTab === "completed" ? "completed" : "in-progress",
     onTabChange,
     refresh,
+    createAdviceAndDefect,
+    updateAdviceAndDefect,
   };
 }
