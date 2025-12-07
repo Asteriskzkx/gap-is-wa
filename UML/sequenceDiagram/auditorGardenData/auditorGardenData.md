@@ -189,11 +189,6 @@ sequenceDiagram
 - DataRecord มีได้ 1 รายการต่อ 1 inspection
 - version จำเป็นสำหรับ update เพื่อป้องกันการ update พร้อมกัน
 
-### Tab Filters
-
-- **"รอบันทึกข้อมูล"** (in-progress) - Inspections ที่ยังไม่มี DataRecord หรือกำลังบันทึก
-- **"บันทึกเรียบร้อย"** (completed) - Inspections ที่มี DataRecord แล้ว
-
 ### Success Flow
 
 - Create: แสดง success toast "สร้างข้อมูลเรียบร้อย"
