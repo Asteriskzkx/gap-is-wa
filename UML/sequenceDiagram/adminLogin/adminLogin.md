@@ -1,6 +1,6 @@
 ```mermaid
 sequenceDiagram
-    actor Admin as ผู้ดูแลระบบ
+    actor Admin as aAdmin:Admin
     participant UI as LoginPage<br/>(page.tsx)
     participant Hook as useLoginForm<br/>(Hook)
     participant NextAuth as NextAuth<br/>(Credentials Provider)

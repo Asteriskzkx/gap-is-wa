@@ -1,6 +1,6 @@
 ```mermaid
 sequenceDiagram
-    actor Farmer as เกษตรกร
+    actor Farmer as aFarmer:Farmer
     participant UI as LoginPage<br/>(page.tsx)
     participant Hook as useLoginForm<br/>(Hook)
     participant NextAuth as NextAuth<br/>(Credentials Provider)
