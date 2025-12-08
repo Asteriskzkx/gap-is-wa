@@ -4,7 +4,7 @@ import { checkAuthorization } from "@/lib/session";
 
 // Route handlers สำหรับ /api/v1/farmers เท่านั้น
 export async function GET(req: NextRequest) {
-  const { authorized, error } = await checkAuthorization(req, [
+  const { authorized, session, error } = await checkAuthorization(req, [
     "FARMER",
     "ADMIN",
     "AUDITOR",
@@ -18,7 +18,12 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  // ตรวจสอบว่าเป็นการร้องขอแบบใช้ filter หรือไม่
+  // หาก role เป็น FARMER ให้ดึงข้อมูลแค่ตัวเองเท่านั้น
+  if (session?.user?.role === "FARMER") {
+    return farmerController.getCurrentFarmer(req);
+  }
+
+  // สำหรับ ADMIN, AUDITOR, COMMITTEE สามารถใช้ filter ได้
   const url = new URL(req.url);
 
   if (url.searchParams.has("district")) {

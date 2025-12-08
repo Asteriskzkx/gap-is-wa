@@ -1,23 +1,51 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { userController } from '@/utils/dependencyInjections';
+import { checkAuthorization } from "@/lib/session";
+import { userController } from "@/utils/dependencyInjections";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
-    req: NextRequest,
-    { params }: { params: { id: string } }
+  req: NextRequest,
+  { params }: { params: { id: string } }
 ) {
-    return userController.getById(req, { params });
+  const { authorized, error } = await checkAuthorization(req, ["ADMIN"]);
+
+  if (!authorized) {
+    return NextResponse.json(
+      { message: error || "Unauthorized" },
+      { status: 401 }
+    );
+  }
+
+  return userController.getById(req, { params });
 }
 
 export async function PUT(
-    req: NextRequest,
-    { params }: { params: { id: string } }
+  req: NextRequest,
+  { params }: { params: { id: string } }
 ) {
-    return userController.update(req, { params });
+  const { authorized, error } = await checkAuthorization(req, ["ADMIN"]);
+
+  if (!authorized) {
+    return NextResponse.json(
+      { message: error || "Unauthorized" },
+      { status: 401 }
+    );
+  }
+
+  return userController.update(req, { params });
 }
 
 export async function DELETE(
-    req: NextRequest,
-    { params }: { params: { id: string } }
+  req: NextRequest,
+  { params }: { params: { id: string } }
 ) {
-    return userController.delete(req, { params });
+  const { authorized, error } = await checkAuthorization(req, ["ADMIN"]);
+
+  if (!authorized) {
+    return NextResponse.json(
+      { message: error || "Unauthorized" },
+      { status: 401 }
+    );
+  }
+
+  return userController.delete(req, { params });
 }

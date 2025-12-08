@@ -314,15 +314,28 @@ export class RubberFarmService extends BaseService<RubberFarmModel> {
 
         // ถ้ามี inspection ให้เพิ่มข้อมูล inspection ด้วย
         if (includeInspections && farm.inspection) {
+          const inspectionData: any = {
+            inspectionId: farm.inspection.inspectionId,
+            inspectionNo: farm.inspection.inspectionNo,
+            inspectionDateAndTime: farm.inspection.inspectionDateAndTime,
+            inspectionStatus: farm.inspection.inspectionStatus,
+            inspectionResult: farm.inspection.inspectionResult,
+          };
+
+          // เพิ่ม adviceAndDefect ถ้ามี
+          if (farm.inspection.adviceAndDefect) {
+            inspectionData.adviceAndDefect = {
+              adviceAndDefectId:
+                farm.inspection.adviceAndDefect.adviceAndDefectId,
+              date: farm.inspection.adviceAndDefect.date,
+              adviceList: farm.inspection.adviceAndDefect.adviceList,
+              defectList: farm.inspection.adviceAndDefect.defectList,
+            };
+          }
+
           return {
             ...baseData,
-            inspection: {
-              inspectionId: farm.inspection.inspectionId,
-              inspectionNo: farm.inspection.inspectionNo,
-              inspectionDateAndTime: farm.inspection.inspectionDateAndTime,
-              inspectionStatus: farm.inspection.inspectionStatus,
-              inspectionResult: farm.inspection.inspectionResult,
-            },
+            inspection: inspectionData,
           };
         }
 

@@ -140,7 +140,6 @@ export class FarmerController extends BaseController<FarmerModel> {
   }
 
   // Addition to src/controllers/FarmerController.ts
-
   async getCurrentFarmer(req: NextRequest): Promise<NextResponse> {
     try {
       // ใช้ NextAuth session แทน JWT token
