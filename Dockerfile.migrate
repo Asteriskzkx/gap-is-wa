@@ -23,11 +23,11 @@ COPY prisma ./prisma/
 # Generate Prisma Client
 RUN npx prisma generate
 
+# Copy and prepare migration script
 COPY migrate.sh /migrate.sh
-RUN chmod +x /migrate.sh
-
-# Debug: ตรวจสอบว่าไฟล์มีอยู่จริง
-RUN ls -la /migrate.sh
+RUN chmod +x /migrate.sh && \
+    # Convert line endings from CRLF to LF (for Windows compatibility)
+    sed -i 's/\r$//' /migrate.sh
 
 # Set default command
 CMD ["/migrate.sh"]
