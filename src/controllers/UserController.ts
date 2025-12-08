@@ -1,9 +1,9 @@
+import { checkAuthorization } from "@/lib/session";
 import { NextRequest, NextResponse } from "next/server";
-import { BaseController } from "./BaseController";
 import { UserModel, UserRole } from "../models/UserModel";
 import { UserService } from "../services/UserService";
-import { requireValidId, isValidId } from "../utils/ParamUtils";
-import { checkAuthorization } from "@/lib/session";
+import { requireValidId } from "../utils/ParamUtils";
+import { BaseController } from "./BaseController";
 
 export class UserController extends BaseController<UserModel> {
   private userService: UserService;
@@ -198,20 +198,10 @@ export class UserController extends BaseController<UserModel> {
     }
   }
 
-  async getUsersNormalized(req: NextRequest, userId?: number): Promise<NextResponse> {
-    const { authorized, session, error } = await checkAuthorization(req, [
-        "ADMIN",
-        "FARMER",
-        "AUDITOR",
-        "COMMITTEE",
-      ]);
-
-      if (!authorized || !session) {
-        return NextResponse.json(
-          { message: error || "Unauthorized" },
-          { status: 401 }
-        );
-      }
+  async getUsersNormalized(
+    req: NextRequest,
+    userId?: number
+  ): Promise<NextResponse> {
     try {
       const data = await this.userService.getUsersNormalizedById(userId);
       return NextResponse.json(data, { status: 200 });
@@ -219,5 +209,4 @@ export class UserController extends BaseController<UserModel> {
       return this.handleControllerError(error);
     }
   }
-
 }

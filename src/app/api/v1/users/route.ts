@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
-import { userController } from "@/utils/dependencyInjections";
 import { checkAuthorization } from "@/lib/session";
+import { userController } from "@/utils/dependencyInjections";
+import { NextRequest, NextResponse } from "next/server";
 
 // Route handlers สำหรับ /api/v1/users
 export async function GET(req: NextRequest) {
