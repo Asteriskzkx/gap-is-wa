@@ -44,7 +44,7 @@ export default function AdminUserManagementPage() {
   const router = useRouter();
   const toast = useRef<Toast | null>(null);
 
-  const showSuccess = () => {
+  const showSuccessDelete = () => {
     if (!toast.current) return; // guard for initial render/unmount
     toast.current.show({
       severity: "success",
@@ -54,7 +54,27 @@ export default function AdminUserManagementPage() {
     });
   };
 
-  const showError = () => {
+  const showSuccessCreated = () => {
+    if (!toast.current) return; // guard for initial render/unmount
+    toast.current.show({
+      severity: "success",
+      summary: "Success create user",
+      detail: "สร้างผู้ใช้สำเร็จ",
+      life: 3000,
+    });
+  };
+
+  const showErrorCreated = () => {
+    if (!toast.current) return; // guard for initial render/unmount
+    toast.current.show({
+      severity: "error",
+      summary: "Error create user",
+      detail: "สร้างผู้ใช้ไม่สำเร็จ",
+      life: 3000,
+    });
+  }
+
+  const showErrorDelete = () => {
     if (!toast.current) return; // guard for initial render/unmount
     toast.current.show({
       severity: "error",
@@ -304,11 +324,11 @@ export default function AdminUserManagementPage() {
                       });
                       setDeleteVisible(false);
                       await fetchUsers(); 
-                      showSuccess();
+                      showSuccessDelete();
                       
                     } catch (error) {
                       console.error("Delete failed:", error);
-                      showError();
+                      showErrorDelete();
                     }
                   }}
                 />
@@ -319,8 +339,8 @@ export default function AdminUserManagementPage() {
               visible={visibleAddUserDialog}
               onHide={() => setVisibleAddUserDialog(false)}
               onCreated={fetchUsers}
-              showSuccess={showSuccess}
-              showError={showError}
+              showSuccess={showSuccessCreated}
+              showError={showErrorCreated}
             />
           </div>
         </div>
