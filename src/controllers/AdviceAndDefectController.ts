@@ -13,10 +13,14 @@ export class AdviceAndDefectController extends BaseController<AdviceAndDefectMod
     this.adviceAndDefectService = adviceAndDefectService;
   }
 
-  async createAdviceAndDefect(req: NextRequest): Promise<NextResponse> {
+  async createAdviceAndDefect(
+    req: NextRequest,
+    session?: any
+  ): Promise<NextResponse> {
     try {
       const data = await req.json();
       const { inspectionId, date, adviceList, defectList } = data;
+      const userId = session ? Number(session.user.id) : undefined;
 
       // Basic validation
       if (!inspectionId) {
@@ -31,12 +35,15 @@ export class AdviceAndDefectController extends BaseController<AdviceAndDefectMod
         date instanceof Date ? date : new Date(date || new Date());
 
       const adviceAndDefect =
-        await this.adviceAndDefectService.createAdviceAndDefect({
-          inspectionId,
-          date: parsedDate,
-          adviceList: adviceList || [],
-          defectList: defectList || [],
-        });
+        await this.adviceAndDefectService.createAdviceAndDefect(
+          {
+            inspectionId,
+            date: parsedDate,
+            adviceList: adviceList || [],
+            defectList: defectList || [],
+          },
+          userId
+        );
 
       return NextResponse.json(adviceAndDefect.toJSON(), { status: 201 });
     } catch (error: any) {
@@ -88,7 +95,8 @@ export class AdviceAndDefectController extends BaseController<AdviceAndDefectMod
 
   async updateAdviceAndDefect(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: { id: string } },
+    session?: any
   ): Promise<NextResponse> {
     try {
       let adviceAndDefectId: number;
@@ -106,11 +114,14 @@ export class AdviceAndDefectController extends BaseController<AdviceAndDefectMod
         updateData.date = new Date(updateData.date);
       }
 
+      const userId = session ? Number(session.user.id) : undefined;
+
       const updatedAdviceAndDefect =
         await this.adviceAndDefectService.updateAdviceAndDefect(
           adviceAndDefectId,
           updateData,
-          version
+          version,
+          userId
         );
 
       if (!updatedAdviceAndDefect) {

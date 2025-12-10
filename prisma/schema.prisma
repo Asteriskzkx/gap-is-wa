@@ -371,3 +371,18 @@ model File {
 
   @@index([tableReference, idReference])
 }
+
+model AuditLog {
+  auditLogId Int      @id @default(autoincrement())
+  tableName  String   @db.VarChar(100)
+  action     String   @db.VarChar(20) // CREATE, UPDATE, DELETE
+  recordId   Int
+  userId     Int?
+  oldData    Json? // UPDATE, DELETE
+  newData    Json? // CREATE, UPDATE
+  createdAt  DateTime @default(now())
+
+  @@index([tableName, recordId])
+  @@index([userId])
+  @@index([createdAt])
+}

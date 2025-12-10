@@ -1,11 +1,14 @@
 import {
   adminMapper,
   adviceAndDefectMapper,
+  auditLogMapper,
   auditorInspectionMapper,
   auditorMapper,
+  certificateMapper,
   committeeMapper,
   dataRecordMapper,
   farmerMapper,
+  fileMapper,
   inspectionItemMapper,
   inspectionMapper,
   inspectionTypeMasterMapper,
@@ -13,22 +16,21 @@ import {
   requirementMapper,
   rubberFarmMapper,
   userMapper,
-  certificateMapper,
-  fileMapper,
 } from "../mappers";
 
 import { AdminRepository } from "@/repositories/AdminRepository";
 import { AdviceAndDefectRepository } from "@/repositories/AdviceAndDefectRepository";
+import { AuditLogRepository } from "@/repositories/AuditLogRepository";
 import { AuditorInspectionRepository } from "@/repositories/AuditorInspectionRepository";
 import { AuditorRepository } from "@/repositories/AuditorRepository";
+import { CertificateRepository } from "@/repositories/CertificateRepository";
 import { CommitteeRepository } from "@/repositories/CommitteeRepository";
 import { DataRecordRepository } from "@/repositories/DataRecordRepository";
 import { FarmerRepository } from "@/repositories/FarmerRepository";
+import { FileRepository } from "@/repositories/FileRepository";
 import { InspectionItemRepository } from "@/repositories/InspectionItemRepository";
 import { InspectionRepository } from "@/repositories/InspectionRepository";
 import { InspectionTypeMasterRepository } from "@/repositories/InspectionTypeMasterRepository";
-import { CertificateRepository } from "@/repositories/CertificateRepository";
-import { FileRepository } from "@/repositories/FileRepository";
 import { PlantingDetailRepository } from "@/repositories/PlantingDetailRepository";
 import { RequirementRepository } from "@/repositories/RequirementRepository";
 import { RubberFarmRepository } from "@/repositories/RubberFarmRepository";
@@ -36,32 +38,34 @@ import { UserRepository } from "@/repositories/UserRepository";
 
 import { AdminService } from "@/services/AdminService";
 import { AdviceAndDefectService } from "@/services/AdviceAndDefectService";
+import { AuditLogService } from "@/services/AuditLogService";
 import { AuditorInspectionService } from "@/services/AuditorInspectionService";
 import { AuditorService } from "@/services/AuditorService";
+import { CertificateService } from "@/services/CertificateService";
 import { CommitteeService } from "@/services/CommitteeService";
 import { DataRecordService } from "@/services/DataRecordService";
 import { FarmerService } from "@/services/FarmerService";
+import { FileService } from "@/services/FileService";
 import { InspectionItemService } from "@/services/InspectionItemService";
 import { InspectionService } from "@/services/InspectionService";
 import { PlantingDetailService } from "@/services/PlantingDetailService";
-import { CertificateService } from "@/services/CertificateService";
-import { FileService } from "@/services/FileService";
 import { RequirementService } from "@/services/RequirementService";
 import { RubberFarmService } from "@/services/RubberFarmService";
 import { UserService } from "@/services/UserService";
 
 import { AdminController } from "@/controllers/AdminController";
 import { AdviceAndDefectController } from "@/controllers/AdviceAndDefectController";
+import { AuditLogController } from "@/controllers/AuditLogController";
 import { AuditorController } from "@/controllers/AuditorController";
 import { AuditorInspectionController } from "@/controllers/AuditorInspectionController";
+import { CertificateController } from "@/controllers/CertificateController";
 import { CommitteeController } from "@/controllers/CommitteeController";
 import { DataRecordController } from "@/controllers/DataRecordController";
 import { FarmerController } from "@/controllers/FarmerController";
+import { FileController } from "@/controllers/FileController";
 import { InspectionController } from "@/controllers/InspectionController";
 import { InspectionItemController } from "@/controllers/InspectionItemController";
 import { PlantingDetailController } from "@/controllers/PlantingDetailController";
-import { CertificateController } from "@/controllers/CertificateController";
-import { FileController } from "@/controllers/FileController";
 import { RequirementController } from "@/controllers/RequirementController";
 import { RubberFarmController } from "@/controllers/RubberFarmController";
 import { UserController } from "@/controllers/UserController";
@@ -93,6 +97,7 @@ const inspectionTypeMasterRepository = new InspectionTypeMasterRepository(
 );
 const certificateRepository = new CertificateRepository(certificateMapper);
 const fileRepository = new FileRepository(fileMapper);
+const auditLogRepository = new AuditLogRepository(auditLogMapper);
 
 // Services
 const userService = new UserService(userRepository);
@@ -135,8 +140,10 @@ const inspectionItemService = new InspectionItemService(
 );
 const requirementService = new RequirementService(requirementRepository);
 const dataRecordService = new DataRecordService(dataRecordRepository);
+const auditLogService = new AuditLogService(auditLogRepository);
 const adviceAndDefectService = new AdviceAndDefectService(
-  adviceAndDefectRepository
+  adviceAndDefectRepository,
+  auditLogService
 );
 const certificateService = new CertificateService(certificateRepository);
 const fileService = new FileService(fileRepository);
@@ -165,6 +172,7 @@ const adviceAndDefectController = new AdviceAndDefectController(
 );
 const certificateController = new CertificateController(certificateService);
 const fileController = new FileController(fileService);
+const auditLogController = new AuditLogController(auditLogService);
 
 // Export all instances
 export {
@@ -174,12 +182,18 @@ export {
   adviceAndDefectController,
   adviceAndDefectRepository,
   adviceAndDefectService,
+  auditLogController,
+  auditLogRepository,
+  auditLogService,
   auditorController,
   auditorInspectionController,
   auditorInspectionRepository,
   auditorInspectionService,
   auditorRepository,
   auditorService,
+  certificateController,
+  certificateRepository,
+  certificateService,
   committeeController,
   committeeRepository,
   committeeService,
@@ -189,6 +203,9 @@ export {
   farmerController,
   farmerRepository,
   farmerService,
+  fileController,
+  fileRepository,
+  fileService,
   inspectionController,
   inspectionItemController,
   inspectionItemRepository,
@@ -205,16 +222,7 @@ export {
   rubberFarmController,
   rubberFarmRepository,
   rubberFarmService,
-  certificateController,
-  certificateRepository,
-  certificateService,
-  fileController,
-  fileRepository,
-  fileService,
-  // Controllers
   userController,
-  // Repositories
   userRepository,
-  // Services
   userService,
 };
