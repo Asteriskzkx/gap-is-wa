@@ -79,7 +79,10 @@ export class AuditorService extends BaseService<AuditorModel> {
       }
 
       if (!auditorData.password) {
-        const generatedPassword = "P@ssw0rd123" ;
+        const generatedPassword = process.env.DEFAULT_PASSWORD;
+        if (!generatedPassword) {
+          throw new Error("DEFAULT_PASSWORD is not configured in environment");
+        }
         auditorData.password = generatedPassword;
       }
 

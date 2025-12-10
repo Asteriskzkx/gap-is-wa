@@ -73,7 +73,10 @@ export class FarmerService extends BaseService<FarmerModel> {
       }
 
       if (!farmerData.password) {
-        const generatedPassword = "P@ssw0rd123" ;
+        const generatedPassword = process.env.DEFAULT_PASSWORD;
+        if (!generatedPassword) {
+          throw new Error("DEFAULT_PASSWORD is not configured in environment");
+        }
         farmerData.password = generatedPassword;
       }
       // Create new farmer
