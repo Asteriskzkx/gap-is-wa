@@ -11,7 +11,6 @@ import thaiProvinceData from "@/data/thai-provinces.json";
 type Option = { name: string; value: string };
 
 export enum UserRole {
-  BASIC = "BASIC",
   FARMER = "FARMER",
   AUDITOR = "AUDITOR",
   COMMITTEE = "COMMITTEE",
