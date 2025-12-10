@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import AdminLayout from "@/components/layout/AdminLayout";
 import AdminEditForm from "@/components/form/AdminEditForm";
@@ -14,19 +13,19 @@ import { useUserDetail } from "@/hooks/useUserDetail";
 export default function EditUserPage() {
   const { id } = useParams();
   const userId = id ? parseInt(id as string, 10) : null;
-  
   const { user, loading, error } = useUserDetail(userId);
-    
-  if (!id || loading) {
+
+  if (!id || loading || error) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <ProgressSpinner className="w-20 h-20" />
-      </div>
+      <AdminLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <ProgressSpinner className="w-20 h-20" />
+        </div>
+      </AdminLayout>
     );
   }
-  
-  if (error) return <p>Error: {error}</p>;
-  if (!user) return <p>User not found</p>;
+
+  if (!user) return <p>User not found.</p>;
 
   return (
     <AdminLayout>
@@ -34,7 +33,7 @@ export default function EditUserPage() {
         {/* Render UI based on role */}
         {/* TODO: Add Form into all component and integrate the ui :D */}
         {user.role === "ADMIN" && <AdminEditForm user={user} />}
-        {user.role === "FARMER" && <FarmerEditForm user={user}/>}
+        {user.role === "FARMER" && <FarmerEditForm user={user} />}
         {user.role === "AUDITOR" && <AuditorEditForm user={user} />}
         {user.role === "COMMITTEE" && <CommitteeEditForm user={user} />}
         {user.role === "BASIC" && <BasicEditForm user={user} />}
