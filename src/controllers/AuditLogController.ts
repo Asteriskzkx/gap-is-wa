@@ -211,4 +211,250 @@ export class AuditLogController {
       );
     }
   }
+
+  /**
+   * DELETE /api/audit-logs/:id - ลบ audit log ตาม ID (Admin only)
+   */
+  async deleteLog(
+    req: NextRequest,
+    params: { id: string }
+  ): Promise<NextResponse> {
+    try {
+      const { authorized, error } = await checkAuthorization(req, [
+        UserRole.ADMIN,
+      ]);
+
+      if (!authorized) {
+        return NextResponse.json(
+          { message: error || "Unauthorized" },
+          { status: 401 }
+        );
+      }
+
+      const id = parseInt(params.id);
+
+      if (isNaN(id)) {
+        return NextResponse.json(
+          { message: "Invalid audit log ID" },
+          { status: 400 }
+        );
+      }
+
+      const success = await this.auditLogService.deleteLog(id);
+
+      if (!success) {
+        return NextResponse.json(
+          { message: "Failed to delete audit log" },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json(
+        { message: "Audit log deleted successfully" },
+        { status: 200 }
+      );
+    } catch (err: any) {
+      console.error("AuditLogController.deleteLog error:", err);
+      return NextResponse.json(
+        { message: err?.message || "Internal server error" },
+        { status: 500 }
+      );
+    }
+  }
+
+  /**
+   * DELETE /api/audit-logs/old?days=90 - ลบ logs ที่เก่าเกินกำหนด (Admin only)
+   */
+  async deleteOldLogs(req: NextRequest): Promise<NextResponse> {
+    try {
+      const { authorized, error } = await checkAuthorization(req, [
+        UserRole.ADMIN,
+      ]);
+
+      if (!authorized) {
+        return NextResponse.json(
+          { message: error || "Unauthorized" },
+          { status: 401 }
+        );
+      }
+
+      const { searchParams } = new URL(req.url);
+      const daysStr = searchParams.get("days");
+
+      if (!daysStr) {
+        return NextResponse.json(
+          { message: "days parameter is required" },
+          { status: 400 }
+        );
+      }
+
+      const days = parseInt(daysStr);
+
+      if (isNaN(days) || days <= 0) {
+        return NextResponse.json(
+          { message: "days must be a positive number" },
+          { status: 400 }
+        );
+      }
+
+      // นับจำนวนที่จะลบก่อน
+      const countToDelete = await this.auditLogService.countOldLogs(days);
+
+      // ลบจริง
+      const deletedCount = await this.auditLogService.deleteOldLogs(days);
+
+      return NextResponse.json(
+        {
+          message: `Successfully deleted ${deletedCount} audit logs older than ${days} days`,
+          deletedCount,
+          estimatedCount: countToDelete,
+        },
+        { status: 200 }
+      );
+    } catch (err: any) {
+      console.error("AuditLogController.deleteOldLogs error:", err);
+      return NextResponse.json(
+        { message: err?.message || "Internal server error" },
+        { status: 500 }
+      );
+    }
+  }
+
+  /**
+   * DELETE /api/audit-logs/record?tableName=XXX&recordId=YYY - ลบ logs ของ record (Admin only)
+   */
+  async deleteRecordLogs(req: NextRequest): Promise<NextResponse> {
+    try {
+      const { authorized, error } = await checkAuthorization(req, [
+        UserRole.ADMIN,
+      ]);
+
+      if (!authorized) {
+        return NextResponse.json(
+          { message: error || "Unauthorized" },
+          { status: 401 }
+        );
+      }
+
+      const { searchParams } = new URL(req.url);
+      const tableName = searchParams.get("tableName");
+      const recordId = searchParams.get("recordId");
+
+      if (!tableName || !recordId) {
+        return NextResponse.json(
+          { message: "tableName and recordId are required" },
+          { status: 400 }
+        );
+      }
+
+      const deletedCount = await this.auditLogService.deleteRecordLogs(
+        tableName,
+        parseInt(recordId)
+      );
+
+      return NextResponse.json(
+        {
+          message: `Successfully deleted ${deletedCount} audit logs for ${tableName} record ${recordId}`,
+          deletedCount,
+        },
+        { status: 200 }
+      );
+    } catch (err: any) {
+      console.error("AuditLogController.deleteRecordLogs error:", err);
+      return NextResponse.json(
+        { message: err?.message || "Internal server error" },
+        { status: 500 }
+      );
+    }
+  }
+
+  /**
+   * DELETE /api/audit-logs/all - ลบ logs ทั้งหมด (Admin only, ใช้ระวัง!)
+   */
+  async deleteAllLogs(req: NextRequest): Promise<NextResponse> {
+    try {
+      const { authorized, error } = await checkAuthorization(req, [
+        UserRole.ADMIN,
+      ]);
+
+      if (!authorized) {
+        return NextResponse.json(
+          { message: error || "Unauthorized" },
+          { status: 401 }
+        );
+      }
+
+      // ต้องส่ง confirm=true ใน query parameter เพื่อยืนยัน
+      const { searchParams } = new URL(req.url);
+      const confirm = searchParams.get("confirm");
+
+      if (confirm !== "true") {
+        return NextResponse.json(
+          {
+            message: "Please add ?confirm=true to confirm deletion of all logs",
+          },
+          { status: 400 }
+        );
+      }
+
+      const deletedCount = await this.auditLogService.deleteAllLogs();
+
+      return NextResponse.json(
+        {
+          message: `Successfully deleted all ${deletedCount} audit logs`,
+          deletedCount,
+        },
+        { status: 200 }
+      );
+    } catch (err: any) {
+      console.error("AuditLogController.deleteAllLogs error:", err);
+      return NextResponse.json(
+        { message: err?.message || "Internal server error" },
+        { status: 500 }
+      );
+    }
+  }
+
+  /**
+   * GET /api/audit-logs/stats - ดึงสถิติ audit logs (Admin only)
+   */
+  async getStats(req: NextRequest): Promise<NextResponse> {
+    try {
+      const { authorized, error } = await checkAuthorization(req, [
+        UserRole.ADMIN,
+      ]);
+
+      if (!authorized) {
+        return NextResponse.json(
+          { message: error || "Unauthorized" },
+          { status: 401 }
+        );
+      }
+
+      const totalCount = await this.auditLogService.countLogs();
+      const old30Days = await this.auditLogService.countOldLogs(30);
+      const old90Days = await this.auditLogService.countOldLogs(90);
+      const old180Days = await this.auditLogService.countOldLogs(180);
+      const old365Days = await this.auditLogService.countOldLogs(365);
+
+      return NextResponse.json(
+        {
+          stats: {
+            total: totalCount,
+            olderThan30Days: old30Days,
+            olderThan90Days: old90Days,
+            olderThan180Days: old180Days,
+            olderThan365Days: old365Days,
+          },
+        },
+        { status: 200 }
+      );
+    } catch (err: any) {
+      console.error("AuditLogController.getStats error:", err);
+      return NextResponse.json(
+        { message: err?.message || "Internal server error" },
+        { status: 500 }
+      );
+    }
+  }
 }
