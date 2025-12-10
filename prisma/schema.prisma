@@ -371,3 +371,18 @@ model File {
 
   @@index([tableReference, idReference])
 }
+
+model AuditLog {
+  auditLogId Int      @id @default(autoincrement())
+  tableName  String   @db.VarChar(100) // ชื่อตารางที่ถูกแก้ไข
+  action     String   @db.VarChar(20) // CREATE, UPDATE, DELETE
+  recordId   Int // ID ของ record ที่ถูกแก้ไข
+  userId     Int? // ใครเป็นคนทำ
+  oldData    Json? // ข้อมูลเก่า (สำหรับ UPDATE, DELETE)
+  newData    Json? // ข้อมูลใหม่ (สำหรับ CREATE, UPDATE)
+  createdAt  DateTime @default(now())
+
+  @@index([tableName, recordId])
+  @@index([userId])
+  @@index([createdAt])
+}
