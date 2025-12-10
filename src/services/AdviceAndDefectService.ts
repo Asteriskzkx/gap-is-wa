@@ -1,22 +1,30 @@
-import { BaseService } from "./BaseService";
 import { AdviceAndDefectModel } from "../models/AdviceAndDefectModel";
 import { AdviceAndDefectRepository } from "../repositories/AdviceAndDefectRepository";
-import { OptimisticLockError } from "../errors/OptimisticLockError";
+import { AuditLogService } from "./AuditLogService";
+import { BaseService } from "./BaseService";
 
 export class AdviceAndDefectService extends BaseService<AdviceAndDefectModel> {
   private adviceAndDefectRepository: AdviceAndDefectRepository;
+  private auditLogService: AuditLogService;
 
-  constructor(adviceAndDefectRepository: AdviceAndDefectRepository) {
+  constructor(
+    adviceAndDefectRepository: AdviceAndDefectRepository,
+    auditLogService: AuditLogService
+  ) {
     super(adviceAndDefectRepository);
     this.adviceAndDefectRepository = adviceAndDefectRepository;
+    this.auditLogService = auditLogService;
   }
 
-  async createAdviceAndDefect(data: {
-    inspectionId: number;
-    date: Date;
-    adviceList: any;
-    defectList: any;
-  }): Promise<AdviceAndDefectModel> {
+  async createAdviceAndDefect(
+    data: {
+      inspectionId: number;
+      date: Date;
+      adviceList: any;
+      defectList: any;
+    },
+    userId?: number
+  ): Promise<AdviceAndDefectModel> {
     try {
       // Check if advice and defect already exists for this inspection
       const existingRecord =
@@ -36,7 +44,26 @@ export class AdviceAndDefectService extends BaseService<AdviceAndDefectModel> {
         data.defectList
       );
 
-      return await this.create(adviceAndDefectModel);
+      const created = await this.create(adviceAndDefectModel);
+
+      const {
+        createdAt: newCreatedAt,
+        updatedAt: newUpdatedAt,
+        ...createdData
+      } = created.toJSON();
+
+      if (this.auditLogService && created) {
+        await this.auditLogService.logAction(
+          "AdviceAndDefect",
+          "CREATE",
+          created.adviceAndDefectId,
+          userId || undefined,
+          void 0,
+          createdData
+        );
+      }
+
+      return created;
     } catch (error) {
       this.handleServiceError(error);
       throw error;
@@ -59,20 +86,53 @@ export class AdviceAndDefectService extends BaseService<AdviceAndDefectModel> {
   async updateAdviceAndDefect(
     adviceAndDefectId: number,
     data: Partial<AdviceAndDefectModel>,
-    currentVersion?: number
+    currentVersion?: number,
+    userId?: number
   ): Promise<AdviceAndDefectModel | null> {
     try {
+      // ดึงข้อมูลเก่าก่อน update (สำหรับ log)
+      const oldRecord = await this.adviceAndDefectRepository.findById(
+        adviceAndDefectId
+      );
+
+      let updated: AdviceAndDefectModel | null;
+
       if (currentVersion !== undefined) {
         // Use optimistic locking
-        return await this.adviceAndDefectRepository.updateWithLock(
+        updated = await this.adviceAndDefectRepository.updateWithLock(
           adviceAndDefectId,
           data,
           currentVersion
         );
       } else {
         // Fallback to regular update
-        return await this.update(adviceAndDefectId, data);
+        updated = await this.update(adviceAndDefectId, data);
       }
+
+      //Log การ update
+      if (updated && oldRecord) {
+        const {
+          createdAt: oldCreatedAt,
+          updatedAt: oldUpdatedAt,
+          ...oldData
+        } = oldRecord.toJSON();
+        const {
+          createdAt: newCreatedAt,
+          updatedAt: newUpdatedAt,
+          ...newData
+        } = updated.toJSON();
+
+        this.auditLogService.logAction(
+          "AdviceAndDefect",
+          "UPDATE",
+          adviceAndDefectId,
+          userId || undefined,
+          oldData,
+          newData
+        );
+      }
+
+      return updated;
     } catch (error) {
       this.handleServiceError(error);
       throw error;

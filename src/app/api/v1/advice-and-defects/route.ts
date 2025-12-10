@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const { authorized, error } = await checkAuthorization(req, [
+  const { authorized, error, session } = await checkAuthorization(req, [
     "AUDITOR",
     "ADMIN",
   ]);
@@ -42,5 +42,5 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  return adviceAndDefectController.createAdviceAndDefect(req);
+  return adviceAndDefectController.createAdviceAndDefect(req, session);
 }

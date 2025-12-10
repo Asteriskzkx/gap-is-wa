@@ -140,12 +140,13 @@ const inspectionItemService = new InspectionItemService(
 );
 const requirementService = new RequirementService(requirementRepository);
 const dataRecordService = new DataRecordService(dataRecordRepository);
+const auditLogService = new AuditLogService(auditLogRepository);
 const adviceAndDefectService = new AdviceAndDefectService(
-  adviceAndDefectRepository
+  adviceAndDefectRepository,
+  auditLogService
 );
 const certificateService = new CertificateService(certificateRepository);
 const fileService = new FileService(fileRepository);
-const auditLogService = new AuditLogService(auditLogRepository);
 
 // Controllers
 const userController = new UserController(userService);

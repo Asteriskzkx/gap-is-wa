@@ -1,10 +1,10 @@
+import { checkAuthorization } from "@/lib/session";
 import { NextRequest, NextResponse } from "next/server";
-import { BaseController } from "./BaseController";
+import { OptimisticLockError } from "../errors/OptimisticLockError";
 import { InspectionModel } from "../models/InspectionModel";
 import { InspectionService } from "../services/InspectionService";
 import { requireValidId } from "../utils/ParamUtils";
-import { checkAuthorization, getSessionFromRequest } from "@/lib/session";
-import { OptimisticLockError } from "../errors/OptimisticLockError";
+import { BaseController } from "./BaseController";
 
 export class InspectionController extends BaseController<InspectionModel> {
   private inspectionService: InspectionService;
