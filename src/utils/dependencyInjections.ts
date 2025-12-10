@@ -36,6 +36,7 @@ import { RequirementRepository } from "@/repositories/RequirementRepository";
 import { RubberFarmRepository } from "@/repositories/RubberFarmRepository";
 import { UserRepository } from "@/repositories/UserRepository";
 
+import { UserRegistrationFactoryService } from "@/services/UserRegistrationFactoryService";
 import { AdminService } from "@/services/AdminService";
 import { AdviceAndDefectService } from "@/services/AdviceAndDefectService";
 import { AuditLogService } from "@/services/AuditLogService";
@@ -100,6 +101,7 @@ const fileRepository = new FileRepository(fileMapper);
 const auditLogRepository = new AuditLogRepository(auditLogMapper);
 
 // Services
+
 const userService = new UserService(userRepository);
 const farmerService = new FarmerService(farmerRepository, userService);
 const plantingDetailService = new PlantingDetailService(
@@ -147,9 +149,13 @@ const adviceAndDefectService = new AdviceAndDefectService(
 );
 const certificateService = new CertificateService(certificateRepository);
 const fileService = new FileService(fileRepository);
+const userRegistrationFactoryService = new UserRegistrationFactoryService( farmerService,
+  auditorService,
+  committeeService,
+  adminService);
 
 // Controllers
-const userController = new UserController(userService);
+const userController = new UserController(userService, userRegistrationFactoryService);
 const farmerController = new FarmerController(farmerService);
 const rubberFarmController = new RubberFarmController(rubberFarmService);
 const plantingDetailController = new PlantingDetailController(
@@ -225,4 +231,5 @@ export {
   userController,
   userRepository,
   userService,
+  userRegistrationFactoryService
 };

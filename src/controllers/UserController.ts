@@ -4,13 +4,40 @@ import { UserModel, UserRole } from "../models/UserModel";
 import { UserService } from "../services/UserService";
 import { requireValidId } from "../utils/ParamUtils";
 import { BaseController } from "./BaseController";
+import { FarmerService } from "@/services/FarmerService";
+import { AuditorService } from "@/services/AuditorService";
+import { CommitteeService } from "@/services/CommitteeService";
+import { UserRegistrationFactoryService } from "@/services/UserRegistrationFactoryService";
+import { th } from "zod/v4/locales";
 
 export class UserController extends BaseController<UserModel> {
   private userService: UserService;
+  private UserRegistrationFactoryService: UserRegistrationFactoryService;
 
-  constructor(userService: UserService) {
+
+
+  constructor(userService: UserService, UserRegistrationFactoryService: UserRegistrationFactoryService) {
     super(userService);
     this.userService = userService;
+    this.UserRegistrationFactoryService = UserRegistrationFactoryService;
+  }
+
+  async createUser(req: NextRequest): Promise<NextResponse> {
+      try {
+          const data = await req.json();
+
+          const createdUser = await this.UserRegistrationFactoryService.createUserWithRole(data);
+
+          // remove sensitive fields
+          const userJson = createdUser.toJSON();
+
+          return NextResponse.json(userJson, { status: 201 });
+        } catch (error: any) {
+          if (error.message.includes("already exists")) {
+            return NextResponse.json({ message: error.message }, { status: 409 });
+          }
+          return this.handleControllerError(error);
+        }
   }
 
   async register(req: NextRequest): Promise<NextResponse> {

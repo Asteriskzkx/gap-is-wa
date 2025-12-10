@@ -24,3 +24,14 @@ export async function GET(req: NextRequest) {
   // Otherwise return all users
   return userController.getAll(req);
 }
+
+export async function POST(req: NextRequest) {
+  const { authorized, error } = await checkAuthorization(req, ["ADMIN"]);
+  if (!authorized) {
+    return NextResponse.json(
+      { message: error || "Unauthorized" },
+      { status: 401 }
+    );
+  } 
+  return userController.createUser(req);
+}
