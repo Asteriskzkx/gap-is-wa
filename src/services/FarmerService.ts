@@ -46,7 +46,7 @@ export class FarmerService extends BaseService<FarmerModel> {
 
   async registerFarmer(farmerData: {
     email: string;
-    password: string;
+    password?: string;
     namePrefix: string;
     firstName: string;
     lastName: string;
@@ -72,6 +72,13 @@ export class FarmerService extends BaseService<FarmerModel> {
         throw new Error("User with this email already exists");
       }
 
+      if (!farmerData.password) {
+        const generatedPassword = process.env.DEFAULT_PASSWORD;
+        if (!generatedPassword) {
+          throw new Error("DEFAULT_PASSWORD is not configured in environment");
+        }
+        farmerData.password = generatedPassword;
+      }
       // Create new farmer
       const farmerModel = await FarmerModel.createFarmer(
         farmerData.email,

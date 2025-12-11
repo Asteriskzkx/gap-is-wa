@@ -46,7 +46,7 @@ export class AdminService extends BaseService<AdminModel> {
 
   async registerAdmin(adminData: {
     email: string;
-    password: string;
+    password?: string;
     namePrefix: string;
     firstName: string;
     lastName: string;
@@ -56,6 +56,13 @@ export class AdminService extends BaseService<AdminModel> {
       const existingUser = await this.userService.findByEmail(adminData.email);
       if (existingUser) {
         throw new Error("User with this email already exists");
+      }
+      if (!adminData.password) {
+        const generatedPassword = process.env.DEFAULT_PASSWORD;
+        if (!generatedPassword) {
+          throw new Error("DEFAULT_PASSWORD is not configured in environment");
+        }
+        adminData.password = generatedPassword;
       }
 
       // Create new admin

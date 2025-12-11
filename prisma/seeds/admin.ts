@@ -8,41 +8,50 @@ export async function seedAdmin(prisma: PrismaClient) {
   const password = process.env.DEFAULT_ADMIN_PASSWORD ?? "admin1234"; // change in prod
   const name = process.env.DEFAULT_ADMIN_NAME ?? "System Admin";
 
-  // Hash password
-  const hashedPassword = await bcrypt.hash(password, 10);
-
-  // Upsert user by email (idempotent)
-  const user = await prisma.user.upsert({
+  // Check if admin user already exists
+  const existingUser = await prisma.user.findUnique({
     where: { email },
-    update: {
-      name,
-      hashedPassword,
-      role: UserRole.ADMIN,
-    },
-    create: {
-      email,
-      hashedPassword,
-      name,
-      role: UserRole.ADMIN,
-    },
   });
 
-  // Upsert admin profile (required fields)
-  // Use a simple default namePrefix/firstName/lastName — adjust as needed
-  await prisma.admin.upsert({
+  let user;
+  if (existingUser) {
+    // User already exists - don't update password or other fields
+    console.log(`Admin user already exists: ${email} - skipping update`);
+    user = existingUser;
+  } else {
+    // Hash password for new user only
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create new admin user
+    user = await prisma.user.create({
+      data: {
+        email,
+        hashedPassword,
+        name,
+        role: UserRole.ADMIN,
+      },
+    });
+    console.log(`Created new admin user: ${email}`);
+  }
+
+  // Ensure admin profile exists (safe to upsert profile without sensitive data)
+  const existingAdmin = await prisma.admin.findUnique({
     where: { userId: user.userId },
-    update: {
-      firstName: name,
-      lastName: name,
-    },
-    create: {
-      userId: user.userId,
-      namePrefix: "นาย",
-      firstName: name,
-      lastName: name,
-    },
   });
 
-  console.log(`Default admin ensured: ${email}`);
+  if (existingAdmin) {
+    console.log(`Admin profile already exists for user: ${email}`);
+  } else {
+    await prisma.admin.create({
+      data: {
+        userId: user.userId,
+        namePrefix: "นาย",
+        firstName: name,
+        lastName: name,
+      },
+    });
+    console.log(`Created admin profile for user: ${email}`);
+  }
+
   console.log("NOTE: change DEFAULT_ADMIN_PASSWORD in env before production.");
 }

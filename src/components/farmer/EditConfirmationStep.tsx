@@ -80,9 +80,17 @@ export const EditConfirmationStep: React.FC<EditConfirmationStepProps> = ({
           <SummaryItem label="จังหวัด" value={rubberFarm.province} />
           <SummaryItem
             label="พิกัด (ละติจูด, ลองจิจูด)"
-            value={`${rubberFarm.location.coordinates[1].toFixed(
-              6
-            )}, ${rubberFarm.location.coordinates[0].toFixed(6)}`}
+            value={
+              rubberFarm.location?.coordinates &&
+              Array.isArray(rubberFarm.location.coordinates) &&
+              rubberFarm.location.coordinates.length === 2 &&
+              typeof rubberFarm.location.coordinates[0] === "number" &&
+              typeof rubberFarm.location.coordinates[1] === "number"
+                ? `${rubberFarm.location.coordinates[1].toFixed(
+                    6
+                  )}, ${rubberFarm.location.coordinates[0].toFixed(6)}`
+                : "ไม่มีข้อมูลพิกัด"
+            }
           />
         </div>
       </div>

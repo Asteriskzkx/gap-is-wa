@@ -1,9 +1,12 @@
+import { AdviceAndDefectModel } from "@/models/AdviceAndDefectModel";
 import { AuditorInspectionModel } from "@/models/AuditorInspectionModel";
+import { DataRecordModel } from "@/models/DataRecordModel";
 import { InspectionItemModel } from "@/models/InspectionItemModel";
 import { RequirementModel } from "@/models/RequirementModel";
 import { InspectionTypeMasterRepository } from "@/repositories/InspectionTypeMasterRepository";
 import { RequirementRepository } from "@/repositories/RequirementRepository";
 import { RubberFarmRepository } from "@/repositories/RubberFarmRepository";
+import { OptimisticLockError } from "../errors/OptimisticLockError";
 import { InspectionModel } from "../models/InspectionModel";
 import { AdviceAndDefectRepository } from "../repositories/AdviceAndDefectRepository";
 import { AuditorInspectionRepository } from "../repositories/AuditorInspectionRepository";
@@ -12,7 +15,7 @@ import { InspectionItemRepository } from "../repositories/InspectionItemReposito
 import { InspectionRepository } from "../repositories/InspectionRepository";
 import { AuditorService } from "./AuditorService";
 import { BaseService } from "./BaseService";
-import { OptimisticLockError } from "../errors/OptimisticLockError";
+import { AuditLogService } from "./AuditLogService";
 export class InspectionService extends BaseService<InspectionModel> {
   private inspectionRepository: InspectionRepository;
   private auditorInspectionRepository: AuditorInspectionRepository;
@@ -23,6 +26,7 @@ export class InspectionService extends BaseService<InspectionModel> {
   private auditorService: AuditorService;
   private rubberFarmRepository: RubberFarmRepository;
   private inspectionTypeMasterRepository: InspectionTypeMasterRepository;
+  private auditLogService: AuditLogService;
 
   constructor(
     inspectionRepository: InspectionRepository,
@@ -33,7 +37,8 @@ export class InspectionService extends BaseService<InspectionModel> {
     requirementRepository: RequirementRepository,
     auditorService: AuditorService,
     rubberFarmRepository: RubberFarmRepository,
-    inspectionTypeMasterRepository: InspectionTypeMasterRepository
+    inspectionTypeMasterRepository: InspectionTypeMasterRepository,
+    auditLogService: AuditLogService
   ) {
     super(inspectionRepository);
     this.inspectionRepository = inspectionRepository;
@@ -45,6 +50,7 @@ export class InspectionService extends BaseService<InspectionModel> {
     this.auditorService = auditorService;
     this.rubberFarmRepository = rubberFarmRepository;
     this.inspectionTypeMasterRepository = inspectionTypeMasterRepository;
+    this.auditLogService = auditLogService;
   }
 
   async createInspection(inspectionData: {
@@ -106,7 +112,8 @@ export class InspectionService extends BaseService<InspectionModel> {
     inspectionTypeId: number,
     inspectionDateAndTime: Date,
     auditorChiefId: number,
-    additionalAuditorIds: number[] = []
+    additionalAuditorIds: number[] = [],
+    userId?: number
   ): Promise<InspectionModel> {
     try {
       // ตรวจสอบว่า auditorChiefId เป็น auditor ที่มีอยู่จริง
@@ -196,10 +203,97 @@ export class InspectionService extends BaseService<InspectionModel> {
         inspectionTypeId
       );
 
+      // สร้าง DataRecord เริ่มต้น (ข้อมูลเปล่า)
+      const dataRecordModel = DataRecordModel.create(
+        createdInspection.inspectionId,
+        {}, // species - เริ่มต้นเป็น empty object
+        {}, // waterSystem
+        {}, // fertilizers
+        {}, // previouslyCultivated
+        {}, // plantDisease
+        {}, // relatedPlants
+        "", // moreInfo
+        {} // map - เริ่มต้นเป็น empty object หรือ GeoJSON ว่าง
+      );
+      const createdDataRecord = await this.dataRecordRepository.create(
+        dataRecordModel
+      );
+
+      const {
+        createdAt: dataRecordCreatedAt,
+        updatedAt: dataRecordUpdatedAt,
+        ...formattedDataRecord
+      } = createdDataRecord.toJSON();
+
+      if (this.auditLogService && userId && createdDataRecord) {
+        await this.auditLogService.logAction(
+          "DataRecord",
+          "CREATE",
+          createdDataRecord.dataRecordId,
+          userId,
+          void 0,
+          formattedDataRecord
+        );
+      }
+
+      // สร้าง AdviceAndDefect เริ่มต้น (รายการเปล่า)
+      const adviceAndDefectModel = AdviceAndDefectModel.create(
+        createdInspection.inspectionId,
+        inspectionDateAndTime, // ใช้วันที่เดียวกับการตรวจ
+        [], // adviceList - เริ่มต้นเป็น empty array
+        [] // defectList - เริ่มต้นเป็น empty array
+      );
+      const createdAdviceAndDefect =
+        await this.adviceAndDefectRepository.create(adviceAndDefectModel);
+
+      const {
+        createdAt: adviceCreatedAt,
+        updatedAt: adviceUpdatedAt,
+        ...formattedAdviceAndDefect
+      } = createdAdviceAndDefect.toJSON();
+
+      if (this.auditLogService && userId && createdAdviceAndDefect) {
+        await this.auditLogService.logAction(
+          "AdviceAndDefect",
+          "CREATE",
+          createdAdviceAndDefect.adviceAndDefectId,
+          userId,
+          void 0,
+          formattedAdviceAndDefect
+        );
+      }
+
       // ดึงข้อมูลที่สร้างทั้งหมด
-      return (await this.getById(
+      const createdInspectionData = (await this.getById(
         createdInspection.inspectionId
       )) as InspectionModel;
+
+      // บันทึก audit log เฉพาะข้อมูลหลักของ Inspection (ไม่รวม relations)
+      if (this.auditLogService && userId && createdInspectionData) {
+        const {
+          createdAt,
+          updatedAt,
+          inspectionItems,
+          dataRecord,
+          adviceAndDefect,
+          auditorInspections,
+          inspectionType,
+          rubberFarm,
+          auditorChief,
+          ...inspectionCoreData
+        } = createdInspectionData.toJSON();
+
+        await this.auditLogService.logAction(
+          "Inspection",
+          "CREATE",
+          createdInspection.inspectionId,
+          userId,
+          void 0,
+          inspectionCoreData
+        );
+      }
+
+      return createdInspectionData;
     } catch (error) {
       this.handleServiceError(error);
       throw error;

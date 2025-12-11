@@ -346,8 +346,15 @@ export default function Page() {
         setDataRecordId(dr.dataRecordId ?? null);
         setDataRecordVersion(dr.version ?? undefined);
         // prefer stored map in dataRecord, otherwise use the inspection rubberFarm location
+        // Check if dr.map is empty object or falsy
+        const hasValidMap =
+          dr.map &&
+          typeof dr.map === "object" &&
+          Object.keys(dr.map).length > 0;
         setMapLocation(
-          dr.map ?? selectedInspection?.rubberFarm?.location ?? null
+          hasValidMap
+            ? dr.map
+            : selectedInspection?.rubberFarm?.location ?? null
         );
       } catch (e) {
         console.error("Failed to populate data record to form", e);

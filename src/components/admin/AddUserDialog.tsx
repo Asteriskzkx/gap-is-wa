@@ -11,7 +11,6 @@ import thaiProvinceData from "@/data/thai-provinces.json";
 type Option = { name: string; value: string };
 
 export enum UserRole {
-  BASIC = "BASIC",
   FARMER = "FARMER",
   AUDITOR = "AUDITOR",
   COMMITTEE = "COMMITTEE",
@@ -289,7 +288,8 @@ export const AddUserDialog: React.FC<Props> = ({
   const buildFarmerPayload = () => {
     return {
       identificationNumber: identificationNumber.replaceAll("-", ""),
-      birthDate: birthDate ? birthDate.toISOString().split("T")[0] : null,
+      birthDate: birthDate ? new Date(birthDate) : null,
+
       gender,
       houseNo: address.houseNo,
       villageName: address.villageName,

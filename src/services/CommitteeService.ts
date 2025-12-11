@@ -48,7 +48,7 @@ export class CommitteeService extends BaseService<CommitteeModel> {
 
   async registerCommittee(committeeData: {
     email: string;
-    password: string;
+    password?: string;
     namePrefix: string;
     firstName: string;
     lastName: string;
@@ -60,6 +60,13 @@ export class CommitteeService extends BaseService<CommitteeModel> {
       );
       if (existingUser) {
         throw new Error("User with this email already exists");
+      }
+      if (!committeeData.password) {
+        const generatedPassword = process.env.DEFAULT_PASSWORD;
+        if (!generatedPassword) {
+          throw new Error("DEFAULT_PASSWORD is not configured in environment");
+        }
+        committeeData.password = generatedPassword;
       }
 
       // Create new committee

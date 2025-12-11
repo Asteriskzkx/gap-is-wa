@@ -1,21 +1,22 @@
 "use client";
 
 import AuditorLayout from "@/components/layout/AuditorLayout";
+import { StepIndicator } from "@/components/farmer/StepIndicator";
+import DynamicMapViewer from "@/components/maps/DynamicMapViewer";
 import {
   PrimaryAutoComplete,
   PrimaryButton,
   PrimaryCalendar,
+  PrimaryCheckbox,
   PrimaryDataTable,
   PrimaryInputText,
-  PrimaryCheckbox,
 } from "@/components/ui";
 import thaiProvinceData from "@/data/thai-provinces.json";
+import { useAuditorApplications } from "@/hooks/useAuditorApplications";
 import { formatThaiDate } from "@/utils/dateFormatter";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { DataTablePageEvent, DataTableSortEvent } from "primereact/datatable";
 import React, { useEffect, useState } from "react";
-import DynamicMapViewer from "@/components/maps/DynamicMapViewer";
 import { toast } from "react-hot-toast";
 
 // Interface สำหรับข้อมูลจังหวัด อำเภอ ตำบล
@@ -92,15 +93,41 @@ interface Auditor {
 export default function AuditorScheduleInspectionPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
+
+  // Use custom hook
+  const {
+    rubberFarms,
+    loading,
+    totalRecords,
+    lazyParams,
+    handlePageChange,
+    handleSort,
+    inspectionTypes,
+    auditors,
+    auditorsTotalRecords,
+    auditorsLazyParams,
+    auditorSearchTerm,
+    setAuditorSearchTerm,
+    handleAuditorPageChange,
+    handleAuditorSort,
+    applyAuditorSearch,
+    selectedProvinceId,
+    selectedDistrictId,
+    selectedSubDistrictId,
+    setSelectedProvinceId,
+    setSelectedDistrictId,
+    setSelectedSubDistrictId,
+    applyFilters,
+    clearFilters,
+    fetchFarmDetails,
+    scheduleInspection,
+  } = useAuditorApplications(10);
+
   const [currentStep, setCurrentStep] = useState(1);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
   // State for form data
-  const [rubberFarms, setRubberFarms] = useState<RubberFarm[]>([]);
-  const [inspectionTypes, setInspectionTypes] = useState<InspectionType[]>([]);
-  const [auditors, setAuditors] = useState<Auditor[]>([]);
   const [showFarmDetails, setShowFarmDetails] = useState(false);
   const [selectedFarmDetails, setSelectedFarmDetails] =
     useState<RubberFarmDetails | null>(null);
@@ -112,59 +139,10 @@ export default function AuditorScheduleInspectionPage() {
   const [selectedAuditors, setSelectedAuditors] = useState<Auditor[]>([]);
   const [inspectionDate, setInspectionDate] = useState<Date | null>(null);
 
-  // State for search and pagination
-  const [searchFilters, setSearchFilters] = useState({
-    provinceId: null as number | null,
-    amphureId: null as number | null,
-    tambonId: null as number | null,
-    province: "",
-    district: "",
-    subDistrict: "",
-  });
-  const [auditorSearchTerm, setAuditorSearchTerm] = useState("");
-
   // State สำหรับข้อมูลจังหวัด อำเภอ ตำบล
   const [provinces, setProvinces] = useState<Province[]>([]);
   const [amphures, setAmphures] = useState<Amphure[]>([]);
   const [tambons, setTambons] = useState<Tambon[]>([]);
-
-  // Pagination state for lazy loading
-  const [farmsPagination, setFarmsPagination] = useState({
-    first: 0,
-    rows: 10,
-    totalRecords: 0,
-  });
-
-  // Pagination state for auditors
-  const [auditorsPagination, setAuditorsPagination] = useState({
-    first: 0,
-    rows: 10,
-    totalRecords: 0,
-  });
-
-  // Sort state
-  const [sortField, setSortField] = useState<string | undefined>(undefined);
-  const [sortOrder, setSortOrder] = useState<1 | -1 | 0 | null>(null);
-  const [multiSortMeta, setMultiSortMeta] = useState<
-    Array<{
-      field: string;
-      order: 1 | -1 | 0 | null;
-    }>
-  >([]);
-
-  // Sort state for auditors
-  const [auditorSortField, setAuditorSortField] = useState<string | undefined>(
-    undefined
-  );
-  const [auditorSortOrder, setAuditorSortOrder] = useState<1 | -1 | 0 | null>(
-    null
-  );
-  const [auditorMultiSortMeta, setAuditorMultiSortMeta] = useState<
-    Array<{
-      field: string;
-      order: 1 | -1 | 0 | null;
-    }>
-  >([]);
 
   // Auditor info
   const [auditor, setAuditor] = useState({
@@ -174,183 +152,17 @@ export default function AuditorScheduleInspectionPage() {
     isLoading: true,
   });
 
-  const fetchFarmDetails = async (farmId: number) => {
+  const handleFetchFarmDetails = async (farmId: number) => {
     setLoadingFarmDetails(true);
     try {
-      const response = await fetch(`/api/v1/rubber-farms/${farmId}`);
-
-      if (response.ok) {
-        const data = await response.json();
-        setSelectedFarmDetails(data);
-        setShowFarmDetails(true);
-      } else {
-        toast.error("ไม่สามารถดึงข้อมูลสวนยางได้");
-      }
+      const data = await fetchFarmDetails(farmId);
+      setSelectedFarmDetails(data);
+      setShowFarmDetails(true);
     } catch (error) {
       console.error("Error fetching farm details:", error);
       toast.error("เกิดข้อผิดพลาดในการดึงข้อมูล");
     } finally {
       setLoadingFarmDetails(false);
-    }
-  };
-
-  // Fetch rubber farms with pagination
-  const fetchRubberFarms = async (
-    offset = 0,
-    limit = 10,
-    filters?: {
-      province?: string;
-      district?: string;
-      subDistrict?: string;
-    },
-    sorting?: {
-      sortField?: string;
-      sortOrder?: string;
-      multiSortMeta?: Array<{
-        field: string;
-        order: number;
-      }>;
-    }
-  ) => {
-    try {
-      setLoading(true);
-
-      // สร้าง query parameters
-      const params = new URLSearchParams({
-        limit: limit.toString(),
-        offset: offset.toString(),
-      });
-
-      // เพิ่ม search filters
-      if (filters?.province) params.append("province", filters.province);
-      if (filters?.district) params.append("district", filters.district);
-      if (filters?.subDistrict)
-        params.append("subDistrict", filters.subDistrict);
-
-      // เพิ่ม sort parameters
-      if (sorting?.sortField) params.append("sortField", sorting.sortField);
-      if (sorting?.sortOrder) params.append("sortOrder", sorting.sortOrder);
-      if (sorting?.multiSortMeta) {
-        // Filter เฉพาะ items ที่มี order เป็น 1 หรือ -1
-        const validSortMeta = sorting.multiSortMeta.filter(
-          (item) => item.order === 1 || item.order === -1
-        );
-        if (validSortMeta.length > 0) {
-          params.append("multiSortMeta", JSON.stringify(validSortMeta));
-        }
-      }
-
-      const response = await fetch(
-        `/api/v1/auditors/available-farms?${params.toString()}`
-      );
-
-      if (response.ok) {
-        const result = await response.json();
-
-        // Handle new paginated response format
-        if (result.results && result.paginator) {
-          setRubberFarms(result.results);
-          setFarmsPagination({
-            first: result.paginator.offset,
-            rows: result.paginator.limit,
-            totalRecords: result.paginator.total,
-          });
-        } else {
-          console.error("Unexpected API response format:", result);
-          setRubberFarms([]);
-          setFarmsPagination({ first: 0, rows: 10, totalRecords: 0 });
-        }
-      } else {
-        console.error("Failed to fetch rubber farms:", response.status);
-        setRubberFarms([]);
-        setFarmsPagination({ first: 0, rows: 10, totalRecords: 0 });
-      }
-    } catch (error) {
-      console.error("Error fetching rubber farms:", error);
-      setRubberFarms([]);
-      setFarmsPagination({ first: 0, rows: 10, totalRecords: 0 });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchInspectionTypes = async () => {
-    try {
-      const response = await fetch("/api/v1/inspections/types");
-      if (response.ok) {
-        const data = await response.json();
-        setInspectionTypes(data);
-      }
-    } catch (error) {
-      console.error("Error fetching inspection types:", error);
-    }
-  };
-
-  const fetchAuditors = async (
-    offset = 0,
-    limit = 10,
-    search = "",
-    sorting?: {
-      sortField?: string;
-      sortOrder?: string;
-      multiSortMeta?: Array<{
-        field: string;
-        order: number;
-      }>;
-    }
-  ) => {
-    try {
-      setLoading(true);
-
-      // สร้าง query parameters
-      const params = new URLSearchParams({
-        limit: limit.toString(),
-        offset: offset.toString(),
-      });
-
-      // เพิ่ม search filter
-      if (search) params.append("search", search);
-
-      // เพิ่ม sort parameters
-      if (sorting?.sortField) params.append("sortField", sorting.sortField);
-      if (sorting?.sortOrder) params.append("sortOrder", sorting.sortOrder);
-      if (sorting?.multiSortMeta) {
-        // Filter เฉพาะ items ที่มี order เป็น 1 หรือ -1
-        const validSortMeta = sorting.multiSortMeta.filter(
-          (item) => item.order === 1 || item.order === -1
-        );
-        if (validSortMeta.length > 0) {
-          params.append("multiSortMeta", JSON.stringify(validSortMeta));
-        }
-      }
-
-      const response = await fetch(
-        `/api/v1/auditors/other-auditors?${params.toString()}`
-      );
-
-      if (response.ok) {
-        const result = await response.json();
-
-        // Handle paginated response format (same as available-farms)
-        if (result.results && result.paginator) {
-          setAuditors(result.results);
-          setAuditorsPagination({
-            first: result.paginator.offset,
-            rows: result.paginator.limit,
-            totalRecords: result.paginator.total,
-          });
-        } else {
-          console.error("Unexpected API response format:", result);
-          setAuditors([]);
-          setAuditorsPagination({ first: 0, rows: 10, totalRecords: 0 });
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching auditors:", error);
-      setAuditors([]);
-      setAuditorsPagination({ first: 0, rows: 10, totalRecords: 0 });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -377,63 +189,38 @@ export default function AuditorScheduleInspectionPage() {
 
   // อัพเดทอำเภอเมื่อเลือกจังหวัด
   useEffect(() => {
-    if (searchFilters.provinceId) {
+    if (selectedProvinceId) {
       const selectedProvince = provinces.find(
-        (p) => p.id === searchFilters.provinceId
+        (p) => p.id === selectedProvinceId
       );
       if (selectedProvince) {
-        setAmphures(selectedProvince.amphure); // แก้ไขจาก amphures เป็น amphure
-        // หาชื่อจังหวัดและอัพเดท
-        setSearchFilters((prev) => ({
-          ...prev,
-          province: selectedProvince.name_th,
-          amphureId: null,
-          tambonId: null,
-          district: "",
-          subDistrict: "",
-        }));
+        setAmphures(selectedProvince.amphure);
+        setSelectedDistrictId(null);
+        setSelectedSubDistrictId(null);
       }
     } else {
       setAmphures([]);
       setTambons([]);
     }
-  }, [searchFilters.provinceId, provinces]);
+  }, [
+    selectedProvinceId,
+    provinces,
+    setSelectedDistrictId,
+    setSelectedSubDistrictId,
+  ]);
 
   // อัพเดทตำบลเมื่อเลือกอำเภอ
   useEffect(() => {
-    if (searchFilters.amphureId) {
-      const selectedAmphure = amphures.find(
-        (a) => a.id === searchFilters.amphureId
-      );
+    if (selectedDistrictId) {
+      const selectedAmphure = amphures.find((a) => a.id === selectedDistrictId);
       if (selectedAmphure) {
-        setTambons(selectedAmphure.tambon); // แก้ไขจาก tambons เป็น tambon
-        // หาชื่ออำเภอและอัพเดท
-        setSearchFilters((prev) => ({
-          ...prev,
-          district: selectedAmphure.name_th,
-          tambonId: null,
-          subDistrict: "",
-        }));
+        setTambons(selectedAmphure.tambon);
+        setSelectedSubDistrictId(null);
       }
     } else {
       setTambons([]);
     }
-  }, [searchFilters.amphureId, amphures]);
-
-  // อัพเดทชื่อตำบลเมื่อเลือกตำบล
-  useEffect(() => {
-    if (searchFilters.tambonId) {
-      const selectedTambon = tambons.find(
-        (t) => t.id === searchFilters.tambonId
-      );
-      if (selectedTambon) {
-        setSearchFilters((prev) => ({
-          ...prev,
-          subDistrict: selectedTambon.name_th,
-        }));
-      }
-    }
-  }, [searchFilters.tambonId, tambons]);
+  }, [selectedDistrictId, amphures, setSelectedSubDistrictId]);
 
   useEffect(() => {
     // ตรวจสอบ session
@@ -450,192 +237,22 @@ export default function AuditorScheduleInspectionPage() {
         lastName: auditorData?.lastName || "",
         isLoading: false,
       });
-
-      // Fetch data
-      fetchRubberFarms(0, 10, searchFilters, {
-        sortField,
-        sortOrder:
-          sortOrder === 1 ? "asc" : sortOrder === -1 ? "desc" : undefined,
-        multiSortMeta: multiSortMeta.filter(
-          (item) => item.order === 1 || item.order === -1
-        ) as Array<{ field: string; order: number }>,
-      });
-      fetchInspectionTypes();
-      fetchAuditors(0, 10, auditorSearchTerm, {
-        sortField: auditorSortField,
-        sortOrder:
-          auditorSortOrder === 1
-            ? "asc"
-            : auditorSortOrder === -1
-            ? "desc"
-            : undefined,
-        multiSortMeta: auditorMultiSortMeta.filter(
-          (item) => item.order === 1 || item.order === -1
-        ) as Array<{ field: string; order: number }>,
-      });
     }
   }, [status, session, router]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Handle page change for DataTable
-  const onPageChange = (event: DataTablePageEvent) => {
-    fetchRubberFarms(event.first, event.rows, searchFilters, {
-      sortField,
-      sortOrder:
-        sortOrder === 1 ? "asc" : sortOrder === -1 ? "desc" : undefined,
-      multiSortMeta: multiSortMeta.filter(
-        (item) => item.order === 1 || item.order === -1
-      ) as Array<{ field: string; order: number }>,
-    });
-  };
-
-  // Handle sort change
-  const onSortChange = (event: DataTableSortEvent) => {
-    if (event.multiSortMeta) {
-      const validMultiSort = event.multiSortMeta.filter(
-        (item) => item.order !== undefined
-      ) as Array<{ field: string; order: 1 | -1 | 0 | null }>;
-      setMultiSortMeta(validMultiSort);
-      const validSortMeta = validMultiSort.filter(
-        (item) => item.order === 1 || item.order === -1
-      ) as Array<{ field: string; order: number }>;
-      fetchRubberFarms(
-        farmsPagination.first,
-        farmsPagination.rows,
-        searchFilters,
-        {
-          multiSortMeta: validSortMeta,
-        }
-      );
-    } else {
-      setSortField(event.sortField);
-      const validOrder = event.sortOrder !== undefined ? event.sortOrder : null;
-      setSortOrder(validOrder);
-      fetchRubberFarms(
-        farmsPagination.first,
-        farmsPagination.rows,
-        searchFilters,
-        {
-          sortField: event.sortField,
-          sortOrder: event.sortOrder === 1 ? "asc" : "desc",
-        }
-      );
-    }
-  };
-
-  // Handle search
+  // Handle search - use hook's applyFilters
   const handleSearch = () => {
-    const validSortMeta = multiSortMeta.filter(
-      (item) => item.order === 1 || item.order === -1
-    ) as Array<{ field: string; order: number }>;
-    fetchRubberFarms(0, farmsPagination.rows, searchFilters, {
-      sortField,
-      sortOrder:
-        sortOrder === 1 ? "asc" : sortOrder === -1 ? "desc" : undefined,
-      multiSortMeta: validSortMeta,
-    });
+    applyFilters();
   };
 
-  // Handle reset search
+  // Handle reset search - use hook's clearFilters
   const handleResetSearch = () => {
-    setSearchFilters({
-      provinceId: null,
-      amphureId: null,
-      tambonId: null,
-      province: "",
-      district: "",
-      subDistrict: "",
-    });
-    const validSortMeta = multiSortMeta.filter(
-      (item) => item.order === 1 || item.order === -1
-    ) as Array<{ field: string; order: number }>;
-    fetchRubberFarms(
-      0,
-      farmsPagination.rows,
-      {
-        province: "",
-        district: "",
-        subDistrict: "",
-      },
-      {
-        sortField,
-        sortOrder:
-          sortOrder === 1 ? "asc" : sortOrder === -1 ? "desc" : undefined,
-        multiSortMeta: validSortMeta,
-      }
-    );
+    clearFilters();
   };
 
-  // Filter for auditors
-  const handleAuditorSearch = () => {
-    const validSortMeta = auditorMultiSortMeta.filter(
-      (item) => item.order === 1 || item.order === -1
-    ) as Array<{ field: string; order: number }>;
-    fetchAuditors(0, auditorsPagination.rows, auditorSearchTerm, {
-      sortField: auditorSortField,
-      sortOrder:
-        auditorSortOrder === 1
-          ? "asc"
-          : auditorSortOrder === -1
-          ? "desc"
-          : undefined,
-      multiSortMeta: validSortMeta,
-    });
-  };
-
-  // Handle page change for Auditors DataTable
-  const onAuditorPageChange = (event: DataTablePageEvent) => {
-    fetchAuditors(event.first, event.rows, auditorSearchTerm, {
-      sortField: auditorSortField,
-      sortOrder:
-        auditorSortOrder === 1
-          ? "asc"
-          : auditorSortOrder === -1
-          ? "desc"
-          : undefined,
-      multiSortMeta: auditorMultiSortMeta.filter(
-        (item) => item.order === 1 || item.order === -1
-      ) as Array<{ field: string; order: number }>,
-    });
-  };
-
-  // Handle sort change for Auditors
-  const onAuditorSortChange = (event: DataTableSortEvent) => {
-    if (event.multiSortMeta) {
-      const validMeta = event.multiSortMeta.map((meta) => ({
-        field: meta.field,
-        order: (meta.order ?? null) as 1 | -1 | 0 | null,
-      }));
-      setAuditorMultiSortMeta(validMeta);
-      setAuditorSortField(undefined);
-      setAuditorSortOrder(null);
-
-      const validSortMeta = validMeta.filter(
-        (item) => item.order === 1 || item.order === -1
-      ) as Array<{ field: string; order: number }>;
-
-      fetchAuditors(
-        auditorsPagination.first,
-        auditorsPagination.rows,
-        auditorSearchTerm,
-        {
-          multiSortMeta: validSortMeta,
-        }
-      );
-    } else {
-      setAuditorSortField(event.sortField);
-      setAuditorSortOrder((event.sortOrder ?? null) as 1 | -1 | 0 | null);
-      setAuditorMultiSortMeta([]);
-
-      fetchAuditors(
-        auditorsPagination.first,
-        auditorsPagination.rows,
-        auditorSearchTerm,
-        {
-          sortField: event.sortField,
-          sortOrder: event.sortOrder === 1 ? "asc" : "desc",
-        }
-      );
-    }
+  // Handle auditor search
+  const handleAuditorSearchClick = () => {
+    applyAuditorSearch();
   };
 
   const handleNextStep = () => {
@@ -664,36 +281,22 @@ export default function AuditorScheduleInspectionPage() {
   };
 
   const handleSubmit = async () => {
-    setLoading(true);
     setError("");
     setSuccess("");
 
     try {
-      const response = await fetch("/api/v1/inspections/schedule", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          rubberFarmId: selectedFarm!.id,
-          inspectionTypeId: selectedInspectionType!.inspectionTypeId,
-          inspectionDateAndTime: inspectionDate!.toISOString(),
-          additionalAuditorIds: selectedAuditors.map((a) => a.id),
-        }),
+      await scheduleInspection({
+        rubberFarmId: selectedFarm!.id,
+        inspectionTypeId: selectedInspectionType!.inspectionTypeId,
+        inspectionDateAndTime: inspectionDate!.toISOString(),
+        additionalAuditorIds: selectedAuditors.map((a) => a.id),
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        setSuccess("กำหนดการตรวจประเมินถูกบันทึกเรียบร้อยแล้ว");
-        setTimeout(() => router.push("/auditor/dashboard"), 2000);
-      } else {
-        setError(data.message || "เกิดข้อผิดพลาดในการบันทึกข้อมูล");
-      }
-    } catch (error) {
-      setError("เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์");
-    } finally {
-      setLoading(false);
+      setSuccess("กำหนดการตรวจประเมินถูกบันทึกเรียบร้อยแล้ว");
+      setTimeout(() => router.push("/auditor/dashboard"), 2000);
+    } catch (error: any) {
+      const errorMessage = error?.message || "เกิดข้อผิดพลาดในการบันทึกข้อมูล";
+      setError(errorMessage);
     }
   };
 
@@ -705,127 +308,6 @@ export default function AuditorScheduleInspectionPage() {
         : [...prev, auditor];
     });
   };
-
-  const StepIndicator = () => (
-    <div className="mb-8">
-      <div className="hidden md:block">
-        <div className="flex items-center justify-between w-full">
-          {[1, 2, 3, 4, 5].map((step, index) => (
-            <React.Fragment key={step}>
-              <div className="flex flex-col items-center">
-                <div
-                  className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-semibold border-2 transition-all duration-300 ${
-                    currentStep >= step
-                      ? "bg-green-600 border-green-600 text-white shadow-lg"
-                      : currentStep === step - 1
-                      ? "bg-white border-green-300 text-green-600"
-                      : "bg-white border-gray-300 text-gray-400"
-                  }`}
-                >
-                  {currentStep > step ? (
-                    <svg
-                      className="w-6 h-6"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                  ) : (
-                    step
-                  )}
-                </div>
-                <div className="mt-3 text-center">
-                  <div
-                    className={`text-xs font-medium transition-colors duration-300 whitespace-nowrap ${
-                      currentStep >= step ? "text-green-600" : "text-gray-500"
-                    }`}
-                  >
-                    {step === 1 && "เลือกสวนยาง"}
-                    {step === 2 && "ประเภทการตรวจ"}
-                    {step === 3 && "คณะผู้ตรวจ"}
-                    {step === 4 && "วันที่ตรวจ"}
-                    {step === 5 && "ยืนยัน"}
-                  </div>
-                </div>
-              </div>
-              {index < 4 && (
-                <div className="flex-1 mx-2 mb-6">
-                  <div
-                    className={`w-full h-1 rounded-full transition-colors duration-300 ${
-                      currentStep > step ? "bg-green-600" : "bg-gray-300"
-                    }`}
-                  />
-                </div>
-              )}
-            </React.Fragment>
-          ))}
-        </div>
-      </div>
-
-      <div className="md:hidden">
-        <div className="flex items-center justify-center mb-4">
-          <div className="flex items-center space-x-2">
-            {[1, 2, 3, 4, 5].map((step, index) => (
-              <React.Fragment key={step}>
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-all duration-300 ${
-                    currentStep >= step
-                      ? "bg-green-600 text-white"
-                      : currentStep === step - 1
-                      ? "bg-green-100 text-green-600 border border-green-300"
-                      : "bg-gray-200 text-gray-400"
-                  }`}
-                >
-                  {currentStep > step ? (
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                  ) : (
-                    step
-                  )}
-                </div>
-                {index < 4 && (
-                  <div
-                    className={`w-6 h-0.5 flex-shrink-0 transition-colors duration-300 ${
-                      currentStep > step ? "bg-green-600" : "bg-gray-300"
-                    }`}
-                  />
-                )}
-              </React.Fragment>
-            ))}
-          </div>
-        </div>
-        <div className="text-center">
-          <div className="text-sm font-medium text-gray-700">
-            ขั้นตอนที่ {currentStep}: {currentStep === 1 && "เลือกสวนยางพารา"}
-            {currentStep === 2 && "เลือกประเภทการตรวจประเมิน"}
-            {currentStep === 3 && "เลือกคณะผู้ตรวจประเมิน"}
-            {currentStep === 4 && "เลือกวันทีตรวจประเมิน"}
-            {currentStep === 5 && "ยืนยันข้อมูล"}
-          </div>
-          <div className="text-xs text-gray-500 mt-1">
-            {currentStep} จาก 5 ขั้นตอน
-          </div>
-        </div>
-      </div>
-    </div>
-  );
 
   const renderStepContent = () => {
     switch (currentStep) {
@@ -851,18 +333,13 @@ export default function AuditorScheduleInspectionPage() {
                   </label>
                   <PrimaryAutoComplete
                     id="searchProvinceId"
-                    value={searchFilters.provinceId || ""}
+                    value={selectedProvinceId || ""}
                     options={provinces.map((province) => ({
                       label: province.name_th,
                       value: province.id,
                     }))}
                     onChange={(value) => {
-                      setSearchFilters({
-                        ...searchFilters,
-                        provinceId: value as number,
-                        amphureId: null,
-                        tambonId: null,
-                      });
+                      setSelectedProvinceId(value as number);
                     }}
                     placeholder="เลือกจังหวัด"
                   />
@@ -876,20 +353,16 @@ export default function AuditorScheduleInspectionPage() {
                   </label>
                   <PrimaryAutoComplete
                     id="searchAmphureId"
-                    value={searchFilters.amphureId || ""}
+                    value={selectedDistrictId || ""}
                     options={amphures.map((amphure) => ({
                       label: amphure.name_th,
                       value: amphure.id,
                     }))}
                     onChange={(value) => {
-                      setSearchFilters({
-                        ...searchFilters,
-                        amphureId: value as number,
-                        tambonId: null,
-                      });
+                      setSelectedDistrictId(value as number);
                     }}
                     placeholder="เลือกอำเภอ/เขต"
-                    disabled={!searchFilters.provinceId}
+                    disabled={!selectedProvinceId}
                   />
                 </div>
                 <div>
@@ -901,19 +374,16 @@ export default function AuditorScheduleInspectionPage() {
                   </label>
                   <PrimaryAutoComplete
                     id="searchTambonId"
-                    value={searchFilters.tambonId || ""}
+                    value={selectedSubDistrictId || ""}
                     options={tambons.map((tambon) => ({
                       label: tambon.name_th,
                       value: tambon.id,
                     }))}
                     onChange={(value) => {
-                      setSearchFilters({
-                        ...searchFilters,
-                        tambonId: value as number,
-                      });
+                      setSelectedSubDistrictId(value as number);
                     }}
                     placeholder="เลือกตำบล/แขวง"
-                    disabled={!searchFilters.amphureId}
+                    disabled={!selectedDistrictId}
                   />
                 </div>
               </div>
@@ -999,7 +469,7 @@ export default function AuditorScheduleInspectionPage() {
                       <PrimaryButton
                         icon="pi pi-eye"
                         color="info"
-                        onClick={() => fetchFarmDetails(rowData.id)}
+                        onClick={() => handleFetchFarmDetails(rowData.id)}
                         disabled={loadingFarmDetails}
                         rounded
                         text
@@ -1017,14 +487,15 @@ export default function AuditorScheduleInspectionPage() {
               ]}
               loading={loading}
               paginator
-              rows={farmsPagination.rows}
+              rows={lazyParams.rows}
               rowsPerPageOptions={[10, 25, 50]}
-              totalRecords={farmsPagination.totalRecords}
+              totalRecords={totalRecords}
               lazy
-              onPage={onPageChange}
+              first={lazyParams.first}
+              onPage={handlePageChange}
               sortMode="multiple"
-              multiSortMeta={multiSortMeta}
-              onSort={onSortChange}
+              multiSortMeta={lazyParams.multiSortMeta}
+              onSort={handleSort}
               emptyMessage="ไม่พบข้อมูลสวนยางพารา"
               rowClassName={(data: RubberFarm) =>
                 selectedFarm?.id === data.id
@@ -1105,7 +576,7 @@ export default function AuditorScheduleInspectionPage() {
               <PrimaryButton
                 label="ค้นหา"
                 icon="pi pi-search"
-                onClick={handleAuditorSearch}
+                onClick={handleAuditorSearchClick}
                 color="success"
               />
             </div>
@@ -1167,21 +638,21 @@ export default function AuditorScheduleInspectionPage() {
               ]}
               loading={loading}
               paginator
-              rows={auditorsPagination.rows}
+              rows={auditorsLazyParams.rows}
               rowsPerPageOptions={[10, 25, 50]}
-              totalRecords={auditorsPagination.totalRecords}
+              totalRecords={auditorsTotalRecords}
               lazy
-              onPage={onAuditorPageChange}
+              first={auditorsLazyParams.first}
+              onPage={handleAuditorPageChange}
               sortMode="multiple"
-              multiSortMeta={auditorMultiSortMeta}
-              onSort={onAuditorSortChange}
+              multiSortMeta={auditorsLazyParams.multiSortMeta}
+              onSort={handleAuditorSort}
               emptyMessage="ไม่พบผู้ตรวจประเมินในระบบ"
               rowClassName={(data: Auditor) =>
                 selectedAuditors.some((a) => a.id === data.id)
                   ? "bg-green-50"
                   : ""
               }
-              first={auditorsPagination.first}
             />
 
             {selectedAuditors.length > 0 && (
@@ -1350,7 +821,17 @@ export default function AuditorScheduleInspectionPage() {
             กำหนดวันและเวลาสำหรับการตรวจประเมินสวนยางพาราตามมาตรฐานจีเอพี
           </p>
         </div>
-        <StepIndicator />
+        <StepIndicator
+          currentStep={currentStep}
+          maxSteps={5}
+          stepLabels={[
+            "เลือกสวนยาง",
+            "ประเภทการตรวจ",
+            "คณะผู้ตรวจ",
+            "วันที่ตรวจ",
+            "ยืนยัน",
+          ]}
+        />
         <div className="bg-white rounded-xl shadow-sm p-3 sm:p-6 w-full">
           {renderStepContent()}
           <div className="mt-8 flex justify-between">

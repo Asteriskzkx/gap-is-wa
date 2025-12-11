@@ -62,7 +62,8 @@ export class InspectionController extends BaseController<InspectionModel> {
         inspectionTypeId,
         new Date(inspectionDateAndTime),
         auditorChiefId,
-        additionalAuditorIds || []
+        additionalAuditorIds || [],
+        auditorId
       );
 
       return NextResponse.json(inspection, { status: 201 });

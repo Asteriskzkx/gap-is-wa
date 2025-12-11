@@ -41,14 +41,43 @@ const MapViewer: React.FC<MapViewerProps> = ({
   // default center (Bangkok)
   const defaultCenter: [number, number] = [13.736717, 100.523186];
 
-  // derive center from GeoJSON Point if available
+  // derive center from GeoJSON
   let center: [number, number] = defaultCenter;
 
   if (location?.type === "Point" && Array.isArray(location.coordinates)) {
     // GeoJSON coordinates are [lng, lat]
     const [lng, lat] = location.coordinates;
-    if (typeof lat === "number" && typeof lng === "number") {
+    if (
+      typeof lat === "number" &&
+      typeof lng === "number" &&
+      !Number.isNaN(lat) &&
+      !Number.isNaN(lng) &&
+      Number.isFinite(lat) &&
+      Number.isFinite(lng)
+    ) {
       center = [lat, lng];
+    }
+  } else if (
+    location?.type === "Polygon" &&
+    Array.isArray(location.coordinates) &&
+    location.coordinates.length > 0 &&
+    Array.isArray(location.coordinates[0]) &&
+    location.coordinates[0].length > 0
+  ) {
+    // Calculate center from first coordinate of polygon
+    const firstCoord = location.coordinates[0][0];
+    if (Array.isArray(firstCoord) && firstCoord.length === 2) {
+      const [lng, lat] = firstCoord;
+      if (
+        typeof lat === "number" &&
+        typeof lng === "number" &&
+        !Number.isNaN(lat) &&
+        !Number.isNaN(lng) &&
+        Number.isFinite(lat) &&
+        Number.isFinite(lng)
+      ) {
+        center = [lat, lng];
+      }
     }
   }
 
@@ -69,6 +98,10 @@ const MapViewer: React.FC<MapViewerProps> = ({
     return null;
   };
 
+  // Determine if we should use auto-fit or fixed zoom
+  const useAutoFit =
+    location?.type === "Polygon" || location?.type === "LineString";
+
   return (
     <div
       style={{ height, width, minWidth: 0 }}
@@ -76,7 +109,7 @@ const MapViewer: React.FC<MapViewerProps> = ({
     >
       <MapContainer
         center={center}
-        zoom={14}
+        zoom={useAutoFit ? 13 : 14}
         style={{ height: `calc(100% - 48px)`, width: "100%" }}
         dragging={true}
         doubleClickZoom={true}
@@ -100,17 +133,25 @@ const MapViewer: React.FC<MapViewerProps> = ({
         )}
 
         {location?.type === "Polygon" &&
-          Array.isArray(location.coordinates) && (
+          Array.isArray(location.coordinates) &&
+          location.coordinates.length > 0 && (
             <>
               {/* use first ring */}
               {(() => {
                 const ring = location.coordinates[0] || [];
+                if (!Array.isArray(ring) || ring.length === 0) return null;
+
                 const latlngs = ring.map((c) => toLatLng(c));
                 return (
                   <>
                     <LeafletPolygon
                       positions={latlngs as any}
-                      pathOptions={{ color: "blue", fillOpacity: 0.2 }}
+                      pathOptions={{
+                        color: "blue",
+                        fillColor: "blue",
+                        fillOpacity: 0.2,
+                        weight: 2,
+                      }}
                     />
                     <AutoFitBounds coords={ring} />
                   </>
@@ -120,16 +161,19 @@ const MapViewer: React.FC<MapViewerProps> = ({
           )}
 
         {location?.type === "LineString" &&
-          Array.isArray(location.coordinates) && (
+          Array.isArray(location.coordinates) &&
+          location.coordinates.length > 0 && (
             <>
               {(() => {
                 const coords = location.coordinates;
+                if (!Array.isArray(coords) || coords.length === 0) return null;
+
                 const latlngs = coords.map((c) => toLatLng(c));
                 return (
                   <>
                     <LeafletPolyline
                       positions={latlngs as any}
-                      pathOptions={{ color: "red" }}
+                      pathOptions={{ color: "red", weight: 3 }}
                     />
                     <AutoFitBounds coords={coords} />
                   </>

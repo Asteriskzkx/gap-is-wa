@@ -64,7 +64,7 @@ export class AuditorService extends BaseService<AuditorModel> {
 
   async registerAuditor(auditorData: {
     email: string;
-    password: string;
+    password?: string;
     namePrefix: string;
     firstName: string;
     lastName: string;
@@ -76,6 +76,14 @@ export class AuditorService extends BaseService<AuditorModel> {
       );
       if (existingUser) {
         throw new Error("User with this email already exists");
+      }
+
+      if (!auditorData.password) {
+        const generatedPassword = process.env.DEFAULT_PASSWORD;
+        if (!generatedPassword) {
+          throw new Error("DEFAULT_PASSWORD is not configured in environment");
+        }
+        auditorData.password = generatedPassword;
       }
 
       // Create new auditor
