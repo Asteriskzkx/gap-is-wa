@@ -84,10 +84,83 @@ export default function FarmerEditForm({ user }: Props) {
     getZipCode,
   } = useThaiAddress();
 
-  const [province, setProvince] = useState<string>(extra.provinceName);
-  const [district, setDistrict] = useState<string>(extra.district);
-  const [subDistrict, setSubDistrict] = useState<string>(extra.subDistrict);
-  const [zipCode, setZipCode] = useState<string>(extra.zipCode);
+  const [province, setProvince] = useState<string>("");
+  const [district, setDistrict] = useState<string>("");
+  const [subDistrict, setSubDistrict] = useState<string>("");
+  const [zipCode, setZipCode] = useState<string>("");
+
+  // Helper function to strip common Thai prefixes for matching
+  const stripPrefix = React.useCallback((name: string): string => {
+    if (!name) return "";
+    return name
+      .replace(/^จังหวัด/, "")
+      .replace(/^อำเภอ/, "")
+      .replace(/^เขต/, "")
+      .replace(/^ตำบล/, "")
+      .replace(/^แขวง/, "")
+      .trim();
+  }, []);
+
+  // Helper function to find matching value in options (case-insensitive, prefix-insensitive)
+  const findMatchingOption = React.useCallback((value: string, options: string[]): string | undefined => {
+    if (!value) return undefined;
+    const strippedValue = stripPrefix(value);
+    
+    // First try exact match
+    if (options.includes(value)) return value;
+    
+    // Then try stripped match
+    return options.find(opt => stripPrefix(opt) === strippedValue);
+  }, [stripPrefix]);
+
+  // Track if initial address values have been set
+  const [isInitialized, setIsInitialized] = React.useState(false);
+  const [lastSyncedExtra, setLastSyncedExtra] = React.useState<string>("");
+
+  // Initialize address values when data is loaded
+  React.useEffect(() => {
+    if (!isLoadingAddress && provinces.length > 0 && !isInitialized) {
+      const initialProvince = user.farmer?.provinceName ?? "";
+      const initialDistrict = user.farmer?.district ?? "";
+      const initialSubDistrict = user.farmer?.subDistrict ?? "";
+      const initialZipCode = user.farmer?.zipCode ?? "";
+
+      // Find matching province (with or without prefix)
+      const matchedProvince = findMatchingOption(initialProvince, provinces);
+
+      if (matchedProvince) {
+        setProvince(matchedProvince);
+        
+        const districts = getDistricts(matchedProvince);
+        
+        // Find matching district (with or without prefix)
+        const matchedDistrict = findMatchingOption(initialDistrict, districts);
+        
+        if (matchedDistrict) {
+          setDistrict(matchedDistrict);
+          
+          const subDistricts = getSubDistricts(matchedProvince, matchedDistrict);
+          
+          // Find matching subDistrict (with or without prefix)
+          const matchedSubDistrict = findMatchingOption(initialSubDistrict, subDistricts);
+          
+          if (matchedSubDistrict) {
+            setSubDistrict(matchedSubDistrict);
+            setZipCode(initialZipCode || getZipCode(matchedProvince, matchedDistrict, matchedSubDistrict));
+          }
+        }
+      }
+      
+      // Mark as initialized and save initial extra state
+      setIsInitialized(true);
+      setLastSyncedExtra(JSON.stringify({
+        provinceName: extra.provinceName,
+        district: extra.district,
+        subDistrict: extra.subDistrict,
+        zipCode: extra.zipCode,
+      }));
+    }
+  }, [isLoadingAddress, provinces, user.farmer, getDistricts, getSubDistricts, getZipCode, findMatchingOption, isInitialized, extra.provinceName, extra.district, extra.subDistrict, extra.zipCode]);
 
   // Dropdown options
   const provinceOptions = useMemo(
@@ -154,13 +227,54 @@ export default function FarmerEditForm({ user }: Props) {
     setExtra((prev) => ({ ...prev, subDistrict: value, zipCode: z }));
   };
 
-  // Keep local cascades in sync if external resets occur
+  // Keep local cascades in sync if external resets occur (e.g., reset button)
   React.useEffect(() => {
-    setProvince(extra.provinceName);
-    setDistrict(extra.district);
-    setSubDistrict(extra.subDistrict);
-    setZipCode(extra.zipCode);
-  }, [extra.provinceName, extra.district, extra.subDistrict, extra.zipCode]);
+    // Only sync when extra changes AFTER initialization (i.e., reset button was clicked)
+    const currentExtraKey = JSON.stringify({
+      provinceName: extra.provinceName,
+      district: extra.district,
+      subDistrict: extra.subDistrict,
+      zipCode: extra.zipCode,
+    });
+    
+    if (isInitialized && !isLoadingAddress && currentExtraKey !== lastSyncedExtra) {
+      // Use findMatchingOption to handle prefix differences
+      const matchedProvince = findMatchingOption(extra.provinceName, provinces);
+      
+      if (matchedProvince) {
+        setProvince(matchedProvince);
+        
+        const districts = getDistricts(matchedProvince);
+        const matchedDistrict = findMatchingOption(extra.district, districts);
+        
+        if (matchedDistrict) {
+          setDistrict(matchedDistrict);
+          
+          const subDistricts = getSubDistricts(matchedProvince, matchedDistrict);
+          const matchedSubDistrict = findMatchingOption(extra.subDistrict, subDistricts);
+          
+          if (matchedSubDistrict) {
+            setSubDistrict(matchedSubDistrict);
+            setZipCode(extra.zipCode || getZipCode(matchedProvince, matchedDistrict, matchedSubDistrict));
+          } else {
+            setSubDistrict("");
+            setZipCode("");
+          }
+        } else {
+          setDistrict("");
+          setSubDistrict("");
+          setZipCode("");
+        }
+      } else {
+        setProvince("");
+        setDistrict("");
+        setSubDistrict("");
+        setZipCode("");
+      }
+      
+      setLastSyncedExtra(currentExtraKey);
+    }
+  }, [extra.provinceName, extra.district, extra.subDistrict, extra.zipCode, isInitialized, isLoadingAddress, provinces, getDistricts, getSubDistricts, getZipCode, findMatchingOption, lastSyncedExtra]);
 
   const validate = (): Record<string, string> => {
     const errs: Record<string, string> = {};

@@ -82,6 +82,7 @@ export type NormalizedUser = {
   committee?: CommitteeInfo;
   farmer?: FarmerInfo;
   auditor?: AuditorInfo;
+  version: number;
 };
 
 
