@@ -122,6 +122,7 @@ const auditorService = new AuditorService(
 );
 const committeeService = new CommitteeService(committeeRepository, userService);
 const adminService = new AdminService(adminRepository, userService);
+const auditLogService = new AuditLogService(auditLogRepository);
 const inspectionService = new InspectionService(
   inspectionRepository,
   auditorInspectionRepository,
@@ -131,7 +132,8 @@ const inspectionService = new InspectionService(
   requirementRepository,
   auditorService,
   rubberFarmRepository,
-  inspectionTypeMasterRepository
+  inspectionTypeMasterRepository,
+  auditLogService
 );
 const auditorInspectionService = new AuditorInspectionService(
   auditorInspectionRepository
@@ -142,20 +144,24 @@ const inspectionItemService = new InspectionItemService(
 );
 const requirementService = new RequirementService(requirementRepository);
 const dataRecordService = new DataRecordService(dataRecordRepository);
-const auditLogService = new AuditLogService(auditLogRepository);
 const adviceAndDefectService = new AdviceAndDefectService(
   adviceAndDefectRepository,
   auditLogService
 );
 const certificateService = new CertificateService(certificateRepository);
 const fileService = new FileService(fileRepository);
-const userRegistrationFactoryService = new UserRegistrationFactoryService( farmerService,
+const userRegistrationFactoryService = new UserRegistrationFactoryService(
+  farmerService,
   auditorService,
   committeeService,
-  adminService);
+  adminService
+);
 
 // Controllers
-const userController = new UserController(userService, userRegistrationFactoryService);
+const userController = new UserController(
+  userService,
+  userRegistrationFactoryService
+);
 const farmerController = new FarmerController(farmerService);
 const rubberFarmController = new RubberFarmController(rubberFarmService);
 const plantingDetailController = new PlantingDetailController(
@@ -231,5 +237,5 @@ export {
   userController,
   userRepository,
   userService,
-  userRegistrationFactoryService
+  userRegistrationFactoryService,
 };
