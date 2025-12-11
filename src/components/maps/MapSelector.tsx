@@ -79,38 +79,69 @@ const MapSelector: React.FC<MapSelectorProps> = ({
 
   // สถานะสำหรับจุด
   const [pointPosition, setPointPosition] = useState<LatLngPosition>(() => {
-    // ถ้ามีพิกัดจริง ให้ใช้พิกัดนั้นเป็นตำแหน่งเริ่มต้น (และถือว่าเป็นการเลือกแล้ว)
+    // ถ้ามีพิกัดที่ valid ให้ใช้พิกัดนั้นเป็นตำแหน่งเริ่มต้น
     if (
       location.type === "Point" &&
-      location.coordinates &&
-      location.coordinates[0] !== 0 &&
-      location.coordinates[1] !== 0
+      Array.isArray(location.coordinates) &&
+      location.coordinates.length === 2
     ) {
-      return [location.coordinates[1], location.coordinates[0]];
+      const [lng, lat] = location.coordinates;
+      if (
+        typeof lat === "number" &&
+        typeof lng === "number" &&
+        !Number.isNaN(lat) &&
+        !Number.isNaN(lng) &&
+        Number.isFinite(lat) &&
+        Number.isFinite(lng)
+      ) {
+        return [lat, lng];
+      }
     }
-    // หากไม่มีพิกัดที่เลือกจริง ให้ใช้ค่าเริ่มต้นเพื่อเป็นตำแหน่งมุมมอง แต่ไม่ถือว่าเป็นการเลือก
+    // หากไม่มีพิกัดที่ valid ให้ใช้ค่าเริ่มต้นเพื่อเป็นตำแหน่งมุมมอง
     return defaultPosition; // ใช้กรุงเทพฯเป็นค่าเริ่มต้นมุมมอง
   });
 
-  // บอกว่า user ได้เลือกจุดแล้วหรือยัง (ถ้า location เป็น Point และไม่ใช่ [0,0] ให้ถือว่าเลือกแล้ว)
+  // บอกว่า user ได้เลือกจุดแล้วหรือยัง (ตรวจสอบว่ามีพิกัดที่ valid)
   const [isPointSelected, setIsPointSelected] = useState<boolean>(() => {
-    return (
+    if (
       location.type === "Point" &&
       Array.isArray(location.coordinates) &&
-      location.coordinates[0] !== 0 &&
-      location.coordinates[1] !== 0
-    );
+      location.coordinates.length === 2
+    ) {
+      const [lng, lat] = location.coordinates;
+      return (
+        typeof lat === "number" &&
+        typeof lng === "number" &&
+        !Number.isNaN(lat) &&
+        !Number.isNaN(lng) &&
+        Number.isFinite(lat) &&
+        Number.isFinite(lng)
+      );
+    }
+    return false;
   });
 
   // สถานะสำหรับวงกลม
-  const [circleCenter, setCircleCenter] = useState<LatLngPosition>(
-    location.type === "Point" &&
+  const [circleCenter, setCircleCenter] = useState<LatLngPosition>(() => {
+    if (
+      location.type === "Point" &&
       Array.isArray(location.coordinates) &&
-      location.coordinates[0] !== 0 &&
-      location.coordinates[1] !== 0
-      ? [location.coordinates[1], location.coordinates[0]]
-      : defaultPosition
-  );
+      location.coordinates.length === 2
+    ) {
+      const [lng, lat] = location.coordinates;
+      if (
+        typeof lat === "number" &&
+        typeof lng === "number" &&
+        !Number.isNaN(lat) &&
+        !Number.isNaN(lng) &&
+        Number.isFinite(lat) &&
+        Number.isFinite(lng)
+      ) {
+        return [lat, lng];
+      }
+    }
+    return defaultPosition;
+  });
   const [circleRadius, setCircleRadius] = useState<number>(100);
   const [isSettingCircle, setIsSettingCircle] = useState<boolean>(false);
 
@@ -395,6 +426,20 @@ const MapSelector: React.FC<MapSelectorProps> = ({
     return null;
   };
 
+  // Component to auto-fit map bounds to polygon/shape
+  const AutoFitBounds: React.FC<{ coords: [number, number][] }> = ({
+    coords,
+  }) => {
+    const map = useMap();
+    useEffect(() => {
+      if (!coords || coords.length === 0) return;
+      // Convert GeoJSON [lng, lat] to Leaflet [lat, lng]
+      const latlngs = coords.map((c) => [c[1], c[0]] as [number, number]);
+      map.fitBounds(latlngs as any, { padding: [50, 50] });
+    }, [map, coords]);
+    return null;
+  };
+
   // แสดงคำแนะนำตามสถานะปัจจุบัน
   const getInstructions = () => {
     switch (shapeType) {
@@ -565,6 +610,27 @@ const MapSelector: React.FC<MapSelectorProps> = ({
                 />
               </>
             )}
+
+            {/* แสดง Polygon ที่มีอยู่แล้วจาก location prop (เมื่อไม่ได้กำลังวาดรูปใหม่) */}
+            {location.type === "Polygon" &&
+              location.coordinates &&
+              Array.isArray(location.coordinates) &&
+              location.coordinates.length > 0 &&
+              !isSettingCircle &&
+              !isDrawingRectangle && (
+                <>
+                  <Polygon
+                    positions={location.coordinates[0].map(
+                      (coord: [number, number]) => [coord[1], coord[0]]
+                    )}
+                    color="blue"
+                    fillColor="blue"
+                    fillOpacity={0.2}
+                    weight={2}
+                  />
+                  <AutoFitBounds coords={location.coordinates[0]} />
+                </>
+              )}
           </MapContainer>
         </div>
       </div>
