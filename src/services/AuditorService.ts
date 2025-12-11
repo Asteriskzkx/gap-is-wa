@@ -118,10 +118,17 @@ export class AuditorService extends BaseService<AuditorModel> {
   ): Promise<AuditorModel | null> {
     // เปลี่ยนจาก string เป็น number
     try {
-      // If updating email, check if it's already in use
+      // If updating email, check if it's already in use by another account
       if (data.email) {
+        // First, get the current auditor to find the associated userId
+        const currentAuditor = await this.auditorRepository.findById(auditorId);
+        if (!currentAuditor) {
+          return null;
+        }
+
         const existingUser = await this.userService.findByEmail(data.email);
-        if (existingUser && existingUser.id !== data.id) {
+        // Only throw error if email belongs to a different user (currentAuditor.id is userId from BaseModel)
+        if (existingUser && existingUser.id !== currentAuditor.id) {
           throw new Error("Email is already in use by another account");
         }
       }

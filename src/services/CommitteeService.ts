@@ -99,10 +99,17 @@ export class CommitteeService extends BaseService<CommitteeModel> {
     data: Partial<CommitteeModel>
   ): Promise<CommitteeModel | null> {
     try {
-      // If updating email, check if it's already in use
+      // If updating email, check if it's already in use by another account
       if (data.email) {
+        // First, get the current committee to find the associated userId
+        const currentCommittee = await this.committeeRepository.findById(committeeId);
+        if (!currentCommittee) {
+          return null;
+        }
+
         const existingUser = await this.userService.findByEmail(data.email);
-        if (existingUser && existingUser.id !== data.id) {
+        // Only throw error if email belongs to a different user (currentCommittee.id is userId from BaseModel)
+        if (existingUser && existingUser.id !== currentCommittee.id) {
           throw new Error("Email is already in use by another account");
         }
       }

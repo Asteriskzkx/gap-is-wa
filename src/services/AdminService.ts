@@ -95,10 +95,17 @@ export class AdminService extends BaseService<AdminModel> {
     data: Partial<AdminModel>
   ): Promise<AdminModel | null> {
     try {
-      // If updating email, check if it's already in use
+      // If updating email, check if it's already in use by another account
       if (data.email) {
+        // First, get the current admin to find the associated userId
+        const currentAdmin = await this.adminRepository.findById(adminId);
+        if (!currentAdmin) {
+          return null;
+        }
+
         const existingUser = await this.userService.findByEmail(data.email);
-        if (existingUser && existingUser.id !== data.id) {
+        // Only throw error if email belongs to a different user (currentAdmin.id is userId from BaseModel)
+        if (existingUser && existingUser.id !== currentAdmin.id) {
           throw new Error("Email is already in use by another account");
         }
       }
