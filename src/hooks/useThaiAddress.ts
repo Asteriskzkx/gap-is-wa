@@ -77,32 +77,32 @@ export default function useThaiAddress() {
     };
   }, []);
 
-  // Optionally merge from API if available (non-fatal on error)
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch("/api/thai-address");
-        if (!res.ok) return;
-        const data = await res.json();
-        const merged = normalizeLocalData(data);
-        if (cancelled || !merged.length) return;
-        // Merge and dedupe
-        const key = (i: FlatAddress) => `${i.province}|${i.district}|${i.subDistrict}`;
-        setRaw((prev) => {
-          const map = new Map<string, FlatAddress>();
-          for (const i of prev) map.set(key(i), i);
-          for (const i of merged) map.set(key(i), i);
-          return Array.from(map.values());
-        });
-      } catch {
-        // ignore
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  // // Optionally merge from API if available (non-fatal on error)
+  // useEffect(() => {
+  //   let cancelled = false;
+  //   (async () => {
+  //     try {
+  //       const res = await fetch("/api/thai-address");
+  //       if (!res.ok) return;
+  //       const data = await res.json();
+  //       const merged = normalizeLocalData(data);
+  //       if (cancelled || !merged.length) return;
+  //       // Merge and dedupe
+  //       const key = (i: FlatAddress) => `${i.province}|${i.district}|${i.subDistrict}`;
+  //       setRaw((prev) => {
+  //         const map = new Map<string, FlatAddress>();
+  //         for (const i of prev) map.set(key(i), i);
+  //         for (const i of merged) map.set(key(i), i);
+  //         return Array.from(map.values());
+  //       });
+  //     } catch {
+  //       // ignore
+  //     }
+  //   })();
+  //   return () => {
+  //     cancelled = true;
+  //   };
+  // }, []);
 
   const provinces = useMemo(() => {
     const arr = raw.map((i) => i.province).filter(Boolean).sort((a, b) => a.localeCompare(b));

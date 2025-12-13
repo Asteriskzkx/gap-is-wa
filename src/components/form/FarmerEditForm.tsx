@@ -335,7 +335,7 @@ export default function FarmerEditForm({ user }: Props) {
       version: user.farmer?.version || 0,
     };
 
-    const res = await fetch(`/api/v1/farmers/${user.userId}`, {
+    const res = await fetch(`/api/v1/farmers/${user.farmer?.farmerId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

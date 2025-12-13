@@ -124,6 +124,7 @@ export class FarmerService extends BaseService<FarmerModel> {
     currentVersion?: number
   ): Promise<FarmerModel | null> {
     try {
+
       // If updating email, check if it's already in use by another account
       if (data.email) {
         // First, get the current farmer to find the associated userId
@@ -141,11 +142,12 @@ export class FarmerService extends BaseService<FarmerModel> {
 
       if (currentVersion !== undefined) {
         // Use optimistic locking
-        return await this.farmerRepository.updateWithLock(
+        const result = await this.farmerRepository.updateWithLock(
           farmerId,
           data,
           currentVersion
         );
+        return result;
       } else {
         // Fallback to regular update
         return await this.update(farmerId, data);

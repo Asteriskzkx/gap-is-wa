@@ -18,7 +18,7 @@ export default function AdminEditForm({ user }: Props) {
   );
 
   const submit = async (values: BaseUserFormValues) => {
-    const res = await fetch(`/api/admins/${user.userId}`, {
+    const res = await fetch(`/api/v1/admins/${user.admin?.adminId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(values),

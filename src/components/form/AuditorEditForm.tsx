@@ -18,7 +18,7 @@ export default function AuditorEditForm({ user }: Props) {
   );
 
   const submit = async (values: BaseUserFormValues) => {
-    const res = await fetch(`/api/v1/auditors/${user.userId}`, {
+    const res = await fetch(`/api/v1/auditors/${user.auditor?.auditorId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(values),

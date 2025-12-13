@@ -113,27 +113,29 @@ export class CommitteeRepository extends BaseRepository<CommitteeModel> {
         return null;
       }
 
+      // Prepare user data - only include defined values
+      const userData: any = { updatedAt: new Date() };
+      if (data.email !== undefined) userData.email = data.email;
+      if (data.name !== undefined) userData.name = data.name;
+
+      // Prepare committee data - only include defined values
+      const committeeData: any = { updatedAt: new Date() };
+      if (data.namePrefix !== undefined) committeeData.namePrefix = data.namePrefix;
+      if (data.firstName !== undefined) committeeData.firstName = data.firstName;
+      if (data.lastName !== undefined) committeeData.lastName = data.lastName;
+
       // Start a transaction to update both User and Committee
       const [updatedUser, updatedCommittee] = await this.prisma.$transaction([
         // Update User record
         this.prisma.user.update({
           where: { userId: existingCommittee.userId },
-          data: {
-            email: data.email,
-            name: data.name,
-            updatedAt: new Date(),
-          },
+          data: userData,
         }),
 
         // Update Committee record
         this.prisma.committee.update({
           where: { committeeId: id },
-          data: {
-            namePrefix: data.namePrefix,
-            firstName: data.firstName,
-            lastName: data.lastName,
-            updatedAt: new Date(),
-          },
+          data: committeeData,
         }),
       ]);
 

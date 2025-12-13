@@ -109,27 +109,29 @@ export class AdminRepository extends BaseRepository<AdminModel> {
         return null;
       }
 
+      // Prepare user data - only include defined values
+      const userData: any = { updatedAt: new Date() };
+      if (data.email !== undefined) userData.email = data.email;
+      if (data.name !== undefined) userData.name = data.name;
+
+      // Prepare admin data - only include defined values
+      const adminData: any = { updatedAt: new Date() };
+      if (data.namePrefix !== undefined) adminData.namePrefix = data.namePrefix;
+      if (data.firstName !== undefined) adminData.firstName = data.firstName;
+      if (data.lastName !== undefined) adminData.lastName = data.lastName;
+
       // Start a transaction to update both User and Admin
       const [updatedUser, updatedAdmin] = await this.prisma.$transaction([
         // Update User record
         this.prisma.user.update({
           where: { userId: existingAdmin.userId },
-          data: {
-            email: data.email,
-            name: data.name,
-            updatedAt: new Date(),
-          },
+          data: userData,
         }),
 
         // Update Admin record
         this.prisma.admin.update({
           where: { adminId: id },
-          data: {
-            namePrefix: data.namePrefix,
-            firstName: data.firstName,
-            lastName: data.lastName,
-            updatedAt: new Date(),
-          },
+          data: adminData,
         }),
       ]);
 

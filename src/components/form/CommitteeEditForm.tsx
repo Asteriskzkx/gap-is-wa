@@ -17,7 +17,7 @@ export default function CommitteeEditForm({ user }: Props) {
   );
 
   const submit = async (values: BaseUserFormValues) => {
-    const res = await fetch(`/api/committees/${user.userId}`, {
+    const res = await fetch(`/api/v1/committees/${user.committee?.committeeId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(values),
