@@ -114,9 +114,9 @@ export class AuditorService extends BaseService<AuditorModel> {
 
   async updateAuditorProfile(
     auditorId: number,
-    data: Partial<AuditorModel>
+    data: Partial<AuditorModel>,
+    currentVersion?: number
   ): Promise<AuditorModel | null> {
-    // เปลี่ยนจาก string เป็น number
     try {
       // If updating email, check if it's already in use by another account
       if (data.email) {
@@ -133,7 +133,17 @@ export class AuditorService extends BaseService<AuditorModel> {
         }
       }
 
-      return await this.update(auditorId, data);
+      if (currentVersion !== undefined) {
+        // Use optimistic locking
+        return await this.auditorRepository.updateWithLock(
+          auditorId,
+          data,
+          currentVersion
+        );
+      } else {
+        // Fallback to regular update
+        return await this.update(auditorId, data);
+      }
     } catch (error) {
       this.handleServiceError(error);
       throw error;

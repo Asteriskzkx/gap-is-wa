@@ -18,10 +18,14 @@ export default function AdminEditForm({ user }: Props) {
   );
 
   const submit = async (values: BaseUserFormValues) => {
+    const payload = {
+      ...values,
+      version: user.admin?.version || 0,
+    };
     const res = await fetch(`/api/v1/admins/${user.admin?.adminId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(values),
+      body: JSON.stringify(payload),
     });
     if (!res.ok) {
       let msg = "บันทึกไม่สำเร็จ";

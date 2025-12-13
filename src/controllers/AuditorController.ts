@@ -4,6 +4,8 @@ import { AuditorModel } from "../models/AuditorModel";
 import { AuditorService } from "../services/AuditorService";
 import { requireValidId } from "../utils/ParamUtils";
 import { checkAuthorization } from "@/lib/session";
+import { OptimisticLockError } from "../errors/OptimisticLockError";
+
 export class AuditorController extends BaseController<AuditorModel> {
   private auditorService: AuditorService;
 
@@ -152,10 +154,12 @@ export class AuditorController extends BaseController<AuditorModel> {
       }
 
       const data = await req.json();
+      const { version, ...updateData } = data;
 
       const updatedAuditor = await this.auditorService.updateAuditorProfile(
         auditorId,
-        data
+        updateData,
+        version
       );
 
       if (!updatedAuditor) {
@@ -167,6 +171,10 @@ export class AuditorController extends BaseController<AuditorModel> {
 
       return NextResponse.json(updatedAuditor.toJSON(), { status: 200 });
     } catch (error: any) {
+      // Handle optimistic lock error
+      if (error instanceof OptimisticLockError) {
+        return NextResponse.json(error.toJSON(), { status: 409 });
+      }
       if (error.message.includes("already in use")) {
         return NextResponse.json({ message: error.message }, { status: 409 });
       }

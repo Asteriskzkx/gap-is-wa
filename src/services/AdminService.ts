@@ -92,7 +92,8 @@ export class AdminService extends BaseService<AdminModel> {
 
   async updateAdminProfile(
     adminId: number,
-    data: Partial<AdminModel>
+    data: Partial<AdminModel>,
+    currentVersion?: number
   ): Promise<AdminModel | null> {
     try {
       // If updating email, check if it's already in use by another account
@@ -110,7 +111,17 @@ export class AdminService extends BaseService<AdminModel> {
         }
       }
 
-      return await this.update(adminId, data);
+      if (currentVersion !== undefined) {
+        // Use optimistic locking
+        return await this.adminRepository.updateWithLock(
+          adminId,
+          data,
+          currentVersion
+        );
+      } else {
+        // Fallback to regular update
+        return await this.update(adminId, data);
+      }
     } catch (error) {
       this.handleServiceError(error);
       throw error;

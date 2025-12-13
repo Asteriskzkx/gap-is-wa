@@ -7,6 +7,7 @@ import { BaseRepository } from "./BaseRepository";
 import { AdminModel } from "../models/AdminModel";
 import { UserRole } from "../models/UserModel";
 import { BaseMapper } from "../mappers/BaseMapper";
+import { OptimisticLockError } from "../errors/OptimisticLockError";
 
 export class AdminRepository extends BaseRepository<AdminModel> {
   constructor(mapper: BaseMapper<any, AdminModel>) {
@@ -168,5 +169,70 @@ export class AdminRepository extends BaseRepository<AdminModel> {
 
   private mapToModel(user: PrismaUser, admin: PrismaAdmin): AdminModel {
     return this.mapper.toDomain({ user, admin });
+  }
+
+  /**
+   * Update admin with optimistic locking
+   */
+  async updateWithLock(
+    id: number,
+    data: Partial<AdminModel>,
+    currentVersion: number
+  ): Promise<AdminModel> {
+    try {
+      // First, find the admin to get the userId and verify version
+      const existingAdmin = await this.prisma.admin.findUnique({
+        where: { adminId: id },
+        select: { userId: true, version: true },
+      });
+
+      if (!existingAdmin) {
+        throw new Error(`Admin with ID ${id} not found`);
+      }
+
+      // Check version for optimistic locking
+      if (existingAdmin.version !== currentVersion) {
+        throw new OptimisticLockError(
+          "admin",
+          id,
+          currentVersion,
+          existingAdmin.version ?? -1
+        );
+      }
+
+      // Prepare user data - only include defined values
+      const userData: any = { updatedAt: new Date() };
+      if (data.email !== undefined) userData.email = data.email;
+      if (data.name !== undefined) userData.name = data.name;
+
+      // Prepare admin data - only include defined values
+      const adminData: any = {
+        version: currentVersion + 1,
+        updatedAt: new Date(),
+      };
+      if (data.namePrefix !== undefined) adminData.namePrefix = data.namePrefix;
+      if (data.firstName !== undefined) adminData.firstName = data.firstName;
+      if (data.lastName !== undefined) adminData.lastName = data.lastName;
+
+      // Start a transaction to update both User and Admin
+      const [updatedUser, updatedAdmin] = await this.prisma.$transaction([
+        this.prisma.user.update({
+          where: { userId: existingAdmin.userId },
+          data: userData,
+        }),
+        this.prisma.admin.update({
+          where: { adminId: id },
+          data: adminData,
+        }),
+      ]);
+
+      return this.mapToModel(updatedUser, updatedAdmin);
+    } catch (error) {
+      if (error instanceof OptimisticLockError) {
+        throw error;
+      }
+      console.error("Error updating admin with optimistic lock:", error);
+      throw error;
+    }
   }
 }

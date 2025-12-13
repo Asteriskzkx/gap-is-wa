@@ -17,10 +17,14 @@ export default function CommitteeEditForm({ user }: Props) {
   );
 
   const submit = async (values: BaseUserFormValues) => {
+    const payload = {
+      ...values,
+      version: user.committee?.version || 0,
+    };
     const res = await fetch(`/api/v1/committees/${user.committee?.committeeId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(values),
+      body: JSON.stringify(payload),
     });
     if (!res.ok) {
       let msg = "บันทึกไม่สำเร็จ";

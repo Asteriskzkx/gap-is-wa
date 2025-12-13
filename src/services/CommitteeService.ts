@@ -96,7 +96,8 @@ export class CommitteeService extends BaseService<CommitteeModel> {
 
   async updateCommitteeProfile(
     committeeId: number,
-    data: Partial<CommitteeModel>
+    data: Partial<CommitteeModel>,
+    currentVersion?: number
   ): Promise<CommitteeModel | null> {
     try {
       // If updating email, check if it's already in use by another account
@@ -114,7 +115,17 @@ export class CommitteeService extends BaseService<CommitteeModel> {
         }
       }
 
-      return await this.update(committeeId, data);
+      if (currentVersion !== undefined) {
+        // Use optimistic locking
+        return await this.committeeRepository.updateWithLock(
+          committeeId,
+          data,
+          currentVersion
+        );
+      } else {
+        // Fallback to regular update
+        return await this.update(committeeId, data);
+      }
     } catch (error) {
       this.handleServiceError(error);
       throw error;

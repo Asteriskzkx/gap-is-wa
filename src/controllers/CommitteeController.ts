@@ -4,6 +4,7 @@ import { CommitteeModel } from "../models/CommitteeModel";
 import { CommitteeService } from "../services/CommitteeService";
 import { requireValidId } from "../utils/ParamUtils";
 import { checkAuthorization } from "@/lib/session";
+import { OptimisticLockError } from "../errors/OptimisticLockError";
 
 export class CommitteeController extends BaseController<CommitteeModel> {
   private committeeService: CommitteeService;
@@ -152,9 +153,14 @@ export class CommitteeController extends BaseController<CommitteeModel> {
       }
 
       const data = await req.json();
+      const { version, ...updateData } = data;
 
       const updatedCommittee =
-        await this.committeeService.updateCommitteeProfile(committeeId, data);
+        await this.committeeService.updateCommitteeProfile(
+          committeeId,
+          updateData,
+          version
+        );
 
       if (!updatedCommittee) {
         return NextResponse.json(
@@ -165,6 +171,10 @@ export class CommitteeController extends BaseController<CommitteeModel> {
 
       return NextResponse.json(updatedCommittee.toJSON(), { status: 200 });
     } catch (error: any) {
+      // Handle optimistic lock error
+      if (error instanceof OptimisticLockError) {
+        return NextResponse.json(error.toJSON(), { status: 409 });
+      }
       if (error.message.includes("already in use")) {
         return NextResponse.json({ message: error.message }, { status: 409 });
       }
