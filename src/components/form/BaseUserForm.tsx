@@ -15,9 +15,9 @@ export type BaseUserFormValues = {
 
 type Option = { name: string; value: string };
 
-type BaseUserFormProps = {
+type BaseUserFormProps<T = any> = {
   defaultValues: BaseUserFormValues;
-  onSubmit: (values: BaseUserFormValues) => Promise<void>;
+  onSubmit: (values: BaseUserFormValues) => Promise<T>;
   namePrefixOptions?: Option[];
   submitLabel?: string;
   resetLabel?: string;
@@ -27,9 +27,10 @@ type BaseUserFormProps = {
   children?: React.ReactNode;
   externalDirty?: boolean;
   onResetExternal?: () => void;
+  onSuccess?: (data: T) => void;
 };
 
-export default function BaseUserForm({
+export default function BaseUserForm<T = any>({
   defaultValues,
   onSubmit,
   namePrefixOptions,
@@ -41,7 +42,8 @@ export default function BaseUserForm({
   children,
   externalDirty = false,
   onResetExternal,
-}: BaseUserFormProps) {
+  onSuccess,
+}: BaseUserFormProps<T>) {
   const toast = useRef<Toast | null>(null);
   const [formData, setFormData] = useState<BaseUserFormValues>(defaultValues);
   const [submitting, setSubmitting] = useState(false);
@@ -83,13 +85,14 @@ export default function BaseUserForm({
     if (disabled || submitting) return;
     setSubmitting(true);
     try {
-      await onSubmit(formData);
+      const result = await onSubmit(formData);
       toast.current?.show({
         severity: "success",
         summary: "สำเร็จ",
         detail: successMessage,
         life: 3000,
       });
+      onSuccess?.(result);
     } catch (err: any) {
       const detail = err?.message || errorMessage;
       toast.current?.show({

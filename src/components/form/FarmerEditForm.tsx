@@ -1,4 +1,4 @@
-import { NormalizedUser } from "@/types/UserType";
+import { NormalizedUser, FarmerInfo } from "@/types/UserType";
 import { InputText } from "primereact/inputtext";
 import React, { useMemo, useState } from "react";
 import BaseUserForm, { BaseUserFormValues } from "./BaseUserForm";
@@ -7,9 +7,10 @@ import useThaiAddress from "@/hooks/useThaiAddress";
 
 type Props = {
   user: NormalizedUser;
+  onSuccess?: (updated: FarmerInfo) => void;
 };
 
-export default function FarmerEditForm({ user }: Props) {
+export default function FarmerEditForm({ user, onSuccess }: Props) {
   const initialValues: BaseUserFormValues = useMemo(
     () => ({
       namePrefix: user.farmer?.namePrefix ?? "",
@@ -313,7 +314,7 @@ export default function FarmerEditForm({ user }: Props) {
     return errs;
   };
 
-  const submit = async (values: BaseUserFormValues) => {
+  const submit = async (values: BaseUserFormValues): Promise<FarmerInfo> => {
     const v = validate();
     if (Object.keys(v).length > 0) {
       setErrors(v);
@@ -348,6 +349,9 @@ export default function FarmerEditForm({ user }: Props) {
       } catch {}
       throw new Error(msg);
     }
+    
+    const updated: FarmerInfo = await res.json();
+    return updated;
   };
 
   return (
@@ -373,6 +377,7 @@ export default function FarmerEditForm({ user }: Props) {
         <BaseUserForm
           defaultValues={initialValues}
           onSubmit={submit}
+          onSuccess={onSuccess}
           successMessage="บันทึกข้อมูลเกษตรกรเรียบร้อย"
           errorMessage="บันทึกข้อมูลเกษตรกรไม่สำเร็จ"
           externalDirty={externalDirty}

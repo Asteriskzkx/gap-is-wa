@@ -1,12 +1,13 @@
 import React, { useMemo } from "react";
-import { NormalizedUser } from "@/types/UserType";
+import { NormalizedUser, AuditorInfo } from "@/types/UserType";
 import BaseUserForm, { BaseUserFormValues } from "./BaseUserForm";
 
 type Props = {
   user: NormalizedUser;
+  onSuccess?: (updated: AuditorInfo) => void;
 };
 
-export default function AuditorEditForm({ user }: Props) {
+export default function AuditorEditForm({ user, onSuccess }: Props) {
   const initialValues: BaseUserFormValues = useMemo(
     () => ({
       namePrefix: user.auditor?.namePrefix ?? "",
@@ -17,7 +18,7 @@ export default function AuditorEditForm({ user }: Props) {
     [user]
   );
 
-  const submit = async (values: BaseUserFormValues) => {
+  const submit = async (values: BaseUserFormValues): Promise<AuditorInfo> => {
     const payload = {
       ...values,
       version: user.auditor?.version || 0,
@@ -35,6 +36,9 @@ export default function AuditorEditForm({ user }: Props) {
       } catch {}
       throw new Error(msg);
     }
+    
+    const updated: AuditorInfo = await res.json();
+    return updated;
   };
 
   return (
@@ -59,6 +63,7 @@ export default function AuditorEditForm({ user }: Props) {
         <BaseUserForm
           defaultValues={initialValues}
           onSubmit={submit}
+          onSuccess={onSuccess}
           successMessage="บันทึกข้อมูลผู้ตรวจสอบเรียบร้อย"
           errorMessage="บันทึกข้อมูลผู้ตรวจสอบไม่สำเร็จ"
         />

@@ -1,12 +1,13 @@
-import { NormalizedUser } from "@/types/UserType";
+import { NormalizedUser, AdminInfo } from "@/types/UserType";
 import React, { useMemo } from "react";
 import BaseUserForm, { BaseUserFormValues } from "./BaseUserForm";
 
 type Props = {
   user: NormalizedUser;
+  onSuccess?: (updated: AdminInfo) => void;
 };
 
-export default function AdminEditForm({ user }: Props) {
+export default function AdminEditForm({ user, onSuccess }: Props) {
   const initialFormData: BaseUserFormValues = useMemo(
     () => ({
       namePrefix: user.admin?.namePrefix ?? "",
@@ -17,7 +18,7 @@ export default function AdminEditForm({ user }: Props) {
     [user]
   );
 
-  const submit = async (values: BaseUserFormValues) => {
+  const submit = async (values: BaseUserFormValues): Promise<AdminInfo> => {
     const payload = {
       ...values,
       version: user.admin?.version || 0,
@@ -35,7 +36,9 @@ export default function AdminEditForm({ user }: Props) {
       } catch {}
       throw new Error(msg);
     }
-    // optional: const result = await res.json();
+    
+    const updated: AdminInfo = await res.json();
+    return updated;
   };
 
   return (
@@ -60,6 +63,7 @@ export default function AdminEditForm({ user }: Props) {
         <BaseUserForm
           defaultValues={initialFormData}
           onSubmit={submit}
+          onSuccess={onSuccess}
           successMessage="บันทึกข้อมูลผู้ดูแลระบบเรียบร้อย"
           errorMessage="บันทึกข้อมูลผู้ดูแลระบบไม่สำเร็จ"
         />

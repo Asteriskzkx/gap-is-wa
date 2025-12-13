@@ -13,7 +13,7 @@ import { useUserDetail } from "@/hooks/useUserDetail";
 export default function EditUserPage() {
   const { id } = useParams();
   const userId = id ? parseInt(id as string, 10) : null;
-  const { user, loading, error } = useUserDetail(userId);
+  const { user, loading, error, updateAdmin, updateAuditor, updateCommittee, updateFarmer } = useUserDetail(userId);
 
   if (!id || loading || error) {
     return (
@@ -32,10 +32,10 @@ export default function EditUserPage() {
       <div className="p-6">
         {/* Render UI based on role */}
         {/* TODO: Add Form into all component and integrate the ui :D */}
-        {user.role === "ADMIN" && <AdminEditForm user={user} />}
-        {user.role === "FARMER" && <FarmerEditForm user={user} />}
-        {user.role === "AUDITOR" && <AuditorEditForm user={user} />}
-        {user.role === "COMMITTEE" && <CommitteeEditForm user={user} />}
+        {user.role === "ADMIN" && <AdminEditForm user={user} onSuccess={updateAdmin} />}
+        {user.role === "FARMER" && <FarmerEditForm user={user} onSuccess={updateFarmer} />}
+        {user.role === "AUDITOR" && <AuditorEditForm user={user} onSuccess={updateAuditor} />}
+        {user.role === "COMMITTEE" && <CommitteeEditForm user={user} onSuccess={updateCommittee} />}
         {user.role === "BASIC" && <BasicEditForm user={user} />}
       </div>
     </AdminLayout>
