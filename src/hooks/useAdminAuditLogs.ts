@@ -155,6 +155,39 @@ export function useAdminAuditLogs(initialRows = 10) {
     setLazyParams((p) => ({ ...p, first: 0 }));
   }, []);
 
+  const countOldLogs = useCallback(async (days: number): Promise<number> => {
+    try {
+      const resp = await fetch(`/api/v1/audit-logs/old/count?days=${days}`);
+      if (!resp.ok) throw new Error("Failed to count old logs");
+      const data = await resp.json();
+      return data.count || 0;
+    } catch (err) {
+      console.error("useAdminAuditLogs countOldLogs error:", err);
+      return 0;
+    }
+  }, []);
+
+  const deleteOldLogs = useCallback(
+    async (
+      days: number
+    ): Promise<{ success: boolean; deletedCount: number }> => {
+      try {
+        const resp = await fetch(`/api/v1/audit-logs/old?days=${days}`, {
+          method: "DELETE",
+        });
+        if (!resp.ok) throw new Error("Failed to delete old logs");
+        const data = await resp.json();
+        // Refresh the list after deletion
+        await fetchItems();
+        return { success: true, deletedCount: data.deletedCount || 0 };
+      } catch (err) {
+        console.error("useAdminAuditLogs deleteOldLogs error:", err);
+        return { success: false, deletedCount: 0 };
+      }
+    },
+    [fetchItems]
+  );
+
   return {
     items,
     loading,
@@ -179,5 +212,7 @@ export function useAdminAuditLogs(initialRows = 10) {
     handlePageChange,
     handleSort,
     setRows: (rows: number) => setLazyParams((p) => ({ ...p, rows })),
+    deleteOldLogs,
+    countOldLogs,
   };
 }

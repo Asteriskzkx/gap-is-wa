@@ -498,6 +498,53 @@ export class AuditLogController {
   }
 
   /**
+   * GET /api/v1/audit-logs/old/count?days=90 - นับจำนวน logs ที่เก่าเกินกำหนด (Admin only)
+   */
+  async countOldLogs(req: NextRequest): Promise<NextResponse> {
+    try {
+      const { authorized, error } = await checkAuthorization(req, [
+        UserRole.ADMIN,
+      ]);
+
+      if (!authorized) {
+        return NextResponse.json(
+          { message: error || "Unauthorized" },
+          { status: 401 }
+        );
+      }
+
+      const { searchParams } = new URL(req.url);
+      const daysStr = searchParams.get("days");
+
+      if (!daysStr) {
+        return NextResponse.json(
+          { message: "days parameter is required" },
+          { status: 400 }
+        );
+      }
+
+      const days = Number.parseInt(daysStr);
+
+      if (Number.isNaN(days) || days <= 0) {
+        return NextResponse.json(
+          { message: "Invalid days parameter" },
+          { status: 400 }
+        );
+      }
+
+      const count = await this.auditLogService.countOldLogs(days);
+
+      return NextResponse.json({ count }, { status: 200 });
+    } catch (err: any) {
+      console.error("AuditLogController.countOldLogs error:", err);
+      return NextResponse.json(
+        { message: err?.message || "Internal server error" },
+        { status: 500 }
+      );
+    }
+  }
+
+  /**
    * GET /api/v1/audit-logs/stats - ดึงสถิติ audit logs (Admin only)
    */
   async getStats(req: NextRequest): Promise<NextResponse> {
