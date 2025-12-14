@@ -310,7 +310,7 @@ export default function AdminUserManagementPage() {
             label="เพิ่มผู้ใช้"
             icon="pi pi-plus"
             onClick={() => setVisibleAddUserDialog(true)}
-            className="p-button-sm p-button-success"
+            className="p-button-sm p-button-success p-2"
           />
         </div>
       </div>
