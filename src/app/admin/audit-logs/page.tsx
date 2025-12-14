@@ -103,7 +103,7 @@ export default function AuditLogsPage() {
       const result = await deleteOldLogs(selectedDays);
       if (result.success) {
         toast.success(
-          `ลบ Audit Logs ที่เก่ากว่า ${selectedDays} วันสำเร็จ (ลบไปทั้งหมด ${result.deletedCount} รายการ)`
+          `ลบข้อมูลเก่าที่เก่ากว่า ${selectedDays} วันสำเร็จ (ลบไปทั้งหมด ${result.deletedCount} รายการ)`
         );
         setShowDeleteDialog(false);
       } else {
@@ -411,7 +411,7 @@ export default function AuditLogsPage() {
 
       {/* Delete Old Logs Dialog */}
       <Dialog
-        header="ล้างข้อมูล Audit Logs เก่า"
+        header="ล้างข้อมูลเก่า"
         visible={showDeleteDialog}
         style={{ width: "500px" }}
         onHide={() => setShowDeleteDialog(false)}
@@ -444,8 +444,8 @@ export default function AuditLogsPage() {
               </div>
               <div className="ml-3">
                 <p className="text-sm text-yellow-700">
-                  <strong>คำเตือน:</strong> การลบข้อมูล Audit Logs
-                  จะไม่สามารถกู้คืนได้ กรุณาพิจารณาอย่างรอบคอบก่อนดำเนินการ
+                  <strong>คำเตือน:</strong> การลบข้อมูลเก่า จะไม่สามารถกู้คืนได้
+                  กรุณาพิจารณาอย่างรอบคอบก่อนดำเนินการ
                 </p>
               </div>
             </div>
