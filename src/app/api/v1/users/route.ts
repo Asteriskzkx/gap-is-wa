@@ -21,7 +21,14 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  // Otherwise return all users
+  // Check if pagination params are provided - use new paginated endpoint
+  const hasPaginationParams = url.searchParams.has("skip") || url.searchParams.has("take") || url.searchParams.has("search") || url.searchParams.has("role");
+  
+  if (hasPaginationParams) {
+    return userController.getAllUsersWithPagination(req);
+  }
+
+  // Otherwise return all users (legacy support)
   return userController.getAll(req);
 }
 

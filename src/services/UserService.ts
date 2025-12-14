@@ -238,4 +238,27 @@ export class UserService extends BaseService<UserModel> {
       return base;
     });
   }
+
+  /**
+   * ดึง users พร้อม filter และ pagination (Server-side)
+   */
+  async getUsersWithFilterAndPagination(params: {
+    search?: string;
+    role?: string;
+    skip?: number;
+    take?: number;
+    sortField?: string;
+    sortOrder?: 'asc' | 'desc';
+  }): Promise<{ users: any[]; total: number }> {
+    try {
+      const result = await this.userRepository.findWithFilterAndPagination(params);
+      return {
+        users: result.users.map((user) => user.toJSON()),
+        total: result.total,
+      };
+    } catch (error) {
+      this.handleServiceError(error);
+      return { users: [], total: 0 };
+    }
+  }
 }
