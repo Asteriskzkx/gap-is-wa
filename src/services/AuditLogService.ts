@@ -113,6 +113,30 @@ export class AuditLogService extends BaseService<AuditLogModel> {
   }
 
   /**
+   * ดึง audit logs แบบ pagination พร้อม filter
+   */
+  async getLogsWithPagination(options?: {
+    tableName?: string;
+    recordId?: number;
+    userId?: number;
+    action?: string;
+    startDate?: Date;
+    endDate?: Date;
+    sortField?: string;
+    sortOrder?: "asc" | "desc";
+    multiSortMeta?: string | Array<{ field: string; order: number }>;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ data: AuditLogModel[]; total: number }> {
+    try {
+      return await this.auditLogRepository.findAllWithPagination(options);
+    } catch (error) {
+      this.handleServiceError(error);
+      return { data: [], total: 0 };
+    }
+  }
+
+  /**
    * ลบ audit log ตาม ID
    */
   async deleteLog(id: number): Promise<boolean> {
