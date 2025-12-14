@@ -37,13 +37,20 @@ export default function AuditLogsPage() {
   // Table name options
   const tableNameOptions = useMemo(
     () => [
-      { label: "Certificate", value: "Certificate" },
-      { label: "Inspection", value: "Inspection" },
-      { label: "RubberFarm", value: "RubberFarm" },
-      { label: "Farmer", value: "Farmer" },
-      { label: "User", value: "User" },
-      { label: "Committee", value: "Committee" },
-      { label: "Auditor", value: "Auditor" },
+      { label: "ผู้ใช้ (User)", value: "User" },
+      { label: "เกษตรกร (Farmer)", value: "Farmer" },
+      { label: "ผู้ตรวจประเมิน (Auditor)", value: "Auditor" },
+      { label: "คณะกรรมการ (Committee)", value: "Committee" },
+      { label: "ผู้ดูแลระบบ (Admin)", value: "Admin" },
+      { label: "แปลงสวนยางพารา (RubberFarm)", value: "RubberFarm" },
+      { label: "รายละเอียดการปลูก (PlantingDetail)", value: "PlantingDetail" },
+      { label: "การตรวจประเมิน (Inspection)", value: "Inspection" },
+      { label: "ข้อมูลประจำสวนยาง (DataRecord)", value: "DataRecord" },
+      {
+        label: "การให้คำปรึกษาและข้อบกพร่อง (AdviceAndDefect)",
+        value: "AdviceAndDefect",
+      },
+      { label: "ใบรับรอง (Certificate)", value: "Certificate" },
     ],
     []
   );
@@ -66,22 +73,38 @@ export default function AuditLogsPage() {
         sortable: true,
         headerAlign: "center" as const,
         bodyAlign: "center" as const,
-        // style: { width: "12%" },
+        style: { width: "9%" },
       },
       {
         field: "tableName",
         header: "ตาราง",
         sortable: true,
         headerAlign: "center" as const,
-        bodyAlign: "center" as const,
-        // style: { width: "12%" },
+        bodyAlign: "left" as const,
+        body: (r: any) => {
+          const tableLabelMap: Record<string, string> = {
+            User: "ผู้ใช้ (User)",
+            Farmer: "เกษตรกร (Farmer)",
+            Auditor: "ผู้ตรวจประเมิน (Auditor)",
+            Committee: "คณะกรรมการ (Committee)",
+            Admin: "ผู้ดูแลระบบ (Admin)",
+            RubberFarm: "แปลงสวนยางพารา (RubberFarm)",
+            PlantingDetail: "รายละเอียดการปลูก (PlantingDetail)",
+            Inspection: "การตรวจประเมิน (Inspection)",
+            DataRecord: "ข้อมูลประจำสวนยาง (DataRecord)",
+            AdviceAndDefect: "การให้คำปรึกษาและข้อบกพร่อง (AdviceAndDefect)",
+            Certificate: "ใบรับรอง (Certificate)",
+          };
+          return tableLabelMap[r.tableName] || r.tableName;
+        },
+        style: { width: "32%" },
       },
       {
         field: "action",
         header: "การดำเนินการ",
         sortable: true,
         headerAlign: "center" as const,
-        bodyAlign: "center" as const,
+        bodyAlign: "left" as const,
         body: (r: any) => {
           const colorMap: Record<string, string> = {
             CREATE: "text-green-600 font-semibold",
@@ -99,7 +122,7 @@ export default function AuditLogsPage() {
             </span>
           );
         },
-        // style: { width: "10%" },
+        style: { width: "17%" },
       },
       {
         field: "recordId",
@@ -107,7 +130,7 @@ export default function AuditLogsPage() {
         sortable: true,
         headerAlign: "center" as const,
         bodyAlign: "center" as const,
-        // style: { width: "8%" },
+        style: { width: "16%" },
       },
       {
         field: "userId",
@@ -116,7 +139,7 @@ export default function AuditLogsPage() {
         headerAlign: "center" as const,
         bodyAlign: "center" as const,
         body: (r: any) => r.userId ?? "-",
-        // style: { width: "8%" },
+        style: { width: "11%" },
       },
       //   {
       //     field: "oldData",
@@ -166,7 +189,7 @@ export default function AuditLogsPage() {
                 minute: "2-digit",
               })
             : "-",
-        // style: { width: "12%" },
+        style: { width: "15%" },
       },
     ],
     []
