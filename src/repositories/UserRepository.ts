@@ -101,4 +101,51 @@ export class UserRepository extends BaseRepository<UserModel> {
   private mapToModel(user: PrismaUser): UserModel {
     return this.mapper.toDomain(user);
   }
+
+  /**
+   * ค้นหา users พร้อม filter และ pagination (Server-side)
+   */
+  async findWithFilterAndPagination(params: {
+    search?: string;
+    role?: string;
+    skip?: number;
+    take?: number;
+  }): Promise<{ users: UserModel[]; total: number }> {
+    try {
+      const { search, role, skip = 0, take = 20 } = params;
+
+      // Build where clause
+      const where: any = {};
+
+      if (role) {
+        where.role = role;
+      }
+
+      if (search) {
+        where.OR = [
+          { name: { contains: search, mode: "insensitive" } },
+          { email: { contains: search, mode: "insensitive" } },
+        ];
+      }
+
+      // Execute queries in parallel
+      const [users, total] = await Promise.all([
+        this.prisma.user.findMany({
+          where,
+          orderBy: { createdAt: "desc" },
+          skip,
+          take,
+        }),
+        this.prisma.user.count({ where }),
+      ]);
+
+      return {
+        users: users.map((user) => this.mapToModel(user)),
+        total,
+      };
+    } catch (error) {
+      console.error("Error finding users with filter:", error);
+      return { users: [], total: 0 };
+    }
+  }
 }

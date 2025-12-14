@@ -236,4 +236,54 @@ export class UserController extends BaseController<UserModel> {
       return this.handleControllerError(error);
     }
   }
+
+  /**
+   * GET /api/v1/users - ดึง users พร้อม filter และ pagination (Admin only)
+   * Query params: search, role, skip, take
+   */
+  async getAllUsersWithPagination(req: NextRequest): Promise<NextResponse> {
+    try {
+      const { authorized, error } = await checkAuthorization(req, [
+        UserRole.ADMIN,
+      ]);
+
+      if (!authorized) {
+        return NextResponse.json(
+          { message: error || "Unauthorized" },
+          { status: 401 }
+        );
+      }
+
+      const { searchParams } = new URL(req.url);
+
+      // Parse query parameters
+      const search = searchParams.get("search") || undefined;
+      const role = searchParams.get("role") || undefined;
+      const skipStr = searchParams.get("skip");
+      const takeStr = searchParams.get("take");
+
+      // Parse pagination
+      const skip = skipStr ? parseInt(skipStr) : 0;
+      const take = takeStr ? parseInt(takeStr) : 20;
+
+      const result = await this.userService.getUsersWithFilterAndPagination({
+        search,
+        role,
+        skip: isNaN(skip) ? 0 : skip,
+        take: isNaN(take) ? 20 : Math.min(take, 100), // Max 100 per page
+      });
+
+      return NextResponse.json(
+        {
+          users: result.users,
+          total: result.total,
+          skip,
+          take,
+        },
+        { status: 200 }
+      );
+    } catch (error) {
+      return this.handleControllerError(error);
+    }
+  }
 }
