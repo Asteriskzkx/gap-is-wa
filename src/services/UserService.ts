@@ -132,13 +132,33 @@ export class UserService extends BaseService<UserModel> {
       // ถ้ามี userId ให้ query คนเดียว
       const user = await prisma.user.findUnique({
         where: { userId },
-        include: { admin: true, committee: true, farmer: true, auditor: true },
+        select: {
+          userId: true,
+          email: true,
+          role: true,
+          createdAt: true,
+          updatedAt: true,
+          admin: true,
+          committee: true,
+          farmer: true,
+          auditor: true,
+        },
       });
       users = user ? [user] : [];
     } else {
       // ถ้าไม่มี userId ให้ query ทุกคน
       users = await prisma.user.findMany({
-        include: { admin: true, committee: true, farmer: true, auditor: true },
+        select: {
+          userId: true,
+          email: true,
+          role: true,
+          createdAt: true,
+          updatedAt: true,
+          admin: true,
+          committee: true,
+          farmer: true,
+          auditor: true,
+        },
       });
     }
 
