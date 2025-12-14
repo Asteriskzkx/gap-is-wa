@@ -1,20 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { adminNavItems } from "@/config/navItems";
+import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useSession, signOut } from "next-auth/react";
+import { useEffect, useState } from "react";
 import FooterNew from "./FooterNew";
 import HeaderNew from "./HeaderNew";
 import SidebarComponent from "./SidebarNew";
-import { adminNavItems } from "@/config/navItems";
-
-// Icons
-import {
-  HomeIcon,
-  EditIcon,
-  XIcon,
-  FileIcon,
-} from "@/components/icons";
 
 interface AdminLayoutProps {
   readonly children: React.ReactNode;
@@ -40,10 +32,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [isMobile, setIsMobile] = useState(false);
   const navItems = adminNavItems;
 
-
   useEffect(() => {
     // ใช้ข้อมูลจาก NextAuth session แทน localStorage
-    if (status === "authenticated" && session?.user) { 
+    if (status === "authenticated" && session?.user) {
       const roleData = session.user.roleData;
       setAdmin({
         namePrefix: roleData?.namePrefix || "",
