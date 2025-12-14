@@ -42,6 +42,99 @@ export class AuditLogRepository extends BaseRepository<AuditLogModel> {
     }
   }
 
+  /**
+   * ค้นหา audit logs แบบ pagination พร้อม filter
+   */
+  async findAllWithPagination(options?: {
+    tableName?: string;
+    recordId?: number;
+    userId?: number;
+    action?: string;
+    startDate?: Date;
+    endDate?: Date;
+    sortField?: string;
+    sortOrder?: "asc" | "desc";
+    multiSortMeta?: string | Array<{ field: string; order: number }>;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ data: AuditLogModel[]; total: number }> {
+    try {
+      const where: any = {};
+
+      if (options?.tableName) {
+        where.tableName = options.tableName;
+      }
+
+      if (options?.recordId !== undefined) {
+        where.recordId = options.recordId;
+      }
+
+      if (options?.userId !== undefined) {
+        where.userId = options.userId;
+      }
+
+      if (options?.action) {
+        where.action = options.action;
+      }
+
+      if (options?.startDate || options?.endDate) {
+        where.createdAt = {};
+        if (options.startDate) {
+          where.createdAt.gte = options.startDate;
+        }
+        if (options.endDate) {
+          where.createdAt.lte = options.endDate;
+        }
+      }
+
+      // Handle multiSortMeta
+      let multiSortArr: Array<{ field: string; order: number }> | undefined;
+      if (typeof options?.multiSortMeta === "string") {
+        try {
+          multiSortArr = JSON.parse(options.multiSortMeta as string);
+        } catch (e) {
+          multiSortArr = undefined;
+        }
+      } else {
+        multiSortArr = options?.multiSortMeta as
+          | Array<{ field: string; order: number }>
+          | undefined;
+      }
+
+      let orderBy: any = {};
+      if (multiSortArr && multiSortArr.length > 0) {
+        orderBy = multiSortArr.map((sort) => ({
+          [sort.field]: sort.order === 1 ? "asc" : "desc",
+        }));
+      } else if (options?.sortField) {
+        orderBy = { [options.sortField]: options.sortOrder || "desc" };
+      } else {
+        orderBy = { createdAt: "desc" };
+      }
+
+      const limit = options?.limit ?? 10;
+      const offset = options?.offset ?? 0;
+
+      const [records, total] = await Promise.all([
+        (this.prisma as any).auditLog.findMany({
+          where,
+          orderBy,
+          skip: offset,
+          take: limit,
+        }),
+        (this.prisma as any).auditLog.count({ where }),
+      ]);
+
+      return {
+        data: records.map((r: any) => this.mapper.toDomain(r)),
+        total,
+      };
+    } catch (error) {
+      console.error("Error finding audit logs with pagination:", error);
+      return { data: [], total: 0 };
+    }
+  }
+
   async update(
     id: number,
     data: Partial<AuditLogModel>

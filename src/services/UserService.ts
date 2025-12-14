@@ -132,13 +132,33 @@ export class UserService extends BaseService<UserModel> {
       // ถ้ามี userId ให้ query คนเดียว
       const user = await prisma.user.findUnique({
         where: { userId },
-        include: { admin: true, committee: true, farmer: true, auditor: true },
+        select: {
+          userId: true,
+          email: true,
+          role: true,
+          createdAt: true,
+          updatedAt: true,
+          admin: true,
+          committee: true,
+          farmer: true,
+          auditor: true,
+        },
       });
       users = user ? [user] : [];
     } else {
       // ถ้าไม่มี userId ให้ query ทุกคน
       users = await prisma.user.findMany({
-        include: { admin: true, committee: true, farmer: true, auditor: true },
+        select: {
+          userId: true,
+          email: true,
+          role: true,
+          createdAt: true,
+          updatedAt: true,
+          admin: true,
+          committee: true,
+          farmer: true,
+          auditor: true,
+        },
       });
     }
 
@@ -217,5 +237,28 @@ export class UserService extends BaseService<UserModel> {
 
       return base;
     });
+  }
+
+  /**
+   * ดึง users พร้อม filter และ pagination (Server-side)
+   */
+  async getUsersWithFilterAndPagination(params: {
+    search?: string;
+    role?: string;
+    skip?: number;
+    take?: number;
+    sortField?: string;
+    sortOrder?: 'asc' | 'desc';
+  }): Promise<{ users: any[]; total: number }> {
+    try {
+      const result = await this.userRepository.findWithFilterAndPagination(params);
+      return {
+        users: result.users.map((user) => user.toJSON()),
+        total: result.total,
+      };
+    } catch (error) {
+      this.handleServiceError(error);
+      return { users: [], total: 0 };
+    }
   }
 }

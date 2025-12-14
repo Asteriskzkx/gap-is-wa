@@ -2,44 +2,60 @@
 
 import AdminLayout from "@/components/layout/AdminLayout";
 import { useRouter } from "next/navigation";
-import { FilterMatchMode } from "primereact/api";
 import { Column } from "primereact/column";
-import { DataTable } from "primereact/datatable";
+import { DataTable, DataTablePageEvent } from "primereact/datatable";
 import { Dropdown } from "primereact/dropdown";
 import { InputText } from "primereact/inputtext";
 import { Tag } from "primereact/tag";
 import { Menu } from "primereact/menu";
 import { Toast } from "primereact/toast";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useCallback, useState, useMemo } from "react";
 import { Button } from "primereact/button";
 import { Dialog } from "primereact/dialog";
 import { AddUserDialog } from "@/components/admin/AddUserDialog";
 
+type User = {
+  userId: number;
+  name: string;
+  email: string;
+  role: string;
+  createdAt: string;
+};
+
+enum UserRole {
+  BASIC = "BASIC",
+  FARMER = "FARMER",
+  AUDITOR = "AUDITOR",
+  COMMITTEE = "COMMITTEE",
+  ADMIN = "ADMIN",
+}
+
+const rowsPerPageOptions = [10, 25, 50, 100];
+const DEBOUNCE_DELAY = 500; // milliseconds
+
 export default function AdminUserManagementPage() {
-  const [users, setUsers] = React.useState<User[]>([]);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<Error | null>(null);
-  const [globalFilter, setGlobalFilter] = React.useState<string>("");
-  const [roleFilter, setRoleFilter] = React.useState<string | null>(null);
-  const [deleteVisible, setDeleteVisible] = React.useState(false);
-  const [selectedId, setSelectedId] = React.useState<number | null>(null);
-  const [visibleAddUserDialog, setVisibleAddUserDialog] = React.useState(false);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [deleteVisible, setDeleteVisible] = useState(false);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [visibleAddUserDialog, setVisibleAddUserDialog] = useState(false);
 
-  type User = {
-    userId: number;
-    name: string;
-    email: string;
-    role: string;
-    createdAt: string;
-  };
+  // Server-side pagination state
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [first, setFirst] = useState(0);
+  const [rows, setRows] = useState(10);
 
-  enum UserRole {
-    BASIC = "BASIC",
-    FARMER = "FARMER",
-    AUDITOR = "AUDITOR",
-    COMMITTEE = "COMMITTEE",
-    ADMIN = "ADMIN",
-  }
+  // Sort state
+  const [sortField, setSortField] = useState<string>('createdAt');
+  const [sortOrder, setSortOrder] = useState<1 | -1>(-1);
+
+  // Filter state - realtime with debounce
+  const [searchInput, setSearchInput] = useState<string>("");
+  const [roleInput, setRoleInput] = useState<string | null>(null);
+  
+  // Debounced search value
+  const [debouncedSearch, setDebouncedSearch] = useState<string>("");
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const router = useRouter();
   const toast = useRef<Toast | null>(null);
@@ -84,23 +100,103 @@ export default function AdminUserManagementPage() {
     });
   }
 
+  // Debounce search input
+  useEffect(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    
+    debounceTimerRef.current = setTimeout(() => {
+      setDebouncedSearch(searchInput);
+    }, DEBOUNCE_DELAY);
 
-  const fetchUsers = React.useCallback(async () => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [searchInput]);
+
+  // Current filters (memoized)
+  const currentFilters = useMemo(() => ({
+    search: debouncedSearch,
+    role: roleInput,
+  }), [debouncedSearch, roleInput]);
+
+  // Build query string from filters, pagination and sorting
+  const buildQueryString = useCallback((skip: number, take: number, filters: { search: string; role: string | null }, sort: { field: string; order: 1 | -1 }) => {
+    const params = new URLSearchParams();
+    params.set("skip", skip.toString());
+    params.set("take", take.toString());
+    
+    if (filters.search) params.set("search", filters.search);
+    if (filters.role) params.set("role", filters.role);
+    if (sort.field) params.set("sortField", sort.field);
+    params.set("sortOrder", sort.order.toString());
+    
+    return params.toString();
+  }, []);
+
+  // Fetch users with server-side filtering, pagination and sorting
+  const fetchUsers = useCallback(async (skip: number, take: number, filters: { search: string; role: string | null }, sort: { field: string; order: 1 | -1 }) => {
     setLoading(true);
     try {
-      const res = await fetch("/api/v1/users", { cache: "no-store" });
+      const queryString = buildQueryString(skip, take, filters, sort);
+      const res = await fetch(`/api/v1/users?${queryString}`, { cache: "no-store" });
       const data = await res.json();
-      setUsers(Array.isArray(data) ? data : []);
+      setUsers(Array.isArray(data.users) ? data.users : []);
+      setTotalRecords(data.total || 0);
     } catch (err) {
-      setError(err as Error);
+      console.error("Error fetching users:", err);
     } finally {
       setLoading(false);
     }
+  }, [buildQueryString]);
+
+  // Current sort (memoized)
+  const currentSort = useMemo(() => ({
+    field: sortField,
+    order: sortOrder,
+  }), [sortField, sortOrder]);
+
+  // Initial load
+  useEffect(() => {
+    fetchUsers(0, rows, currentFilters, currentSort);
   }, []);
 
+  // Refetch when filters change (realtime with debounce)
   useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+    fetchUsers(0, rows, currentFilters, currentSort);
+    setFirst(0); // Reset to first page when filters change
+  }, [currentFilters, rows, fetchUsers, currentSort]);
+
+  // Handle pagination change
+  const handlePageChange = (event: DataTablePageEvent) => {
+    setFirst(event.first);
+    setRows(event.rows);
+    fetchUsers(event.first, event.rows, currentFilters, currentSort);
+  };
+
+  // Handle sort change
+  const handleSort = (event: { sortField: string; sortOrder: 1 | -1 | 0 | null | undefined }) => {
+    const newSortField = event.sortField || 'createdAt';
+    const newSortOrder = event.sortOrder === 1 ? 1 : -1;
+    setSortField(newSortField);
+    setSortOrder(newSortOrder);
+    fetchUsers(first, rows, currentFilters, { field: newSortField, order: newSortOrder });
+  };
+
+  // Clear filters
+  const handleClearFilters = () => {
+    setSearchInput("");
+    setRoleInput(null);
+    setDebouncedSearch("");
+  };
+
+  // Handle role change - immediate filter
+  const handleRoleChange = (e: { value: string | null }) => {
+    setRoleInput(e.value);
+  };
 
   const dateTemplate = (rowData: User) => {
     if (!rowData.createdAt) return "";
@@ -190,34 +286,67 @@ export default function AdminUserManagementPage() {
     );
   };
 
-  const tableHeader = (
-    <div className="flex items-center flex-col md:flex-row justify-between gap-2">
-      <InputText
-        value={globalFilter}
-        onChange={(e) => setGlobalFilter((e.target as HTMLInputElement).value)}
-        placeholder="Search by name, email or role"
-      ></InputText>
+  // Check if currently debouncing (search input differs from debounced value)
+  const isDebouncing = searchInput !== debouncedSearch;
 
-      <Dropdown
-        value={roleFilter}
-        options={roleOptions}
-        onChange={(e) => setRoleFilter(e.value)}
-        placeholder="Filter by role"
-        showClear
-      ></Dropdown>
-      <div className="flex gap-2 w-auto h-10">
-        <Button
-          label="รีเฟรช"
-          icon="pi pi-refresh"
-          onClick={fetchUsers}
-          className="w-full hover:bg-gray-200 p-button-sm px-4 text-nowrap "
-        />
-        <Button
-          label="เพิ่มผู้ใช้"
-          icon="pi pi-plus"
-          onClick={() => setVisibleAddUserDialog(true)}
-          className="w-full p-button-sm px-4 text-nowrap p-button-success"
-        />
+  const tableHeader = (
+    <div className="flex flex-col gap-3">
+      {/* Row 1: Filters and Actions */}
+      <div className="flex flex-col lg:flex-row gap-3">
+        {/* Search and Filter Group */}
+        <div className="flex flex-col sm:flex-row gap-2 flex-1">
+          <InputText
+            value={searchInput}
+            onChange={(e) => setSearchInput((e.target as HTMLInputElement).value)}
+            placeholder="ค้นหาชื่อหรืออีเมล..."
+            style={{ width: '200px' }}
+          />
+          <Dropdown
+            value={roleInput}
+            options={roleOptions}
+            onChange={handleRoleChange}
+            placeholder="เลือก Role"
+            showClear
+            style={{ width: '200px' }}
+          />
+          <Button
+            icon="pi pi-filter-slash"
+            tooltip="ล้างตัวกรอง"
+            onClick={handleClearFilters}
+            className="p-button-sm p-button-outlined"
+            disabled={loading}
+          />
+        </div>
+        
+        {/* Action Buttons */}
+        <div className="flex gap-2">
+          <Button
+            label="รีเฟรช"
+            icon="pi pi-refresh"
+            onClick={() => fetchUsers(first, rows, currentFilters, currentSort)}
+            className="p-button-sm p-button-outlined"
+            disabled={loading}
+          />
+          <Button
+            label="เพิ่มผู้ใช้"
+            icon="pi pi-plus"
+            onClick={() => setVisibleAddUserDialog(true)}
+            className="p-button-sm p-button-success p-2"
+          />
+        </div>
+      </div>
+      
+      {/* Row 2: Debouncing indicator */}
+      {isDebouncing && (
+        <div className="text-sm text-blue-600">
+          <i className="pi pi-spin pi-spinner mr-1"></i>
+          กำลังรอค้นหา...
+        </div>
+      )}
+      
+      {/* Row 3: Record count */}
+      <div className="text-sm text-gray-500">
+        แสดง {users.length} จาก {totalRecords.toLocaleString()} รายการ
       </div>
     </div>
   );
@@ -244,24 +373,18 @@ export default function AdminUserManagementPage() {
             <DataTable
               value={users}
               header={tableHeader}
-              globalFilter={globalFilter}
-              globalFilterFields={["name", "email", "role"]}
-              filters={
-                roleFilter
-                  ? {
-                      role: {
-                        value: roleFilter,
-                        matchMode: FilterMatchMode.EQUALS,
-                      },
-                    }
-                  : {}
-              } // added
               loading={loading}
+              lazy
               paginator
-              paginatorLeft
+              first={first}
+              rows={rows}
+              totalRecords={totalRecords}
+              onPage={handlePageChange}
+              sortField={sortField}
+              sortOrder={sortOrder}
+              onSort={handleSort}
               paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
-              rows={10}
-              rowsPerPageOptions={[10, 25, 50, 100]}
+              rowsPerPageOptions={rowsPerPageOptions}
               tableStyle={{ minWidth: "50rem" }}
               stripedRows
               resizableColumns
@@ -323,7 +446,7 @@ export default function AdminUserManagementPage() {
                         method: "DELETE",
                       });
                       setDeleteVisible(false);
-                      await fetchUsers(); 
+                      await fetchUsers(first, rows, currentFilters, currentSort); 
                       showSuccessDelete();
                       
                     } catch (error) {
@@ -338,7 +461,9 @@ export default function AdminUserManagementPage() {
             <AddUserDialog
               visible={visibleAddUserDialog}
               onHide={() => setVisibleAddUserDialog(false)}
-              onCreated={fetchUsers}
+              onCreated={async () => {
+                await fetchUsers(first, rows, currentFilters, currentSort);
+              }}
               showSuccess={showSuccessCreated}
               showError={showErrorCreated}
             />

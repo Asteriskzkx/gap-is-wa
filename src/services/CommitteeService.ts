@@ -96,18 +96,36 @@ export class CommitteeService extends BaseService<CommitteeModel> {
 
   async updateCommitteeProfile(
     committeeId: number,
-    data: Partial<CommitteeModel>
+    data: Partial<CommitteeModel>,
+    currentVersion?: number
   ): Promise<CommitteeModel | null> {
     try {
-      // If updating email, check if it's already in use
+      // If updating email, check if it's already in use by another account
       if (data.email) {
+        // First, get the current committee to find the associated userId
+        const currentCommittee = await this.committeeRepository.findById(committeeId);
+        if (!currentCommittee) {
+          return null;
+        }
+
         const existingUser = await this.userService.findByEmail(data.email);
-        if (existingUser && existingUser.id !== data.id) {
+        // Only throw error if email belongs to a different user (currentCommittee.id is userId from BaseModel)
+        if (existingUser && existingUser.id !== currentCommittee.id) {
           throw new Error("Email is already in use by another account");
         }
       }
 
-      return await this.update(committeeId, data);
+      if (currentVersion !== undefined) {
+        // Use optimistic locking
+        return await this.committeeRepository.updateWithLock(
+          committeeId,
+          data,
+          currentVersion
+        );
+      } else {
+        // Fallback to regular update
+        return await this.update(committeeId, data);
+      }
     } catch (error) {
       this.handleServiceError(error);
       throw error;

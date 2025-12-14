@@ -29,7 +29,7 @@ export type CommitteeInfo = {
   namePrefix: string;
   firstName: string;
   lastName: string;
-  
+
   // System/Metadata Fields
   createdAt: Date; // ⏱ icon suggests a Date/Time type
   updatedAt: Date; // ⏱ icon suggests a Date/Time type
@@ -69,7 +69,7 @@ export type FarmerInfo = {
   updatedAt: Date; // ⏱ icon suggests a Date/Time type
   userId: number; // Foreign Key, connects to User table
   version: number;
-}
+};
 
 export type NormalizedUser = {
   userId: number;
@@ -83,5 +83,3 @@ export type NormalizedUser = {
   farmer?: FarmerInfo;
   auditor?: AuditorInfo;
 };
-
-

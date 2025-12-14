@@ -7,6 +7,7 @@ import { BaseRepository } from "./BaseRepository";
 import { CommitteeModel } from "../models/CommitteeModel";
 import { UserRole } from "../models/UserModel";
 import { BaseMapper } from "../mappers/BaseMapper";
+import { OptimisticLockError } from "../errors/OptimisticLockError";
 
 export class CommitteeRepository extends BaseRepository<CommitteeModel> {
   constructor(mapper: BaseMapper<any, CommitteeModel>) {
@@ -113,27 +114,29 @@ export class CommitteeRepository extends BaseRepository<CommitteeModel> {
         return null;
       }
 
+      // Prepare user data - only include defined values
+      const userData: any = { updatedAt: new Date() };
+      if (data.email !== undefined) userData.email = data.email;
+      if (data.name !== undefined) userData.name = data.name;
+
+      // Prepare committee data - only include defined values
+      const committeeData: any = { updatedAt: new Date() };
+      if (data.namePrefix !== undefined) committeeData.namePrefix = data.namePrefix;
+      if (data.firstName !== undefined) committeeData.firstName = data.firstName;
+      if (data.lastName !== undefined) committeeData.lastName = data.lastName;
+
       // Start a transaction to update both User and Committee
       const [updatedUser, updatedCommittee] = await this.prisma.$transaction([
         // Update User record
         this.prisma.user.update({
           where: { userId: existingCommittee.userId },
-          data: {
-            email: data.email,
-            name: data.name,
-            updatedAt: new Date(),
-          },
+          data: userData,
         }),
 
         // Update Committee record
         this.prisma.committee.update({
           where: { committeeId: id },
-          data: {
-            namePrefix: data.namePrefix,
-            firstName: data.firstName,
-            lastName: data.lastName,
-            updatedAt: new Date(),
-          },
+          data: committeeData,
         }),
       ]);
 
@@ -173,5 +176,70 @@ export class CommitteeRepository extends BaseRepository<CommitteeModel> {
     committee: PrismaCommittee
   ): CommitteeModel {
     return this.mapper.toDomain({ user, committee });
+  }
+
+  /**
+   * Update committee with optimistic locking
+   */
+  async updateWithLock(
+    id: number,
+    data: Partial<CommitteeModel>,
+    currentVersion: number
+  ): Promise<CommitteeModel> {
+    try {
+      // First, find the committee to get the userId and verify version
+      const existingCommittee = await this.prisma.committee.findUnique({
+        where: { committeeId: id },
+        select: { userId: true, version: true },
+      });
+
+      if (!existingCommittee) {
+        throw new Error(`Committee with ID ${id} not found`);
+      }
+
+      // Check version for optimistic locking
+      if (existingCommittee.version !== currentVersion) {
+        throw new OptimisticLockError(
+          "committee",
+          id,
+          currentVersion,
+          existingCommittee.version ?? -1
+        );
+      }
+
+      // Prepare user data - only include defined values
+      const userData: any = { updatedAt: new Date() };
+      if (data.email !== undefined) userData.email = data.email;
+      if (data.name !== undefined) userData.name = data.name;
+
+      // Prepare committee data - only include defined values
+      const committeeData: any = {
+        version: currentVersion + 1,
+        updatedAt: new Date(),
+      };
+      if (data.namePrefix !== undefined) committeeData.namePrefix = data.namePrefix;
+      if (data.firstName !== undefined) committeeData.firstName = data.firstName;
+      if (data.lastName !== undefined) committeeData.lastName = data.lastName;
+
+      // Start a transaction to update both User and Committee
+      const [updatedUser, updatedCommittee] = await this.prisma.$transaction([
+        this.prisma.user.update({
+          where: { userId: existingCommittee.userId },
+          data: userData,
+        }),
+        this.prisma.committee.update({
+          where: { committeeId: id },
+          data: committeeData,
+        }),
+      ]);
+
+      return this.mapToModel(updatedUser, updatedCommittee);
+    } catch (error) {
+      if (error instanceof OptimisticLockError) {
+        throw error;
+      }
+      console.error("Error updating committee with optimistic lock:", error);
+      throw error;
+    }
   }
 }

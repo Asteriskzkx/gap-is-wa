@@ -114,19 +114,36 @@ export class AuditorService extends BaseService<AuditorModel> {
 
   async updateAuditorProfile(
     auditorId: number,
-    data: Partial<AuditorModel>
+    data: Partial<AuditorModel>,
+    currentVersion?: number
   ): Promise<AuditorModel | null> {
-    // เปลี่ยนจาก string เป็น number
     try {
-      // If updating email, check if it's already in use
+      // If updating email, check if it's already in use by another account
       if (data.email) {
+        // First, get the current auditor to find the associated userId
+        const currentAuditor = await this.auditorRepository.findById(auditorId);
+        if (!currentAuditor) {
+          return null;
+        }
+
         const existingUser = await this.userService.findByEmail(data.email);
-        if (existingUser && existingUser.id !== data.id) {
+        // Only throw error if email belongs to a different user (currentAuditor.id is userId from BaseModel)
+        if (existingUser && existingUser.id !== currentAuditor.id) {
           throw new Error("Email is already in use by another account");
         }
       }
 
-      return await this.update(auditorId, data);
+      if (currentVersion !== undefined) {
+        // Use optimistic locking
+        return await this.auditorRepository.updateWithLock(
+          auditorId,
+          data,
+          currentVersion
+        );
+      } else {
+        // Fallback to regular update
+        return await this.update(auditorId, data);
+      }
     } catch (error) {
       this.handleServiceError(error);
       throw error;

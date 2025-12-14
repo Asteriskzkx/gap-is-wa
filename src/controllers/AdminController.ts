@@ -4,6 +4,7 @@ import { AdminModel } from "../models/AdminModel";
 import { AdminService } from "../services/AdminService";
 import { UserRole } from "../models/UserModel";
 import { requireValidId, isValidId } from "../utils/ParamUtils";
+import { OptimisticLockError } from "../errors/OptimisticLockError";
 
 export class AdminController extends BaseController<AdminModel> {
   private adminService: AdminService;
@@ -123,10 +124,12 @@ export class AdminController extends BaseController<AdminModel> {
       }
 
       const data = await req.json();
+      const { version, ...updateData } = data;
 
       const updatedAdmin = await this.adminService.updateAdminProfile(
         adminId,
-        data
+        updateData,
+        version
       );
 
       if (!updatedAdmin) {
@@ -138,6 +141,10 @@ export class AdminController extends BaseController<AdminModel> {
 
       return NextResponse.json(updatedAdmin.toJSON(), { status: 200 });
     } catch (error: any) {
+      // Handle optimistic lock error
+      if (error instanceof OptimisticLockError) {
+        return NextResponse.json(error.toJSON(), { status: 409 });
+      }
       if (error.message.includes("already in use")) {
         return NextResponse.json({ message: error.message }, { status: 409 });
       }

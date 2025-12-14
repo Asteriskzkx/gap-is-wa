@@ -1,11 +1,12 @@
 import React, { useMemo } from "react";
-import { NormalizedUser } from "@/types/UserType";
+import { NormalizedUser, CommitteeInfo } from "@/types/UserType";
 import BaseUserForm, { BaseUserFormValues } from "./BaseUserForm";
 
 type Props = {
   user: NormalizedUser;
+  onSuccess?: (updated: CommitteeInfo) => void;
 };
-export default function CommitteeEditForm({ user }: Props) {
+export default function CommitteeEditForm({ user, onSuccess }: Props) {
   const initialValues: BaseUserFormValues = useMemo(
     () => ({
       namePrefix: user.committee?.namePrefix ?? "",
@@ -16,11 +17,15 @@ export default function CommitteeEditForm({ user }: Props) {
     [user]
   );
 
-  const submit = async (values: BaseUserFormValues) => {
-    const res = await fetch(`/api/committees/${user.userId}`, {
+  const submit = async (values: BaseUserFormValues): Promise<CommitteeInfo> => {
+    const payload = {
+      ...values,
+      version: user.committee?.version || 0,
+    };
+    const res = await fetch(`/api/v1/committees/${user.committee?.committeeId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(values),
+      body: JSON.stringify(payload),
     });
     if (!res.ok) {
       let msg = "บันทึกไม่สำเร็จ";
@@ -30,6 +35,9 @@ export default function CommitteeEditForm({ user }: Props) {
       } catch {}
       throw new Error(msg);
     }
+    
+    const updated: CommitteeInfo = await res.json();
+    return updated;
   };
 
   return (
@@ -54,6 +62,7 @@ export default function CommitteeEditForm({ user }: Props) {
         <BaseUserForm
           defaultValues={initialValues}
           onSubmit={submit}
+          onSuccess={onSuccess}
           successMessage="บันทึกข้อมูลคณะกรรมการเรียบร้อย"
           errorMessage="บันทึกข้อมูลคณะกรรมการไม่สำเร็จ"
         />
