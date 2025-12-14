@@ -45,6 +45,10 @@ export default function AdminUserManagementPage() {
   const [first, setFirst] = useState(0);
   const [rows, setRows] = useState(10);
 
+  // Sort state
+  const [sortField, setSortField] = useState<string>('createdAt');
+  const [sortOrder, setSortOrder] = useState<1 | -1>(-1);
+
   // Filter state - realtime with debounce
   const [searchInput, setSearchInput] = useState<string>("");
   const [roleInput, setRoleInput] = useState<string | null>(null);
@@ -119,23 +123,25 @@ export default function AdminUserManagementPage() {
     role: roleInput,
   }), [debouncedSearch, roleInput]);
 
-  // Build query string from filters and pagination
-  const buildQueryString = useCallback((skip: number, take: number, filters: { search: string; role: string | null }) => {
+  // Build query string from filters, pagination and sorting
+  const buildQueryString = useCallback((skip: number, take: number, filters: { search: string; role: string | null }, sort: { field: string; order: 1 | -1 }) => {
     const params = new URLSearchParams();
     params.set("skip", skip.toString());
     params.set("take", take.toString());
     
     if (filters.search) params.set("search", filters.search);
     if (filters.role) params.set("role", filters.role);
+    if (sort.field) params.set("sortField", sort.field);
+    params.set("sortOrder", sort.order.toString());
     
     return params.toString();
   }, []);
 
-  // Fetch users with server-side filtering and pagination
-  const fetchUsers = useCallback(async (skip: number, take: number, filters: { search: string; role: string | null }) => {
+  // Fetch users with server-side filtering, pagination and sorting
+  const fetchUsers = useCallback(async (skip: number, take: number, filters: { search: string; role: string | null }, sort: { field: string; order: 1 | -1 }) => {
     setLoading(true);
     try {
-      const queryString = buildQueryString(skip, take, filters);
+      const queryString = buildQueryString(skip, take, filters, sort);
       const res = await fetch(`/api/v1/users?${queryString}`, { cache: "no-store" });
       const data = await res.json();
       setUsers(Array.isArray(data.users) ? data.users : []);
@@ -147,22 +153,37 @@ export default function AdminUserManagementPage() {
     }
   }, [buildQueryString]);
 
+  // Current sort (memoized)
+  const currentSort = useMemo(() => ({
+    field: sortField,
+    order: sortOrder,
+  }), [sortField, sortOrder]);
+
   // Initial load
   useEffect(() => {
-    fetchUsers(0, rows, currentFilters);
+    fetchUsers(0, rows, currentFilters, currentSort);
   }, []);
 
   // Refetch when filters change (realtime with debounce)
   useEffect(() => {
-    fetchUsers(0, rows, currentFilters);
+    fetchUsers(0, rows, currentFilters, currentSort);
     setFirst(0); // Reset to first page when filters change
-  }, [currentFilters, rows, fetchUsers]);
+  }, [currentFilters, rows, fetchUsers, currentSort]);
 
   // Handle pagination change
   const handlePageChange = (event: DataTablePageEvent) => {
     setFirst(event.first);
     setRows(event.rows);
-    fetchUsers(event.first, event.rows, currentFilters);
+    fetchUsers(event.first, event.rows, currentFilters, currentSort);
+  };
+
+  // Handle sort change
+  const handleSort = (event: { sortField: string; sortOrder: 1 | -1 | 0 | null | undefined }) => {
+    const newSortField = event.sortField || 'createdAt';
+    const newSortOrder = event.sortOrder === 1 ? 1 : -1;
+    setSortField(newSortField);
+    setSortOrder(newSortOrder);
+    fetchUsers(first, rows, currentFilters, { field: newSortField, order: newSortOrder });
   };
 
   // Clear filters
@@ -302,7 +323,7 @@ export default function AdminUserManagementPage() {
           <Button
             label="รีเฟรช"
             icon="pi pi-refresh"
-            onClick={() => fetchUsers(first, rows, currentFilters)}
+            onClick={() => fetchUsers(first, rows, currentFilters, currentSort)}
             className="p-button-sm p-button-outlined"
             disabled={loading}
           />
@@ -359,6 +380,9 @@ export default function AdminUserManagementPage() {
               rows={rows}
               totalRecords={totalRecords}
               onPage={handlePageChange}
+              sortField={sortField}
+              sortOrder={sortOrder}
+              onSort={handleSort}
               paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink RowsPerPageDropdown"
               rowsPerPageOptions={rowsPerPageOptions}
               tableStyle={{ minWidth: "50rem" }}
@@ -422,7 +446,7 @@ export default function AdminUserManagementPage() {
                         method: "DELETE",
                       });
                       setDeleteVisible(false);
-                      await fetchUsers(first, rows, currentFilters); 
+                      await fetchUsers(first, rows, currentFilters, currentSort); 
                       showSuccessDelete();
                       
                     } catch (error) {
@@ -438,7 +462,7 @@ export default function AdminUserManagementPage() {
               visible={visibleAddUserDialog}
               onHide={() => setVisibleAddUserDialog(false)}
               onCreated={async () => {
-                await fetchUsers(first, rows, currentFilters);
+                await fetchUsers(first, rows, currentFilters, currentSort);
               }}
               showSuccess={showSuccessCreated}
               showError={showErrorCreated}

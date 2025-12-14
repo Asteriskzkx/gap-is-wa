@@ -247,6 +247,8 @@ export class UserService extends BaseService<UserModel> {
     role?: string;
     skip?: number;
     take?: number;
+    sortField?: string;
+    sortOrder?: 'asc' | 'desc';
   }): Promise<{ users: any[]; total: number }> {
     try {
       const result = await this.userRepository.findWithFilterAndPagination(params);

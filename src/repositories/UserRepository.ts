@@ -110,9 +110,11 @@ export class UserRepository extends BaseRepository<UserModel> {
     role?: string;
     skip?: number;
     take?: number;
+    sortField?: string;
+    sortOrder?: 'asc' | 'desc';
   }): Promise<{ users: UserModel[]; total: number }> {
     try {
-      const { search, role, skip = 0, take = 20 } = params;
+      const { search, role, skip = 0, take = 20, sortField = 'createdAt', sortOrder = 'desc' } = params;
 
       // Build where clause
       const where: any = {};
@@ -128,11 +130,16 @@ export class UserRepository extends BaseRepository<UserModel> {
         ];
       }
 
+      // Build orderBy - validate sortField to prevent injection
+      const validSortFields = ['userId', 'name', 'email', 'role', 'createdAt'];
+      const safeSortField = validSortFields.includes(sortField) ? sortField : 'createdAt';
+      const orderBy = { [safeSortField]: sortOrder };
+
       // Execute queries in parallel
       const [users, total] = await Promise.all([
         this.prisma.user.findMany({
           where,
-          orderBy: { createdAt: "desc" },
+          orderBy,
           skip,
           take,
         }),

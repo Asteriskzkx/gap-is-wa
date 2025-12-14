@@ -239,7 +239,7 @@ export class UserController extends BaseController<UserModel> {
 
   /**
    * GET /api/v1/users - ดึง users พร้อม filter และ pagination (Admin only)
-   * Query params: search, role, skip, take
+   * Query params: search, role, skip, take, sortField, sortOrder
    */
   async getAllUsersWithPagination(req: NextRequest): Promise<NextResponse> {
     try {
@@ -261,16 +261,23 @@ export class UserController extends BaseController<UserModel> {
       const role = searchParams.get("role") || undefined;
       const skipStr = searchParams.get("skip");
       const takeStr = searchParams.get("take");
+      const sortField = searchParams.get("sortField") || undefined;
+      const sortOrderParam = searchParams.get("sortOrder");
 
       // Parse pagination
       const skip = skipStr ? parseInt(skipStr) : 0;
       const take = takeStr ? parseInt(takeStr) : 20;
+      
+      // Parse sort order (1 = asc, -1 = desc from PrimeReact)
+      const sortOrder: 'asc' | 'desc' = sortOrderParam === '1' ? 'asc' : 'desc';
 
       const result = await this.userService.getUsersWithFilterAndPagination({
         search,
         role,
         skip: isNaN(skip) ? 0 : skip,
         take: isNaN(take) ? 20 : Math.min(take, 100), // Max 100 per page
+        sortField,
+        sortOrder,
       });
 
       return NextResponse.json(
