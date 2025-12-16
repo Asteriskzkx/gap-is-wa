@@ -102,15 +102,19 @@ const auditLogRepository = new AuditLogRepository(auditLogMapper);
 
 // Services
 
+const auditLogService = new AuditLogService(auditLogRepository);
+
 const userService = new UserService(userRepository);
 const farmerService = new FarmerService(farmerRepository, userService);
 const plantingDetailService = new PlantingDetailService(
-  plantingDetailRepository
+  plantingDetailRepository,
+  auditLogService
 );
 const rubberFarmService = new RubberFarmService(
   rubberFarmRepository,
   plantingDetailRepository,
-  inspectionRepository
+  inspectionRepository,
+  auditLogService
 );
 const auditorService = new AuditorService(
   auditorRepository,
@@ -122,7 +126,6 @@ const auditorService = new AuditorService(
 );
 const committeeService = new CommitteeService(committeeRepository, userService);
 const adminService = new AdminService(adminRepository, userService);
-const auditLogService = new AuditLogService(auditLogRepository);
 const inspectionService = new InspectionService(
   inspectionRepository,
   auditorInspectionRepository,
@@ -148,7 +151,10 @@ const adviceAndDefectService = new AdviceAndDefectService(
   adviceAndDefectRepository,
   auditLogService
 );
-const certificateService = new CertificateService(certificateRepository);
+const certificateService = new CertificateService(
+  certificateRepository,
+  auditLogService
+);
 const fileService = new FileService(fileRepository);
 const userRegistrationFactoryService = new UserRegistrationFactoryService(
   farmerService,

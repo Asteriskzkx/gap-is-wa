@@ -4,6 +4,7 @@ import { InspectionRepository } from "../repositories/InspectionRepository";
 import { PlantingDetailRepository } from "../repositories/PlantingDetailRepository";
 import { RubberFarmRepository } from "../repositories/RubberFarmRepository";
 import { BaseService } from "./BaseService";
+import { AuditLogService } from "./AuditLogService";
 
 // ประกาศ interface สำหรับข้อมูลที่ใช้ในการอัปเดต PlantingDetail
 interface PlantingDetailUpdateData {
@@ -22,16 +23,19 @@ export class RubberFarmService extends BaseService<RubberFarmModel> {
   private rubberFarmRepository: RubberFarmRepository;
   private plantingDetailRepository: PlantingDetailRepository;
   private inspectionRepository: InspectionRepository;
+  private auditLogService: AuditLogService;
 
   constructor(
     rubberFarmRepository: RubberFarmRepository,
     plantingDetailRepository: PlantingDetailRepository,
-    inspectionRepository: InspectionRepository
+    inspectionRepository: InspectionRepository,
+    auditLogService: AuditLogService
   ) {
     super(rubberFarmRepository);
     this.rubberFarmRepository = rubberFarmRepository;
     this.plantingDetailRepository = plantingDetailRepository;
     this.inspectionRepository = inspectionRepository;
+    this.auditLogService = auditLogService;
   }
 
   async createRubberFarmWithDetails(
@@ -55,7 +59,8 @@ export class RubberFarmService extends BaseService<RubberFarmModel> {
       yearOfTapping: Date;
       monthOfTapping: Date;
       totalProduction: number;
-    }>
+    }>,
+    userId?: number
   ): Promise<RubberFarmModel> {
     try {
       // Create the rubber farm first
@@ -95,6 +100,24 @@ export class RubberFarmService extends BaseService<RubberFarmModel> {
 
         // Add the created details to the farm
         createdFarm.plantingDetails = createdDetails;
+
+        if (this.auditLogService && userId && createdFarm) {
+          const {
+            createdAt,
+            updatedAt,
+            plantingDetails,
+            ...createdFarmCoreData
+          } = createdFarm.toJSON();
+
+          await this.auditLogService.logAction(
+            "RubberFarm",
+            "CREATE",
+            createdFarm.rubberFarmId,
+            userId,
+            void 0,
+            createdFarmCoreData
+          );
+        }
       }
 
       return createdFarm;
@@ -383,133 +406,54 @@ export class RubberFarmService extends BaseService<RubberFarmModel> {
   async updateRubberFarm(
     rubberFarmId: number,
     farmData: Partial<RubberFarmModel>,
-    currentVersion?: number
+    currentVersion?: number,
+    userId?: number
   ): Promise<RubberFarmModel | null> {
     try {
-      if (currentVersion !== undefined) {
+      const oldRecord = await this.rubberFarmRepository.findById(rubberFarmId);
+
+      let updated: RubberFarmModel | null;
+
+      if (currentVersion === undefined) {
+        // Fallback to regular update
+        updated = await this.update(rubberFarmId, farmData);
+      } else {
         // Use optimistic locking
-        return await this.rubberFarmRepository.updateWithLock(
+        updated = await this.rubberFarmRepository.updateWithLock(
           rubberFarmId,
           farmData,
           currentVersion
         );
-      } else {
-        // Fallback to regular update
-        return await this.update(rubberFarmId, farmData);
       }
+
+      if (updated && oldRecord) {
+        const {
+          createdAt: oldCreatedAt,
+          updatedAt: oldUpdatedAt,
+          plantingDetails: oldPlantingDetails,
+          ...oldData
+        } = oldRecord.toJSON();
+
+        const {
+          createdAt: newCreatedAt,
+          updatedAt: newUpdatedAt,
+          plantingDetails: newPlantingDetails,
+          ...updatedData
+        } = updated.toJSON();
+
+        await this.auditLogService.logAction(
+          "RubberFarm",
+          "UPDATE",
+          rubberFarmId,
+          userId || undefined,
+          oldData,
+          updatedData
+        );
+      }
+      return updated;
     } catch (error) {
       this.handleServiceError(error);
       throw error;
-    }
-  }
-
-  /**
-   * Update a planting detail record
-   * @param plantingDetailId - ID of the planting detail to update
-   * @param detailData - New data for the planting detail
-   * @returns Updated planting detail or null if failed
-   */
-  async updatePlantingDetail(
-    plantingDetailId: number,
-    detailData: PlantingDetailUpdateData
-  ): Promise<PlantingDetailModel | null> {
-    try {
-      // Check if the planting detail exists
-      const existingDetail = await this.plantingDetailRepository.findById(
-        plantingDetailId
-      );
-      if (!existingDetail) {
-        throw new Error("Planting detail not found");
-      }
-
-      // Check if the detail belongs to the farm
-      if (
-        detailData.rubberFarmId &&
-        existingDetail.rubberFarmId !== detailData.rubberFarmId
-      ) {
-        throw new Error("Planting detail does not belong to this farm");
-      }
-
-      // Create an update data object with the correct type
-      const updatedData: PlantingDetailUpdateData = {
-        specie: detailData.specie || existingDetail.specie,
-        areaOfPlot: detailData.areaOfPlot || existingDetail.areaOfPlot,
-        numberOfRubber:
-          detailData.numberOfRubber || existingDetail.numberOfRubber,
-        numberOfTapping:
-          detailData.numberOfTapping || existingDetail.numberOfTapping,
-        ageOfRubber: detailData.ageOfRubber || existingDetail.ageOfRubber,
-        totalProduction:
-          detailData.totalProduction || existingDetail.totalProduction,
-      };
-
-      // Only update dates if they are provided
-      if (detailData.yearOfTapping) {
-        updatedData.yearOfTapping = new Date(detailData.yearOfTapping);
-      }
-
-      if (detailData.monthOfTapping) {
-        updatedData.monthOfTapping = new Date(detailData.monthOfTapping);
-      }
-
-      // Update the planting detail
-      return await this.plantingDetailRepository.update(
-        plantingDetailId,
-        updatedData
-      );
-    } catch (error) {
-      console.error("Error updating planting detail:", error);
-      return null;
-    }
-  }
-
-  /**
-   * Create a new planting detail record
-   * @param detailData - Data for the new planting detail
-   * @returns Created planting detail or null if failed
-   */
-  async createPlantingDetail(
-    detailData: PlantingDetailUpdateData
-  ): Promise<PlantingDetailModel | null> {
-    try {
-      // Check if the farm exists
-      if (!detailData.rubberFarmId) {
-        throw new Error("Rubber farm ID is required");
-      }
-
-      const farm = await this.rubberFarmRepository.findById(
-        detailData.rubberFarmId
-      );
-      if (!farm) {
-        throw new Error("Rubber farm not found");
-      }
-
-      // Make sure dates are properly formatted
-      const yearOfTapping = detailData.yearOfTapping
-        ? new Date(detailData.yearOfTapping)
-        : new Date();
-      const monthOfTapping = detailData.monthOfTapping
-        ? new Date(detailData.monthOfTapping)
-        : new Date();
-
-      // Create a planting detail model using the static factory method
-      const plantingDetailModel = PlantingDetailModel.create(
-        detailData.rubberFarmId,
-        detailData.specie || "",
-        detailData.areaOfPlot || 0,
-        detailData.numberOfRubber || 0,
-        detailData.numberOfTapping || 0,
-        detailData.ageOfRubber || 0,
-        yearOfTapping,
-        monthOfTapping,
-        detailData.totalProduction || 0
-      );
-
-      // Create the planting detail using the repository
-      return await this.plantingDetailRepository.create(plantingDetailModel);
-    } catch (error) {
-      console.error("Error creating planting detail:", error);
-      return null;
     }
   }
 

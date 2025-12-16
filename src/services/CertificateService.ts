@@ -1,13 +1,19 @@
 import { CertificateModel } from "@/models/CertificateModel";
 import { CertificateRepository } from "@/repositories/CertificateRepository";
+import { AuditLogService } from "./AuditLogService";
 import { BaseService } from "./BaseService";
 
 export class CertificateService extends BaseService<CertificateModel> {
   private certificateRepository: CertificateRepository;
+  private auditLogService: AuditLogService;
 
-  constructor(certificateRepository: CertificateRepository) {
+  constructor(
+    certificateRepository: CertificateRepository,
+    auditLogService: AuditLogService
+  ) {
     super(certificateRepository);
     this.certificateRepository = certificateRepository;
+    this.auditLogService = auditLogService;
   }
 
   async createCertificate(data: {
@@ -95,7 +101,8 @@ export class CertificateService extends BaseService<CertificateModel> {
   async updateCancelRequestDetail(
     certificateId: number,
     cancelRequestDetail: string,
-    version: number
+    version: number,
+    userId?: number
   ): Promise<CertificateModel | null> {
     try {
       const payload: any = {
@@ -103,11 +110,43 @@ export class CertificateService extends BaseService<CertificateModel> {
         cancelRequestDetail: cancelRequestDetail,
       };
 
-      return await this.certificateRepository.updateWithLock(
+      const oldRecord = await this.certificateRepository.findById(
+        certificateId
+      );
+
+      let updated: CertificateModel | null;
+
+      updated = await this.certificateRepository.updateWithLock(
         certificateId,
         payload,
         Number(version)
       );
+
+      if (updated && oldRecord && this.auditLogService && userId) {
+        const {
+          createdAt: oldCreatedAt,
+          updatedAt: oldUpdatedAt,
+          inspection: oldInspection,
+          ...oldData
+        } = oldRecord.toJSON();
+        const {
+          createdAt: newCreatedAt,
+          updatedAt: newUpdatedAt,
+          inspection: newInspection,
+          ...createdData
+        } = updated.toJSON();
+
+        await this.auditLogService.logAction(
+          "Certificate",
+          "UPDATE",
+          updated.certificateId,
+          userId,
+          oldData,
+          createdData
+        );
+      }
+
+      return updated;
     } catch (error) {
       this.handleServiceError(error);
       throw error;

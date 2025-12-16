@@ -97,16 +97,16 @@ export class AdviceAndDefectService extends BaseService<AdviceAndDefectModel> {
 
       let updated: AdviceAndDefectModel | null;
 
-      if (currentVersion !== undefined) {
+      if (currentVersion === undefined) {
+        // Fallback to regular update
+        updated = await this.update(adviceAndDefectId, data);
+      } else {
         // Use optimistic locking
         updated = await this.adviceAndDefectRepository.updateWithLock(
           adviceAndDefectId,
           data,
           currentVersion
         );
-      } else {
-        // Fallback to regular update
-        updated = await this.update(adviceAndDefectId, data);
       }
 
       //Log การ update

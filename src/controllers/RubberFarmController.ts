@@ -1,10 +1,10 @@
+import { checkAuthorization } from "@/lib/session";
 import { NextRequest, NextResponse } from "next/server";
-import { BaseController } from "./BaseController";
+import { OptimisticLockError } from "../errors/OptimisticLockError";
 import { RubberFarmModel } from "../models/RubberFarmModel";
 import { RubberFarmService } from "../services/RubberFarmService";
 import { requireValidId } from "../utils/ParamUtils";
-import { checkAuthorization } from "@/lib/session";
-import { OptimisticLockError } from "../errors/OptimisticLockError";
+import { BaseController } from "./BaseController";
 
 export class RubberFarmController extends BaseController<RubberFarmModel> {
   private rubberFarmService: RubberFarmService;
@@ -19,13 +19,22 @@ export class RubberFarmController extends BaseController<RubberFarmModel> {
       const data = await req.json();
       const { farmData, plantingDetailsData } = data;
 
+      const { authorized, session, error } = await checkAuthorization(req, [
+        "FARMER",
+        "ADMIN",
+      ]);
+
+      if (!authorized || !session) {
+        return NextResponse.json(
+          { message: error || "Authorization required" },
+          { status: 401 }
+        );
+      }
+
+      const userId = session ? Number(session.user.id) : undefined;
+
       // Validate basic farm data
-      if (
-        !farmData ||
-        !farmData.farmerId ||
-        !farmData.villageName ||
-        !farmData.moo
-      ) {
+      if (!farmData?.farmerId || !farmData?.villageName || !farmData?.moo) {
         return NextResponse.json(
           { message: "Required farm fields missing" },
           { status: 400 }
@@ -48,7 +57,8 @@ export class RubberFarmController extends BaseController<RubberFarmModel> {
       const rubberFarm =
         await this.rubberFarmService.createRubberFarmWithDetails(
           farmData,
-          plantingDetailsData
+          plantingDetailsData,
+          userId
         );
 
       return NextResponse.json(rubberFarm, { status: 201 });
@@ -193,13 +203,28 @@ export class RubberFarmController extends BaseController<RubberFarmModel> {
         return NextResponse.json({ message: error.message }, { status: 400 });
       }
 
+      const { authorized, session, error } = await checkAuthorization(req, [
+        "FARMER",
+        "ADMIN",
+      ]);
+
+      if (!authorized || !session) {
+        return NextResponse.json(
+          { message: error || "Authorization required" },
+          { status: 401 }
+        );
+      }
+
+      const userId = session ? Number(session.user.id) : undefined;
+
       const data = await req.json();
       const { version, ...updateData } = data;
 
       const updatedFarm = await this.rubberFarmService.updateRubberFarm(
         farmId,
         updateData,
-        version
+        version,
+        userId
       );
 
       if (!updatedFarm) {

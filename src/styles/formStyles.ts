@@ -15,7 +15,7 @@ export const formStyles = {
   stepIndicator: {
     desktopWrapper: "hidden md:block",
     mobileWrapper: "md:hidden",
-    stepContainer: "flex items-center",
+    stepContainer: "flex items-center justify-center",
     stepCircle: {
       base: "w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all duration-300",
       active: "bg-green-600 text-white ring-4 ring-green-100",
@@ -29,7 +29,7 @@ export const formStyles = {
       inactive: "text-gray-500",
     },
     progressLine: {
-      base: "flex-1 mx-4 mb-6",
+      base: "flex-1 mx-4",
       bar: "h-1 rounded-full transition-all duration-300",
       completed: "bg-green-600",
       inactive: "bg-gray-300",

@@ -264,7 +264,7 @@ export class CertificateController extends BaseController<CertificateModel> {
 
   async updateCancelRequestDetail(req: NextRequest): Promise<NextResponse> {
     try {
-      const { authorized, error } = await checkAuthorization(req, [
+      const { authorized, session, error } = await checkAuthorization(req, [
         "FARMER",
         "ADMIN",
       ]);
@@ -274,6 +274,8 @@ export class CertificateController extends BaseController<CertificateModel> {
           { status: 401 }
         );
       }
+      const userId = session ? Number(session.user.id) : undefined;
+
       const data = await req.json();
       const certificateId = Number(data.certificateId || data.id);
       const cancelRequestDetail = data.cancelRequestDetail;
@@ -293,7 +295,8 @@ export class CertificateController extends BaseController<CertificateModel> {
       const updated = await this.certificateService.updateCancelRequestDetail(
         certificateId,
         cancelRequestDetail,
-        version
+        version,
+        userId
       );
 
       if (!updated) {

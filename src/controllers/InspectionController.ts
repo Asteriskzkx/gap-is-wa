@@ -36,6 +36,8 @@ export class InspectionController extends BaseController<InspectionModel> {
         );
       }
 
+      const userId = session ? Number(session.user.id) : undefined;
+
       // ดึง auditorId จาก session
       const auditorId = session.user.roleData?.auditorId;
       if (!auditorId) {
@@ -63,7 +65,7 @@ export class InspectionController extends BaseController<InspectionModel> {
         new Date(inspectionDateAndTime),
         auditorChiefId,
         additionalAuditorIds || [],
-        auditorId
+        userId
       );
 
       return NextResponse.json(inspection, { status: 201 });

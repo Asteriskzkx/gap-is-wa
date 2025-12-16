@@ -57,7 +57,7 @@ const initialRubberFarm: RubberFarm = {
   tambonId: 0,
   location: {
     type: "Point",
-    coordinates: [0, 0],
+    coordinates: [100.523186, 13.736717], // กรุงเทพฯ [lng, lat] เป็นค่าเริ่มต้นให้แผนที่แสดงที่ไทย
   },
   plantingDetails: [],
 };
@@ -168,15 +168,15 @@ export const useRubberFarmForm = () => {
         return false;
       }
 
-      // กรณี Point ให้ตรวจสอบพิกัดไม่เท่ากับ [0,0]
+      // กรณี Point ให้ตรวจสอบว่าไม่ใช่พิกัดเริ่มต้น (กรุงเทพฯ)
       if (
         loc.type === "Point" &&
         Array.isArray(loc.coordinates) &&
         loc.coordinates.length === 2 &&
-        loc.coordinates[0] === 0 &&
-        loc.coordinates[1] === 0
+        loc.coordinates[0] === 100.523186 &&
+        loc.coordinates[1] === 13.736717
       ) {
-        setError("กรุณาระบุตำแหน่งที่ตั้งสวนยางบนแผนที่");
+        setError("กรุณาคลิกบนแผนที่เพื่อระบุตำแหน่งสวนยางของคุณ");
         return false;
       }
 

@@ -62,12 +62,10 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({
               </div>
 
               {index < maxSteps - 1 && (
-                <div className={formStyles.stepIndicator.progressLine.base}>
+                <div className="flex items-center flex-1 px-4">
                   <div
-                    className={`${formStyles.stepIndicator.progressLine.bar} ${
-                      s < currentStep
-                        ? formStyles.stepIndicator.progressLine.completed
-                        : formStyles.stepIndicator.progressLine.inactive
+                    className={`h-1 w-full rounded-full transition-all duration-300 ${
+                      s < currentStep ? "bg-green-600" : "bg-gray-300"
                     }`}
                   />
                 </div>
