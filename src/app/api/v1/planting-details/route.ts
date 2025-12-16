@@ -4,12 +4,7 @@ import { checkAuthorization } from "@/lib/session";
 
 // Route handlers for /api/v1/planting-details
 export async function GET(req: NextRequest) {
-  const { authorized, error } = await checkAuthorization(req, [
-    "FARMER",
-    "ADMIN",
-    "AUDITOR",
-    "COMMITTEE",
-  ]);
+  const { authorized, error } = await checkAuthorization(req, ["ADMIN"]);
 
   if (!authorized) {
     return NextResponse.json(

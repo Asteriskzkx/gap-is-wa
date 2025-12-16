@@ -47,7 +47,10 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const { authorized, error } = await checkAuthorization(req, ["ADMIN"]);
+  const { authorized, error } = await checkAuthorization(req, [
+    "FARMER",
+    "ADMIN",
+  ]);
 
   if (!authorized) {
     return NextResponse.json(
