@@ -151,7 +151,10 @@ const adviceAndDefectService = new AdviceAndDefectService(
   adviceAndDefectRepository,
   auditLogService
 );
-const certificateService = new CertificateService(certificateRepository);
+const certificateService = new CertificateService(
+  certificateRepository,
+  auditLogService
+);
 const fileService = new FileService(fileRepository);
 const userRegistrationFactoryService = new UserRegistrationFactoryService(
   farmerService,
