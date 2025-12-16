@@ -2,15 +2,17 @@ import React from "react";
 import { formStyles } from "@/styles/formStyles";
 
 interface Props {
-  currentStep: number;
-  maxSteps?: number;
-  labels?: string[];
+  readonly currentStep: number;
+  readonly maxSteps: number;
+  readonly labels?: string[];
 }
+
+const defaultLabels = ["เลือกการตรวจ", "ออกใบรับรอง"];
 
 export default function CertificationStepIndicator({
   currentStep,
   maxSteps = 2,
-  labels = ["เลือกการตรวจ", "ออกใบรับรอง"],
+  labels = defaultLabels,
 }: Props) {
   const getCircle = (s: number) => {
     const base = formStyles.stepIndicator.stepCircle.base;
