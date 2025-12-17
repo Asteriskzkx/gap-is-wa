@@ -68,6 +68,7 @@ interface FormErrors {
   provinceId: string;
   amphureId: string;
   tambonId: string;
+  phoneNumber: string;
   mobilePhoneNumber: string;
 }
 
@@ -129,6 +130,7 @@ export function useRegisterForm() {
     provinceId: "",
     amphureId: "",
     tambonId: "",
+    phoneNumber: "",
     mobilePhoneNumber: "",
   });
 
@@ -378,6 +380,21 @@ export function useRegisterForm() {
   };
 
   const validateStep4 = () => {
+    if (!formData.phoneNumber) {
+      const phoneError = "กรุณากรอกเบอร์โทรศัพท์";
+      setErrors((prev) => ({ ...prev, phoneNumber: phoneError }));
+      setError(phoneError);
+      return false;
+    }
+
+    const cleanedPhone = formData.phoneNumber.replaceAll("-", "");
+    if (cleanedPhone.length !== 9) {
+      const phoneError = "เบอร์โทรศัพท์ต้องเป็นตัวเลข 9 หลัก";
+      setErrors((prev) => ({ ...prev, phoneNumber: phoneError }));
+      setError(phoneError);
+      return false;
+    }
+
     if (!formData.mobilePhoneNumber) {
       const mobileError = "กรุณากรอกเบอร์โทรศัพท์มือถือ";
       setErrors((prev) => ({ ...prev, mobilePhoneNumber: mobileError }));
@@ -393,7 +410,7 @@ export function useRegisterForm() {
       return false;
     }
 
-    setErrors((prev) => ({ ...prev, mobilePhoneNumber: "" }));
+    setErrors((prev) => ({ ...prev, phoneNumber: "", mobilePhoneNumber: "" }));
     setError("");
     return true;
   };

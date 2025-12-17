@@ -620,7 +620,7 @@ export default function FarmerRegisterPage() {
 
                 <div className={styles.formGroup}>
                   <label htmlFor="phoneNumber" className={styles.label}>
-                    เบอร์โทรศัพท์บ้าน
+                    เบอร์โทรศัพท์ <span className={styles.required}>*</span>
                   </label>
                   <PrimaryInputMask
                     id="phoneNumber"
@@ -629,8 +629,11 @@ export default function FarmerRegisterPage() {
                     onChange={(value) =>
                       setFormData((prev) => ({ ...prev, phoneNumber: value }))
                     }
-                    mask="99-999-9999"
-                    placeholder="0X-XXX-XXXX"
+                    mask="9-9999-9999"
+                    placeholder="0-XXXX-XXXX"
+                    required
+                    invalid={!!errors.phoneNumber}
+                    errorMessage={errors.phoneNumber}
                   />
                 </div>
 
@@ -649,8 +652,8 @@ export default function FarmerRegisterPage() {
                         mobilePhoneNumber: value,
                       }))
                     }
-                    mask="999-999-9999"
-                    placeholder="0XX-XXX-XXXX"
+                    mask="99-9999-9999"
+                    placeholder="0X-XXXX-XXXX"
                     required
                     invalid={!!errors.mobilePhoneNumber}
                     errorMessage={errors.mobilePhoneNumber}
