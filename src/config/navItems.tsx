@@ -3,7 +3,6 @@ import {
   HomeIcon,
   InspectIcon,
   ManageAccountIcon,
-  PlusIcon,
 } from "@/components/icons";
 
 export const adminNavItems = [
@@ -18,18 +17,13 @@ export const adminNavItems = [
     icon: <ManageAccountIcon className="h-6 w-6" />,
   },
   {
-    title: "ตรวจสอบเหตุการณ์ในระบบ",
+    title: "ตรวจสอบบันทึกเหตุการณ์ในระบบ",
     href: "/admin/audit-logs",
     icon: <InspectIcon className="h-6 w-6" />,
   },
   {
-    title: "สร้างรายงาน",
-    href: "/admin/create-report",
-    icon: <PlusIcon className="h-6 w-6" />,
-  },
-  {
     title: "ตรวจสอบรายงาน",
-    href: "/admin/report-inspection",
+    href: "/admin/report",
     icon: <FindInPageIcon className="h-6 w-6" />,
   },
 ];
