@@ -61,7 +61,10 @@ interface FormErrors {
   birthDate: string;
   gender: string;
   houseNo: string;
+  villageName: string;
   moo: string;
+  road: string;
+  alley: string;
   provinceId: string;
   amphureId: string;
   tambonId: string;
@@ -119,7 +122,10 @@ export function useRegisterForm() {
     birthDate: "",
     gender: "",
     houseNo: "",
+    villageName: "",
     moo: "",
+    road: "",
+    alley: "",
     provinceId: "",
     amphureId: "",
     tambonId: "",
@@ -326,13 +332,13 @@ export function useRegisterForm() {
 
   const validateStep2 = () => {
     const newErrors = {
-      namePrefix: !formData.namePrefix ? "กรุณาเลือกคำนำหน้า" : "",
-      firstName: !formData.firstName ? "กรุณากรอกชื่อ" : "",
-      lastName: !formData.lastName ? "กรุณากรอกนามสกุล" : "",
+      namePrefix: formData.namePrefix ? "" : "กรุณาเลือกคำนำหน้า",
+      firstName: formData.firstName ? "" : "กรุณากรอกชื่อ",
+      lastName: formData.lastName ? "" : "กรุณากรอกนามสกุล",
       identificationNumber: validateIdentificationNumber(
         formData.identificationNumber
       ),
-      birthDate: !formData.birthDate ? "กรุณาเลือกวันเกิด" : "",
+      birthDate: formData.birthDate ? "" : "กรุณาเลือกวันเกิด",
     };
 
     setErrors((prev) => ({ ...prev, ...newErrors }));
@@ -349,11 +355,14 @@ export function useRegisterForm() {
 
   const validateStep3 = () => {
     const newErrors = {
-      houseNo: !formData.houseNo ? "กรุณากรอกบ้านเลขที่" : "",
-      moo: !formData.moo ? "กรุณากรอกหมู่ที่" : "",
-      provinceId: !formData.provinceId ? "กรุณาเลือกจังหวัด" : "",
-      amphureId: !formData.amphureId ? "กรุณาเลือกอำเภอ/เขต" : "",
-      tambonId: !formData.tambonId ? "กรุณาเลือกตำบล/แขวง" : "",
+      houseNo: formData.houseNo ? "" : "กรุณากรอกบ้านเลขที่",
+      villageName: formData.villageName ? "" : "กรุณากรอกชื่อหมู่บ้าน",
+      moo: formData.moo ? "" : "กรุณากรอกหมู่ที่",
+      road: formData.road ? "" : "กรุณากรอกชื่อถนน",
+      alley: formData.alley ? "" : "กรุณากรอกชื่อซอย",
+      provinceId: formData.provinceId ? "" : "กรุณาเลือกจังหวัด",
+      amphureId: formData.amphureId ? "" : "กรุณาเลือกอำเภอ/เขต",
+      tambonId: formData.tambonId ? "" : "กรุณาเลือกตำบล/แขวง",
     };
 
     setErrors((prev) => ({ ...prev, ...newErrors }));

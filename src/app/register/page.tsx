@@ -432,7 +432,7 @@ export default function FarmerRegisterPage() {
 
                   <div className={styles.formGroup}>
                     <label htmlFor="villageName" className={styles.label}>
-                      หมู่บ้าน
+                      หมู่บ้าน <span className={styles.required}>*</span>
                     </label>
                     <PrimaryInputText
                       id="villageName"
@@ -443,6 +443,9 @@ export default function FarmerRegisterPage() {
                       }
                       placeholder="ชื่อหมู่บ้าน"
                       maxLength={255}
+                      required
+                      invalid={!!errors.villageName}
+                      errorMessage={errors.villageName}
                     />
                   </div>
                 </div>
@@ -477,7 +480,7 @@ export default function FarmerRegisterPage() {
 
                   <div className={styles.formGroup}>
                     <label htmlFor="road" className={styles.label}>
-                      ถนน
+                      ถนน <span className={styles.required}>*</span>
                     </label>
                     <PrimaryInputText
                       id="road"
@@ -488,13 +491,16 @@ export default function FarmerRegisterPage() {
                       }
                       placeholder="ชื่อถนน"
                       maxLength={100}
+                      required
+                      invalid={!!errors.road}
+                      errorMessage={errors.road}
                     />
                   </div>
                 </div>
 
                 <div className={styles.formGroup}>
                   <label htmlFor="alley" className={styles.label}>
-                    ซอย
+                    ซอย <span className={styles.required}>*</span>
                   </label>
                   <PrimaryInputText
                     id="alley"
@@ -505,6 +511,9 @@ export default function FarmerRegisterPage() {
                     }
                     placeholder="ชื่อซอย"
                     maxLength={100}
+                    required
+                    invalid={!!errors.alley}
+                    errorMessage={errors.alley}
                   />
                 </div>
 
