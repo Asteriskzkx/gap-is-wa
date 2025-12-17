@@ -149,20 +149,21 @@ model Admin {
 }
 
 model RubberFarm {
-  rubberFarmId Int      @id @default(autoincrement())
-  farmerId     Int
-  farmer       Farmer   @relation(fields: [farmerId], references: [farmerId], onDelete: Cascade)
-  villageName  String   @db.VarChar(255)
-  moo          Int
-  road         String   @db.VarChar(100)
-  alley        String   @db.VarChar(100)
-  subDistrict  String   @db.VarChar(100)
-  district     String   @db.VarChar(100)
-  province     String   @db.VarChar(100)
-  location     Json // For GeoJSON data
-  version      Int      @default(0)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  rubberFarmId            Int      @id @default(autoincrement())
+  farmerId                Int
+  farmer                  Farmer   @relation(fields: [farmerId], references: [farmerId], onDelete: Cascade)
+  villageName             String   @db.VarChar(255)
+  moo                     Int
+  road                    String   @db.VarChar(100)
+  alley                   String   @db.VarChar(100)
+  subDistrict             String   @db.VarChar(100)
+  district                String   @db.VarChar(100)
+  province                String   @db.VarChar(100)
+  location                Json // For GeoJSON data
+  productDistributionType String   @default("") @db.VarChar(50)
+  version                 Int      @default(0)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
 
   // Relations
   plantingDetails PlantingDetail[]

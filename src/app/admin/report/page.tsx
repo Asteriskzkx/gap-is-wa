@@ -1,6 +1,6 @@
 import AdminLayout from "@/components/layout/AdminLayout";
 
-export default function AdminCreateReportPage() {
+export default function AdminReportPage() {
   return (
     <AdminLayout>
       <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
@@ -15,9 +15,7 @@ export default function AdminCreateReportPage() {
         {/* Content Area */}
         <div className="bg-white rounded-lg shadow p-6">
           <p className="text-gray-700">
-            ที่นี่คุณสามารถสร้างรายงานต่างๆ ได้ตามความต้องการ เช่น
-            รายงานผลการตรวจประเมินสวนยางพารา
-            รายงานการออกใบรับรองแหล่งผลิตยางพารา เป็นต้น
+            ที่นี่คุณสามารถตรวจสอบรายงานต่างๆ ได้ตามความต้องการ
           </p>
         </div>
       </div>

@@ -22,6 +22,7 @@ export class RubberFarmMapper implements BaseMapper<any, RubberFarmModel> {
       prismaEntity.district,
       prismaEntity.province,
       prismaEntity.location,
+      prismaEntity.productDistributionType,
       prismaEntity.plantingDetails
         ? prismaEntity.plantingDetails.map((detail: any) =>
             this.plantingDetailMapper.toDomain(detail)
@@ -46,6 +47,7 @@ export class RubberFarmMapper implements BaseMapper<any, RubberFarmModel> {
       district: domainEntity.district,
       province: domainEntity.province,
       location: domainEntity.location,
+      productDistributionType: domainEntity.productDistributionType,
     };
   }
 }

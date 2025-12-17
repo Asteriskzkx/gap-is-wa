@@ -49,6 +49,7 @@ export class RubberFarmService extends BaseService<RubberFarmModel> {
       district: string;
       province: string;
       location: any;
+      productDistributionType: string;
     },
     plantingDetailsData: Array<{
       specie: string;
@@ -73,7 +74,8 @@ export class RubberFarmService extends BaseService<RubberFarmModel> {
         farmData.subDistrict,
         farmData.district,
         farmData.province,
-        farmData.location
+        farmData.location,
+        farmData.productDistributionType
       );
 
       const createdFarm = await this.create(rubberFarmModel);
@@ -451,6 +453,150 @@ export class RubberFarmService extends BaseService<RubberFarmModel> {
         );
       }
       return updated;
+    } catch (error) {
+      this.handleServiceError(error);
+      throw error;
+    }
+  }
+
+  async updateRubberFarmWithDetails(
+    rubberFarmId: number,
+    farmData: Partial<RubberFarmModel>,
+    existingPlantingDetails: Array<{
+      plantingDetailId: number;
+      specie: string;
+      areaOfPlot: number;
+      numberOfRubber: number;
+      numberOfTapping: number;
+      ageOfRubber: number;
+      yearOfTapping: Date;
+      monthOfTapping: Date;
+      totalProduction: number;
+      version?: number;
+    }>,
+    newPlantingDetails: Array<{
+      specie: string;
+      areaOfPlot: number;
+      numberOfRubber: number;
+      numberOfTapping: number;
+      ageOfRubber: number;
+      yearOfTapping: Date;
+      monthOfTapping: Date;
+      totalProduction: number;
+    }>,
+    deletedPlantingDetailIds: number[],
+    userId?: number
+  ): Promise<RubberFarmModel | null> {
+    try {
+      // 1. Update the rubber farm
+      const currentVersion = farmData.version;
+      const updatedFarm = await this.updateRubberFarm(
+        rubberFarmId,
+        farmData,
+        currentVersion,
+        userId
+      );
+
+      if (!updatedFarm) {
+        throw new Error("Failed to update rubber farm");
+      }
+
+      // 2. Delete planting details
+      for (const detailId of deletedPlantingDetailIds) {
+        await this.plantingDetailRepository.delete(detailId);
+        await this.auditLogService.logAction(
+          "PlantingDetail",
+          "DELETE",
+          detailId,
+          userId || undefined,
+          { plantingDetailId: detailId }
+        );
+      }
+
+      // 3. Update existing planting details
+      for (const detail of existingPlantingDetails) {
+        const { plantingDetailId, version, ...updateData } = detail;
+        const oldDetail = await this.plantingDetailRepository.findById(
+          plantingDetailId
+        );
+
+        let updatedDetail;
+        if (version === undefined) {
+          const existingModel = PlantingDetailModel.create(
+            rubberFarmId,
+            updateData.specie,
+            updateData.areaOfPlot,
+            updateData.numberOfRubber,
+            updateData.numberOfTapping,
+            updateData.ageOfRubber,
+            updateData.yearOfTapping,
+            updateData.monthOfTapping,
+            updateData.totalProduction
+          );
+          updatedDetail = await this.plantingDetailRepository.update(
+            plantingDetailId,
+            existingModel
+          );
+        } else {
+          updatedDetail = await this.plantingDetailRepository.updateWithLock(
+            plantingDetailId,
+            updateData,
+            version
+          );
+        }
+
+        if (oldDetail && updatedDetail) {
+          const {
+            createdAt: oldCreatedAt,
+            updatedAt: oldUpdatedAt,
+            ...oldData
+          } = oldDetail.toJSON();
+          const {
+            createdAt: newCreatedAt,
+            updatedAt: newUpdatedAt,
+            ...updatedData
+          } = updatedDetail.toJSON();
+
+          await this.auditLogService.logAction(
+            "PlantingDetail",
+            "UPDATE",
+            plantingDetailId,
+            userId || undefined,
+            oldData,
+            updatedData
+          );
+        }
+      }
+
+      // 4. Create new planting details
+      for (const detail of newPlantingDetails) {
+        const newModel = PlantingDetailModel.create(
+          rubberFarmId,
+          detail.specie,
+          detail.areaOfPlot,
+          detail.numberOfRubber,
+          detail.numberOfTapping,
+          detail.ageOfRubber,
+          detail.yearOfTapping,
+          detail.monthOfTapping,
+          detail.totalProduction
+        );
+        const created = await this.plantingDetailRepository.create(newModel);
+
+        if (created.plantingDetailId) {
+          await this.auditLogService.logAction(
+            "PlantingDetail",
+            "CREATE",
+            created.plantingDetailId,
+            userId || undefined,
+            undefined,
+            created.toJSON()
+          );
+        }
+      }
+
+      // Return the updated farm with all planting details
+      return await this.rubberFarmRepository.findById(rubberFarmId);
     } catch (error) {
       this.handleServiceError(error);
       throw error;

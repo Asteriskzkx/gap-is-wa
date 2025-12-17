@@ -244,6 +244,65 @@ export class RubberFarmController extends BaseController<RubberFarmModel> {
     }
   }
 
+  async updateRubberFarmWithDetails(
+    req: NextRequest,
+    { params }: { params: { id: string } }
+  ): Promise<NextResponse> {
+    try {
+      let farmId: number;
+      try {
+        farmId = requireValidId(params.id, "rubberFarmId");
+      } catch (error: any) {
+        return NextResponse.json({ message: error.message }, { status: 400 });
+      }
+
+      const { authorized, session, error } = await checkAuthorization(req, [
+        "FARMER",
+        "ADMIN",
+      ]);
+
+      if (!authorized || !session) {
+        return NextResponse.json(
+          { message: error || "Authorization required" },
+          { status: 401 }
+        );
+      }
+
+      const userId = session ? Number(session.user.id) : undefined;
+
+      const data = await req.json();
+      const {
+        farmData,
+        existingPlantingDetails,
+        newPlantingDetails,
+        deletedPlantingDetailIds,
+      } = data;
+
+      if (!farmData) {
+        return NextResponse.json(
+          { message: "Farm data is required" },
+          { status: 400 }
+        );
+      }
+
+      const result = await this.rubberFarmService.updateRubberFarmWithDetails(
+        farmId,
+        farmData,
+        existingPlantingDetails || [],
+        newPlantingDetails || [],
+        deletedPlantingDetailIds || [],
+        userId
+      );
+
+      return NextResponse.json(result, { status: 200 });
+    } catch (error: any) {
+      if (error instanceof OptimisticLockError) {
+        return NextResponse.json(error.toJSON(), { status: 409 });
+      }
+      return this.handleControllerError(error);
+    }
+  }
+
   async deleteRubberFarm(
     req: NextRequest,
     { params }: { params: { id: string } }
@@ -284,7 +343,8 @@ export class RubberFarmController extends BaseController<RubberFarmModel> {
       data.subDistrict,
       data.district,
       data.province,
-      data.location || {}
+      data.location || {},
+      data.productDistributionType || ""
     );
   }
 }

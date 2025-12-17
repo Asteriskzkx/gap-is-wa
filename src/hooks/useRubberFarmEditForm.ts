@@ -30,6 +30,7 @@ export interface RubberFarm {
   provinceId: number;
   amphureId: number;
   tambonId: number;
+  productDistributionType: string;
   version?: number;
   location: {
     type: string;
@@ -51,6 +52,7 @@ const initialRubberFarm: RubberFarm = {
   provinceId: 0,
   amphureId: 0,
   tambonId: 0,
+  productDistributionType: "",
   version: undefined,
   location: {
     type: "Point",
@@ -376,9 +378,12 @@ export const useRubberFarmEditForm = () => {
     if (
       !rubberFarm.villageName ||
       rubberFarm.moo <= 0 ||
+      !rubberFarm.road ||
+      !rubberFarm.alley ||
       !rubberFarm.subDistrict ||
       !rubberFarm.district ||
-      !rubberFarm.province
+      !rubberFarm.province ||
+      !rubberFarm.productDistributionType
     ) {
       setError("กรุณากรอกข้อมูลฟาร์มให้ครบถ้วน");
       return false;
@@ -450,43 +455,72 @@ export const useRubberFarmEditForm = () => {
           detail.specie && detail.areaOfPlot > 0 && detail.numberOfRubber > 0
       );
 
-      const existingDetails = validPlantingDetails.filter(
-        (detail) => detail.plantingDetailId && detail.plantingDetailId > 0
-      );
-      const newDetails = validPlantingDetails.filter(
-        (detail) => !detail.plantingDetailId || detail.plantingDetailId <= 0
-      );
+      const existingDetails = validPlantingDetails
+        .filter(
+          (detail) => detail.plantingDetailId && detail.plantingDetailId > 0
+        )
+        .map((detail) => ({
+          plantingDetailId: detail.plantingDetailId,
+          specie: detail.specie,
+          areaOfPlot: Number(detail.areaOfPlot),
+          numberOfRubber: Number(detail.numberOfRubber),
+          numberOfTapping: Number(detail.numberOfTapping) || 0,
+          ageOfRubber: Number(detail.ageOfRubber) || 0,
+          yearOfTapping: detail.yearOfTapping,
+          monthOfTapping: detail.monthOfTapping,
+          totalProduction: Number(detail.totalProduction) || 0,
+          version: detail.version,
+        }));
 
-      // Update farm
-      const farmUpdatePayload: any = {
-        villageName: rubberFarm.villageName,
-        moo: Number(rubberFarm.moo) || 0,
-        road: rubberFarm.road || "",
-        alley: rubberFarm.alley || "",
-        subDistrict: rubberFarm.subDistrict,
-        district: rubberFarm.district,
-        province: rubberFarm.province,
-        location: rubberFarm.location,
+      const newDetails = validPlantingDetails
+        .filter(
+          (detail) => !detail.plantingDetailId || detail.plantingDetailId <= 0
+        )
+        .map((detail) => ({
+          specie: detail.specie,
+          areaOfPlot: Number(detail.areaOfPlot),
+          numberOfRubber: Number(detail.numberOfRubber),
+          numberOfTapping: Number(detail.numberOfTapping) || 0,
+          ageOfRubber: Number(detail.ageOfRubber) || 0,
+          yearOfTapping: detail.yearOfTapping,
+          monthOfTapping: detail.monthOfTapping,
+          totalProduction: Number(detail.totalProduction) || 0,
+        }));
+
+      // Prepare single payload with all data
+      const payload = {
+        farmData: {
+          villageName: rubberFarm.villageName,
+          moo: Number(rubberFarm.moo) || 0,
+          road: rubberFarm.road || "",
+          alley: rubberFarm.alley || "",
+          subDistrict: rubberFarm.subDistrict,
+          district: rubberFarm.district,
+          province: rubberFarm.province,
+          location: rubberFarm.location,
+          productDistributionType: rubberFarm.productDistributionType,
+          version: rubberFarm.version,
+        },
+        existingPlantingDetails: existingDetails,
+        newPlantingDetails: newDetails,
+        deletedPlantingDetailIds: deletedPlantingDetailIds,
       };
 
-      if (rubberFarm.version !== undefined) {
-        farmUpdatePayload.version = rubberFarm.version;
-      }
-
-      const farmResponse = await fetch(
-        `/api/v1/rubber-farms/${selectedFarmId}`,
+      // Call single API endpoint
+      const response = await fetch(
+        `/api/v1/rubber-farms/${selectedFarmId}/update-with-details`,
         {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
           },
           credentials: "include",
-          body: JSON.stringify(farmUpdatePayload),
+          body: JSON.stringify(payload),
         }
       );
 
-      if (farmResponse.status === 409) {
-        const errorData = await farmResponse.json();
+      if (response.status === 409) {
+        const errorData = await response.json();
         toast.error(
           errorData.userMessage ||
             "ข้อมูลถูกแก้ไขโดยผู้ใช้อื่นแล้ว กรุณาโหลดข้อมูลใหม่และลองอีกครั้ง",
@@ -496,114 +530,27 @@ export const useRubberFarmEditForm = () => {
         return;
       }
 
-      if (!farmResponse.ok) {
-        const errorData = await farmResponse.json();
-        throw new Error(errorData.message || "ไม่สามารถอัปเดตข้อมูลสวนยางได้");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "ไม่สามารถอัปเดตข้อมูลได้");
       }
 
-      const updatedFarmData = await farmResponse.json();
+      const result = await response.json();
+
+      // Update local state with new versions
       setRubberFarm((prev) => ({
         ...prev,
-        version: updatedFarmData.version,
+        version: result.rubberFarm?.version || prev.version,
       }));
 
-      // Delete removed planting details
-      for (const id of deletedPlantingDetailIds) {
-        try {
-          await fetch(`/api/v1/planting-details/${id}`, {
-            method: "DELETE",
-            credentials: "include",
-          });
-        } catch (err) {
-          console.error("Error deleting planting detail:", err);
-        }
-      }
-
-      // Update existing planting details
-      for (const detail of existingDetails) {
-        try {
-          if (detail.plantingDetailId) {
-            const detailUpdatePayload: any = {
-              specie: detail.specie,
-              areaOfPlot: Number(detail.areaOfPlot),
-              numberOfRubber: Number(detail.numberOfRubber),
-              numberOfTapping: Number(detail.numberOfTapping) || 0,
-              ageOfRubber: Number(detail.ageOfRubber) || 0,
-              yearOfTapping: detail.yearOfTapping,
-              monthOfTapping: detail.monthOfTapping,
-              totalProduction: Number(detail.totalProduction) || 0,
-            };
-
-            if (detail.version !== undefined) {
-              detailUpdatePayload.version = detail.version;
-            }
-
-            const detailResponse = await fetch(
-              `/api/v1/planting-details/${detail.plantingDetailId}`,
-              {
-                method: "PUT",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                credentials: "include",
-                body: JSON.stringify(detailUpdatePayload),
-              }
-            );
-
-            if (detailResponse.status === 409) {
-              const errorData = await detailResponse.json();
-              toast.error(
-                errorData.userMessage ||
-                  "ข้อมูลรายละเอียดการปลูกถูกแก้ไขโดยผู้ใช้อื่นแล้ว",
-                { duration: 5000 }
-              );
-              setIsLoading(false);
-              return;
-            }
-
-            if (detailResponse.ok) {
-              const updatedDetailData = await detailResponse.json();
-              const detailIndex = plantingDetails.findIndex(
-                (d) => d.plantingDetailId === detail.plantingDetailId
-              );
-              if (detailIndex !== -1) {
-                const updatedDetails = [...plantingDetails];
-                updatedDetails[detailIndex].version = updatedDetailData.version;
-                setPlantingDetails(updatedDetails);
-              }
-            }
-          }
-        } catch (detailError) {
-          console.error("Error with planting detail:", detailError);
-        }
-      }
-
-      // Create new planting details
-      for (const detail of newDetails) {
-        try {
-          const newDetailPayload = {
-            rubberFarmId: selectedFarmId,
-            specie: detail.specie,
-            areaOfPlot: Number(detail.areaOfPlot),
-            numberOfRubber: Number(detail.numberOfRubber),
-            numberOfTapping: Number(detail.numberOfTapping) || 0,
-            ageOfRubber: Number(detail.ageOfRubber) || 0,
-            yearOfTapping: detail.yearOfTapping,
-            monthOfTapping: detail.monthOfTapping,
-            totalProduction: Number(detail.totalProduction) || 0,
-          };
-
-          await fetch(`/api/v1/planting-details`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            credentials: "include",
-            body: JSON.stringify(newDetailPayload),
-          });
-        } catch (detailError) {
-          console.error("Error with new planting detail:", detailError);
-        }
+      if (result.plantingDetails) {
+        const updatedDetails = plantingDetails.map((detail) => {
+          const updated = result.plantingDetails.find(
+            (pd: any) => pd.plantingDetailId === detail.plantingDetailId
+          );
+          return updated ? { ...detail, version: updated.version } : detail;
+        });
+        setPlantingDetails(updatedDetails);
       }
 
       setSuccess(true);

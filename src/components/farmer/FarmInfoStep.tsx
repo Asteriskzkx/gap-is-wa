@@ -4,6 +4,7 @@ import {
   PrimaryInputText,
   PrimaryInputNumber,
   PrimaryAutoComplete,
+  PrimaryDropdown,
 } from "@/components/ui";
 import DynamicMapSelector from "@/components/maps/DynamicMap";
 import { RubberFarm } from "@/hooks/useRubberFarmForm";
@@ -37,6 +38,7 @@ interface FarmInfoStepProps {
     type: string;
     coordinates: [number, number];
   }) => void;
+  isEditMode?: boolean;
 }
 
 export const FarmInfoStep: React.FC<FarmInfoStepProps> = ({
@@ -46,7 +48,14 @@ export const FarmInfoStep: React.FC<FarmInfoStepProps> = ({
   tambons,
   updateFarmData,
   onLocationChange,
+  isEditMode = false,
 }) => {
+  const productDistributionOptions = [
+    { label: "ก่อนเปิดกรีด", value: "ก่อนเปิดกรีด" },
+    { label: "น้ำยางสด", value: "น้ำยางสด" },
+    { label: "ยางก้อนถ้วย", value: "ยางก้อนถ้วย" },
+  ];
+
   return (
     <div className={formStyles.formSection}>
       <h2 className={formStyles.section.title}>ข้อมูลสวนยาง</h2>
@@ -86,25 +95,51 @@ export const FarmInfoStep: React.FC<FarmInfoStepProps> = ({
       <div className={formStyles.formField.wrapper}>
         <div>
           <label htmlFor="road" className={formStyles.formField.label}>
-            ถนน
+            ถนน <span className={formStyles.formField.requiredMark}>*</span>
           </label>
           <PrimaryInputText
             id="road"
             name="road"
             value={rubberFarm.road}
             onChange={(value) => updateFarmData("road", value)}
+            required
           />
         </div>
 
         <div>
           <label htmlFor="alley" className={formStyles.formField.label}>
-            ซอย
+            ซอย <span className={formStyles.formField.requiredMark}>*</span>
           </label>
           <PrimaryInputText
             id="alley"
             name="alley"
             value={rubberFarm.alley}
             onChange={(value) => updateFarmData("alley", value)}
+            required
+          />
+        </div>
+      </div>
+
+      <div className={formStyles.formField.wrapper}>
+        <div>
+          <label
+            htmlFor="productDistributionType"
+            className={formStyles.formField.label}
+          >
+            รูปแบบการจำหน่ายผลผลิต{" "}
+            <span className={formStyles.formField.requiredMark}>*</span>
+          </label>
+          <PrimaryDropdown
+            id="productDistributionType"
+            name="productDistributionType"
+            value={rubberFarm.productDistributionType}
+            options={productDistributionOptions}
+            onChange={(value) =>
+              updateFarmData("productDistributionType", value)
+            }
+            placeholder="เลือกรูปแบบการจำหน่าย"
+            required
+            disabled={isEditMode}
           />
         </div>
       </div>
