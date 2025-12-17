@@ -1,9 +1,11 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { DangerIcon } from "@/components/icons";
 import FarmerLayout from "@/components/layout/FarmerLayout";
 import { PrimaryButton, PrimaryDataTable } from "@/components/ui";
+import { useRouter } from "next/navigation";
+import { Dialog } from "primereact/dialog";
+import { useState } from "react";
 
 import {
   ApplicationItem,
@@ -24,6 +26,15 @@ export default function FarmerApplicationsPage() {
     formatThaiDate,
     getStatusInfo,
   } = useFarmerApplications(10);
+
+  const [showAdviceModal, setShowAdviceModal] = useState(false);
+  const [selectedApplication, setSelectedApplication] =
+    useState<ApplicationItem | null>(null);
+
+  const handleViewAdvice = (application: ApplicationItem) => {
+    setSelectedApplication(application);
+    setShowAdviceModal(true);
+  };
 
   return (
     <FarmerLayout>
@@ -81,7 +92,7 @@ export default function FarmerApplicationsPage() {
                   sortable: true,
                   headerAlign: "center" as const,
                   bodyAlign: "center" as const,
-                  style: { width: "12%" },
+                  style: { width: "10%" },
                 },
                 {
                   field: "location",
@@ -95,7 +106,7 @@ export default function FarmerApplicationsPage() {
                   sortable: true,
                   headerAlign: "center" as const,
                   bodyAlign: "left" as const,
-                  style: { width: "15%" },
+                  style: { width: "13%" },
                 },
                 {
                   field: "province",
@@ -105,7 +116,7 @@ export default function FarmerApplicationsPage() {
                   sortable: true,
                   headerAlign: "center" as const,
                   bodyAlign: "left" as const,
-                  style: { width: "15%" },
+                  style: { width: "14%" },
                 },
                 {
                   field: "district",
@@ -115,7 +126,7 @@ export default function FarmerApplicationsPage() {
                   sortable: true,
                   headerAlign: "center" as const,
                   bodyAlign: "left" as const,
-                  style: { width: "15%" },
+                  style: { width: "14%" },
                 },
                 {
                   field: "subDistrict",
@@ -125,7 +136,7 @@ export default function FarmerApplicationsPage() {
                   sortable: true,
                   headerAlign: "center" as const,
                   bodyAlign: "left" as const,
-                  style: { width: "15%" },
+                  style: { width: "14%" },
                 },
                 {
                   field: "inspectionDateAndTime",
@@ -137,7 +148,7 @@ export default function FarmerApplicationsPage() {
                   sortable: true,
                   headerAlign: "center" as const,
                   bodyAlign: "center" as const,
-                  style: { width: "13%" },
+                  style: { width: "15%" },
                 },
                 {
                   field: "status",
@@ -160,6 +171,31 @@ export default function FarmerApplicationsPage() {
                   mobileAlign: "right" as const,
                   style: { width: "15%" },
                 },
+                {
+                  field: "actions",
+                  header: "",
+                  body: (rowData: ApplicationItem) => {
+                    const hasAdviceAndDefect =
+                      rowData.inspection?.adviceAndDefect != null;
+                    return (
+                      <div className="flex justify-center">
+                        <PrimaryButton
+                          icon="pi pi-eye"
+                          color="info"
+                          onClick={() => handleViewAdvice(rowData)}
+                          disabled={!hasAdviceAndDefect}
+                          rounded
+                          text
+                        />
+                      </div>
+                    );
+                  },
+                  style: { width: "5%" },
+                  headerAlign: "center" as const,
+                  bodyAlign: "center" as const,
+                  mobileAlign: "right" as const,
+                  mobileHideLabel: true, // ซ่อน label ใน mobile
+                },
               ]}
               loading={loading}
               paginator
@@ -176,6 +212,158 @@ export default function FarmerApplicationsPage() {
             />
           )}
         </div>
+
+        <Dialog
+          visible={
+            showAdviceModal &&
+            selectedApplication?.inspection?.adviceAndDefect != null
+          }
+          onHide={() => setShowAdviceModal(false)}
+          header={
+            <div className="text-xl font-bold">
+              ข้อมูลการให้คำปรึกษาและข้อบกพร่อง
+            </div>
+          }
+          footer={
+            <div className="flex justify-end">
+              <PrimaryButton
+                label="ปิด"
+                icon="pi pi-times"
+                color="secondary"
+                onClick={() => setShowAdviceModal(false)}
+              />
+            </div>
+          }
+          modal
+          style={{ width: "90vw", maxWidth: "56rem" }}
+          contentStyle={{ maxHeight: "70vh", overflowY: "auto" }}
+          blockScroll={true}
+        >
+          {selectedApplication?.inspection?.adviceAndDefect && (
+            <div>
+              {/* ข้อมูลการตรวจ */}
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                  ข้อมูลการตรวจประเมิน
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <span className="text-sm text-gray-600">รหัสการตรวจ:</span>
+                    <p className="font-medium">
+                      {selectedApplication.inspection?.inspectionNo || "-"}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-sm text-gray-600">วันที่บันทึก:</span>
+                    <p className="font-medium">
+                      {formatThaiDate(
+                        selectedApplication.inspection.adviceAndDefect.date
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* รายการให้คำปรึกษา */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                  รายการให้คำปรึกษา
+                </h3>
+                {selectedApplication.inspection.adviceAndDefect.adviceList
+                  ?.length > 0 ? (
+                  <div className="space-y-4">
+                    {selectedApplication.inspection.adviceAndDefect.adviceList.map(
+                      (advice: any, index: number) => (
+                        <div
+                          key={`advice-${advice.adviceItem}-${advice.time}-${index}`}
+                          className="border border-gray-200 rounded-lg p-4 bg-white hover:shadow-md transition-shadow"
+                        >
+                          <div className="mb-3">
+                            <span className="text-sm font-medium text-gray-700">
+                              รายการให้คำปรึกษา:
+                            </span>
+                            <p className="mt-1 text-gray-900">
+                              {advice.adviceItem}
+                            </p>
+                          </div>
+                          <div className="mb-3">
+                            <span className="text-sm font-medium text-gray-700">
+                              แนวทางการแก้ไข:
+                            </span>
+                            <p className="mt-1 text-gray-900">
+                              {advice.recommendation}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-sm font-medium text-gray-700">
+                              กำหนดระยะเวลา:
+                            </span>
+                            <p className="mt-1 text-gray-900">
+                              {advice.time ? formatThaiDate(advice.time) : "-"}
+                            </p>
+                          </div>
+                        </div>
+                      )
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-gray-500  py-4 text-center bg-gray-50 rounded-lg">
+                    ไม่มีรายการให้คำปรึกษา
+                  </p>
+                )}
+              </div>
+
+              {/* ข้อบกพร่อง */}
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                  ข้อบกพร่อง
+                </h3>
+                {selectedApplication.inspection.adviceAndDefect.defectList
+                  ?.length > 0 ? (
+                  <div className="space-y-4">
+                    {selectedApplication.inspection.adviceAndDefect.defectList.map(
+                      (defect: any, index: number) => (
+                        <div
+                          key={`defect-${defect.defectItem}-${defect.time}-${index}`}
+                          className="border border-gray-200 rounded-lg p-4 bg-white-50 hover:shadow-md transition-shadow"
+                        >
+                          <div className="mb-3">
+                            <span className="text-sm font-medium text-gray-700">
+                              ข้อบกพร่องที่พบ:
+                            </span>
+                            <p className="mt-1 text-gray-900">
+                              {defect.defectItem}
+                            </p>
+                          </div>
+                          <div className="mb-3">
+                            <span className="text-sm font-medium text-gray-700">
+                              รายละเอียดข้อบกพร่อง:
+                            </span>
+                            <p className="mt-1 text-gray-900">
+                              {defect.defectDetail}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-sm font-medium text-gray-700">
+                              กำหนดระยะเวลาแก้ไข:
+                            </span>
+                            <p className="mt-1 text-gray-900">
+                              {defect.time ? formatThaiDate(defect.time) : "-"}
+                            </p>
+                          </div>
+                        </div>
+                      )
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-gray-500  py-4 text-center bg-gray-50 rounded-lg">
+                    ไม่มีข้อบกพร่อง
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+        </Dialog>
       </div>
     </FarmerLayout>
   );
