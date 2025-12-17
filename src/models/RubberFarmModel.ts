@@ -80,9 +80,12 @@ export class RubberFarmModel extends BaseModel {
       this.farmerId > 0 &&
       this.villageName.trim().length > 0 &&
       this.moo > 0 &&
+      this.road.trim().length > 0 &&
+      this.alley.trim().length > 0 &&
       this.subDistrict.trim().length > 0 &&
       this.district.trim().length > 0 &&
       this.province.trim().length > 0 &&
+      this.productDistributionType.trim().length > 0 &&
       this.location !== null &&
       this.location !== undefined
     );

@@ -84,9 +84,9 @@ export default function RubberFarmEditForm() {
     if (step === 2 && !validateFarmData()) return;
     if (step === 3 && !validatePlantingDetails()) return;
 
+    setError(""); // Clear error before moving to next step
     if (step < maxSteps) {
       nextStep();
-      setError("");
     }
   };
 
@@ -222,6 +222,7 @@ export default function RubberFarmEditForm() {
             tambons={tambons}
             updateFarmData={updateFarmData}
             onLocationChange={handleLocationChange}
+            isEditMode={true}
           />
         )}
 

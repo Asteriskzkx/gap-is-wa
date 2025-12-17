@@ -26,6 +26,7 @@ export interface RubberFarm {
   provinceId: number;
   amphureId: number;
   tambonId: number;
+  productDistributionType: string;
   location: {
     type: string;
     coordinates: [number, number];
@@ -55,6 +56,7 @@ const initialRubberFarm: RubberFarm = {
   provinceId: 0,
   amphureId: 0,
   tambonId: 0,
+  productDistributionType: "",
   location: {
     type: "Point",
     coordinates: [100.523186, 13.736717], // กรุงเทพฯ [lng, lat] เป็นค่าเริ่มต้นให้แผนที่แสดงที่ไทย
@@ -153,9 +155,12 @@ export const useRubberFarmForm = () => {
     if (
       !rubberFarm.villageName ||
       rubberFarm.moo <= 0 ||
+      !rubberFarm.road ||
+      !rubberFarm.alley ||
       !rubberFarm.subDistrict ||
       !rubberFarm.district ||
-      !rubberFarm.province
+      !rubberFarm.province ||
+      !rubberFarm.productDistributionType
     ) {
       setError("กรุณากรอกข้อมูลฟาร์มให้ครบถ้วน");
       return false;
@@ -297,6 +302,7 @@ export const useRubberFarmForm = () => {
           district: rubberFarm.district,
           province: rubberFarm.province,
           location: rubberFarm.location,
+          productDistributionType: rubberFarm.productDistributionType,
         },
         plantingDetailsData: validPlantingDetails,
       };
