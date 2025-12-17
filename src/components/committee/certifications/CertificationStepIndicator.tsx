@@ -3,7 +3,7 @@ import { formStyles } from "@/styles/formStyles";
 
 interface Props {
   readonly currentStep: number;
-  readonly maxSteps: number;
+  readonly maxSteps?: number;
   readonly labels?: string[];
 }
 
