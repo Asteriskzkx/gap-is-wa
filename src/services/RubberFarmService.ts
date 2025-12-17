@@ -49,6 +49,7 @@ export class RubberFarmService extends BaseService<RubberFarmModel> {
       district: string;
       province: string;
       location: any;
+      productDistributionType: string;
     },
     plantingDetailsData: Array<{
       specie: string;
@@ -73,7 +74,8 @@ export class RubberFarmService extends BaseService<RubberFarmModel> {
         farmData.subDistrict,
         farmData.district,
         farmData.province,
-        farmData.location
+        farmData.location,
+        farmData.productDistributionType
       );
 
       const createdFarm = await this.create(rubberFarmModel);

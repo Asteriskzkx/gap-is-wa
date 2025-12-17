@@ -284,7 +284,8 @@ export class RubberFarmController extends BaseController<RubberFarmModel> {
       data.subDistrict,
       data.district,
       data.province,
-      data.location || {}
+      data.location || {},
+      data.productDistributionType || ""
     );
   }
 }

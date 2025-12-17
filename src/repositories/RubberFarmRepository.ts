@@ -21,6 +21,7 @@ export class RubberFarmRepository extends BaseRepository<RubberFarmModel> {
           district: model.district,
           province: model.province,
           location: model.location,
+          productDistributionType: model.productDistributionType,
         },
         include: {
           plantingDetails: true,
