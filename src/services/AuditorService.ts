@@ -210,6 +210,7 @@ export class AuditorService extends BaseService<AuditorModel> {
         province: farm.province,
         district: farm.district,
         subDistrict: farm.subDistrict,
+        productDistributionType: farm.productDistributionType,
         farmerName: farm.farmerDetails
           ? farm.farmerDetails.fullName
           : "Unknown",

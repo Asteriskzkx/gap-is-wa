@@ -49,6 +49,7 @@ interface RubberFarm {
   province: string;
   district: string;
   subDistrict: string;
+  productDistributionType: string;
   farmerName: string;
   farmerEmail: string;
 }
@@ -63,6 +64,7 @@ interface RubberFarmDetails {
   district: string;
   province: string;
   location: any;
+  productDistributionType: string;
   plantingDetails: PlantingDetail[];
 }
 
@@ -309,6 +311,24 @@ export default function AuditorScheduleInspectionPage() {
     });
   };
 
+  // ตรวจสอบว่า inspection type สามารถเลือกได้หรือไม่ ตาม productDistributionType
+  const isInspectionTypeAvailable = (
+    inspectionType: InspectionType
+  ): boolean => {
+    if (!selectedFarm) return false;
+
+    const productType = selectedFarm.productDistributionType;
+
+    // Mapping ระหว่าง productDistributionType กับ inspectionTypeId
+    const typeMapping: Record<string, number> = {
+      ก่อนเปิดกรีด: 1,
+      น้ำยางสด: 2,
+      ยางก้อนถ้วย: 3,
+    };
+
+    return typeMapping[productType] === inspectionType.inspectionTypeId;
+  };
+
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
@@ -518,42 +538,76 @@ export default function AuditorScheduleInspectionPage() {
             <h2 className="text-xl font-semibold text-gray-900 mb-4">
               ขั้นตอนที่ 2: เลือกประเภทการตรวจประเมิน
             </h2>
+            {selectedFarm && (
+              <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  <span className="font-semibold">รูปแบบการจำหน่ายผลผลิต:</span>{" "}
+                  {selectedFarm.productDistributionType}
+                </p>
+                <p className="text-xs text-blue-600 mt-1">
+                  ระบบจะแสดงเฉพาะประเภทการตรวจประเมินที่เหมาะสมกับรูปแบบการจำหน่ายผลผลิต
+                </p>
+              </div>
+            )}
             <div className="grid gap-4">
-              {inspectionTypes.map((type) => (
-                <div
-                  key={type.inspectionTypeId}
-                  className={`p-6 border-2 rounded-lg cursor-pointer transition-all ${
-                    selectedInspectionType?.inspectionTypeId ===
-                    type.inspectionTypeId
-                      ? "border-green-500 bg-green-50"
-                      : "border-gray-200 hover:border-gray-300"
-                  }`}
-                  onClick={() => setSelectedInspectionType(type)}
-                >
-                  <div className="flex items-start">
-                    <input
-                      type="radio"
-                      name="inspectionType"
-                      checked={
-                        selectedInspectionType?.inspectionTypeId ===
-                        type.inspectionTypeId
-                      }
-                      onChange={() => setSelectedInspectionType(type)}
-                      className="mt-1 h-4 w-4 text-green-600 focus:ring-green-500"
-                    />
-                    <div className="ml-3">
-                      <h3 className="text-lg font-medium text-gray-900">
-                        {type.typeName}
-                      </h3>
-                      {type.description && (
-                        <p className="mt-1 text-sm text-gray-500">
-                          {type.description}
-                        </p>
-                      )}
+              {inspectionTypes.map((type) => {
+                const isAvailable = isInspectionTypeAvailable(type);
+                return (
+                  <div
+                    key={type.inspectionTypeId}
+                    className={`p-6 border-2 rounded-lg transition-all ${
+                      !isAvailable
+                        ? "opacity-50 cursor-not-allowed bg-gray-50"
+                        : selectedInspectionType?.inspectionTypeId ===
+                          type.inspectionTypeId
+                        ? "border-green-500 bg-green-50 cursor-pointer"
+                        : "border-gray-200 hover:border-gray-300 cursor-pointer"
+                    }`}
+                    onClick={() =>
+                      isAvailable && setSelectedInspectionType(type)
+                    }
+                  >
+                    <div className="flex items-start">
+                      <input
+                        type="radio"
+                        name="inspectionType"
+                        checked={
+                          selectedInspectionType?.inspectionTypeId ===
+                          type.inspectionTypeId
+                        }
+                        onChange={() =>
+                          isAvailable && setSelectedInspectionType(type)
+                        }
+                        disabled={!isAvailable}
+                        className="mt-1 h-4 w-4 text-green-600 focus:ring-green-500 disabled:opacity-50"
+                      />
+                      <div className="ml-3">
+                        <h3
+                          className={`text-lg font-medium ${
+                            isAvailable ? "text-gray-900" : "text-gray-400"
+                          }`}
+                        >
+                          {type.typeName}
+                          {!isAvailable && (
+                            <span className="ml-2 text-xs text-red-500">
+                              (ไม่สามารถเลือกได้)
+                            </span>
+                          )}
+                        </h3>
+                        {type.description && (
+                          <p
+                            className={`mt-1 text-sm ${
+                              isAvailable ? "text-gray-500" : "text-gray-400"
+                            }`}
+                          >
+                            {type.description}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         );
@@ -913,11 +967,17 @@ export default function AuditorScheduleInspectionPage() {
                       </span>{" "}
                       {selectedFarmDetails.district}
                     </div>
-                    <div className="md:col-span-2">
+                    <div>
                       <span className="font-medium text-gray-600">
                         จังหวัด:
                       </span>{" "}
                       {selectedFarmDetails.province}
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-600">
+                        รูปแบบการจำหน่ายผลผลิต:
+                      </span>{" "}
+                      {selectedFarmDetails.productDistributionType}
                     </div>
                   </div>
                 </div>
