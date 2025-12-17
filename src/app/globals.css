@@ -1062,7 +1062,6 @@ button {
   text-align: center !important;
 }
 
-
 /* Dropdown Clear Icon */
 .p-dropdown .p-dropdown-clear-icon {
   color: #6b7280 !important;
@@ -1551,7 +1550,6 @@ input.p-inputtext:disabled {
   height: 1.25rem;
 }
 
-
 .p-radiobutton .p-radiobutton-box {
   border: 2px solid #d1d5db;
   background: #ffffff;
@@ -1621,7 +1619,7 @@ input.p-inputtext:disabled {
 
 .p-multiselect .p-multiselect-label.p-placeholder {
   color: #9ca3af;
-  padding: 0.5rem 0rem !important;
+  padding: 0.5rem 0.75rem !important;
   line-height: inherit !important;
   vertical-align: middle !important;
 }
