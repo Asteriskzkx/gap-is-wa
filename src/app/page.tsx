@@ -53,7 +53,7 @@ export default function LoginPage() {
           <div className={styles.header}>
             <div className={styles.logoWrapper}>
               <Image
-                src="/logo.png"
+                src="/logo-with-text.png"
                 alt="Rubber Authority of Thailand Logo"
                 width={120}
                 height={120}

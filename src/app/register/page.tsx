@@ -42,7 +42,7 @@ export default function FarmerRegisterPage() {
         <div className={styles.header}>
           <Link href="/" className={styles.logoLink}>
             <Image
-              src="/logo.png"
+              src="/logo-with-text.png"
               alt="การยางแห่งประเทศไทย"
               width={100}
               height={100}

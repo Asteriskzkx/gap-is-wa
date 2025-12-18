@@ -13,7 +13,7 @@ export default function RegisterSuccessPage() {
       <div className="max-w-md w-full bg-white shadow rounded-lg p-8 text-center">
         <div className="mb-6 flex justify-center">
           <Image
-            src="/logo.png"
+            src="/logo-with-text.png"
             alt="การยางแห่งประเทศไทย"
             width={100}
             height={100}
