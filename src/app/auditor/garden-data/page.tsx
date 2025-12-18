@@ -1043,7 +1043,7 @@ export default function Page() {
                                 )
                               }
                               placeholder="ครั้ง/ปี"
-                              maxLength={10}
+                              maxLength={255}
                             />
                           </div>
                         </div>
@@ -1134,7 +1134,7 @@ export default function Page() {
                                 )
                               }
                               placeholder="ครั้ง/ปี"
-                              maxLength={10}
+                              maxLength={255}
                             />
                           </div>
                         </div>
@@ -1225,7 +1225,7 @@ export default function Page() {
                                 )
                               }
                               placeholder="ครั้ง/ปี"
-                              maxLength={10}
+                              maxLength={255}
                             />
                           </div>
                         </div>
