@@ -432,7 +432,7 @@ export default function FarmerRegisterPage() {
 
                   <div className={styles.formGroup}>
                     <label htmlFor="villageName" className={styles.label}>
-                      หมู่บ้าน
+                      หมู่บ้าน <span className={styles.required}>*</span>
                     </label>
                     <PrimaryInputText
                       id="villageName"
@@ -443,6 +443,9 @@ export default function FarmerRegisterPage() {
                       }
                       placeholder="ชื่อหมู่บ้าน"
                       maxLength={255}
+                      required
+                      invalid={!!errors.villageName}
+                      errorMessage={errors.villageName}
                     />
                   </div>
                 </div>
@@ -477,7 +480,7 @@ export default function FarmerRegisterPage() {
 
                   <div className={styles.formGroup}>
                     <label htmlFor="road" className={styles.label}>
-                      ถนน
+                      ถนน <span className={styles.required}>*</span>
                     </label>
                     <PrimaryInputText
                       id="road"
@@ -488,13 +491,16 @@ export default function FarmerRegisterPage() {
                       }
                       placeholder="ชื่อถนน"
                       maxLength={100}
+                      required
+                      invalid={!!errors.road}
+                      errorMessage={errors.road}
                     />
                   </div>
                 </div>
 
                 <div className={styles.formGroup}>
                   <label htmlFor="alley" className={styles.label}>
-                    ซอย
+                    ซอย <span className={styles.required}>*</span>
                   </label>
                   <PrimaryInputText
                     id="alley"
@@ -505,6 +511,9 @@ export default function FarmerRegisterPage() {
                     }
                     placeholder="ชื่อซอย"
                     maxLength={100}
+                    required
+                    invalid={!!errors.alley}
+                    errorMessage={errors.alley}
                   />
                 </div>
 
@@ -611,7 +620,7 @@ export default function FarmerRegisterPage() {
 
                 <div className={styles.formGroup}>
                   <label htmlFor="phoneNumber" className={styles.label}>
-                    เบอร์โทรศัพท์บ้าน
+                    เบอร์โทรศัพท์ <span className={styles.required}>*</span>
                   </label>
                   <PrimaryInputMask
                     id="phoneNumber"
@@ -620,8 +629,11 @@ export default function FarmerRegisterPage() {
                     onChange={(value) =>
                       setFormData((prev) => ({ ...prev, phoneNumber: value }))
                     }
-                    mask="99-999-9999"
-                    placeholder="0X-XXX-XXXX"
+                    mask="9-9999-9999"
+                    placeholder="0-XXXX-XXXX"
+                    required
+                    invalid={!!errors.phoneNumber}
+                    errorMessage={errors.phoneNumber}
                   />
                 </div>
 
@@ -640,8 +652,8 @@ export default function FarmerRegisterPage() {
                         mobilePhoneNumber: value,
                       }))
                     }
-                    mask="999-999-9999"
-                    placeholder="0XX-XXX-XXXX"
+                    mask="99-9999-9999"
+                    placeholder="0X-XXXX-XXXX"
                     required
                     invalid={!!errors.mobilePhoneNumber}
                     errorMessage={errors.mobilePhoneNumber}

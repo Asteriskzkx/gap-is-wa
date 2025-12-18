@@ -17,6 +17,25 @@ export interface RubberFarm {
   createdAt: string;
 }
 
+export interface AdviceItem {
+  adviceItem: string;
+  recommendation: string;
+  time: string | null;
+}
+
+export interface DefectItem {
+  defectItem: string;
+  defectDetail: string;
+  time: string | null;
+}
+
+export interface AdviceAndDefect {
+  adviceAndDefectId: number;
+  date: string;
+  adviceList: AdviceItem[];
+  defectList: DefectItem[];
+}
+
 export interface Inspection {
   inspectionId: number;
   inspectionNo: string;
@@ -24,6 +43,7 @@ export interface Inspection {
   inspectionStatus: string;
   inspectionResult: string;
   rubberFarmId: number;
+  adviceAndDefect?: AdviceAndDefect;
 }
 
 export interface ApplicationItem {
