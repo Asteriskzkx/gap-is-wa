@@ -1,8 +1,8 @@
 import React from "react";
 
-type ChevronRightIconProps = React.SVGProps<SVGSVGElement>;
+type ChevronRightIconProps = Readonly<React.SVGProps<SVGSVGElement>>;
 
-export default function ChevronRightIcon(props : ChevronRightIconProps) {
+export default function ChevronRightIcon(props: ChevronRightIconProps) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

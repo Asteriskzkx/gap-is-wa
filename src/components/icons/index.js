@@ -12,6 +12,7 @@ export { default as EditIcon } from "./EditIcon";
 export { default as FileIcon } from "./FileIcon";
 export { default as FindInPageIcon } from "./FindInPageIcon";
 export { default as HomeIcon } from "./HomeIcon";
+export { default as InfoIcon } from "./InfoIcon";
 export { default as InspectIcon } from "./InspectIcon";
 export { default as LandFrameIcon } from "./LandFrameIcon";
 export { default as LogoutIcon } from "./LogoutIcon";
