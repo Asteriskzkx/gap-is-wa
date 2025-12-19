@@ -1,5 +1,6 @@
 import Link from "next/link";
 import React from "react";
+import { ChevronRightIcon } from "../icons";
 
 interface CommitteeStatusCardProps {
   title: string;
@@ -48,20 +49,7 @@ export const CommitteeStatusCard: React.FC<CommitteeStatusCardProps> = ({
           )} flex items-center mt-1`}
         >
           {linkText}
-          <svg
-            className="w-3 h-3 ml-1"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M9 5l7 7-7 7"
-            ></path>
-          </svg>
+          <ChevronRightIcon className="w-3 h-3 ml-1" />
         </Link>
       </div>
     </div>

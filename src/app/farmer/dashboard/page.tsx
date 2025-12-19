@@ -19,11 +19,7 @@ import {
 import FarmerLayout from "@/components/layout/FarmerLayout";
 
 // Components
-import {
-  ActionCard,
-  ApplicationMobileCard,
-  EmptyApplicationsState,
-} from "@/components/farmer";
+import { ActionCard, EmptyApplicationsState } from "@/components/farmer";
 
 import { PrimaryCard } from "@/components/ui";
 import PrimaryDataTable from "@/components/ui/PrimaryDataTable";
@@ -31,7 +27,9 @@ import PrimaryDataTable from "@/components/ui/PrimaryDataTable";
 interface RubberFarm {
   rubberFarmId: number;
   villageName: string;
+  location: string;
   moo: number;
+  subDistrict: string;
   district: string;
   province: string;
   createdAt: string;
@@ -120,10 +118,8 @@ const renderFarmId = (rowData: ApplicationItem) =>
 const renderLocation = (rowData: ApplicationItem) => (
   <div>
     <p>
-      {rowData.rubberFarm.villageName} หมู่ {rowData.rubberFarm.moo}
-    </p>
-    <p className="text-sm text-gray-500">
-      {rowData.rubberFarm.district}, {rowData.rubberFarm.province}
+      {rowData.rubberFarm.location} {rowData.rubberFarm.subDistrict}{" "}
+      {rowData.rubberFarm.district} {rowData.rubberFarm.province}
     </p>
   </div>
 );
@@ -248,8 +244,10 @@ export default function FarmerDashboardPage() {
             (farm: any) => ({
               rubberFarm: {
                 rubberFarmId: farm.rubberFarmId,
+                location: farm.location,
                 villageName: farm.villageName,
                 moo: farm.moo,
+                subDistrict: farm.subDistrict,
                 district: farm.district,
                 province: farm.province,
                 createdAt: farm.createdAt,
@@ -324,70 +322,45 @@ export default function FarmerDashboardPage() {
           )}
 
           {!applicationsLoading && applications.length > 0 && (
-            <>
-              {/* Desktop view - PrimaryDataTable */}
-              <div className="hidden md:block">
-                <PrimaryDataTable
-                  value={applications}
-                  loading={applicationsLoading}
-                  emptyMessage="ไม่มีข้อมูลการยื่นขอรับรอง"
-                  dataKey="rubberFarm.rubberFarmId"
-                  columns={[
-                    {
-                      field: "rubberFarmId",
-                      header: "รหัสสวน",
-                      headerAlign: "center",
-                      bodyAlign: "center",
-                      body: renderFarmId,
-                    },
-                    {
-                      field: "location",
-                      header: "สถานที่",
-                      headerAlign: "center",
-                      bodyAlign: "left",
-                      body: renderLocation,
-                    },
-                    {
-                      field: "inspectionDate",
-                      header: "กำหนดตรวจประเมิน",
-                      headerAlign: "center",
-                      bodyAlign: "center",
-                      body: renderInspectionDate,
-                    },
-                    {
-                      field: "status",
-                      header: "สถานะ",
-                      headerAlign: "center",
-                      bodyAlign: "center",
-                      mobileAlign: "right",
-                      body: renderStatus,
-                    },
-                  ]}
-                />
-              </div>
-
-              {/* Mobile view - Card layout */}
-              <div className="md:hidden space-y-3">
-                {applications.map((application) => {
-                  const statusInfo = getStatusInfo(application);
-                  const { rubberFarm, inspection } = application;
-
-                  return (
-                    <ApplicationMobileCard
-                      key={
-                        inspection
-                          ? `${rubberFarm.rubberFarmId}-${inspection.inspectionId}`
-                          : rubberFarm.rubberFarmId
-                      }
-                      rubberFarm={rubberFarm}
-                      inspection={inspection}
-                      statusInfo={statusInfo}
-                      formatThaiDate={formatThaiDate}
-                    />
-                  );
-                })}
-              </div>
-            </>
+            <div>
+              <PrimaryDataTable
+                value={applications}
+                loading={applicationsLoading}
+                emptyMessage="ไม่มีข้อมูลการยื่นขอรับรอง"
+                dataKey="rubberFarm.rubberFarmId"
+                columns={[
+                  {
+                    field: "rubberFarmId",
+                    header: "รหัสสวน",
+                    headerAlign: "center",
+                    bodyAlign: "center",
+                    body: renderFarmId,
+                  },
+                  {
+                    field: "location",
+                    header: "สถานที่",
+                    headerAlign: "center",
+                    bodyAlign: "left",
+                    body: renderLocation,
+                  },
+                  {
+                    field: "inspectionDate",
+                    header: "กำหนดการตรวจประเมิน",
+                    headerAlign: "center",
+                    bodyAlign: "center",
+                    body: renderInspectionDate,
+                  },
+                  {
+                    field: "status",
+                    header: "สถานะ",
+                    headerAlign: "center",
+                    bodyAlign: "center",
+                    mobileAlign: "right",
+                    body: renderStatus,
+                  },
+                ]}
+              />
+            </div>
           )}
         </PrimaryCard>
       </div>

@@ -3,22 +3,27 @@
 import Link from "next/link";
 import { Sidebar as PrimeSidebar } from "primereact/sidebar";
 import styles from "./Sidebar.module.css";
+import { MenuIcon } from "../icons";
 
 interface SidebarProps {
-  isMobile: boolean;
-  user: {
-    namePrefix: string;
-    firstName: string;
-    lastName: string;
+  readonly isMobile: boolean;
+  readonly user: {
+    readonly namePrefix: string;
+    readonly firstName: string;
+    readonly lastName: string;
   };
-  handleLogout: () => void;
-  visible: boolean;
-  collapsed: boolean;
-  navItems: { title: string; href: string; icon: React.ReactNode }[];
-  onNavItemClick: () => void;
-  onToggleCollapse: () => void;
-  onVisibilityChange: (visible: boolean) => void;
-  avatarColor?: "blue" | "green" | "indigo";
+  readonly handleLogout: () => void;
+  readonly visible: boolean;
+  readonly collapsed: boolean;
+  readonly navItems: readonly {
+    readonly title: string;
+    readonly href: string;
+    readonly icon: React.ReactNode;
+  }[];
+  readonly onNavItemClick: () => void;
+  readonly onToggleCollapse: () => void;
+  readonly onVisibilityChange: (visible: boolean) => void;
+  readonly avatarColor?: "blue" | "green" | "indigo";
 }
 
 export default function SidebarComponent({
@@ -68,20 +73,7 @@ export default function SidebarComponent({
                 className={styles.toggleButton}
                 aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className={styles.toggleIcon}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                </svg>
+                <MenuIcon className={styles.toggleIcon} />
               </button>
             </div>
 
