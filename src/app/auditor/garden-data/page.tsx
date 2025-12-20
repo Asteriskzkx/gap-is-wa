@@ -795,7 +795,6 @@ export default function Page() {
                     label="ถัดไป"
                     onClick={() => {
                       if (selectedInspection) nextStep();
-                      console.log(selectedInspection?.dataRecord);
                     }}
                     disabled={!selectedInspection}
                   />
