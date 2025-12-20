@@ -3,6 +3,17 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { DataTablePageEvent, DataTableSortEvent } from "primereact/datatable";
 
+export interface AuditLogItem {
+  auditLogId: number;
+  tableName: string;
+  recordId: number;
+  userId: number | null;
+  action: string;
+  oldData: Record<string, any> | null;
+  newData: Record<string, any> | null;
+  createdAt: string;
+}
+
 type SortOrder = 1 | -1 | 0 | null;
 
 interface LazyParams {

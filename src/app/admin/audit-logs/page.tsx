@@ -6,7 +6,7 @@ import PrimaryButton from "@/components/ui/PrimaryButton";
 import PrimaryCalendar from "@/components/ui/PrimaryCalendar";
 import PrimaryDataTable from "@/components/ui/PrimaryDataTable";
 import PrimaryInputNumber from "@/components/ui/PrimaryInputNumber";
-import { useAdminAuditLogs } from "@/hooks/useAdminAuditLogs";
+import { AuditLogItem, useAdminAuditLogs } from "@/hooks/useAdminAuditLogs";
 import { CONTAINER, HEADER, SPACING } from "@/styles/auditorClasses";
 import { Dialog } from "primereact/dialog";
 import { useMemo, useState } from "react";
@@ -117,6 +117,17 @@ export default function AuditLogsPage() {
     }
   };
 
+  const [showAuditLogDetailDialog, setShowAuditLogDetailDialog] =
+    useState(false);
+  const [selectedAuditLog, setSelectedAuditLog] = useState<AuditLogItem | null>(
+    null
+  );
+
+  const handleOpenAuditLogDetail = (auditLog: AuditLogItem) => {
+    setSelectedAuditLog(auditLog);
+    setShowAuditLogDetailDialog(true);
+  };
+
   // Table name options
   const tableNameOptions = useMemo(
     () => [
@@ -156,7 +167,8 @@ export default function AuditLogsPage() {
         sortable: true,
         headerAlign: "center" as const,
         bodyAlign: "center" as const,
-        style: { width: "9%" },
+        body: (r: AuditLogItem) => r.auditLogId,
+        style: { width: "8%" },
       },
       {
         field: "tableName",
@@ -164,8 +176,8 @@ export default function AuditLogsPage() {
         sortable: true,
         headerAlign: "center" as const,
         bodyAlign: "left" as const,
-        body: (r: any) => <TableNameCell tableName={r.tableName} />,
-        style: { width: "32%" },
+        body: (r: AuditLogItem) => <TableNameCell tableName={r.tableName} />,
+        style: { width: "30%" },
       },
       {
         field: "action",
@@ -173,8 +185,8 @@ export default function AuditLogsPage() {
         sortable: true,
         headerAlign: "center" as const,
         bodyAlign: "left" as const,
-        body: (r: any) => <ActionCell action={r.action} />,
-        style: { width: "17%" },
+        body: (r: AuditLogItem) => <ActionCell action={r.action} />,
+        style: { width: "15%" },
       },
       {
         field: "recordId",
@@ -182,7 +194,8 @@ export default function AuditLogsPage() {
         sortable: true,
         headerAlign: "center" as const,
         bodyAlign: "center" as const,
-        style: { width: "16%" },
+        body: (r: AuditLogItem) => r.recordId,
+        style: { width: "15%" },
       },
       {
         field: "userId",
@@ -190,8 +203,8 @@ export default function AuditLogsPage() {
         sortable: true,
         headerAlign: "center" as const,
         bodyAlign: "center" as const,
-        body: (r: any) => r.userId ?? "-",
-        style: { width: "11%" },
+        body: (r: AuditLogItem) => r.userId ?? "-",
+        style: { width: "10%" },
       },
       //   {
       //     field: "oldData",
@@ -231,7 +244,7 @@ export default function AuditLogsPage() {
         sortable: true,
         headerAlign: "center" as const,
         bodyAlign: "center" as const,
-        body: (r: any) =>
+        body: (r: AuditLogItem) =>
           r.createdAt
             ? new Date(r.createdAt).toLocaleString("th-TH", {
                 year: "numeric",
@@ -241,7 +254,29 @@ export default function AuditLogsPage() {
                 minute: "2-digit",
               })
             : "-",
-        style: { width: "15%" },
+        style: { width: "14%" },
+      },
+      {
+        field: "actions",
+        header: "",
+        body: (r: AuditLogItem) => {
+          return (
+            <div className="flex justify-center">
+              <PrimaryButton
+                icon="pi pi-eye"
+                color="info"
+                onClick={() => handleOpenAuditLogDetail(r)}
+                rounded
+                text
+              />
+            </div>
+          );
+        },
+        headerAlign: "center" as const,
+        bodyAlign: "center" as const,
+        mobileAlign: "right" as const,
+        mobileHideLabel: true,
+        style: { width: "8%" },
       },
     ],
     []
@@ -359,26 +394,31 @@ export default function AuditLogsPage() {
                 </div>
               </div>
 
-              <div className="mt-3 flex justify-between items-center">
-                <div className="pr-3">
+              <div className="mt-3 grid grid-cols-1 md:grid-cols-4 gap-3 items-center">
+                <div className="md:col-span-2">
                   <PrimaryButton
                     label="ล้างข้อมูลเก่า"
                     icon="pi pi-trash"
                     onClick={handleOpenDeleteDialog}
                     color="danger"
+                    fullWidth
                   />
                 </div>
-                <div className="flex gap-3">
+                <div>
                   <PrimaryButton
                     label="ค้นหา"
                     icon="pi pi-search"
                     onClick={applyFilters}
+                    fullWidth
                   />
+                </div>
+                <div>
                   <PrimaryButton
                     label="ล้างตัวกรอง"
                     icon="pi pi-refresh"
                     onClick={clearFilters}
                     color="secondary"
+                    fullWidth
                   />
                 </div>
               </div>
@@ -500,6 +540,136 @@ export default function AuditLogsPage() {
             </div>
           )}
         </div>
+      </Dialog>
+
+      {/* Audit Log Detail Dialog */}
+      <Dialog
+        visible={showAuditLogDetailDialog && selectedAuditLog !== null}
+        onHide={() => setShowAuditLogDetailDialog(false)}
+        header="รายละเอียดบันทึกเหตุการณ์"
+        footer={
+          <div className="flex justify-end">
+            <PrimaryButton
+              label="ปิด"
+              icon="pi pi-times"
+              onClick={() => setShowAuditLogDetailDialog(false)}
+              color="secondary"
+            />
+          </div>
+        }
+        modal
+        blockScroll={true}
+        style={{ width: "90vw", maxWidth: "90vw" }}
+        contentStyle={{ maxHeight: "80vh", overflowY: "auto" }}
+      >
+        {selectedAuditLog && (
+          <div className="space-y-4">
+            {/* Basic Information */}
+            <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                ข้อมูลพื้นฐาน
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <span className="text-sm font-medium text-gray-600 block">
+                    รหัส
+                  </span>
+                  <p className="text-base text-gray-900 mt-1">
+                    {selectedAuditLog.auditLogId}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-sm font-medium text-gray-600 block">
+                    ตาราง
+                  </span>
+                  <p className="text-base text-gray-900 mt-1">
+                    <TableNameCell tableName={selectedAuditLog.tableName} />
+                  </p>
+                </div>
+                <div>
+                  <span className="text-sm font-medium text-gray-600 block">
+                    การดำเนินการ
+                  </span>
+                  <p className="text-base text-gray-900 mt-1">
+                    <ActionCell action={selectedAuditLog.action} />
+                  </p>
+                </div>
+                <div>
+                  <span className="text-sm font-medium text-gray-600 block">
+                    รหัสข้อมูลในตาราง
+                  </span>
+                  <p className="text-base text-gray-900 mt-1">
+                    {selectedAuditLog.recordId}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-sm font-medium text-gray-600 block">
+                    รหัสผู้ใช้
+                  </span>
+                  <p className="text-base text-gray-900 mt-1">
+                    {selectedAuditLog.userId ?? "-"}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-sm font-medium text-gray-600 block">
+                    วันที่ดำเนินการ
+                  </span>
+                  <p className="text-base text-gray-900 mt-1">
+                    {selectedAuditLog.createdAt
+                      ? new Date(selectedAuditLog.createdAt).toLocaleString(
+                          "th-TH",
+                          {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            second: "2-digit",
+                          }
+                        )
+                      : "-"}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Old Data */}
+            <div className="bg-blue-50 rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                ข้อมูลเก่า
+              </h3>
+              {selectedAuditLog.oldData ? (
+                <div className="bg-white rounded border border-blue-200 p-3 overflow-auto">
+                  <pre className="text-sm text-gray-800 whitespace-pre-wrap break-words">
+                    {JSON.stringify(selectedAuditLog.oldData, null, 2)}
+                  </pre>
+                </div>
+              ) : (
+                <div className="bg-white rounded border border-blue-200 p-3 text-center">
+                  <p className="text-gray-500 italic">ไม่มีข้อมูลเก่า</p>
+                </div>
+              )}
+            </div>
+
+            {/* New Data */}
+            <div className="bg-green-50 rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                ข้อมูลใหม่
+              </h3>
+              {selectedAuditLog.newData ? (
+                <div className="bg-white rounded border border-green-200 p-3 overflow-auto">
+                  <pre className="text-sm text-gray-800 whitespace-pre-wrap break-words">
+                    {JSON.stringify(selectedAuditLog.newData, null, 2)}
+                  </pre>
+                </div>
+              ) : (
+                <div className="bg-white rounded border border-green-200 p-3 text-center">
+                  <p className="text-gray-500 italic">ไม่มีข้อมูลใหม่</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </Dialog>
     </AdminLayout>
   );
