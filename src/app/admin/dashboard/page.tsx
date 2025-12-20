@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 // Icons
+import { ChevronRightIcon } from "@/components/icons";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { adminNavItems } from "@/config/navItems";
 
@@ -61,20 +62,7 @@ export default function AdminDashboardPage() {
                     </p>
                     <div className="mt-4 flex items-center text-indigo-600 font-medium text-sm">
                       <span>เข้าสู่เมนู</span>
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4 ml-1"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 5l7 7-7 7"
-                        />
-                      </svg>
+                      <ChevronRightIcon className="h-4 w-4 ml-1" />
                     </div>
                   </div>
                 </Link>

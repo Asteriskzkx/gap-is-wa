@@ -1,6 +1,7 @@
-import Link from "next/link";
 import { getInspectionSummaryRoute } from "@/lib/routeHelpers";
+import Link from "next/link";
 import React from "react";
+import { ChevronRightIcon } from "../icons";
 
 interface Inspection {
   inspectionId: number;
@@ -84,20 +85,7 @@ export const RecentInspectionCard: React.FC<RecentInspectionCardProps> = ({
           className="text-sm text-indigo-600 hover:text-indigo-900 flex items-center"
         >
           {getLinkText(inspection.inspectionResult)}
-          <svg
-            className="w-4 h-4 ml-1"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M9 5l7 7-7 7"
-            ></path>
-          </svg>
+          <ChevronRightIcon className="h-4 w-4 ml-1" />
         </Link>
       </div>
     </div>

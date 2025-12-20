@@ -161,7 +161,6 @@ export class AuditLogService extends BaseService<AuditLogModel> {
         cutoffDate
       );
 
-      console.log(`Deleted ${deletedCount} audit logs older than ${days} days`);
       return deletedCount;
     } catch (error) {
       this.handleServiceError(error);

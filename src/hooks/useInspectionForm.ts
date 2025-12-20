@@ -144,23 +144,12 @@ export function useInspectionForm(): UseInspectionFormReturn {
 
   const saveCurrentItem = useCallback(
     async (inspectionId: number): Promise<boolean> => {
-      console.log("saveCurrentItem called:", {
-        inspectionId,
-        currentItemIndex,
-      });
-
       // ใช้ state ล่าสุดแทนการใช้ closure
       const currentItem = inspectionItems[currentItemIndex];
       if (!currentItem) {
         console.error("Current item not found at index:", currentItemIndex);
         return false;
       }
-
-      console.log("Current item to save:", {
-        inspectionItemId: currentItem.inspectionItemId,
-        itemNo: currentItem.inspectionItemMaster?.itemNo,
-        otherConditions: currentItem.otherConditions,
-      });
 
       // Validate
       if (currentItem.requirements) {
@@ -187,11 +176,6 @@ export function useInspectionForm(): UseInspectionFormReturn {
             note: r.note || "",
             version: r.version,
           }));
-
-          console.log(
-            "Sending batch requirements payload for current item:",
-            reqPayload
-          );
 
           const response = await fetch(`/api/v1/requirements/evaluation`, {
             method: "PUT",
@@ -267,7 +251,6 @@ export function useInspectionForm(): UseInspectionFormReturn {
           });
         }
 
-        console.log("Save completed successfully");
         return true;
       } catch (error) {
         console.error("Error saving item:", error);
@@ -283,7 +266,6 @@ export function useInspectionForm(): UseInspectionFormReturn {
   // ฟังก์ชันบันทึกทุกรายการที่มีการแก้ไข
   const saveAllItems = useCallback(
     async (inspectionId: number): Promise<boolean> => {
-      console.log("saveAllItems called for all items");
       setSaving(true);
 
       try {

@@ -20,11 +20,6 @@ export const metadata: Metadata = {
   authors: [{ name: "การยางแห่งประเทศไทย" }],
   creator: "การยางแห่งประเทศไทย",
   robots: "index, follow",
-  icons: {
-    icon: "/logo-without-text.png",
-    shortcut: "/logo-without-text.png",
-    apple: "/logo-without-text.png",
-  },
 };
 
 // แยก viewport ออกมาเป็น export แยก

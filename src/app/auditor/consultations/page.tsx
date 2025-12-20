@@ -557,7 +557,6 @@ export default function Page() {
                     label="ถัดไป"
                     onClick={() => {
                       if (selectedInspection) nextStep();
-                      console.log(selectedInspection?.adviceAndDefect);
                     }}
                     disabled={!selectedInspection}
                   />

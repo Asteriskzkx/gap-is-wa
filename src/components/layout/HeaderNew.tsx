@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useRef } from "react";
 import Image from "next/image";
 import { Menu as PrimeMenu } from "primereact/menu";
 import { MenuItem } from "primereact/menuitem";
+import { useRef, useState } from "react";
+import { ChevronBottomIcon, MenuIcon } from "../icons";
 import styles from "./Header.module.css";
 
 interface UserInfo {
@@ -15,11 +16,11 @@ interface UserInfo {
 }
 
 interface HeaderProps {
-  isMobile: boolean;
-  user: UserInfo;
-  toggleSidebarVisibility: () => void;
-  handleLogout: () => void;
-  avatarColor?: "blue" | "green" | "indigo";
+  readonly isMobile: boolean;
+  readonly user: UserInfo;
+  readonly toggleSidebarVisibility: () => void;
+  readonly handleLogout: () => void;
+  readonly avatarColor?: "blue" | "green" | "indigo";
 }
 
 const rolePathMap: Record<string, string> = {
@@ -81,20 +82,7 @@ export default function Header({
               className={styles.menuButton}
               aria-label="Toggle sidebar"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className={styles.menuIcon}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
+              <MenuIcon className={styles.menuIcon} />
             </button>
           )}
           <Image
@@ -127,22 +115,12 @@ export default function Header({
               <div className={`${styles.avatar} ${avatarClass}`}>
                 {!user.isLoading && user.firstName.charAt(0)}
               </div>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
+
+              <ChevronBottomIcon
                 className={`${styles.chevronIcon} ${
                   dropdownOpen ? styles.rotated : ""
                 }`}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
+              />
             </button>
 
             <PrimeMenu

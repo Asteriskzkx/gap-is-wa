@@ -258,6 +258,7 @@ export class UserService extends BaseService<UserModel> {
       };
     } catch (error) {
       this.handleServiceError(error);
+      console.error("Error finding users with filter:", error);
       return { users: [], total: 0 };
     }
   }

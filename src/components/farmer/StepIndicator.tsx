@@ -44,7 +44,7 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({
   return (
     <div className="mb-8">
       {/* Desktop Version */}
-      <div className={formStyles.stepIndicator.desktopWrapper}>
+      <div className="hidden md:block">
         <div className={formStyles.stepIndicator.stepContainer}>
           {Array.from({ length: maxSteps }, (_, i) => i + 1).map((s, index) => (
             <React.Fragment key={s}>
@@ -76,7 +76,7 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({
       </div>
 
       {/* Mobile Version */}
-      <div className={formStyles.stepIndicator.mobileWrapper}>
+      <div className="md:hidden">
         <div className="flex items-center justify-center mb-4">
           <div className="flex items-center space-x-2">
             {Array.from({ length: maxSteps }, (_, i) => i + 1).map(

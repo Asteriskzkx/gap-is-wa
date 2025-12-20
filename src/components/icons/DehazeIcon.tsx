@@ -1,8 +1,8 @@
 import React from "react";
 
-type MenuIconProps = Readonly<React.SVGProps<SVGSVGElement>>;
+type DehazeIconProps = Readonly<React.SVGProps<SVGSVGElement>>;
 
-export default function MenuIcon(props: MenuIconProps) {
+export default function DehazeIcon(props: DehazeIconProps) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -11,7 +11,7 @@ export default function MenuIcon(props: MenuIconProps) {
       fill="currentColor"
       {...props}
     >
-      <path d="M120-240v-80h720v80H120Zm0-200v-80h720v80H120Zm0-200v-80h720v80H120Z" />
+<path d="M120-680v-80h720v80H120Zm0 480v-80h720v80H120Zm0-240v-80h720v80H120Z"/>
     </svg>
   );
 }

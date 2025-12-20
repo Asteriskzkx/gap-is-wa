@@ -159,12 +159,7 @@ export default function AdminUserManagementPage() {
     order: sortOrder,
   }), [sortField, sortOrder]);
 
-  // Initial load
-  useEffect(() => {
-    fetchUsers(0, rows, currentFilters, currentSort);
-  }, []);
-
-  // Refetch when filters change (realtime with debounce)
+  // Fetch when filters, sort, or rows change (also handles initial load)
   useEffect(() => {
     fetchUsers(0, rows, currentFilters, currentSort);
     setFirst(0); // Reset to first page when filters change

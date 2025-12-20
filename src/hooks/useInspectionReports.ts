@@ -182,8 +182,6 @@ export function useInspectionReports(
         | string
         | undefined;
 
-      console.log("roleFromSession:", roleFromSession);
-
       // normalize role to lowercase to handle different casing (e.g. 'COMMITTEE')
       const normalizedRoleFromSession = roleFromSession
         ? roleFromSession.toLowerCase()

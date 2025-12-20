@@ -8,7 +8,7 @@ export default function FooterNew() {
         <div className={styles.footerContent}>
           <div className={styles.leftSection}>
             <Image
-              src="/logo.png"
+              src="/logo-with-text.png"
               alt="Rubber Authority of Thailand Logo"
               width={40}
               height={40}

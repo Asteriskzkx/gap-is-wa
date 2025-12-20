@@ -14,6 +14,7 @@ import PrimaryInputText from "@/components/ui/PrimaryInputText";
 import PrimaryPassword from "@/components/ui/PrimaryPassword";
 import { useRegisterForm } from "@/hooks/useRegisterForm";
 import styles from "./register.module.css";
+import CheckIcon from "@/components/icons/CheckIcon";
 
 export default function FarmerRegisterPage() {
   const {
@@ -42,7 +43,7 @@ export default function FarmerRegisterPage() {
         <div className={styles.header}>
           <Link href="/" className={styles.logoLink}>
             <Image
-              src="/logo.png"
+              src="/logo-with-text.png"
               alt="การยางแห่งประเทศไทย"
               width={100}
               height={100}
@@ -73,19 +74,7 @@ export default function FarmerRegisterPage() {
                       }`}
                     >
                       {s < step ? (
-                        <svg
-                          className={styles.checkIcon}
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
+                        <CheckIcon className={styles.checkIcon} />
                       ) : (
                         s
                       )}
@@ -140,19 +129,7 @@ export default function FarmerRegisterPage() {
                         className={`${styles.stepDotMobile} ${getStepClass()}`}
                       >
                         {s < step ? (
-                          <svg
-                            className={styles.checkIconMobile}
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M5 13l4 4L19 7"
-                            />
-                          </svg>
+                          <CheckIcon className={styles.checkIconMobile} />
                         ) : (
                           s
                         )}
