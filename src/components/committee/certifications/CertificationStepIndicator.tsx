@@ -32,9 +32,19 @@ export default function CertificationStepIndicator({
     return `${base} ${formStyles.stepIndicator.stepLabel.inactive}`;
   };
 
+  const getMobileCircle = (s: number) => {
+    const base = formStyles.stepIndicator.mobileCircle.base;
+    if (s === currentStep)
+      return `${base} ${formStyles.stepIndicator.mobileCircle.active}`;
+    if (s < currentStep)
+      return `${base} ${formStyles.stepIndicator.mobileCircle.completed}`;
+    return `${base} ${formStyles.stepIndicator.mobileCircle.inactive}`;
+  };
+
   return (
     <div className="mb-6">
-      <div className={formStyles.stepIndicator.desktopWrapper}>
+      {/* Desktop Version */}
+      <div className="hidden md:block">
         <div className={formStyles.stepIndicator.stepContainer}>
           {Array.from({ length: maxSteps }, (_, i) => i + 1).map((s, idx) => (
             <React.Fragment key={s}>
@@ -62,6 +72,39 @@ export default function CertificationStepIndicator({
               )}
             </React.Fragment>
           ))}
+        </div>
+      </div>
+
+      {/* Mobile Version */}
+      <div className="md:hidden">
+        <div className="flex items-center justify-center mb-4">
+          <div className="flex items-center space-x-2">
+            {Array.from({ length: maxSteps }, (_, i) => i + 1).map((s, idx) => (
+              <React.Fragment key={s}>
+                <div className={getMobileCircle(s)}>
+                  {s < currentStep ? <i className="pi pi-check text-xs" /> : s}
+                </div>
+                {idx < maxSteps - 1 && (
+                  <div
+                    className={
+                      s < currentStep
+                        ? formStyles.stepIndicator.mobileProgressLine.completed
+                        : formStyles.stepIndicator.mobileProgressLine.inactive
+                    }
+                  />
+                )}
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+
+        <div className="text-center">
+          <div className="text-lg font-semibold text-gray-800">
+            ขั้นตอนที่ {currentStep}: {labels[currentStep - 1]}
+          </div>
+          <div className="text-sm text-gray-500 mt-1">
+            {currentStep} จาก {maxSteps} ขั้นตอน
+          </div>
         </div>
       </div>
     </div>
