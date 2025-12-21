@@ -209,15 +209,20 @@ export default function PreviewComponentPage() {
 
           {/* ThaiDatePicker */}
           <div className="mb-8">
-            <ThaiDatePicker
-              value={selectedDate}
-              onChange={handleDatePickerChange}
-              // reactDatePickerProps={{
-              //   customInput: <input className="w-full bg-blue-300" />,
-              // }}
-            />
-            <div>christDate: {selectedDate}</div>
-            <div>thaiDate: {selectedThaiDate}</div>
+            <h2 className="text-xl font-bold text-gray-800 mb-4">
+              6. ThaiDatePicker (ตัวเลือกวันที่แบบพุทธศักราช)
+            </h2>
+            <div className="w-full ">
+              <ThaiDatePicker
+                value={selectedDate}
+                onChange={handleDatePickerChange}
+                // reactDatePickerProps={{
+                //   customInput: <input className="w-full bg-blue-300" />,
+                // }}
+              />
+              <div>christDate: {selectedDate}</div>
+              <div>thaiDate: {selectedThaiDate}</div>
+            </div>
           </div>
         </div>
       </div>
