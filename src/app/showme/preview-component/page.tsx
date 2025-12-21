@@ -9,7 +9,7 @@ import { InputTextarea } from "primereact/inputtextarea";
 import { useState } from "react";
 import toast from "react-hot-toast";
 
-export default function LocaleTestPage() {
+export default function PreviewComponentPage() {
   const [date, setDate] = useState<Date | null>(null);
   const [visible, setVisible] = useState(false);
   const [textAreaValue, setTextAreaValue] = useState("");
