@@ -5,25 +5,32 @@ import PrimaryInputTextarea from "@/components/ui/PrimaryInputTextarea";
 import { Button } from "primereact/button";
 import { Calendar } from "primereact/calendar";
 import { Dialog } from "primereact/dialog";
-import { InputTextarea } from "primereact/inputtextarea";
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { ThaiDatePicker } from "thaidatepicker-react";
 
-export default function LocaleTestPage() {
+export default function PreviewComponentPage() {
   const [date, setDate] = useState<Date | null>(null);
   const [visible, setVisible] = useState(false);
   const [textAreaValue, setTextAreaValue] = useState("");
+
+  const [selectedDate, setSelectedDate] = useState("2025-12-21");
+  const [selectedThaiDate, setSelectedThaiDate] = useState("2568-12-21");
+
+  const handleDatePickerChange = (christDate: string, buddhistDate: string) => {
+    console.log(christDate);
+    console.log(buddhistDate);
+    setSelectedDate(christDate);
+    setSelectedThaiDate(buddhistDate);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-6xl mx-auto">
         <div className="bg-white rounded-lg shadow-lg p-8">
-          <h1 className="text-3xl font-bold text-green-800 mb-2">
-            ทดสอบ PrimeReact Thai Locale
+          <h1 className="text-3xl font-bold text-green-800 mb-4">
+            ทดสอบ Components
           </h1>
-          <p className="text-gray-600 mb-8">
-            ตรวจสอบการแสดงผลภาษาไทยใน PrimeReact Components
-          </p>
 
           {/* Calendar Test */}
           <div className="mb-8">
@@ -197,6 +204,24 @@ export default function LocaleTestPage() {
                 rows={5}
                 className="border border-gray-300"
               />
+            </div>
+          </div>
+
+          {/* ThaiDatePicker */}
+          <div className="mb-8">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">
+              6. ThaiDatePicker (ตัวเลือกวันที่แบบพุทธศักราช)
+            </h2>
+            <div className="w-full ">
+              <ThaiDatePicker
+                value={selectedDate}
+                onChange={handleDatePickerChange}
+                // reactDatePickerProps={{
+                //   customInput: <input className="w-full bg-blue-300" />,
+                // }}
+              />
+              <div>christDate: {selectedDate}</div>
+              <div>thaiDate: {selectedThaiDate}</div>
             </div>
           </div>
         </div>
