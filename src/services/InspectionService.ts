@@ -488,16 +488,30 @@ export class InspectionService extends BaseService<InspectionModel> {
         currentVersion
       );
 
-      // Log การ update
+      // บันทึก audit log เฉพาะข้อมูลหลักของ Inspection (ไม่รวม relations)
       if (updated && oldRecord) {
         const {
           createdAt: oldCreatedAt,
           updatedAt: oldUpdatedAt,
+          inspectionItems: oldInspectionItems,
+          dataRecord: oldDataRecord,
+          adviceAndDefect: oldAdviceAndDefect,
+          auditorInspections: oldAuditorInspections,
+          inspectionType: oldInspectionType,
+          rubberFarm: oldRubberFarm,
+          auditorChief: oldAuditorChief,
           ...oldData
         } = oldRecord.toJSON();
         const {
           createdAt: newCreatedAt,
           updatedAt: newUpdatedAt,
+          inspectionItems: newInspectionItems,
+          dataRecord: newDataRecord,
+          adviceAndDefect: newAdviceAndDefect,
+          auditorInspections: newAuditorInspections,
+          inspectionType: newInspectionType,
+          rubberFarm: newRubberFarm,
+          auditorChief: newAuditorChief,
           ...newData
         } = updated.toJSON();
 
@@ -538,16 +552,30 @@ export class InspectionService extends BaseService<InspectionModel> {
         currentVersion
       );
 
-      // Log การ update
+      // บันทึก audit log เฉพาะข้อมูลหลักของ Inspection (ไม่รวม relations)
       if (updated && oldRecord) {
         const {
           createdAt: oldCreatedAt,
           updatedAt: oldUpdatedAt,
+          inspectionItems: oldInspectionItems,
+          dataRecord: oldDataRecord,
+          adviceAndDefect: oldAdviceAndDefect,
+          auditorInspections: oldAuditorInspections,
+          inspectionType: oldInspectionType,
+          rubberFarm: oldRubberFarm,
+          auditorChief: oldAuditorChief,
           ...oldData
         } = oldRecord.toJSON();
         const {
           createdAt: newCreatedAt,
           updatedAt: newUpdatedAt,
+          inspectionItems: newInspectionItems,
+          dataRecord: newDataRecord,
+          adviceAndDefect: newAdviceAndDefect,
+          auditorInspections: newAuditorInspections,
+          inspectionType: newInspectionType,
+          rubberFarm: newRubberFarm,
+          auditorChief: newAuditorChief,
           ...newData
         } = updated.toJSON();
 
