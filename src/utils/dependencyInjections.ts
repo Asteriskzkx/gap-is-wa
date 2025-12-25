@@ -143,7 +143,8 @@ const auditorInspectionService = new AuditorInspectionService(
 );
 const inspectionItemService = new InspectionItemService(
   inspectionItemRepository,
-  requirementRepository
+  requirementRepository,
+  auditLogService
 );
 const requirementService = new RequirementService(
   requirementRepository,
