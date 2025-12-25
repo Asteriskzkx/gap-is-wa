@@ -145,7 +145,10 @@ const inspectionItemService = new InspectionItemService(
   inspectionItemRepository,
   requirementRepository
 );
-const requirementService = new RequirementService(requirementRepository);
+const requirementService = new RequirementService(
+  requirementRepository,
+  auditLogService
+);
 const dataRecordService = new DataRecordService(
   dataRecordRepository,
   auditLogService

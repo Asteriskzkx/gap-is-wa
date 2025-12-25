@@ -1,14 +1,20 @@
 import { BaseService } from "./BaseService";
 import { RequirementModel } from "../models/RequirementModel";
 import { RequirementRepository } from "../repositories/RequirementRepository";
+import { AuditLogService } from "./AuditLogService";
 import { OptimisticLockError } from "../errors/OptimisticLockError";
 
 export class RequirementService extends BaseService<RequirementModel> {
   private requirementRepository: RequirementRepository;
+  private auditLogService: AuditLogService;
 
-  constructor(requirementRepository: RequirementRepository) {
+  constructor(
+    requirementRepository: RequirementRepository,
+    auditLogService: AuditLogService
+  ) {
     super(requirementRepository);
     this.requirementRepository = requirementRepository;
+    this.auditLogService = auditLogService;
   }
 
   async createRequirement(requirementData: {
@@ -54,28 +60,50 @@ export class RequirementService extends BaseService<RequirementModel> {
     evaluationResult: string,
     evaluationMethod: string,
     note: string,
-    currentVersion?: number
+    currentVersion: number,
+    userId?: number
   ): Promise<RequirementModel | null> {
     try {
-      if (currentVersion !== undefined) {
-        // Use optimistic locking
-        return await this.requirementRepository.updateWithLock(
-          requirementId,
-          {
-            evaluationResult,
-            evaluationMethod,
-            note,
-          },
-          currentVersion
-        );
-      } else {
-        // Fallback to regular update
-        return await this.update(requirementId, {
+      // ดึงข้อมูลเก่าก่อน update (สำหรับ log)
+      const oldRecord = await this.requirementRepository.findById(
+        requirementId
+      );
+
+      // Use optimistic locking
+      const updated = await this.requirementRepository.updateWithLock(
+        requirementId,
+        {
           evaluationResult,
           evaluationMethod,
           note,
-        });
+        },
+        currentVersion
+      );
+
+      // Log การ update
+      if (updated && oldRecord) {
+        const {
+          createdAt: oldCreatedAt,
+          updatedAt: oldUpdatedAt,
+          ...oldData
+        } = oldRecord.toJSON();
+        const {
+          createdAt: newCreatedAt,
+          updatedAt: newUpdatedAt,
+          ...newData
+        } = updated.toJSON();
+
+        this.auditLogService.logAction(
+          "Requirement",
+          "UPDATE",
+          requirementId,
+          userId || undefined,
+          oldData,
+          newData
+        );
       }
+
+      return updated;
     } catch (error) {
       this.handleServiceError(error);
       throw error;

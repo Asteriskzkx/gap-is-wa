@@ -3,7 +3,7 @@ import { requirementController } from "@/utils/dependencyInjections";
 import { checkAuthorization } from "@/lib/session";
 
 export async function PUT(req: NextRequest) {
-  const { authorized, error } = await checkAuthorization(req, [
+  const { authorized, error, session } = await checkAuthorization(req, [
     "AUDITOR",
     "ADMIN",
   ]);
@@ -15,5 +15,5 @@ export async function PUT(req: NextRequest) {
     );
   }
 
-  return requirementController.updateRequirementsEvaluations(req);
+  return requirementController.updateRequirementsEvaluations(req, session);
 }
