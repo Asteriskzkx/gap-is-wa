@@ -1,14 +1,20 @@
 import { BaseService } from "./BaseService";
 import { DataRecordModel } from "../models/DataRecordModel";
 import { DataRecordRepository } from "../repositories/DataRecordRepository";
+import { AuditLogService } from "./AuditLogService";
 import { OptimisticLockError } from "../errors/OptimisticLockError";
 
 export class DataRecordService extends BaseService<DataRecordModel> {
   private dataRecordRepository: DataRecordRepository;
+  private auditLogService: AuditLogService;
 
-  constructor(dataRecordRepository: DataRecordRepository) {
+  constructor(
+    dataRecordRepository: DataRecordRepository,
+    auditLogService: AuditLogService
+  ) {
     super(dataRecordRepository);
     this.dataRecordRepository = dataRecordRepository;
+    this.auditLogService = auditLogService;
   }
 
   async createDataRecord(dataRecordData: {
@@ -64,20 +70,44 @@ export class DataRecordService extends BaseService<DataRecordModel> {
   async updateDataRecord(
     dataRecordId: number,
     data: Partial<DataRecordModel>,
-    currentVersion?: number
+    currentVersion: number,
+    userId?: number
   ): Promise<DataRecordModel | null> {
     try {
-      if (currentVersion !== undefined) {
-        // Use optimistic locking
-        return await this.dataRecordRepository.updateWithLock(
+      // ดึงข้อมูลเก่าก่อน update (สำหรับ log)
+      const oldRecord = await this.dataRecordRepository.findById(dataRecordId);
+
+      // Use optimistic locking
+      const updated = await this.dataRecordRepository.updateWithLock(
+        dataRecordId,
+        data,
+        currentVersion
+      );
+
+      // Log การ update
+      if (updated && oldRecord) {
+        const {
+          createdAt: oldCreatedAt,
+          updatedAt: oldUpdatedAt,
+          ...oldData
+        } = oldRecord.toJSON();
+        const {
+          createdAt: newCreatedAt,
+          updatedAt: newUpdatedAt,
+          ...newData
+        } = updated.toJSON();
+
+        this.auditLogService.logAction(
+          "DataRecord",
+          "UPDATE",
           dataRecordId,
-          data,
-          currentVersion
+          userId || undefined,
+          oldData,
+          newData
         );
-      } else {
-        // Fallback to regular update
-        return await this.update(dataRecordId, data);
       }
+
+      return updated;
     } catch (error) {
       this.handleServiceError(error);
       throw error;
