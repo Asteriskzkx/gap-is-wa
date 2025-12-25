@@ -94,7 +94,8 @@ export class DataRecordController extends BaseController<DataRecordModel> {
 
   async updateDataRecord(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: { id: string } },
+    session?: any
   ): Promise<NextResponse> {
     try {
       let dataRecordId: number;
@@ -107,10 +108,21 @@ export class DataRecordController extends BaseController<DataRecordModel> {
       const data = await req.json();
       const { version, ...updateData } = data;
 
+      // Validate that version is provided
+      if (version === undefined || version === null) {
+        return NextResponse.json(
+          { message: "Version is required for optimistic locking" },
+          { status: 400 }
+        );
+      }
+
+      const userId = session ? Number(session.user.id) : undefined;
+
       const updatedDataRecord = await this.dataRecordService.updateDataRecord(
         dataRecordId,
         updateData,
-        version
+        version,
+        userId
       );
 
       if (!updatedDataRecord) {
