@@ -524,26 +524,50 @@ export class InspectionService extends BaseService<InspectionModel> {
   async updateInspectionResult(
     inspectionId: number,
     result: string,
-    currentVersion?: number
+    currentVersion: number,
+    userId?: number
   ): Promise<InspectionModel | null> {
     try {
-      // Use optimistic locking if version is provided
-      if (currentVersion !== undefined && currentVersion !== null) {
-        return await this.inspectionRepository.updateWithLock(
+      // ดึงข้อมูลเก่าก่อน update (สำหรับ log)
+      const oldRecord = await this.inspectionRepository.findById(inspectionId);
+
+      // Use optimistic locking
+      const updated = await this.inspectionRepository.updateWithLock(
+        inspectionId,
+        { inspectionResult: result },
+        currentVersion
+      );
+
+      // Log การ update
+      if (updated && oldRecord) {
+        const {
+          createdAt: oldCreatedAt,
+          updatedAt: oldUpdatedAt,
+          ...oldData
+        } = oldRecord.toJSON();
+        const {
+          createdAt: newCreatedAt,
+          updatedAt: newUpdatedAt,
+          ...newData
+        } = updated.toJSON();
+
+        this.auditLogService.logAction(
+          "Inspection",
+          "UPDATE",
           inspectionId,
-          { inspectionResult: result },
-          currentVersion
+          userId || undefined,
+          oldData,
+          newData
         );
       }
 
-      // Fallback to regular update if no version provided (backward compatibility)
-      return await this.update(inspectionId, { inspectionResult: result });
+      return updated;
     } catch (error) {
       if (error instanceof OptimisticLockError) {
         throw error; // Re-throw to be handled by controller
       }
       this.handleServiceError(error);
-      return null;
+      throw error;
     }
   }
 

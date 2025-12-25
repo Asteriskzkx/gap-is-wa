@@ -384,7 +384,8 @@ export class InspectionController extends BaseController<InspectionModel> {
 
   async updateInspectionResult(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: { id: string } },
+    session?: any
   ): Promise<NextResponse> {
     try {
       let inspectionId: number;
@@ -404,11 +405,22 @@ export class InspectionController extends BaseController<InspectionModel> {
         );
       }
 
+      // Validate that version is provided
+      if (version === undefined || version === null) {
+        return NextResponse.json(
+          { message: "Version is required for optimistic locking" },
+          { status: 400 }
+        );
+      }
+
+      const userId = session ? Number(session.user.id) : undefined;
+
       const updatedInspection =
         await this.inspectionService.updateInspectionResult(
           inspectionId,
           result,
-          version // Pass version for optimistic locking (optional, backward compatible)
+          version,
+          userId
         );
 
       if (!updatedInspection) {
