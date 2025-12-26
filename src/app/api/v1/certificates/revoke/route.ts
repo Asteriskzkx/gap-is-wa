@@ -3,7 +3,7 @@ import { certificateController } from "@/utils/dependencyInjections";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
-  const { authorized, error } = await checkAuthorization(req, [
+  const { authorized, error, session } = await checkAuthorization(req, [
     "COMMITTEE",
     "ADMIN",
   ]);
@@ -15,5 +15,5 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  return certificateController.revokeCertificate(req);
+  return certificateController.revokeCertificate(req, session);
 }

@@ -89,7 +89,8 @@ export class InspectionItemController extends BaseController<InspectionItemModel
 
   async updateInspectionItemResult(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: { id: string } },
+    session?: any
   ): Promise<NextResponse> {
     try {
       let itemId: number;
@@ -109,12 +110,23 @@ export class InspectionItemController extends BaseController<InspectionItemModel
         );
       }
 
+      // Validate that version is provided
+      if (version === undefined || version === null) {
+        return NextResponse.json(
+          { message: "Version is required for optimistic locking" },
+          { status: 400 }
+        );
+      }
+
+      const userId = session ? Number(session.user.id) : undefined;
+
       const updatedItem =
         await this.inspectionItemService.updateInspectionItemResult(
           itemId,
           result,
           version,
-          otherConditions
+          otherConditions,
+          userId
         );
 
       if (!updatedItem) {
@@ -135,7 +147,8 @@ export class InspectionItemController extends BaseController<InspectionItemModel
   }
 
   async updateInspectionItemResultsBulk(
-    req: NextRequest
+    req: NextRequest,
+    session?: any
   ): Promise<NextResponse> {
     try {
       const data = await req.json();
@@ -150,11 +163,22 @@ export class InspectionItemController extends BaseController<InspectionItemModel
       const results: any[] = [];
       const errors: any[] = [];
 
+      const userId = session ? Number(session.user.id) : undefined;
+
       for (const entry of data) {
         const { inspectionItemId, result, version, otherConditions } = entry;
 
         if (!inspectionItemId || !result) {
           errors.push({ inspectionItemId, message: "Missing fields" });
+          continue;
+        }
+
+        // Validate that version is provided
+        if (version === undefined || version === null) {
+          errors.push({
+            inspectionItemId,
+            message: "Version is required for optimistic locking",
+          });
           continue;
         }
 
@@ -164,7 +188,8 @@ export class InspectionItemController extends BaseController<InspectionItemModel
               inspectionItemId,
               result,
               version,
-              otherConditions
+              otherConditions,
+              userId
             );
 
           if (updated) {

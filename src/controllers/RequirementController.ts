@@ -90,7 +90,10 @@ export class RequirementController extends BaseController<RequirementModel> {
     }
   }
 
-  async updateRequirementsEvaluations(req: NextRequest): Promise<NextResponse> {
+  async updateRequirementsEvaluations(
+    req: NextRequest,
+    session?: any
+  ): Promise<NextResponse> {
     try {
       const data = await req.json();
 
@@ -103,6 +106,8 @@ export class RequirementController extends BaseController<RequirementModel> {
 
       const results: any[] = [];
       const errors: any[] = [];
+
+      const userId = session ? Number(session.user.id) : undefined;
 
       for (const entry of data) {
         const {
@@ -118,6 +123,15 @@ export class RequirementController extends BaseController<RequirementModel> {
           continue;
         }
 
+        // Validate that version is provided
+        if (version === undefined || version === null) {
+          errors.push({
+            requirementId,
+            message: "Version is required for optimistic locking",
+          });
+          continue;
+        }
+
         try {
           const updated =
             await this.requirementService.updateRequirementEvaluation(
@@ -125,7 +139,8 @@ export class RequirementController extends BaseController<RequirementModel> {
               evaluationResult,
               evaluationMethod,
               note || "",
-              version
+              version,
+              userId
             );
 
           if (updated) {

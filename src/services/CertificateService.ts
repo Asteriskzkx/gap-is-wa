@@ -67,29 +67,53 @@ export class CertificateService extends BaseService<CertificateModel> {
 
   async revokeCertificate(
     certificateId: number,
-    cancelRequestDetail?: string,
-    version?: number
+    cancelRequestDetail: string,
+    version: number,
+    userId?: number
   ): Promise<CertificateModel | null> {
     try {
+      // ดึงข้อมูลเก่าก่อน update (สำหรับ log)
+      const oldRecord = await this.certificateRepository.findById(
+        certificateId
+      );
+
       const payload: any = {
         cancelRequestFlag: true,
         cancelRequestDetail: cancelRequestDetail,
         activeFlag: false,
       };
 
-      // If a version is provided, use optimistic locking update
-      if (version !== undefined && !Number.isNaN(Number(version))) {
-        return await this.certificateRepository.updateWithLock(
+      // Use optimistic locking
+      const updated = await this.certificateRepository.updateWithLock(
+        certificateId,
+        payload,
+        Number(version)
+      );
+
+      // Log การ update
+      if (updated && oldRecord) {
+        const {
+          createdAt: oldCreatedAt,
+          updatedAt: oldUpdatedAt,
+          inspection: oldInspection,
+          ...oldData
+        } = oldRecord.toJSON();
+        const {
+          createdAt: newCreatedAt,
+          updatedAt: newUpdatedAt,
+          inspection: newInspection,
+          ...newData
+        } = updated.toJSON();
+
+        this.auditLogService.logAction(
+          "Certificate",
+          "UPDATE",
           certificateId,
-          payload,
-          Number(version)
+          userId || undefined,
+          oldData,
+          newData
         );
       }
-
-      const updated = await this.certificateRepository.update(
-        certificateId,
-        payload
-      );
 
       return updated;
     } catch (error) {

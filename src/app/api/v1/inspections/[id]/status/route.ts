@@ -7,7 +7,7 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const { authorized, error } = await checkAuthorization(req, [
+  const { authorized, error, session } = await checkAuthorization(req, [
     "AUDITOR",
     "ADMIN",
   ]);
@@ -19,5 +19,5 @@ export async function PUT(
     );
   }
 
-  return inspectionController.updateInspectionStatus(req, { params });
+  return inspectionController.updateInspectionStatus(req, { params }, session);
 }

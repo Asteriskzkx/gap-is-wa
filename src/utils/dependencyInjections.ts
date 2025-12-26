@@ -143,10 +143,17 @@ const auditorInspectionService = new AuditorInspectionService(
 );
 const inspectionItemService = new InspectionItemService(
   inspectionItemRepository,
-  requirementRepository
+  requirementRepository,
+  auditLogService
 );
-const requirementService = new RequirementService(requirementRepository);
-const dataRecordService = new DataRecordService(dataRecordRepository);
+const requirementService = new RequirementService(
+  requirementRepository,
+  auditLogService
+);
+const dataRecordService = new DataRecordService(
+  dataRecordRepository,
+  auditLogService
+);
 const adviceAndDefectService = new AdviceAndDefectService(
   adviceAndDefectRepository,
   auditLogService

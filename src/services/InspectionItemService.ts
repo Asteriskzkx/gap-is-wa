@@ -3,19 +3,23 @@ import { InspectionItemModel } from "../models/InspectionItemModel";
 import { InspectionItemRepository } from "../repositories/InspectionItemRepository";
 import { RequirementRepository } from "../repositories/RequirementRepository";
 import { RequirementModel } from "../models/RequirementModel";
+import { AuditLogService } from "./AuditLogService";
 import { OptimisticLockError } from "../errors/OptimisticLockError";
 
 export class InspectionItemService extends BaseService<InspectionItemModel> {
   private inspectionItemRepository: InspectionItemRepository;
   private requirementRepository: RequirementRepository;
+  private auditLogService: AuditLogService;
 
   constructor(
     inspectionItemRepository: InspectionItemRepository,
-    requirementRepository: RequirementRepository
+    requirementRepository: RequirementRepository,
+    auditLogService: AuditLogService
   ) {
     super(inspectionItemRepository);
     this.inspectionItemRepository = inspectionItemRepository;
     this.requirementRepository = requirementRepository;
+    this.auditLogService = auditLogService;
   }
 
   async createInspectionItem(itemData: {
@@ -92,26 +96,50 @@ export class InspectionItemService extends BaseService<InspectionItemModel> {
   async updateInspectionItemResult(
     itemId: number,
     result: string,
-    currentVersion?: number,
-    otherConditions?: any
+    currentVersion: number,
+    otherConditions?: any,
+    userId?: number
   ): Promise<InspectionItemModel | null> {
     try {
+      // ดึงข้อมูลเก่าก่อน update (สำหรับ log)
+      const oldRecord = await this.inspectionItemRepository.findById(itemId);
+
       const updateData: any = { inspectionItemResult: result };
       if (otherConditions !== undefined) {
         updateData.otherConditions = otherConditions;
       }
 
-      if (currentVersion !== undefined) {
-        // Use optimistic locking
-        return await this.inspectionItemRepository.updateWithLock(
+      // Use optimistic locking
+      const updated = await this.inspectionItemRepository.updateWithLock(
+        itemId,
+        updateData,
+        currentVersion
+      );
+
+      // Log การ update
+      if (updated && oldRecord) {
+        const {
+          createdAt: oldCreatedAt,
+          updatedAt: oldUpdatedAt,
+          ...oldData
+        } = oldRecord.toJSON();
+        const {
+          createdAt: newCreatedAt,
+          updatedAt: newUpdatedAt,
+          ...newData
+        } = updated.toJSON();
+
+        this.auditLogService.logAction(
+          "InspectionItem",
+          "UPDATE",
           itemId,
-          updateData,
-          currentVersion
+          userId || undefined,
+          oldData,
+          newData
         );
-      } else {
-        // Fallback to regular update
-        return await this.update(itemId, updateData);
       }
+
+      return updated;
     } catch (error) {
       this.handleServiceError(error);
       throw error;

@@ -219,7 +219,10 @@ export class CertificateController extends BaseController<CertificateModel> {
     }
   }
 
-  async revokeCertificate(req: NextRequest): Promise<NextResponse> {
+  async revokeCertificate(
+    req: NextRequest,
+    session?: any
+  ): Promise<NextResponse> {
     try {
       const { authorized, error } = await checkAuthorization(req, [
         "COMMITTEE",
@@ -236,8 +239,7 @@ export class CertificateController extends BaseController<CertificateModel> {
       const data = await req.json();
       const certificateId = Number(data.certificateId || data.id);
       const cancelRequestDetail = data.cancelRequestDetail;
-      const version =
-        data.version === undefined ? undefined : Number(data.version);
+      const version = data.version;
 
       if (!certificateId || Number.isNaN(certificateId)) {
         return NextResponse.json(
@@ -246,10 +248,28 @@ export class CertificateController extends BaseController<CertificateModel> {
         );
       }
 
+      if (!cancelRequestDetail) {
+        return NextResponse.json(
+          { message: "cancelRequestDetail is required" },
+          { status: 400 }
+        );
+      }
+
+      // Validate that version is provided
+      if (version === undefined || version === null) {
+        return NextResponse.json(
+          { message: "Version is required for optimistic locking" },
+          { status: 400 }
+        );
+      }
+
+      const userId = session ? Number(session.user.id) : undefined;
+
       const updated = await this.certificateService.revokeCertificate(
         certificateId,
         cancelRequestDetail,
-        version
+        Number(version),
+        userId
       );
 
       if (!updated) {

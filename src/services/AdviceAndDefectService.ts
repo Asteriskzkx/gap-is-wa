@@ -86,7 +86,7 @@ export class AdviceAndDefectService extends BaseService<AdviceAndDefectModel> {
   async updateAdviceAndDefect(
     adviceAndDefectId: number,
     data: Partial<AdviceAndDefectModel>,
-    currentVersion?: number,
+    currentVersion: number,
     userId?: number
   ): Promise<AdviceAndDefectModel | null> {
     try {
@@ -95,19 +95,12 @@ export class AdviceAndDefectService extends BaseService<AdviceAndDefectModel> {
         adviceAndDefectId
       );
 
-      let updated: AdviceAndDefectModel | null;
-
-      if (currentVersion === undefined) {
-        // Fallback to regular update
-        updated = await this.update(adviceAndDefectId, data);
-      } else {
-        // Use optimistic locking
-        updated = await this.adviceAndDefectRepository.updateWithLock(
-          adviceAndDefectId,
-          data,
-          currentVersion
-        );
-      }
+      // Use optimistic locking
+      const updated = await this.adviceAndDefectRepository.updateWithLock(
+        adviceAndDefectId,
+        data,
+        currentVersion
+      );
 
       //Log การ update
       if (updated && oldRecord) {

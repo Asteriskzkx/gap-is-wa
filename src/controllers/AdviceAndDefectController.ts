@@ -109,6 +109,14 @@ export class AdviceAndDefectController extends BaseController<AdviceAndDefectMod
       const data = await req.json();
       const { version, ...updateData } = data;
 
+      // Validate that version is provided
+      if (version === undefined || version === null) {
+        return NextResponse.json(
+          { message: "Version is required for optimistic locking" },
+          { status: 400 }
+        );
+      }
+
       // Parse the date if it's a string and provided
       if (updateData.date && !(updateData.date instanceof Date)) {
         updateData.date = new Date(updateData.date);
