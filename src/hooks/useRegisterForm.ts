@@ -84,6 +84,10 @@ export function useRegisterForm() {
   const [tambons, setTambons] = useState<Tambon[]>([]);
   const [isLoadingProvinces, setIsLoadingProvinces] = useState(true);
 
+  // สำหรับการตรวจสอบ email ซ้ำ
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+
   // Form data
   const [formData, setFormData] = useState<FormData>({
     email: "",
@@ -284,6 +288,49 @@ export function useRegisterForm() {
     return "";
   };
 
+  // ตรวจสอบ email ซ้ำจาก API (เรียกเมื่อผู้ใช้กดปุ่มเท่านั้น)
+  const checkDuplicateEmail = async () => {
+    const email = formData.email;
+
+    // ตรวจสอบ format ก่อน
+    const emailError = validateEmail(email);
+    if (emailError) {
+      setErrors((prev) => ({ ...prev, email: emailError }));
+      return;
+    }
+
+    setIsCheckingEmail(true);
+    setIsEmailVerified(false);
+
+    try {
+      const response = await fetch(
+        `/api/v1/users/check-dup-email?email=${encodeURIComponent(email)}`
+      );
+      const data = await response.json();
+
+      if (data.isDuplicate) {
+        setErrors((prev) => ({ ...prev, email: "อีเมลนี้ถูกใช้งานแล้ว" }));
+        setIsEmailVerified(false);
+      } else {
+        setErrors((prev) => ({ ...prev, email: "" }));
+        setIsEmailVerified(true);
+      }
+    } catch (error) {
+      console.error("Error checking duplicate email:", error);
+      setErrors((prev) => ({ ...prev, email: "เกิดข้อผิดพลาดในการตรวจสอบ" }));
+      setIsEmailVerified(false);
+    } finally {
+      setIsCheckingEmail(false);
+    }
+  };
+
+  // ฟังก์ชันเมื่อ email เปลี่ยน - reset verification status
+  const handleEmailChange = (email: string) => {
+    setFormData((prev) => ({ ...prev, email }));
+    setIsEmailVerified(false);
+    setErrors((prev) => ({ ...prev, email: "" }));
+  };
+
   const validatePassword = (password: string) => {
     if (!password) return "กรุณากรอกรหัสผ่าน";
     if (password.length < 8) return "รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร";
@@ -308,7 +355,7 @@ export function useRegisterForm() {
     return "";
   };
 
-  const validateStep1 = () => {
+  const validateStep1 = async () => {
     const emailError = validateEmail(formData.email);
     const passwordError = validatePassword(formData.password);
     const confirmPasswordError = validateConfirmPassword(
@@ -316,14 +363,20 @@ export function useRegisterForm() {
       formData.confirmPassword
     );
 
+    // ตรวจสอบว่า email ถูก verify แล้วหรือยัง
+    let finalEmailError = emailError;
+    if (!emailError && !isEmailVerified) {
+      finalEmailError = "กรุณากดปุ่มตรวจสอบอีเมลก่อน";
+    }
+
     setErrors((prev) => ({
       ...prev,
-      email: emailError,
+      email: finalEmailError,
       password: passwordError,
       confirmPassword: confirmPasswordError,
     }));
 
-    if (emailError || passwordError || confirmPasswordError) {
+    if (finalEmailError || passwordError || confirmPasswordError) {
       setError("กรุณาแก้ไขข้อมูลที่ไม่ถูกต้อง");
       return false;
     }
@@ -416,8 +469,8 @@ export function useRegisterForm() {
   };
 
   // Navigation between steps
-  const nextStep = () => {
-    if (step === 1 && !validateStep1()) return;
+  const nextStep = async () => {
+    if (step === 1 && !(await validateStep1())) return;
     if (step === 2 && !validateStep2()) return;
     if (step === 3 && !validateStep3()) return;
 
@@ -500,6 +553,8 @@ export function useRegisterForm() {
     amphures,
     tambons,
     isLoadingProvinces,
+    isCheckingEmail,
+    isEmailVerified,
 
     // Options
     namePrefixOptions,
@@ -515,6 +570,8 @@ export function useRegisterForm() {
     nextStep,
     prevStep,
     handleSubmit,
+    handleEmailChange,
+    checkDuplicateEmail,
     validateEmail,
     validatePassword,
   };

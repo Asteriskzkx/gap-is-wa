@@ -14,30 +14,32 @@ export class UserController extends BaseController<UserModel> {
   private userService: UserService;
   private UserRegistrationFactoryService: UserRegistrationFactoryService;
 
-
-
-  constructor(userService: UserService, UserRegistrationFactoryService: UserRegistrationFactoryService) {
+  constructor(
+    userService: UserService,
+    UserRegistrationFactoryService: UserRegistrationFactoryService
+  ) {
     super(userService);
     this.userService = userService;
     this.UserRegistrationFactoryService = UserRegistrationFactoryService;
   }
 
   async createUser(req: NextRequest): Promise<NextResponse> {
-      try {
-          const data = await req.json();
+    try {
+      const data = await req.json();
 
-          const createdUser = await this.UserRegistrationFactoryService.createUserWithRole(data);
+      const createdUser =
+        await this.UserRegistrationFactoryService.createUserWithRole(data);
 
-          // remove sensitive fields
-          const userJson = createdUser.toJSON();
+      // remove sensitive fields
+      const userJson = createdUser.toJSON();
 
-          return NextResponse.json(userJson, { status: 201 });
-        } catch (error: any) {
-          if (error.message.includes("already exists")) {
-            return NextResponse.json({ message: error.message }, { status: 409 });
-          }
-          return this.handleControllerError(error);
-        }
+      return NextResponse.json(userJson, { status: 201 });
+    } catch (error: any) {
+      if (error.message.includes("already exists")) {
+        return NextResponse.json({ message: error.message }, { status: 409 });
+      }
+      return this.handleControllerError(error);
+    }
   }
 
   async register(req: NextRequest): Promise<NextResponse> {
@@ -199,6 +201,35 @@ export class UserController extends BaseController<UserModel> {
     }
   }
 
+  async checkDuplicateEmail(req: NextRequest): Promise<NextResponse> {
+    try {
+      const { searchParams } = new URL(req.url);
+      const email = searchParams.get("email");
+
+      if (!email) {
+        return NextResponse.json(
+          { message: "Email parameter is required" },
+          { status: 400 }
+        );
+      }
+
+      const existingUser = await this.userService.findByEmail(email);
+      const isDuplicate = !!existingUser;
+
+      return NextResponse.json(
+        {
+          isDuplicate,
+          message: isDuplicate
+            ? "อีเมลนี้ถูกใช้งานแล้ว"
+            : "อีเมลนี้สามารถใช้งานได้",
+        },
+        { status: 200 }
+      );
+    } catch (error) {
+      return this.handleControllerError(error);
+    }
+  }
+
   protected async createModel(data: any): Promise<UserModel> {
     return UserModel.create(data.email, data.password, data.name, data.role);
   }
@@ -267,9 +298,9 @@ export class UserController extends BaseController<UserModel> {
       // Parse pagination
       const skip = skipStr ? parseInt(skipStr) : 0;
       const take = takeStr ? parseInt(takeStr) : 20;
-      
+
       // Parse sort order (1 = asc, -1 = desc from PrimeReact)
-      const sortOrder: 'asc' | 'desc' = sortOrderParam === '1' ? 'asc' : 'desc';
+      const sortOrder: "asc" | "desc" = sortOrderParam === "1" ? "asc" : "desc";
 
       const result = await this.userService.getUsersWithFilterAndPagination({
         search,

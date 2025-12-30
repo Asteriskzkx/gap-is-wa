@@ -8,6 +8,7 @@ interface PrimaryButtonProps extends Omit<ButtonProps, "severity" | "size"> {
   readonly iconPos?: "left" | "right" | "top" | "bottom";
   readonly loading?: boolean;
   readonly fullWidth?: boolean;
+  readonly fullHeight?: boolean;
   readonly variant?: "solid" | "outlined" | "text";
   readonly color?:
     | "success"
@@ -27,8 +28,11 @@ interface PrimaryButtonProps extends Omit<ButtonProps, "severity" | "size"> {
  * PrimaryButton - ปุ่มหลักที่ใช้ในระบบ GAP
  *
  * @example
- * // ปุ่มสีเขียวแบบเต็ม
+ * // ปุ่มสีเขียวแบบเต็มความกว้าง
  * <PrimaryButton label="เข้าสู่ระบบ" loading={isLoading} fullWidth />
+ *
+ * // ปุ่มแบบเต็มความสูง
+ * <PrimaryButton label="ตรวจสอบ" fullHeight />
  *
  * // ปุ่มแบบ outlined
  * <PrimaryButton label="ยกเลิก" variant="outlined" color="secondary" />
@@ -46,6 +50,7 @@ export default function PrimaryButton({
   iconPos = "left",
   loading = false,
   fullWidth = false,
+  fullHeight = false,
   variant = "solid",
   color = "success",
   size = "large",
@@ -62,6 +67,10 @@ export default function PrimaryButton({
 
     if (fullWidth) {
       classes.push("w-full");
+    }
+
+    if (fullHeight) {
+      classes.push("h-full");
     }
 
     return classes.join(" ").trim();
