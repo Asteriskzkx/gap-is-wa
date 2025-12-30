@@ -24,6 +24,8 @@ export default function FarmerRegisterPage() {
     formData,
     errors,
     isLoadingProvinces,
+    isCheckingEmail,
+    isEmailVerified,
     namePrefixOptions,
     genderOptions,
     provinceOptions,
@@ -35,6 +37,8 @@ export default function FarmerRegisterPage() {
     nextStep,
     prevStep,
     handleSubmit,
+    handleEmailChange,
+    checkDuplicateEmail,
   } = useRegisterForm();
 
   return (
@@ -176,20 +180,33 @@ export default function FarmerRegisterPage() {
                   <label htmlFor="email" className={styles.label}>
                     อีเมล <span className={styles.required}>*</span>
                   </label>
-                  <PrimaryInputText
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(value) =>
-                      setFormData((prev) => ({ ...prev, email: value }))
-                    }
-                    placeholder="email@example.com"
-                    required
-                    autoComplete="email"
-                    invalid={!!errors.email}
-                    errorMessage={errors.email}
-                  />
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-start">
+                    <div className="md:col-span-2">
+                      <PrimaryInputText
+                        id="email"
+                        name="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={handleEmailChange}
+                        placeholder="email@example.com"
+                        required
+                        autoComplete="email"
+                        invalid={!!errors.email}
+                        errorMessage={errors.email}
+                        disabled={isCheckingEmail}
+                      />
+                    </div>
+                    <PrimaryButton
+                      type="button"
+                      onClick={() => checkDuplicateEmail()}
+                      loading={isCheckingEmail}
+                      disabled={isCheckingEmail || !formData.email}
+                      icon={isEmailVerified ? "pi pi-check" : "pi pi-search"}
+                      label={isEmailVerified ? "ตรวจสอบแล้ว" : "ตรวจสอบ"}
+                      color={isEmailVerified ? "success" : "info"}
+                      fullWidth
+                    />
+                  </div>
                 </div>
 
                 <div className={styles.formGroup}>
