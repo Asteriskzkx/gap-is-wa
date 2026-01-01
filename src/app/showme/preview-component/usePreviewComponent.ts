@@ -56,6 +56,43 @@ export const usePreviewComponent = () => {
   const stylingChartRef = useRef<HTMLCanvasElement>(null);
   const stylingChartInstanceRef = useRef<ChartJS | null>(null);
 
+  // Other Charts refs
+  const bubbleChartRef = useRef<HTMLCanvasElement>(null);
+  const bubbleChartInstanceRef = useRef<ChartJS | null>(null);
+
+  const comboChartRef = useRef<HTMLCanvasElement>(null);
+  const comboChartInstanceRef = useRef<ChartJS | null>(null);
+
+  const doughnutChartRef = useRef<HTMLCanvasElement>(null);
+  const doughnutChartInstanceRef = useRef<ChartJS | null>(null);
+
+  const multiPieChartRef = useRef<HTMLCanvasElement>(null);
+  const multiPieChartInstanceRef = useRef<ChartJS | null>(null);
+
+  const pieChartRef = useRef<HTMLCanvasElement>(null);
+  const pieChartInstanceRef = useRef<ChartJS | null>(null);
+
+  const polarAreaChartRef = useRef<HTMLCanvasElement>(null);
+  const polarAreaChartInstanceRef = useRef<ChartJS | null>(null);
+
+  const polarAreaCenterChartRef = useRef<HTMLCanvasElement>(null);
+  const polarAreaCenterChartInstanceRef = useRef<ChartJS | null>(null);
+
+  const radarChartRef = useRef<HTMLCanvasElement>(null);
+  const radarChartInstanceRef = useRef<ChartJS | null>(null);
+
+  const radarSkipChartRef = useRef<HTMLCanvasElement>(null);
+  const radarSkipChartInstanceRef = useRef<ChartJS | null>(null);
+
+  const scatterChartRef = useRef<HTMLCanvasElement>(null);
+  const scatterChartInstanceRef = useRef<ChartJS | null>(null);
+
+  const scatterMultiAxisChartRef = useRef<HTMLCanvasElement>(null);
+  const scatterMultiAxisChartInstanceRef = useRef<ChartJS | null>(null);
+
+  const stackedBarLineChartRef = useRef<HTMLCanvasElement>(null);
+  const stackedBarLineChartInstanceRef = useRef<ChartJS | null>(null);
+
   // Handlers
   const handleDatePickerChange = (christDate: string, buddhistDate: string) => {
     console.log(christDate);
@@ -960,6 +997,710 @@ export const usePreviewComponent = () => {
     };
   }, []);
 
+  // Bubble Chart
+  useEffect(() => {
+    if (!bubbleChartRef.current) return;
+
+    if (bubbleChartInstanceRef.current) {
+      bubbleChartInstanceRef.current.destroy();
+    }
+
+    const ctx = bubbleChartRef.current.getContext("2d");
+    if (!ctx) return;
+
+    bubbleChartInstanceRef.current = new ChartJS(ctx, {
+      type: "bubble",
+      data: {
+        datasets: [
+          {
+            label: "กลุ่ม A",
+            data: [
+              { x: 20, y: 30, r: 15 },
+              { x: 40, y: 10, r: 10 },
+              { x: 30, y: 25, r: 20 },
+            ],
+            backgroundColor: "rgba(255, 99, 132, 0.5)",
+            borderColor: "rgb(255, 99, 132)",
+          },
+          {
+            label: "กลุ่ม B",
+            data: [
+              { x: 10, y: 20, r: 25 },
+              { x: 50, y: 40, r: 15 },
+              { x: 25, y: 35, r: 12 },
+            ],
+            backgroundColor: "rgba(54, 162, 235, 0.5)",
+            borderColor: "rgb(54, 162, 235)",
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: "top",
+          },
+          title: {
+            display: true,
+            text: "กราฟ Bubble - แสดงความสัมพันธ์ 3 มิติ",
+            font: { size: 16 },
+          },
+        },
+      },
+    });
+
+    return () => {
+      if (bubbleChartInstanceRef.current) {
+        bubbleChartInstanceRef.current.destroy();
+      }
+    };
+  }, []);
+
+  // Combo Bar/Line Chart
+  useEffect(() => {
+    if (!comboChartRef.current) return;
+
+    if (comboChartInstanceRef.current) {
+      comboChartInstanceRef.current.destroy();
+    }
+
+    const ctx = comboChartRef.current.getContext("2d");
+    if (!ctx) return;
+
+    comboChartInstanceRef.current = new ChartJS(ctx, {
+      type: "bar",
+      data: {
+        labels: ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย."],
+        datasets: [
+          {
+            type: "bar",
+            label: "ยอดขาย (พันบาท)",
+            data: [12, 19, 3, 5, 2, 3],
+            backgroundColor: "rgba(255, 99, 132, 0.5)",
+            borderColor: "rgb(255, 99, 132)",
+          },
+          {
+            type: "line",
+            label: "เป้าหมาย (พันบาท)",
+            data: [10, 15, 8, 12, 7, 10],
+            borderColor: "rgb(54, 162, 235)",
+            backgroundColor: "rgba(54, 162, 235, 0.1)",
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: "top",
+          },
+          title: {
+            display: true,
+            text: "กราฟผสม Bar/Line - เปรียบเทียบผลกับเป้า",
+            font: { size: 16 },
+          },
+        },
+      },
+    });
+
+    return () => {
+      if (comboChartInstanceRef.current) {
+        comboChartInstanceRef.current.destroy();
+      }
+    };
+  }, []);
+
+  // Doughnut Chart
+  useEffect(() => {
+    if (!doughnutChartRef.current) return;
+
+    if (doughnutChartInstanceRef.current) {
+      doughnutChartInstanceRef.current.destroy();
+    }
+
+    const ctx = doughnutChartRef.current.getContext("2d");
+    if (!ctx) return;
+
+    doughnutChartInstanceRef.current = new ChartJS(ctx, {
+      type: "doughnut",
+      data: {
+        labels: ["ออนไลน์", "หน้าร้าน", "โทรศัพท์", "แอปพลิเคชัน"],
+        datasets: [
+          {
+            data: [300, 150, 100, 80],
+            backgroundColor: [
+              "rgba(255, 99, 132, 0.7)",
+              "rgba(54, 162, 235, 0.7)",
+              "rgba(255, 206, 86, 0.7)",
+              "rgba(75, 192, 192, 0.7)",
+            ],
+            borderColor: [
+              "rgb(255, 99, 132)",
+              "rgb(54, 162, 235)",
+              "rgb(255, 206, 86)",
+              "rgb(75, 192, 192)",
+            ],
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: "top",
+          },
+          title: {
+            display: true,
+            text: "กราฟวงแหวน - สัดส่วนยอดขายตามช่องทาง",
+            font: { size: 16 },
+          },
+        },
+      },
+    });
+
+    return () => {
+      if (doughnutChartInstanceRef.current) {
+        doughnutChartInstanceRef.current.destroy();
+      }
+    };
+  }, []);
+
+  // Multi Series Pie Chart
+  useEffect(() => {
+    if (!multiPieChartRef.current) return;
+
+    if (multiPieChartInstanceRef.current) {
+      multiPieChartInstanceRef.current.destroy();
+    }
+
+    const ctx = multiPieChartRef.current.getContext("2d");
+    if (!ctx) return;
+
+    multiPieChartInstanceRef.current = new ChartJS(ctx, {
+      type: "pie",
+      data: {
+        labels: ["สินค้า A", "สินค้า B", "สินค้า C", "สินค้า D"],
+        datasets: [
+          {
+            label: "Q1",
+            data: [300, 50, 100, 80],
+            backgroundColor: [
+              "rgba(255, 99, 132, 0.7)",
+              "rgba(54, 162, 235, 0.7)",
+              "rgba(255, 206, 86, 0.7)",
+              "rgba(75, 192, 192, 0.7)",
+            ],
+          },
+          {
+            label: "Q2",
+            data: [250, 80, 120, 90],
+            backgroundColor: [
+              "rgba(255, 99, 132, 0.5)",
+              "rgba(54, 162, 235, 0.5)",
+              "rgba(255, 206, 86, 0.5)",
+              "rgba(75, 192, 192, 0.5)",
+            ],
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: "top",
+          },
+          title: {
+            display: true,
+            text: "กราฟวงกลมหลายชุดข้อมูล",
+            font: { size: 16 },
+          },
+        },
+      },
+    });
+
+    return () => {
+      if (multiPieChartInstanceRef.current) {
+        multiPieChartInstanceRef.current.destroy();
+      }
+    };
+  }, []);
+
+  // Pie Chart
+  useEffect(() => {
+    if (!pieChartRef.current) return;
+
+    if (pieChartInstanceRef.current) {
+      pieChartInstanceRef.current.destroy();
+    }
+
+    const ctx = pieChartRef.current.getContext("2d");
+    if (!ctx) return;
+
+    pieChartInstanceRef.current = new ChartJS(ctx, {
+      type: "pie",
+      data: {
+        labels: ["ภาคเหนือ", "ภาคกลาง", "ภาคตะวันออกเฉียงเหนือ", "ภาคใต้"],
+        datasets: [
+          {
+            data: [300, 50, 100, 150],
+            backgroundColor: [
+              "rgba(255, 99, 132, 0.7)",
+              "rgba(54, 162, 235, 0.7)",
+              "rgba(255, 206, 86, 0.7)",
+              "rgba(75, 192, 192, 0.7)",
+            ],
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: "top",
+          },
+          title: {
+            display: true,
+            text: "กราฟวงกลม - สัดส่วนยอดขายตามภูมิภาค",
+            font: { size: 16 },
+          },
+        },
+      },
+    });
+
+    return () => {
+      if (pieChartInstanceRef.current) {
+        pieChartInstanceRef.current.destroy();
+      }
+    };
+  }, []);
+
+  // Polar Area Chart
+  useEffect(() => {
+    if (!polarAreaChartRef.current) return;
+
+    if (polarAreaChartInstanceRef.current) {
+      polarAreaChartInstanceRef.current.destroy();
+    }
+
+    const ctx = polarAreaChartRef.current.getContext("2d");
+    if (!ctx) return;
+
+    polarAreaChartInstanceRef.current = new ChartJS(ctx, {
+      type: "polarArea",
+      data: {
+        labels: ["สินค้า A", "สินค้า B", "สินค้า C", "สินค้า D", "สินค้า E"],
+        datasets: [
+          {
+            data: [11, 16, 7, 3, 14],
+            backgroundColor: [
+              "rgba(255, 99, 132, 0.7)",
+              "rgba(75, 192, 192, 0.7)",
+              "rgba(255, 205, 86, 0.7)",
+              "rgba(201, 203, 207, 0.7)",
+              "rgba(54, 162, 235, 0.7)",
+            ],
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: "top",
+          },
+          title: {
+            display: true,
+            text: "กราฟพื้นที่ขั้วโลก - เปรียบเทียบยอดขาย",
+            font: { size: 16 },
+          },
+        },
+      },
+    });
+
+    return () => {
+      if (polarAreaChartInstanceRef.current) {
+        polarAreaChartInstanceRef.current.destroy();
+      }
+    };
+  }, []);
+
+  // Polar Area Centered Labels
+  useEffect(() => {
+    if (!polarAreaCenterChartRef.current) return;
+
+    if (polarAreaCenterChartInstanceRef.current) {
+      polarAreaCenterChartInstanceRef.current.destroy();
+    }
+
+    const ctx = polarAreaCenterChartRef.current.getContext("2d");
+    if (!ctx) return;
+
+    polarAreaCenterChartInstanceRef.current = new ChartJS(ctx, {
+      type: "polarArea",
+      data: {
+        labels: ["Q1", "Q2", "Q3", "Q4"],
+        datasets: [
+          {
+            data: [15, 18, 12, 20],
+            backgroundColor: [
+              "rgba(255, 99, 132, 0.7)",
+              "rgba(54, 162, 235, 0.7)",
+              "rgba(255, 206, 86, 0.7)",
+              "rgba(75, 192, 192, 0.7)",
+            ],
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: "top",
+          },
+          title: {
+            display: true,
+            text: "กราฟพื้นที่ขั้วโลก - ยอดขายรายไตรมาส",
+            font: { size: 16 },
+          },
+        },
+        scales: {
+          r: {
+            pointLabels: {
+              display: true,
+              centerPointLabels: true,
+              font: {
+                size: 14,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return () => {
+      if (polarAreaCenterChartInstanceRef.current) {
+        polarAreaCenterChartInstanceRef.current.destroy();
+      }
+    };
+  }, []);
+
+  // Radar Chart
+  useEffect(() => {
+    if (!radarChartRef.current) return;
+
+    if (radarChartInstanceRef.current) {
+      radarChartInstanceRef.current.destroy();
+    }
+
+    const ctx = radarChartRef.current.getContext("2d");
+    if (!ctx) return;
+
+    radarChartInstanceRef.current = new ChartJS(ctx, {
+      type: "radar",
+      data: {
+        labels: ["คุณภาพ", "ราคา", "บริการ", "จัดส่ง", "บรรจุภัณฑ์"],
+        datasets: [
+          {
+            label: "ร้าน A",
+            data: [80, 90, 70, 85, 75],
+            borderColor: "rgb(255, 99, 132)",
+            backgroundColor: "rgba(255, 99, 132, 0.2)",
+          },
+          {
+            label: "ร้าน B",
+            data: [70, 85, 80, 75, 90],
+            borderColor: "rgb(54, 162, 235)",
+            backgroundColor: "rgba(54, 162, 235, 0.2)",
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: "top",
+          },
+          title: {
+            display: true,
+            text: "กราฟเรดาร์ - เปรียบเทียบคะแนนความพึงพอใจ",
+            font: { size: 16 },
+          },
+        },
+        scales: {
+          r: {
+            beginAtZero: true,
+            max: 100,
+          },
+        },
+      },
+    });
+
+    return () => {
+      if (radarChartInstanceRef.current) {
+        radarChartInstanceRef.current.destroy();
+      }
+    };
+  }, []);
+
+  // Radar Skip Points
+  useEffect(() => {
+    if (!radarSkipChartRef.current) return;
+
+    if (radarSkipChartInstanceRef.current) {
+      radarSkipChartInstanceRef.current.destroy();
+    }
+
+    const ctx = radarSkipChartRef.current.getContext("2d");
+    if (!ctx) return;
+
+    radarSkipChartInstanceRef.current = new ChartJS(ctx, {
+      type: "radar",
+      data: {
+        labels: ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย."],
+        datasets: [
+          {
+            label: "ชุดข้อมูล 1",
+            data: [65, 59, null, 81, 56, 55],
+            borderColor: "rgb(255, 99, 132)",
+            backgroundColor: "rgba(255, 99, 132, 0.2)",
+            spanGaps: false,
+          },
+          {
+            label: "ชุดข้อมูล 2",
+            data: [28, 48, 40, null, 86, 27],
+            borderColor: "rgb(54, 162, 235)",
+            backgroundColor: "rgba(54, 162, 235, 0.2)",
+            spanGaps: false,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: "top",
+          },
+          title: {
+            display: true,
+            text: "กราฟเรดาร์ - ข้ามจุดข้อมูลที่หายไป",
+            font: { size: 16 },
+          },
+        },
+      },
+    });
+
+    return () => {
+      if (radarSkipChartInstanceRef.current) {
+        radarSkipChartInstanceRef.current.destroy();
+      }
+    };
+  }, []);
+
+  // Scatter Chart
+  useEffect(() => {
+    if (!scatterChartRef.current) return;
+
+    if (scatterChartInstanceRef.current) {
+      scatterChartInstanceRef.current.destroy();
+    }
+
+    const ctx = scatterChartRef.current.getContext("2d");
+    if (!ctx) return;
+
+    scatterChartInstanceRef.current = new ChartJS(ctx, {
+      type: "scatter",
+      data: {
+        datasets: [
+          {
+            label: "ชุดข้อมูล A",
+            data: [
+              { x: -10, y: 0 },
+              { x: 0, y: 10 },
+              { x: 10, y: 5 },
+              { x: 20, y: 15 },
+            ],
+            backgroundColor: "rgb(255, 99, 132)",
+          },
+          {
+            label: "ชุดข้อมูล B",
+            data: [
+              { x: -5, y: 15 },
+              { x: 5, y: 5 },
+              { x: 15, y: 10 },
+              { x: 25, y: 20 },
+            ],
+            backgroundColor: "rgb(54, 162, 235)",
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: "top",
+          },
+          title: {
+            display: true,
+            text: "กราฟกระจาย - ความสัมพันธ์ระหว่างตัวแปร",
+            font: { size: 16 },
+          },
+        },
+        scales: {
+          x: {
+            type: "linear",
+            position: "bottom",
+          },
+        },
+      },
+    });
+
+    return () => {
+      if (scatterChartInstanceRef.current) {
+        scatterChartInstanceRef.current.destroy();
+      }
+    };
+  }, []);
+
+  // Scatter Multi-Axis
+  useEffect(() => {
+    if (!scatterMultiAxisChartRef.current) return;
+
+    if (scatterMultiAxisChartInstanceRef.current) {
+      scatterMultiAxisChartInstanceRef.current.destroy();
+    }
+
+    const ctx = scatterMultiAxisChartRef.current.getContext("2d");
+    if (!ctx) return;
+
+    scatterMultiAxisChartInstanceRef.current = new ChartJS(ctx, {
+      type: "scatter",
+      data: {
+        datasets: [
+          {
+            label: "แกน Y ซ้าย",
+            data: [
+              { x: 1, y: 5 },
+              { x: 2, y: 10 },
+              { x: 3, y: 15 },
+            ],
+            backgroundColor: "rgb(255, 99, 132)",
+            yAxisID: "y",
+          },
+          {
+            label: "แกน Y ขวา",
+            data: [
+              { x: 1, y: 50 },
+              { x: 2, y: 100 },
+              { x: 3, y: 150 },
+            ],
+            backgroundColor: "rgb(54, 162, 235)",
+            yAxisID: "y1",
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: "top",
+          },
+          title: {
+            display: true,
+            text: "กราฟกระจายแบบหลายแกน",
+            font: { size: 16 },
+          },
+        },
+        scales: {
+          y: {
+            type: "linear",
+            position: "left",
+          },
+          y1: {
+            type: "linear",
+            position: "right",
+            grid: {
+              drawOnChartArea: false,
+            },
+          },
+        },
+      },
+    });
+
+    return () => {
+      if (scatterMultiAxisChartInstanceRef.current) {
+        scatterMultiAxisChartInstanceRef.current.destroy();
+      }
+    };
+  }, []);
+
+  // Stacked Bar/Line Chart
+  useEffect(() => {
+    if (!stackedBarLineChartRef.current) return;
+
+    if (stackedBarLineChartInstanceRef.current) {
+      stackedBarLineChartInstanceRef.current.destroy();
+    }
+
+    const ctx = stackedBarLineChartRef.current.getContext("2d");
+    if (!ctx) return;
+
+    stackedBarLineChartInstanceRef.current = new ChartJS(ctx, {
+      type: "bar",
+      data: {
+        labels: ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย."],
+        datasets: [
+          {
+            type: "bar",
+            label: "สินค้า A",
+            data: [12, 19, 3, 5, 2, 3],
+            backgroundColor: "rgba(255, 99, 132, 0.7)",
+          },
+          {
+            type: "bar",
+            label: "สินค้า B",
+            data: [8, 11, 7, 9, 6, 5],
+            backgroundColor: "rgba(54, 162, 235, 0.7)",
+          },
+          {
+            type: "line",
+            label: "ผลรวม",
+            data: [20, 30, 10, 14, 8, 8],
+            borderColor: "rgb(75, 192, 192)",
+            backgroundColor: "rgba(75, 192, 192, 0.1)",
+            fill: false,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: "top",
+          },
+          title: {
+            display: true,
+            text: "กราฟผสม Stacked Bar/Line",
+            font: { size: 16 },
+          },
+        },
+        scales: {
+          x: {
+            stacked: true,
+          },
+          y: {
+            stacked: true,
+          },
+        },
+      },
+    });
+
+    return () => {
+      if (stackedBarLineChartInstanceRef.current) {
+        stackedBarLineChartInstanceRef.current.destroy();
+      }
+    };
+  }, []);
+
   return {
     // Calendar
     date,
@@ -992,5 +1733,17 @@ export const usePreviewComponent = () => {
     segmentsChartRef,
     steppedChartRef,
     stylingChartRef,
+    bubbleChartRef,
+    comboChartRef,
+    doughnutChartRef,
+    multiPieChartRef,
+    pieChartRef,
+    polarAreaChartRef,
+    polarAreaCenterChartRef,
+    radarChartRef,
+    radarSkipChartRef,
+    scatterChartRef,
+    scatterMultiAxisChartRef,
+    stackedBarLineChartRef,
   };
 };
