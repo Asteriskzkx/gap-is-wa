@@ -93,6 +93,22 @@ export const usePreviewComponent = () => {
   const stackedBarLineChartRef = useRef<HTMLCanvasElement>(null);
   const stackedBarLineChartInstanceRef = useRef<ChartJS | null>(null);
 
+  // Area Charts refs
+  const lineBoundariesChartRef = useRef<HTMLCanvasElement>(null);
+  const lineBoundariesChartInstanceRef = useRef<ChartJS | null>(null);
+
+  const lineDatasetsChartRef = useRef<HTMLCanvasElement>(null);
+  const lineDatasetsChartInstanceRef = useRef<ChartJS | null>(null);
+
+  const lineDrawtimeChartRef = useRef<HTMLCanvasElement>(null);
+  const lineDrawtimeChartInstanceRef = useRef<ChartJS | null>(null);
+
+  const lineStackedChartRef = useRef<HTMLCanvasElement>(null);
+  const lineStackedChartInstanceRef = useRef<ChartJS | null>(null);
+
+  const radarStackedChartRef = useRef<HTMLCanvasElement>(null);
+  const radarStackedChartInstanceRef = useRef<ChartJS | null>(null);
+
   // Handlers
   const handleDatePickerChange = (christDate: string, buddhistDate: string) => {
     console.log(christDate);
@@ -1701,6 +1717,321 @@ export const usePreviewComponent = () => {
     };
   }, []);
 
+  // Line Chart Boundaries (Area)
+  useEffect(() => {
+    if (!lineBoundariesChartRef.current) return;
+
+    if (lineBoundariesChartInstanceRef.current) {
+      lineBoundariesChartInstanceRef.current.destroy();
+    }
+
+    const ctx = lineBoundariesChartRef.current.getContext("2d");
+    if (!ctx) return;
+
+    lineBoundariesChartInstanceRef.current = new ChartJS(ctx, {
+      type: "line",
+      data: {
+        labels: ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค."],
+        datasets: [
+          {
+            label: "ข้อมูล 1",
+            data: [65, 59, 80, 81, 56, 55, 40],
+            fill: {
+              target: "origin",
+              above: "rgba(255, 99, 132, 0.2)",
+              below: "rgba(54, 162, 235, 0.2)",
+            },
+            borderColor: "rgb(255, 99, 132)",
+            tension: 0.4,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: "top",
+          },
+          title: {
+            display: true,
+            text: "กราฟเส้นแบบ Boundaries - แสดงพื้นที่เหนือ/ใต้เส้น",
+            font: { size: 16 },
+          },
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+          },
+        },
+      },
+    });
+
+    return () => {
+      if (lineBoundariesChartInstanceRef.current) {
+        lineBoundariesChartInstanceRef.current.destroy();
+      }
+    };
+  }, []);
+
+  // Line Chart Datasets (Area)
+  useEffect(() => {
+    if (!lineDatasetsChartRef.current) return;
+
+    if (lineDatasetsChartInstanceRef.current) {
+      lineDatasetsChartInstanceRef.current.destroy();
+    }
+
+    const ctx = lineDatasetsChartRef.current.getContext("2d");
+    if (!ctx) return;
+
+    lineDatasetsChartInstanceRef.current = new ChartJS(ctx, {
+      type: "line",
+      data: {
+        labels: ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย."],
+        datasets: [
+          {
+            label: "ชุดข้อมูล 1",
+            data: [10, 30, 39, 20, 25, 34],
+            fill: true,
+            backgroundColor: "rgba(255, 99, 132, 0.2)",
+            borderColor: "rgb(255, 99, 132)",
+          },
+          {
+            label: "ชุดข้อมูล 2",
+            data: [18, 33, 22, 19, 11, 39],
+            fill: true,
+            backgroundColor: "rgba(54, 162, 235, 0.2)",
+            borderColor: "rgb(54, 162, 235)",
+          },
+          {
+            label: "ชุดข้อมูล 3",
+            data: [28, 12, 20, 31, 25, 27],
+            fill: true,
+            backgroundColor: "rgba(75, 192, 192, 0.2)",
+            borderColor: "rgb(75, 192, 192)",
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: "top",
+          },
+          title: {
+            display: true,
+            text: "กราฟเส้นหลายชุดข้อมูล - แสดงพื้นที่ทับซ้อน",
+            font: { size: 16 },
+          },
+        },
+        interaction: {
+          mode: "index",
+          intersect: false,
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+          },
+        },
+      },
+    });
+
+    return () => {
+      if (lineDatasetsChartInstanceRef.current) {
+        lineDatasetsChartInstanceRef.current.destroy();
+      }
+    };
+  }, []);
+
+  // Line Chart DrawTime (Area)
+  useEffect(() => {
+    if (!lineDrawtimeChartRef.current) return;
+
+    if (lineDrawtimeChartInstanceRef.current) {
+      lineDrawtimeChartInstanceRef.current.destroy();
+    }
+
+    const ctx = lineDrawtimeChartRef.current.getContext("2d");
+    if (!ctx) return;
+
+    lineDrawtimeChartInstanceRef.current = new ChartJS(ctx, {
+      type: "line",
+      data: {
+        labels: ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย."],
+        datasets: [
+          {
+            label: "Before Dataset Draw",
+            data: [20, 35, 40, 30, 45, 40],
+            fill: "origin",
+            backgroundColor: "rgba(255, 99, 132, 0.2)",
+            borderColor: "rgb(255, 99, 132)",
+          },
+          {
+            label: "Before Draw",
+            data: [35, 25, 30, 35, 40, 35],
+            fill: "origin",
+            backgroundColor: "rgba(54, 162, 235, 0.2)",
+            borderColor: "rgb(54, 162, 235)",
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: "top",
+          },
+          title: {
+            display: true,
+            text: "กราฟเส้นแบบ DrawTime - ควบคุมการวาดพื้นที่",
+            font: { size: 16 },
+          },
+          filler: {
+            propagate: false,
+          },
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+          },
+        },
+      },
+    });
+
+    return () => {
+      if (lineDrawtimeChartInstanceRef.current) {
+        lineDrawtimeChartInstanceRef.current.destroy();
+      }
+    };
+  }, []);
+
+  // Line Chart Stacked (Area)
+  useEffect(() => {
+    if (!lineStackedChartRef.current) return;
+
+    if (lineStackedChartInstanceRef.current) {
+      lineStackedChartInstanceRef.current.destroy();
+    }
+
+    const ctx = lineStackedChartRef.current.getContext("2d");
+    if (!ctx) return;
+
+    lineStackedChartInstanceRef.current = new ChartJS(ctx, {
+      type: "line",
+      data: {
+        labels: ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย."],
+        datasets: [
+          {
+            label: "สินค้า A",
+            data: [33, 25, 35, 51, 54, 76],
+            fill: true,
+            backgroundColor: "rgba(255, 99, 132, 0.5)",
+            borderColor: "rgb(255, 99, 132)",
+          },
+          {
+            label: "สินค้า B",
+            data: [33, 25, 35, 51, 54, 76].map(v => v + 20),
+            fill: true,
+            backgroundColor: "rgba(54, 162, 235, 0.5)",
+            borderColor: "rgb(54, 162, 235)",
+          },
+          {
+            label: "สินค้า C",
+            data: [33, 25, 35, 51, 54, 76].map(v => v + 40),
+            fill: true,
+            backgroundColor: "rgba(75, 192, 192, 0.5)",
+            borderColor: "rgb(75, 192, 192)",
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: "top",
+          },
+          title: {
+            display: true,
+            text: "กราฟเส้นซ้อน - แสดงผลรวมสะสม",
+            font: { size: 16 },
+          },
+        },
+        scales: {
+          y: {
+            stacked: true,
+            beginAtZero: true,
+          },
+        },
+      },
+    });
+
+    return () => {
+      if (lineStackedChartInstanceRef.current) {
+        lineStackedChartInstanceRef.current.destroy();
+      }
+    };
+  }, []);
+
+  // Radar Chart Stacked (Area)
+  useEffect(() => {
+    if (!radarStackedChartRef.current) return;
+
+    if (radarStackedChartInstanceRef.current) {
+      radarStackedChartInstanceRef.current.destroy();
+    }
+
+    const ctx = radarStackedChartRef.current.getContext("2d");
+    if (!ctx) return;
+
+    radarStackedChartInstanceRef.current = new ChartJS(ctx, {
+      type: "radar",
+      data: {
+        labels: ["ความเร็ว", "ความแข็งแรง", "ความทนทาน", "ความแม่นยำ", "เทคนิค"],
+        datasets: [
+          {
+            label: "นักกีฬา A",
+            data: [80, 90, 70, 85, 75],
+            fill: true,
+            backgroundColor: "rgba(255, 99, 132, 0.4)",
+            borderColor: "rgb(255, 99, 132)",
+          },
+          {
+            label: "นักกีฬา B",
+            data: [70, 85, 80, 75, 90],
+            fill: true,
+            backgroundColor: "rgba(54, 162, 235, 0.4)",
+            borderColor: "rgb(54, 162, 235)",
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: "top",
+          },
+          title: {
+            display: true,
+            text: "กราฟเรดาร์แบบ Area - เปรียบเทียบความสามารถ",
+            font: { size: 16 },
+          },
+        },
+        scales: {
+          r: {
+            beginAtZero: true,
+            max: 100,
+          },
+        },
+      },
+    });
+
+    return () => {
+      if (radarStackedChartInstanceRef.current) {
+        radarStackedChartInstanceRef.current.destroy();
+      }
+    };
+  }, []);
+
   return {
     // Calendar
     date,
@@ -1745,5 +2076,10 @@ export const usePreviewComponent = () => {
     scatterChartRef,
     scatterMultiAxisChartRef,
     stackedBarLineChartRef,
+    lineBoundariesChartRef,
+    lineDatasetsChartRef,
+    lineDrawtimeChartRef,
+    lineStackedChartRef,
+    radarStackedChartRef,
   };
 };

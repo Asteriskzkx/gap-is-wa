@@ -94,6 +94,11 @@ export default function PreviewComponentPage() {
     scatterChartRef,
     scatterMultiAxisChartRef,
     stackedBarLineChartRef,
+    lineBoundariesChartRef,
+    lineDatasetsChartRef,
+    lineDrawtimeChartRef,
+    lineStackedChartRef,
+    radarStackedChartRef,
   } = usePreviewComponent();
 
   const scrollToSection = (id: string) => {
@@ -340,7 +345,7 @@ export default function PreviewComponentPage() {
                     </button>
                     <button
                       onClick={() => scrollToSection("chart-scatter-multi")}
-                      className="w-full text-left px-3 py-1 text-xs text-gray-600 hover:bg-gray-50 rounded font-medium"
+                      className="w-full text-left px-3 py-1 text-xs text-gray-600 hover:bg-gray-50 rounded"
                     >
                       Scatter - Multi axis
                     </button>
@@ -349,6 +354,48 @@ export default function PreviewComponentPage() {
                       className="w-full text-left px-3 py-1 text-xs text-gray-600 hover:bg-gray-50 rounded"
                     >
                       Stacked bar/line
+                    </button>
+                  </div>
+                </div>
+
+                {/* Area Charts */}
+                <div className="ml-4">
+                  <button
+                    onClick={() => scrollToSection("area-charts")}
+                    className="w-full text-left px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded"
+                  >
+                    Area charts
+                  </button>
+                  <div className="ml-4 space-y-1">
+                    <button
+                      onClick={() => scrollToSection("line-boundaries")}
+                      className="w-full text-left px-3 py-1 text-xs text-gray-600 hover:bg-gray-50 rounded"
+                    >
+                      Line Boundaries
+                    </button>
+                    <button
+                      onClick={() => scrollToSection("line-datasets")}
+                      className="w-full text-left px-3 py-1 text-xs text-gray-600 hover:bg-gray-50 rounded"
+                    >
+                      Line Datasets
+                    </button>
+                    <button
+                      onClick={() => scrollToSection("line-drawtime")}
+                      className="w-full text-left px-3 py-1 text-xs text-gray-600 hover:bg-gray-50 rounded"
+                    >
+                      Line DrawTime
+                    </button>
+                    <button
+                      onClick={() => scrollToSection("line-stacked")}
+                      className="w-full text-left px-3 py-1 text-xs text-gray-600 hover:bg-gray-50 rounded"
+                    >
+                      Line Stacked
+                    </button>
+                    <button
+                      onClick={() => scrollToSection("radar-stacked")}
+                      className="w-full text-left px-3 py-1 text-xs text-gray-600 hover:bg-gray-50 rounded"
+                    >
+                      Radar Stacked
                     </button>
                   </div>
                 </div>
@@ -1069,6 +1116,108 @@ export default function PreviewComponentPage() {
                           <p className="text-sm text-gray-700">
                             <strong>คุณสมบัติ:</strong>{" "}
                             ผสมผสานกราฟแท่งซ้อนและเส้น
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 7.4 Area Charts */}
+                    <div id="area-charts" className="mb-8 scroll-mt-8">
+                      <h3 className="text-lg font-semibold text-gray-700 mb-4">
+                        7.4 Area Charts
+                      </h3>
+
+                      <div id="line-boundaries" className="mb-6 scroll-mt-8">
+                        <h4 className="text-md font-medium text-gray-600 mb-3">
+                          7.4.1 Line Chart Boundaries
+                        </h4>
+                        <div className="bg-white p-6 rounded-lg border border-gray-200">
+                          <canvas
+                            ref={lineBoundariesChartRef}
+                            id="lineBoundariesChart"
+                          ></canvas>
+                        </div>
+                        <div className="mt-4 p-4 bg-gray-50 rounded border border-gray-200">
+                          <p className="text-sm text-gray-700">
+                            <strong>คุณสมบัติ:</strong>{" "}
+                            กราฟเส้นที่แสดงพื้นที่เหนือและใต้เส้น (Boundaries)
+                            โดยกำหนดสีต่างกันสำหรับพื้นที่ด้านบนและด้านล่างจากจุดอ้างอิง
+                          </p>
+                        </div>
+                      </div>
+
+                      <div id="line-datasets" className="mb-6 scroll-mt-8">
+                        <h4 className="text-md font-medium text-gray-600 mb-3">
+                          7.4.2 Line Chart Datasets
+                        </h4>
+                        <div className="bg-white p-6 rounded-lg border border-gray-200">
+                          <canvas
+                            ref={lineDatasetsChartRef}
+                            id="lineDatasetsChart"
+                          ></canvas>
+                        </div>
+                        <div className="mt-4 p-4 bg-gray-50 rounded border border-gray-200">
+                          <p className="text-sm text-gray-700">
+                            <strong>คุณสมบัติ:</strong>{" "}
+                            กราฟเส้นหลายชุดข้อมูลพร้อมพื้นที่ใต้กราฟ
+                            แสดงการทับซ้อนของพื้นที่จากหลายชุดข้อมูล
+                          </p>
+                        </div>
+                      </div>
+
+                      <div id="line-drawtime" className="mb-6 scroll-mt-8">
+                        <h4 className="text-md font-medium text-gray-600 mb-3">
+                          7.4.3 Line Chart DrawTime
+                        </h4>
+                        <div className="bg-white p-6 rounded-lg border border-gray-200">
+                          <canvas
+                            ref={lineDrawtimeChartRef}
+                            id="lineDrawtimeChart"
+                          ></canvas>
+                        </div>
+                        <div className="mt-4 p-4 bg-gray-50 rounded border border-gray-200">
+                          <p className="text-sm text-gray-700">
+                            <strong>คุณสมบัติ:</strong>{" "}
+                            กราฟเส้นที่แสดงการควบคุมเวลาในการวาดพื้นที่
+                            (DrawTime) สำหรับปรับแต่งลำดับการแสดงผล
+                          </p>
+                        </div>
+                      </div>
+
+                      <div id="line-stacked" className="mb-6 scroll-mt-8">
+                        <h4 className="text-md font-medium text-gray-600 mb-3">
+                          7.4.4 Line Chart Stacked
+                        </h4>
+                        <div className="bg-white p-6 rounded-lg border border-gray-200">
+                          <canvas
+                            ref={lineStackedChartRef}
+                            id="lineStackedChart"
+                          ></canvas>
+                        </div>
+                        <div className="mt-4 p-4 bg-gray-50 rounded border border-gray-200">
+                          <p className="text-sm text-gray-700">
+                            <strong>คุณสมบัติ:</strong>{" "}
+                            กราฟเส้นแบบซ้อน (Stacked)
+                            แสดงผลรวมสะสมของหลายชุดข้อมูลในรูปแบบพื้นที่
+                          </p>
+                        </div>
+                      </div>
+
+                      <div id="radar-stacked" className="mb-6 scroll-mt-8">
+                        <h4 className="text-md font-medium text-gray-600 mb-3">
+                          7.4.5 Radar Chart Stacked
+                        </h4>
+                        <div className="bg-white p-6 rounded-lg border border-gray-200">
+                          <canvas
+                            ref={radarStackedChartRef}
+                            id="radarStackedChart"
+                          ></canvas>
+                        </div>
+                        <div className="mt-4 p-4 bg-gray-50 rounded border border-gray-200">
+                          <p className="text-sm text-gray-700">
+                            <strong>คุณสมบัติ:</strong>{" "}
+                            กราฟเรดาร์แบบ Area
+                            แสดงการเปรียบเทียบความสามารถหลายด้านในรูปแบบพื้นที่
                           </p>
                         </div>
                       </div>
