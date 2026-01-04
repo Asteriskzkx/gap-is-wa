@@ -1196,8 +1196,8 @@ export default function PreviewComponentPage() {
                         </div>
                         <div className="mt-4 p-4 bg-gray-50 rounded border border-gray-200">
                           <p className="text-sm text-gray-700">
-                            <strong>คุณสมบัติ:</strong>{" "}
-                            กราฟเส้นแบบซ้อน (Stacked)
+                            <strong>คุณสมบัติ:</strong> กราฟเส้นแบบซ้อน
+                            (Stacked)
                             แสดงผลรวมสะสมของหลายชุดข้อมูลในรูปแบบพื้นที่
                           </p>
                         </div>
@@ -1215,8 +1215,7 @@ export default function PreviewComponentPage() {
                         </div>
                         <div className="mt-4 p-4 bg-gray-50 rounded border border-gray-200">
                           <p className="text-sm text-gray-700">
-                            <strong>คุณสมบัติ:</strong>{" "}
-                            กราฟเรดาร์แบบ Area
+                            <strong>คุณสมบัติ:</strong> กราฟเรดาร์แบบ Area
                             แสดงการเปรียบเทียบความสามารถหลายด้านในรูปแบบพื้นที่
                           </p>
                         </div>

@@ -1930,14 +1930,14 @@ export const usePreviewComponent = () => {
           },
           {
             label: "สินค้า B",
-            data: [33, 25, 35, 51, 54, 76].map(v => v + 20),
+            data: [33, 25, 35, 51, 54, 76].map((v) => v + 20),
             fill: true,
             backgroundColor: "rgba(54, 162, 235, 0.5)",
             borderColor: "rgb(54, 162, 235)",
           },
           {
             label: "สินค้า C",
-            data: [33, 25, 35, 51, 54, 76].map(v => v + 40),
+            data: [33, 25, 35, 51, 54, 76].map((v) => v + 40),
             fill: true,
             backgroundColor: "rgba(75, 192, 192, 0.5)",
             borderColor: "rgb(75, 192, 192)",
@@ -1986,7 +1986,13 @@ export const usePreviewComponent = () => {
     radarStackedChartInstanceRef.current = new ChartJS(ctx, {
       type: "radar",
       data: {
-        labels: ["ความเร็ว", "ความแข็งแรง", "ความทนทาน", "ความแม่นยำ", "เทคนิค"],
+        labels: [
+          "ความเร็ว",
+          "ความแข็งแรง",
+          "ความทนทาน",
+          "ความแม่นยำ",
+          "เทคนิค",
+        ],
         datasets: [
           {
             label: "นักกีฬา A",
