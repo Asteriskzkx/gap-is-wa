@@ -27,6 +27,7 @@ export class CommitteeModel extends UserModel {
       hashedPassword,
       name,
       UserRole.COMMITTEE,
+      undefined, // requirePasswordChange
       createdAt,
       updatedAt
     );
