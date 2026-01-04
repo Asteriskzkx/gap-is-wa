@@ -1,5 +1,6 @@
 "use client";
 
+import { farmerNavItems } from "@/config/navItems";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -7,18 +8,8 @@ import FooterNew from "./FooterNew";
 import HeaderNew from "./HeaderNew";
 import SidebarComponent from "./SidebarNew";
 
-// Icons
-import {
-  EditIcon,
-  HomeIcon,
-  PlusIcon,
-  StacksIcon,
-  TextClipboardIcon,
-  TrashIcon,
-} from "@/components/icons";
-
 interface FarmerLayoutProps {
-  children: React.ReactNode;
+  readonly children: React.ReactNode;
 }
 
 export default function FarmerLayout({ children }: FarmerLayoutProps) {
@@ -38,40 +29,7 @@ export default function FarmerLayout({ children }: FarmerLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   // State to track screen size for responsive behavior
   const [isMobile, setIsMobile] = useState(false);
-
-  // Navigation menu items
-  const navItems = [
-    {
-      title: "หน้าหลัก",
-      href: "/farmer/dashboard",
-      icon: <HomeIcon className="h-6 w-6" />,
-    },
-    {
-      title: "ยื่นขอใบรับรองแหล่งผลิต",
-      href: "/farmer/applications/new",
-      icon: <PlusIcon className="h-6 w-6" />,
-    },
-    {
-      title: "ติดตามสถานะการรับรอง",
-      href: "/farmer/applications",
-      icon: <TextClipboardIcon className="h-6 w-6" />,
-    },
-    {
-      title: "ใบรับรองแหล่งผลิตที่ได้รับ",
-      href: "/farmer/certificates",
-      icon: <StacksIcon className="h-6 w-6" />,
-    },
-    {
-      title: "ขอแก้ไขข้อมูลใบรับรองแหล่งผลิต",
-      href: "/farmer/applications/edit",
-      icon: <EditIcon className="h-6 w-6" />,
-    },
-    {
-      title: "ขอยกเลิกใบรับรองแหล่งผลิต",
-      href: "/farmer/applications/cancel",
-      icon: <TrashIcon className="h-6 w-6" />,
-    },
-  ];
+  const navItems = farmerNavItems;
 
   useEffect(() => {
     // ใช้ข้อมูลจาก NextAuth session แทน localStorage

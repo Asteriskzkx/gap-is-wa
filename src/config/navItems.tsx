@@ -9,8 +9,10 @@ import {
   InspectIcon,
   ManageAccountIcon,
   NaturePeopleIcon,
+  PlusIcon,
   StacksIcon,
   TextClipboardIcon,
+  TrashIcon,
 } from "@/components/icons";
 
 export const adminNavItems = [
@@ -94,5 +96,38 @@ export const committeeNavItems = [
     title: "ยกเลิกใบรับรองแหล่งผลิตจีเอพี",
     href: "/committee/certifications/revoke",
     icon: <CancelIcon className="h-6 w-6" />,
+  },
+];
+
+export const farmerNavItems = [
+  {
+    title: "หน้าหลัก",
+    href: "/farmer/dashboard",
+    icon: <HomeIcon className="h-6 w-6" />,
+  },
+  {
+    title: "ยื่นขอใบรับรองแหล่งผลิต",
+    href: "/farmer/applications/new",
+    icon: <PlusIcon className="h-6 w-6" />,
+  },
+  {
+    title: "ติดตามสถานะการรับรอง",
+    href: "/farmer/applications",
+    icon: <TextClipboardIcon className="h-6 w-6" />,
+  },
+  {
+    title: "ใบรับรองแหล่งผลิตที่ได้รับ",
+    href: "/farmer/certificates",
+    icon: <StacksIcon className="h-6 w-6" />,
+  },
+  {
+    title: "ขอแก้ไขข้อมูลใบรับรองแหล่งผลิต",
+    href: "/farmer/applications/edit",
+    icon: <EditIcon className="h-6 w-6" />,
+  },
+  {
+    title: "ขอยกเลิกใบรับรองแหล่งผลิต",
+    href: "/farmer/applications/cancel",
+    icon: <TrashIcon className="h-6 w-6" />,
   },
 ];
