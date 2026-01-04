@@ -10,6 +10,7 @@ export class UserMapper implements BaseMapper<PrismaUser, UserModel> {
       prismaEntity.hashedPassword,
       prismaEntity.name,
       prismaEntity.role as UserRole,
+      prismaEntity.requirePasswordChange,
       prismaEntity.createdAt,
       prismaEntity.updatedAt
     );
@@ -21,6 +22,7 @@ export class UserMapper implements BaseMapper<PrismaUser, UserModel> {
       hashedPassword: domainEntity.hashedPassword,
       name: domainEntity.name,
       role: domainEntity.role,
+      requirePasswordChange: domainEntity.requirePasswordChange,
     };
   }
 }

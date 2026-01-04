@@ -14,6 +14,7 @@ export class UserModel extends BaseModel {
   hashedPassword: string;
   name: string;
   role: UserRole;
+  requirePasswordChange?: boolean;
 
   constructor(
     userId: number, // เปลี่ยนจาก string เป็น number
@@ -21,6 +22,7 @@ export class UserModel extends BaseModel {
     hashedPassword: string,
     name: string,
     role: UserRole = UserRole.BASIC,
+    requirePasswordChange?: boolean,
     createdAt: Date = new Date(),
     updatedAt: Date = new Date()
   ) {
@@ -29,6 +31,7 @@ export class UserModel extends BaseModel {
     this.hashedPassword = hashedPassword;
     this.name = name;
     this.role = role;
+    this.requirePasswordChange = requirePasswordChange;
   }
 
   static async create(
@@ -89,6 +92,7 @@ export class UserModel extends BaseModel {
       email: this.email,
       name: this.name,
       role: this.role,
+      requirePasswordChange: this.requirePasswordChange,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
     };

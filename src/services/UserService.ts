@@ -99,6 +99,7 @@ export class UserService extends BaseService<UserModel> {
       const hashedPassword = await bcrypt.hash(newPassword, 10);
       await this.update(userId, {
         hashedPassword,
+        requirePasswordChange: false,
       } as Partial<UserModel>);
 
       return true;
@@ -248,10 +249,12 @@ export class UserService extends BaseService<UserModel> {
     skip?: number;
     take?: number;
     sortField?: string;
-    sortOrder?: 'asc' | 'desc';
+    sortOrder?: "asc" | "desc";
   }): Promise<{ users: any[]; total: number }> {
     try {
-      const result = await this.userRepository.findWithFilterAndPagination(params);
+      const result = await this.userRepository.findWithFilterAndPagination(
+        params
+      );
       return {
         users: result.users.map((user) => user.toJSON()),
         total: result.total,
