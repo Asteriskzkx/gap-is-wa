@@ -51,6 +51,7 @@ export const authOptions: NextAuthOptions = {
           role: user.role,
           // เพิ่มข้อมูลเฉพาะตาม role
           roleData: user.farmer || user.auditor || user.committee || user.admin,
+          requirePasswordChange: user.requirePasswordChange,
         };
       },
     }),
@@ -63,12 +64,24 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.role = user.role;
         token.roleData = user.roleData;
+        token.requirePasswordChange = user.requirePasswordChange;
       }
 
       // ต่ออายุ token เมื่อมีการใช้งาน
       if (trigger === "update") {
         // อัพเดท iat (issued at) เพื่อต่ออายุ session
         token.iat = Math.floor(Date.now() / 1000);
+
+        // Re-fetch user data to get latest requirePasswordChange value
+        if (token.id) {
+          const updatedUser = await prisma.user.findUnique({
+            where: { userId: Number.parseInt(token.id) },
+            select: { requirePasswordChange: true },
+          });
+          if (updatedUser) {
+            token.requirePasswordChange = updatedUser.requirePasswordChange;
+          }
+        }
       }
 
       return token;
@@ -80,6 +93,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id;
         session.user.role = token.role;
         session.user.roleData = token.roleData;
+        session.user.requirePasswordChange = token.requirePasswordChange;
       }
       return session;
     },
