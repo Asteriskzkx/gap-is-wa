@@ -1,6 +1,41 @@
+"use client";
+
 import AdminLayout from "@/components/layout/AdminLayout";
+import { PrimaryDropdown, PrimaryMultiSelect } from "@/components/ui";
+import { useState } from "react";
 
 export default function AdminReportPage() {
+  const OptionForReport = [
+    { value: "user-management", label: "รายงานผู้ใช้ในระบบ" },
+  ];
+  const [selectedReport, setSelectedReport] = useState<string[]>([]);
+  const reportCategories = [
+    {
+      label: "รายงานหมวดการจัดการผู้ใช้",
+      code: "User Management",
+      items: [
+        { value: "user-list", label: "รายงานรายการผู้ใช้" },
+        { value: "user-activity", label: "รายงานกิจกรรมผู้ใช้" },
+      ],
+    },
+    {
+      label: "รายงานหมวดการจัดการข้อมูลทางการเกษตร",
+      code: "Agricultural Data Management",
+      items: [
+        { value: "crop-yield", label: "รายงานผลผลิตทางการเกษตร" },
+        { value: "pest-control", label: "รายงานการควบคุมศัตรูพืช" },
+      ],
+    },
+  ];
+
+  const groupTemplate = (option: any) => {
+    return (
+            <div className="flex align-items-center">
+                <img alt={option.label} src="https://primefaces.org/cdn/primereact/images/flag/flag_placeholder.png" className={`mr-2 flag flag-${option.code.toLowerCase()}`} style={{ width: '18px' }} />
+                <div>{option.label}</div>
+            </div>
+        );
+  };
   return (
     <AdminLayout>
       <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
@@ -17,6 +52,18 @@ export default function AdminReportPage() {
           <p className="text-gray-700">
             ที่นี่คุณสามารถตรวจสอบรายงานต่างๆ ได้ตามความต้องการ
           </p>
+          <p>โปรดเลือกรายงานที่ต้องการแสดง</p>
+          <PrimaryMultiSelect
+            value={selectedReport}
+            options={reportCategories}
+            onChange={(value) => setSelectedReport(value)}
+            placeholder="เลือกประเภทรายงานที่ต้องการแสดง"
+            optionLabel="label"
+            optionGroupLabel="label"
+            optionGroupChildren="items"
+            optionGroupTemplate={groupTemplate}
+            display="chip"
+          ></PrimaryMultiSelect>
         </div>
       </div>
     </AdminLayout>

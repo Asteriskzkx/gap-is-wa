@@ -1740,14 +1740,40 @@ input.p-inputtext:disabled {
   transition: background-color 0.2s, border-color 0.2s;
 }
 
-.p-multiselect-panel .p-checkbox .p-checkbox-box.p-highlight {
+.p-multiselect-panel .p-checkbox .p-checkbox-box.p-highlight,
+.p-multiselect-panel .p-checkbox.p-highlight .p-checkbox-box,
+.p-multiselect-panel .p-multiselect-item.p-highlight .p-checkbox .p-checkbox-box,
+.p-multiselect-panel .p-checkbox-checked .p-checkbox-box {
   border-color: #16a34a;
   background: #16a34a;
 }
 
-.p-multiselect-panel .p-checkbox .p-checkbox-box .p-checkbox-icon {
+.p-multiselect-panel .p-checkbox .p-checkbox-box .p-checkbox-icon,
+.p-multiselect-panel .p-checkbox-box .p-icon {
   color: #ffffff;
   font-size: 0.875rem;
+}
+
+/* Ensure checkbox icon is visible when checked */
+.p-multiselect-panel .p-multiselect-item.p-highlight .p-checkbox .p-checkbox-box .p-checkbox-icon,
+.p-multiselect-panel .p-multiselect-item.p-highlight .p-checkbox-box .p-icon {
+  display: inline-flex !important;
+  color: #ffffff;
+}
+
+/* PrimeReact 10.x checkbox styles */
+.p-multiselect-option[aria-selected="true"] .p-checkbox-box,
+.p-multiselect-option[data-p-highlight="true"] .p-checkbox-box,
+.p-multiselect-list .p-multiselect-option.p-highlight .p-checkbox-box {
+  border-color: #16a34a !important;
+  background: #16a34a !important;
+}
+
+.p-multiselect-option[aria-selected="true"] .p-checkbox-box svg,
+.p-multiselect-option[data-p-highlight="true"] .p-checkbox-box svg,
+.p-multiselect-list .p-multiselect-option.p-highlight .p-checkbox-box svg {
+  display: block !important;
+  color: #ffffff !important;
 }
 
 /* MultiSelect Chips (when display="chip") */
