@@ -55,6 +55,7 @@ export class FarmerModel extends UserModel {
       hashedPassword,
       name,
       UserRole.FARMER,
+      undefined, // requirePasswordChange
       createdAt,
       updatedAt
     );
