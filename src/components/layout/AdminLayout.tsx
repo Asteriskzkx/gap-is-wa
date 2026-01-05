@@ -4,6 +4,7 @@ import { adminNavItems } from "@/config/navItems";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import ChangePasswordDialog from "../ChangePasswordDialog";
 import FooterNew from "./FooterNew";
 import HeaderNew from "./HeaderNew";
 import SidebarComponent from "./SidebarNew";
@@ -14,7 +15,7 @@ interface AdminLayoutProps {
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
 
   const [admin, setAdmin] = useState({
     namePrefix: "",
@@ -23,6 +24,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     isLoading: true,
     role: "ADMIN",
   });
+
+  // State for password change dialog
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
 
   // State for sidebar visibility
   const [sidebarVisible, setSidebarVisible] = useState(false);
@@ -43,6 +47,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         isLoading: false,
         role: "ADMIN",
       });
+
+      // เช็คว่าต้องเปลี่ยน password หรือไม่
+      if (session.user.requirePasswordChange) {
+        setShowPasswordDialog(true);
+      }
     } else if (status === "loading") {
       setAdmin((prev) => ({ ...prev, isLoading: true }));
     } else if (status === "unauthenticated") {
@@ -109,6 +118,16 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   return (
     <div className="flex flex-col min-h-screen bg-secondary">
+      {/* Change Password Dialog */}
+      <ChangePasswordDialog
+        visible={showPasswordDialog}
+        onPasswordChanged={async () => {
+          setShowPasswordDialog(false);
+          // รีเฟรช session เพื่อให้ได้ requirePasswordChange = false
+          await update();
+        }}
+      />
+
       {/* Sidebar */}
       <SidebarComponent
         isMobile={isMobile}

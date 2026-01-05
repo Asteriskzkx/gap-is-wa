@@ -1,7 +1,7 @@
-import { PrismaClient, User as PrismaUser } from "@prisma/client";
-import { BaseRepository } from "./BaseRepository";
-import { UserModel, UserRole } from "../models/UserModel";
+import { User as PrismaUser } from "@prisma/client";
 import { BaseMapper } from "../mappers/BaseMapper";
+import { UserModel } from "../models/UserModel";
+import { BaseRepository } from "./BaseRepository";
 
 export class UserRepository extends BaseRepository<UserModel> {
   constructor(mapper: BaseMapper<any, UserModel>) {
@@ -74,6 +74,7 @@ export class UserRepository extends BaseRepository<UserModel> {
           name: data.name,
           role: data.role,
           hashedPassword: data.hashedPassword,
+          requirePasswordChange: data.requirePasswordChange,
           updatedAt: new Date(),
         },
       });
@@ -111,10 +112,17 @@ export class UserRepository extends BaseRepository<UserModel> {
     skip?: number;
     take?: number;
     sortField?: string;
-    sortOrder?: 'asc' | 'desc';
+    sortOrder?: "asc" | "desc";
   }): Promise<{ users: UserModel[]; total: number }> {
     try {
-      const { search, role, skip = 0, take = 20, sortField = 'createdAt', sortOrder = 'desc' } = params;
+      const {
+        search,
+        role,
+        skip = 0,
+        take = 20,
+        sortField = "createdAt",
+        sortOrder = "desc",
+      } = params;
 
       // Build where clause
       const where: any = {};
@@ -131,8 +139,10 @@ export class UserRepository extends BaseRepository<UserModel> {
       }
 
       // Build orderBy - validate sortField to prevent injection
-      const validSortFields = ['userId', 'name', 'email', 'role', 'createdAt'];
-      const safeSortField = validSortFields.includes(sortField) ? sortField : 'createdAt';
+      const validSortFields = ["userId", "name", "email", "role", "createdAt"];
+      const safeSortField = validSortFields.includes(sortField)
+        ? sortField
+        : "createdAt";
       const orderBy = { [safeSortField]: sortOrder };
 
       // Execute queries in parallel

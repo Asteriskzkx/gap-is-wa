@@ -27,6 +27,7 @@ export class AdminModel extends UserModel {
       hashedPassword,
       name,
       UserRole.ADMIN,
+      undefined, // requirePasswordChange
       createdAt,
       updatedAt
     );

@@ -9,9 +9,18 @@ interface Option {
   value: any;
 }
 
+interface GroupedOption {
+    label: string;
+    code: string;
+    items: {
+        value: string;
+        label: string;
+    }[];
+  }
+
 interface PrimaryMultiSelectProps extends Omit<MultiSelectProps, "pt"> {
   readonly value: any;
-  readonly options: Option[];
+  readonly options: Option[] | GroupedOption[];
   readonly onChange: (value: any) => void;
   readonly placeholder?: string;
   readonly disabled?: boolean;
@@ -25,6 +34,10 @@ interface PrimaryMultiSelectProps extends Omit<MultiSelectProps, "pt"> {
   readonly display?: "comma" | "chip";
   readonly maxSelectedLabels?: number;
   readonly selectAll?: boolean;
+  readonly optionLabel?: string;
+  readonly optionGroupLabel?: string;
+  readonly optionGroupChildren?: string;
+  readonly optionGroupTemplate?: (option: any) => React.ReactNode;
 }
 
 /**
@@ -57,6 +70,10 @@ export default function PrimaryMultiSelect({
   display = "comma",
   maxSelectedLabels = 3,
   selectAll = true,
+  optionLabel = "label",
+  optionGroupLabel,
+  optionGroupChildren,
+  optionGroupTemplate,
 }: PrimaryMultiSelectProps) {
   const handleChange = (e: any) => {
     onChange(e.value);
@@ -73,8 +90,11 @@ export default function PrimaryMultiSelect({
         value={value}
         options={options}
         onChange={handleChange}
-        optionLabel="label"
+        optionLabel={optionLabel}
         optionValue="value"
+        optionGroupLabel={optionGroupLabel}
+        optionGroupChildren={optionGroupChildren}
+        optionGroupTemplate={optionGroupTemplate}
         placeholder={placeholder}
         disabled={disabled}
         required={required}

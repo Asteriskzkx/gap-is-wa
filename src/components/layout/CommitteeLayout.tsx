@@ -1,20 +1,13 @@
 "use client";
 
+import { committeeNavItems } from "@/config/navItems";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import ChangePasswordDialog from "../ChangePasswordDialog";
 import FooterNew from "./FooterNew";
 import HeaderNew from "./HeaderNew";
 import SidebarComponent from "./SidebarNew";
-
-// Icons
-import {
-  CancelIcon,
-  EditIcon,
-  HomeIcon,
-  StacksIcon,
-  TextClipboardIcon,
-} from "@/components/icons";
 
 interface CommitteeLayoutProps {
   readonly children: React.ReactNode;
@@ -22,7 +15,7 @@ interface CommitteeLayoutProps {
 
 export default function CommitteeLayout({ children }: CommitteeLayoutProps) {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
 
   const [committee, setCommittee] = useState({
     namePrefix: "",
@@ -32,41 +25,16 @@ export default function CommitteeLayout({ children }: CommitteeLayoutProps) {
     role: "COMMITTEE",
   });
 
+  // State for password change dialog
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+
   // State for sidebar visibility
   const [sidebarVisible, setSidebarVisible] = useState(false);
   // State for sidebar collapse
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   // State to track screen size for responsive behavior
   const [isMobile, setIsMobile] = useState(false);
-
-  // Navigation menu items
-  const navItems = [
-    {
-      title: "หน้าหลัก",
-      href: "/committee/dashboard",
-      icon: <HomeIcon className="h-6 w-6" />,
-    },
-    {
-      title: "พิจารณาผลการตรวจประเมิน",
-      href: "/committee/assessments",
-      icon: <TextClipboardIcon className="h-6 w-6" />,
-    },
-    {
-      title: "ใบรับรองแหล่งผลิตจีเอพีในระบบ",
-      href: "/committee/certifications/list",
-      icon: <StacksIcon className="h-6 w-6" />,
-    },
-    {
-      title: "ออกใบรับรองแหล่งผลิตจีเอพี",
-      href: "/committee/certifications/issue",
-      icon: <EditIcon className="h-6 w-6" />,
-    },
-    {
-      title: "ยกเลิกใบรับรองแหล่งผลิตจีเอพี",
-      href: "/committee/certifications/revoke",
-      icon: <CancelIcon className="h-6 w-6" />,
-    },
-  ];
+  const navItems = committeeNavItems;
 
   useEffect(() => {
     // ใช้ข้อมูลจาก NextAuth session แทน localStorage
@@ -79,6 +47,11 @@ export default function CommitteeLayout({ children }: CommitteeLayoutProps) {
         isLoading: false,
         role: "COMMITTEE",
       });
+
+      // เช็คว่าต้องเปลี่ยน password หรือไม่
+      if (session.user.requirePasswordChange) {
+        setShowPasswordDialog(true);
+      }
     } else if (status === "loading") {
       setCommittee((prev) => ({ ...prev, isLoading: true }));
     } else if (status === "unauthenticated") {
@@ -145,6 +118,16 @@ export default function CommitteeLayout({ children }: CommitteeLayoutProps) {
 
   return (
     <div className="flex flex-col min-h-screen bg-secondary">
+      {/* Change Password Dialog */}
+      <ChangePasswordDialog
+        visible={showPasswordDialog}
+        onPasswordChanged={async () => {
+          setShowPasswordDialog(false);
+          // รีเฟรช session เพื่อให้ได้ requirePasswordChange = false
+          await update();
+        }}
+      />
+
       {/* Sidebar */}
       <SidebarComponent
         isMobile={isMobile}

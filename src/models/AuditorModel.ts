@@ -27,6 +27,7 @@ export class AuditorModel extends UserModel {
       hashedPassword,
       name,
       UserRole.AUDITOR,
+      undefined, // requirePasswordChange
       createdAt,
       updatedAt
     );
