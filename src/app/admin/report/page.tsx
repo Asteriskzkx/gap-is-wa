@@ -1,50 +1,75 @@
 "use client";
 
 import AdminLayout from "@/components/layout/AdminLayout";
-import { PrimaryDropdown, PrimaryMultiSelect } from "@/components/ui";
+import { PrimaryCard, PrimaryDropdown, PrimaryMultiSelect } from "@/components/ui";
 import { Button } from "primereact/button";
 import { Calendar } from "primereact/calendar";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useChart } from "@/hooks/useChart";
 
 export default function AdminReportPage() {
   const [dates, setDates] = useState<(Date | null)[] | null>(null);
 
-  const OptionForReport = [
-    { value: "user-management", label: "รายงานผู้ใช้ในระบบ" },
-  ];
-  const [selectedReport, setSelectedReport] = useState<string[]>([]);
-  const reportCategories = [
-    {
-      label: "รายงานหมวดการจัดการผู้ใช้",
-      code: "User Management",
-      items: [
-        { value: "user-list", label: "รายงานรายการผู้ใช้" },
-        { value: "user-activity", label: "รายงานกิจกรรมผู้ใช้" },
-      ],
-    },
-    {
-      label: "รายงานหมวดการจัดการข้อมูลทางการเกษตร",
-      code: "Agricultural Data Management",
-      items: [
-        { value: "crop-yield", label: "รายงานผลผลิตทางการเกษตร" },
-        { value: "pest-control", label: "รายงานการควบคุมศัตรูพืช" },
-      ],
-    },
-  ];
+  // const OptionForReport = [
+  //   { value: "user-management", label: "รายงานผู้ใช้ในระบบ" },
+  // ];
+  // const [selectedReport, setSelectedReport] = useState<string[]>([]);
+  // const reportCategories = [
+  //   {
+  //     label: "รายงานหมวดการจัดการผู้ใช้",
+  //     code: "User Management",
+  //     items: [
+  //       { value: "user-list", label: "รายงานรายการผู้ใช้" },
+  //       { value: "user-activity", label: "รายงานกิจกรรมผู้ใช้" },
+  //     ],
+  //   },
+  //   {
+  //     label: "รายงานหมวดการจัดการข้อมูลทางการเกษตร",
+  //     code: "Agricultural Data Management",
+  //     items: [
+  //       { value: "crop-yield", label: "รายงานผลผลิตทางการเกษตร" },
+  //       { value: "pest-control", label: "รายงานการควบคุมศัตรูพืช" },
+  //     ],
+  //   },
+  // ];
 
-  const groupTemplate = (option: any) => {
-    return (
-      <div className="flex align-items-center">
-        <img
-          alt={option.label}
-          src="https://primefaces.org/cdn/primereact/images/flag/flag_placeholder.png"
-          className={`mr-2 flag flag-${option.code.toLowerCase()}`}
-          style={{ width: "18px" }}
-        />
-        <div>{option.label}</div>
-      </div>
-    );
-  };
+  // const groupTemplate = (option: any) => {
+  //   return (
+  //     <div className="flex align-items-center">
+  //       <img
+  //         alt={option.label}
+  //         src="https://primefaces.org/cdn/primereact/images/flag/flag_placeholder.png"
+  //         className={`mr-2 flag flag-${option.code.toLowerCase()}`}
+  //         style={{ width: "18px" }}
+  //       />
+  //       <div>{option.label}</div>
+  //     </div>
+  //   );
+  // };
+
+  const data = useMemo(
+    () => ({
+      labels: ["A", "B", "C"],
+      datasets: [
+        {
+          data: [40, 35, 25],
+          backgroundColor: ["#60a5fa", "#34d399", "#fbbf24"],
+        },
+      ],
+    }),
+    []
+  );
+
+  const pieChartRef = useChart({
+    type: "pie",
+    data,
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: "bottom" },
+      },
+    },
+  });
   return (
     <AdminLayout>
       <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
@@ -57,24 +82,16 @@ export default function AdminReportPage() {
           </p>
         </div>
         {/* Content Area */}
-        {/* <div className="bg-white rounded-lg shadow p-6">
-          <p className="text-gray-700">
-            ที่นี่คุณสามารถตรวจสอบรายงานต่างๆ ได้ตามความต้องการ
-          </p>
-          
-        </div> */}
-
-        {/* Chart Area */}
+        {/* Header Area */}
         <div className="mt-8 bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-wrap items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">
               กราฟแสดงข้อมูลรายงาน
             </h2>
-            <div className="flex items-center justify-end gap-2 mb-6">
-              <div className="pi pi-calendar text-2xl"></div>
-              <div className="w-auto max-w-96 ">
+            <div className="items-center justify-end gap-2 mb-6">
+              <div className="w-auto max-w-96">
                 {" "}
-                <Calendar
+                <Calendar showIcon 
                   className=""
                   value={dates}
                   placeholder="เลือกช่วงเวลาในการแสดงแผนผัง"
@@ -87,7 +104,15 @@ export default function AdminReportPage() {
             </div>
           </div>
 
-          <h2 className="text-gray-700">ส่วนกราฟ</h2>
+          {/* Graph Area */}
+          {/* Pie Chart */}
+          
+          <div id="chart-pie" className="mb-6 scroll-mt-8">
+            <PrimaryCard className="p-5 size-96 flex items-center justify-center">
+              <p className="text-xl text-center">จำนวนผู้ใช้ภายในระบบแยกตามบทบาท</p>
+              <canvas ref={pieChartRef} id="pieChart"></canvas>
+            </PrimaryCard>
+          </div>
         </div>
       </div>
     </AdminLayout>
