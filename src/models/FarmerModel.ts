@@ -99,12 +99,13 @@ export class FarmerModel extends UserModel {
     provinceName: string,
     zipCode: string,
     phoneNumber: string,
-    mobilePhoneNumber: string
+    mobilePhoneNumber: string,
+    requirePasswordChange?: boolean
   ): Promise<FarmerModel> {
     const hashedPassword = await bcrypt.hash(password, 10);
     const name = `${namePrefix}${firstName} ${lastName}`;
 
-    return new FarmerModel(
+    const farmer = new FarmerModel(
       0, // userId จะถูกสร้างโดยฐานข้อมูล (เปลี่ยนจาก '' เป็น 0)
       email,
       hashedPassword,
@@ -128,6 +129,13 @@ export class FarmerModel extends UserModel {
       phoneNumber,
       mobilePhoneNumber
     );
+
+    // Set requirePasswordChange if provided
+    if (requirePasswordChange !== undefined) {
+      farmer.requirePasswordChange = requirePasswordChange;
+    }
+
+    return farmer;
   }
 
   override validate(): boolean {

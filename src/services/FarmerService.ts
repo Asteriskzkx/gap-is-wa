@@ -64,6 +64,7 @@ export class FarmerService extends BaseService<FarmerModel> {
     zipCode: string;
     phoneNumber: string;
     mobilePhoneNumber: string;
+    requirePasswordChange?: boolean;
   }): Promise<FarmerModel> {
     try {
       // Check if user already exists
@@ -99,7 +100,8 @@ export class FarmerService extends BaseService<FarmerModel> {
         farmerData.provinceName,
         farmerData.zipCode,
         farmerData.phoneNumber,
-        farmerData.mobilePhoneNumber
+        farmerData.mobilePhoneNumber,
+        farmerData.requirePasswordChange
       );
 
       return await this.create(farmerModel);
@@ -124,7 +126,6 @@ export class FarmerService extends BaseService<FarmerModel> {
     currentVersion?: number
   ): Promise<FarmerModel | null> {
     try {
-
       // If updating email, check if it's already in use by another account
       if (data.email) {
         // First, get the current farmer to find the associated userId

@@ -125,6 +125,7 @@ export class FarmerController extends BaseController<FarmerModel> {
         zipCode,
         phoneNumber: phoneNumber || "",
         mobilePhoneNumber,
+        requirePasswordChange: false, // เกษตรกรลงทะเบียนเองไม่บังคับเปลี่ยน password
       });
 
       // Remove sensitive data before returning
