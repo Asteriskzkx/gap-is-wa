@@ -1,10 +1,7 @@
-import {
-  PrismaClient,
-  PlantingDetail as PrismaPlantingDetail,
-} from "@prisma/client";
-import { BaseRepository } from "./BaseRepository";
-import { PlantingDetailModel } from "../models/PlantingDetailModel";
+import { PlantingDetail as PrismaPlantingDetail } from "@prisma/client";
 import { BaseMapper } from "../mappers/BaseMapper";
+import { PlantingDetailModel } from "../models/PlantingDetailModel";
+import { BaseRepository } from "./BaseRepository";
 
 export class PlantingDetailRepository extends BaseRepository<PlantingDetailModel> {
   constructor(mapper: BaseMapper<any, PlantingDetailModel>) {

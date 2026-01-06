@@ -1,7 +1,7 @@
-import { PrismaClient, DataRecord as PrismaDataRecord } from "@prisma/client";
-import { BaseRepository } from "./BaseRepository";
-import { DataRecordModel } from "../models/DataRecordModel";
+import { DataRecord as PrismaDataRecord } from "@prisma/client";
 import { BaseMapper } from "../mappers/BaseMapper";
+import { DataRecordModel } from "../models/DataRecordModel";
+import { BaseRepository } from "./BaseRepository";
 
 export class DataRecordRepository extends BaseRepository<DataRecordModel> {
   constructor(mapper: BaseMapper<any, DataRecordModel>) {

@@ -1,10 +1,7 @@
-import {
-  PrismaClient,
-  AdviceAndDefect as PrismaAdviceAndDefect,
-} from "@prisma/client";
-import { BaseRepository } from "./BaseRepository";
-import { AdviceAndDefectModel } from "../models/AdviceAndDefectModel";
+import { AdviceAndDefect as PrismaAdviceAndDefect } from "@prisma/client";
 import { BaseMapper } from "../mappers/BaseMapper";
+import { AdviceAndDefectModel } from "../models/AdviceAndDefectModel";
+import { BaseRepository } from "./BaseRepository";
 
 export class AdviceAndDefectRepository extends BaseRepository<AdviceAndDefectModel> {
   constructor(mapper: BaseMapper<any, AdviceAndDefectModel>) {

@@ -1,7 +1,7 @@
-import { PrismaClient, Requirement as PrismaRequirement } from "@prisma/client";
-import { BaseRepository } from "./BaseRepository";
-import { RequirementModel } from "../models/RequirementModel";
+import { Requirement as PrismaRequirement } from "@prisma/client";
 import { BaseMapper } from "../mappers/BaseMapper";
+import { RequirementModel } from "../models/RequirementModel";
+import { BaseRepository } from "./BaseRepository";
 
 export class RequirementRepository extends BaseRepository<RequirementModel> {
   constructor(mapper: BaseMapper<any, RequirementModel>) {

@@ -1,13 +1,9 @@
-import {
-  PrismaClient,
-  Auditor as PrismaAuditor,
-  User as PrismaUser,
-} from "@prisma/client";
-import { BaseRepository } from "./BaseRepository";
+import { Auditor as PrismaAuditor, User as PrismaUser } from "@prisma/client";
+import { OptimisticLockError } from "../errors/OptimisticLockError";
+import { BaseMapper } from "../mappers/BaseMapper";
 import { AuditorModel } from "../models/AuditorModel";
 import { UserRole } from "../models/UserModel";
-import { BaseMapper } from "../mappers/BaseMapper";
-import { OptimisticLockError } from "../errors/OptimisticLockError";
+import { BaseRepository } from "./BaseRepository";
 
 export class AuditorRepository extends BaseRepository<AuditorModel> {
   constructor(mapper: BaseMapper<any, AuditorModel>) {
@@ -124,7 +120,8 @@ export class AuditorRepository extends BaseRepository<AuditorModel> {
 
       // Prepare auditor data - only include defined values
       const auditorData: any = { updatedAt: new Date() };
-      if (data.namePrefix !== undefined) auditorData.namePrefix = data.namePrefix;
+      if (data.namePrefix !== undefined)
+        auditorData.namePrefix = data.namePrefix;
       if (data.firstName !== undefined) auditorData.firstName = data.firstName;
       if (data.lastName !== undefined) auditorData.lastName = data.lastName;
 
@@ -218,7 +215,8 @@ export class AuditorRepository extends BaseRepository<AuditorModel> {
         version: currentVersion + 1,
         updatedAt: new Date(),
       };
-      if (data.namePrefix !== undefined) auditorData.namePrefix = data.namePrefix;
+      if (data.namePrefix !== undefined)
+        auditorData.namePrefix = data.namePrefix;
       if (data.firstName !== undefined) auditorData.firstName = data.firstName;
       if (data.lastName !== undefined) auditorData.lastName = data.lastName;
 
