@@ -49,11 +49,11 @@ export default function AdminReportPage() {
 
   const data = useMemo(
     () => ({
-      labels: ["A", "B", "C"],
+      labels: ["Admin", "Committee", "Farmer", "Auditor"],
       datasets: [
         {
-          data: [40, 35, 25],
-          backgroundColor: ["#60a5fa", "#34d399", "#fbbf24"],
+          data: [40, 35, 25, 50],
+          backgroundColor: ["#60a5fa", "#34d399", "#fbbf24", "#f87171"],
         },
       ],
     }),
@@ -109,7 +109,7 @@ export default function AdminReportPage() {
           
           <div id="chart-pie" className="mb-6 scroll-mt-8">
             <PrimaryCard className="p-5 size-96 flex items-center justify-center">
-              <p className="text-xl text-center">จำนวนผู้ใช้ภายในระบบแยกตามบทบาท</p>
+              <p className="mb-2 text-xl text-center">จำนวนผู้ใช้ในแต่ละบทบาท</p>
               <canvas ref={pieChartRef} id="pieChart"></canvas>
             </PrimaryCard>
           </div>
