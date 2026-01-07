@@ -363,29 +363,36 @@ export default function AdminReportPage() {
         isFirstPage = false;
       };
 
-      // Add title
-      pdf.setFontSize(18);
-      pdf.text("รายงานสรุปข้อมูลระบบ", pageWidth / 2, currentY, { align: "center" });
-      currentY += 10;
-
-      // Add date range if selected
+      // Create temporary header element for Thai text rendering
+      const headerDiv = document.createElement("div");
+      headerDiv.style.cssText = "position: absolute; left: -9999px; top: 0; background: white; padding: 20px; width: 800px; text-align: center; font-family: 'Sarabun', sans-serif;";
+      
+      let headerHTML = `<h1 style="font-size: 24px; font-weight: bold; margin-bottom: 10px; color: #1f2937;">รายงานสรุปข้อมูลระบบ</h1>`;
+      
       if (dates && dates[0] && dates[1]) {
-        pdf.setFontSize(12);
-        pdf.text(
-          `ช่วงวันที่: ${dates[0].toLocaleDateString("th-TH")} - ${dates[1].toLocaleDateString("th-TH")}`,
-          pageWidth / 2,
-          currentY,
-          { align: "center" }
-        );
-        currentY += 10;
+        headerHTML += `<p style="font-size: 14px; color: #4b5563; margin-bottom: 5px;">ช่วงวันที่: ${dates[0].toLocaleDateString("th-TH")} - ${dates[1].toLocaleDateString("th-TH")}</p>`;
       }
+      
+      headerHTML += `<p style="font-size: 12px; color: #6b7280;">วันที่ส่งออก: ${new Date().toLocaleDateString("th-TH")}</p>`;
+      
+      headerDiv.innerHTML = headerHTML;
+      document.body.appendChild(headerDiv);
 
-      // Add export date
-      pdf.setFontSize(10);
-      pdf.text(`วันที่ส่งออก: ${new Date().toLocaleDateString("th-TH")}`, pageWidth / 2, currentY, {
-        align: "center",
+      // Render header to canvas
+      const headerCanvas = await html2canvas(headerDiv, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff",
       });
-      currentY += 15;
+      document.body.removeChild(headerDiv);
+
+      const headerImgData = headerCanvas.toDataURL("image/png");
+      const headerImgWidth = pageWidth - margin * 2;
+      const headerImgHeight = (headerCanvas.height * headerImgWidth) / headerCanvas.width;
+
+      pdf.addImage(headerImgData, "PNG", margin, currentY, headerImgWidth, headerImgHeight);
+      currentY += headerImgHeight + 5;
       isFirstPage = false;
 
       // Add selected sections
@@ -660,37 +667,42 @@ export default function AdminReportPage() {
           </div>
         </Dialog>
 
-        {/* Content Area */}
-        <div ref={userReportRef} className="mt-8 flex flex-col bg-white rounded-lg shadow p-6">
-          {/* Header Section of Content Contain Filter*/}
-          <div className="flex flex-wrap items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              📊 รายงานผู้ใช้งาน
-            </h2>
-            <div className="items-center justify-end gap-2 mb-6">
-              <div className="w-auto">
-                <Calendar
-                  showIcon
-                  className=""
-                  value={dates}
-                  placeholder="เลือกช่วงวันที่แสดงแผนผัง"
-                  onChange={(e) => setDates(e.value ?? null)}
-                  selectionMode="range"
-                  readOnlyInput
-                  hideOnRangeSelection
-                  footerTemplate={() => (
-                    <div className="flex justify-end m-3">
-                      <Button
-                        label="ล้างวันที่"
-                        className="p-button-text p-button-danger p-2"
-                        onClick={() => setDates(null)}
-                      />
-                    </div>
-                  )}
-                />
-              </div>
+        {/* Global Date Filter Section */}
+        <div className="mt-8 flex flex-col bg-white rounded-lg shadow p-4">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span className="text-gray-700 font-medium">📅 ช่วงวันที่:</span>
+              <Calendar
+                showIcon
+                value={dates}
+                placeholder="เลือกช่วงวันที่"
+                onChange={(e) => setDates(e.value ?? null)}
+                selectionMode="range"
+                readOnlyInput
+                hideOnRangeSelection
+                dateFormat="dd/mm/yy"
+                footerTemplate={() => (
+                  <div className="flex justify-end m-3">
+                    <Button
+                      label="ล้างวันที่"
+                      className="p-button-text p-button-danger p-2"
+                      onClick={() => setDates(null)}
+                    />
+                  </div>
+                )}
+              />
             </div>
+            <p className="text-sm text-gray-500">
+              * ช่วงวันที่นี้ใช้กับ รายงานผู้ใช้งาน (กราฟผู้ใช้ใหม่ตามชั่วโมง)
+            </p>
           </div>
+        </div>
+
+        {/* User Report Section */}
+        <div ref={userReportRef} className="mt-6 flex flex-col bg-white rounded-lg shadow p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">
+            📊 รายงานผู้ใช้งาน
+          </h2>
 
           {/* Card Area - 5 columns: Total + 4 Roles */}
           <div id="card-area" className="mb-6 scroll-mt-8">
