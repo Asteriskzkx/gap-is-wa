@@ -24,6 +24,77 @@ export interface NewUsersTimeSeriesReport {
 
 export type TimeGranularity = "hour" | "day" | "week" | "month" | "year";
 
+// Inspection Report Interfaces
+export interface InspectionStatusCount {
+  status: string;
+  count: number;
+}
+
+export interface InspectionResultCount {
+  result: string;
+  count: number;
+}
+
+export interface InspectionTypeCount {
+  typeId: number;
+  typeName: string;
+  count: number;
+}
+
+export interface InspectionReportSummary {
+  totalInspections: number;
+  byStatus: InspectionStatusCount[];
+  byResult: InspectionResultCount[];
+  byType: InspectionTypeCount[];
+}
+
+// Rubber Farm Report Interfaces
+export interface RubberFarmProvinceCount {
+  province: string;
+  count: number;
+  totalArea: number;
+}
+
+export interface RubberFarmReportSummary {
+  totalFarms: number;
+  totalArea: number;
+  byProvince: RubberFarmProvinceCount[];
+  byDistributionType: { type: string; count: number }[];
+}
+
+// Certificate Report Interfaces
+export interface CertificateStatusCount {
+  status: string;
+  count: number;
+}
+
+export interface CertificateReportSummary {
+  totalCertificates: number;
+  activeCertificates: number;
+  expiredCertificates: number;
+  expiringIn30Days: number;
+  expiringIn60Days: number;
+  expiringIn90Days: number;
+  cancelRequested: number;
+  byStatus: CertificateStatusCount[];
+}
+
+// Auditor Performance Interfaces
+export interface AuditorPerformance {
+  auditorId: number;
+  auditorName: string;
+  totalInspections: number;
+  passedInspections: number;
+  failedInspections: number;
+  passRate: number;
+}
+
+export interface AuditorPerformanceReport {
+  auditors: AuditorPerformance[];
+  totalInspections: number;
+  averagePassRate: number;
+}
+
 export class AdminReportService {
   /**
    * Get the earliest user creation date
@@ -335,5 +406,327 @@ export class AdminReportService {
    */
   private formatYearLabel(date: Date): string {
     return `${date.getFullYear() + 543}`;
+  }
+
+  // ==================== INSPECTION REPORTS ====================
+
+  /**
+   * Get inspection report summary
+   */
+  async getInspectionReportSummary(
+    startDate?: Date,
+    endDate?: Date
+  ): Promise<InspectionReportSummary> {
+    try {
+      const whereClause = startDate && endDate
+        ? { createdAt: { gte: startDate, lte: endDate } }
+        : {};
+
+      // Get total inspections
+      const totalInspections = await prisma.inspection.count({ where: whereClause });
+
+      // Group by status
+      const statusGroups = await prisma.inspection.groupBy({
+        by: ["inspectionStatus"],
+        where: whereClause,
+        _count: { inspectionId: true },
+      });
+
+      const byStatus: InspectionStatusCount[] = statusGroups.map((g) => ({
+        status: g.inspectionStatus,
+        count: g._count.inspectionId,
+      }));
+
+      // Group by result
+      const resultGroups = await prisma.inspection.groupBy({
+        by: ["inspectionResult"],
+        where: whereClause,
+        _count: { inspectionId: true },
+      });
+
+      const byResult: InspectionResultCount[] = resultGroups.map((g) => ({
+        result: g.inspectionResult,
+        count: g._count.inspectionId,
+      }));
+
+      // Group by type
+      const inspections = await prisma.inspection.findMany({
+        where: whereClause,
+        include: { inspectionType: true },
+      });
+
+      const typeMap = new Map<number, { typeName: string; count: number }>();
+      inspections.forEach((insp) => {
+        const typeId = insp.inspectionTypeId;
+        const typeName = insp.inspectionType.typeName;
+        if (typeMap.has(typeId)) {
+          typeMap.get(typeId)!.count++;
+        } else {
+          typeMap.set(typeId, { typeName, count: 1 });
+        }
+      });
+
+      const byType: InspectionTypeCount[] = Array.from(typeMap.entries()).map(
+        ([typeId, data]) => ({
+          typeId,
+          typeName: data.typeName,
+          count: data.count,
+        })
+      );
+
+      return {
+        totalInspections,
+        byStatus,
+        byResult,
+        byType,
+      };
+    } catch (error) {
+      console.error("Error getting inspection report summary:", error);
+      throw error;
+    }
+  }
+
+  // ==================== RUBBER FARM REPORTS ====================
+
+  /**
+   * Get rubber farm report summary
+   */
+  async getRubberFarmReportSummary(
+    startDate?: Date,
+    endDate?: Date
+  ): Promise<RubberFarmReportSummary> {
+    try {
+      const whereClause = startDate && endDate
+        ? { createdAt: { gte: startDate, lte: endDate } }
+        : {};
+
+      // Get all rubber farms with planting details
+      const farms = await prisma.rubberFarm.findMany({
+        where: whereClause,
+        include: { plantingDetails: true },
+      });
+
+      const totalFarms = farms.length;
+
+      // Calculate total area
+      let totalArea = 0;
+      farms.forEach((farm) => {
+        farm.plantingDetails.forEach((detail) => {
+          totalArea += detail.areaOfPlot;
+        });
+      });
+
+      // Group by province
+      const provinceMap = new Map<string, { count: number; area: number }>();
+      farms.forEach((farm) => {
+        const province = farm.province || "ไม่ระบุ";
+        let farmArea = 0;
+        farm.plantingDetails.forEach((detail) => {
+          farmArea += detail.areaOfPlot;
+        });
+
+        if (provinceMap.has(province)) {
+          const data = provinceMap.get(province)!;
+          data.count++;
+          data.area += farmArea;
+        } else {
+          provinceMap.set(province, { count: 1, area: farmArea });
+        }
+      });
+
+      const byProvince: RubberFarmProvinceCount[] = Array.from(provinceMap.entries())
+        .map(([province, data]) => ({
+          province,
+          count: data.count,
+          totalArea: Math.round(data.area * 100) / 100,
+        }))
+        .sort((a, b) => b.count - a.count);
+
+      // Group by distribution type
+      const distributionMap = new Map<string, number>();
+      farms.forEach((farm) => {
+        const type = farm.productDistributionType || "ไม่ระบุ";
+        distributionMap.set(type, (distributionMap.get(type) || 0) + 1);
+      });
+
+      const byDistributionType = Array.from(distributionMap.entries()).map(
+        ([type, count]) => ({ type, count })
+      );
+
+      return {
+        totalFarms,
+        totalArea: Math.round(totalArea * 100) / 100,
+        byProvince,
+        byDistributionType,
+      };
+    } catch (error) {
+      console.error("Error getting rubber farm report summary:", error);
+      throw error;
+    }
+  }
+
+  // ==================== CERTIFICATE REPORTS ====================
+
+  /**
+   * Get certificate report summary
+   */
+  async getCertificateReportSummary(
+    startDate?: Date,
+    endDate?: Date
+  ): Promise<CertificateReportSummary> {
+    try {
+      const now = new Date();
+      const in30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+      const in60Days = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
+      const in90Days = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
+
+      const whereClause = startDate && endDate
+        ? { createdAt: { gte: startDate, lte: endDate } }
+        : {};
+
+      // Total certificates
+      const totalCertificates = await prisma.certificate.count({ where: whereClause });
+
+      // Active certificates
+      const activeCertificates = await prisma.certificate.count({
+        where: {
+          ...whereClause,
+          activeFlag: true,
+          expiryDate: { gte: now },
+        },
+      });
+
+      // Expired certificates
+      const expiredCertificates = await prisma.certificate.count({
+        where: {
+          ...whereClause,
+          expiryDate: { lt: now },
+        },
+      });
+
+      // Expiring in 30 days
+      const expiringIn30Days = await prisma.certificate.count({
+        where: {
+          ...whereClause,
+          activeFlag: true,
+          expiryDate: { gte: now, lte: in30Days },
+        },
+      });
+
+      // Expiring in 60 days
+      const expiringIn60Days = await prisma.certificate.count({
+        where: {
+          ...whereClause,
+          activeFlag: true,
+          expiryDate: { gte: now, lte: in60Days },
+        },
+      });
+
+      // Expiring in 90 days
+      const expiringIn90Days = await prisma.certificate.count({
+        where: {
+          ...whereClause,
+          activeFlag: true,
+          expiryDate: { gte: now, lte: in90Days },
+        },
+      });
+
+      // Cancel requested
+      const cancelRequested = await prisma.certificate.count({
+        where: {
+          ...whereClause,
+          cancelRequestFlag: true,
+        },
+      });
+
+      // Build status breakdown
+      const byStatus: CertificateStatusCount[] = [
+        { status: "ใช้งานอยู่", count: activeCertificates },
+        { status: "หมดอายุแล้ว", count: expiredCertificates },
+        { status: "ขอยกเลิก", count: cancelRequested },
+      ];
+
+      return {
+        totalCertificates,
+        activeCertificates,
+        expiredCertificates,
+        expiringIn30Days,
+        expiringIn60Days,
+        expiringIn90Days,
+        cancelRequested,
+        byStatus,
+      };
+    } catch (error) {
+      console.error("Error getting certificate report summary:", error);
+      throw error;
+    }
+  }
+
+  // ==================== AUDITOR PERFORMANCE REPORTS ====================
+
+  /**
+   * Get auditor performance report
+   */
+  async getAuditorPerformanceReport(
+    startDate?: Date,
+    endDate?: Date
+  ): Promise<AuditorPerformanceReport> {
+    try {
+      const whereClause = startDate && endDate
+        ? { createdAt: { gte: startDate, lte: endDate } }
+        : {};
+
+      // Get all auditors with their inspections
+      const auditors = await prisma.auditor.findMany({
+        include: {
+          user: { select: { name: true } },
+          inspectionsAsChief: {
+            where: whereClause,
+            select: {
+              inspectionResult: true,
+            },
+          },
+        },
+      });
+
+      const auditorPerformances: AuditorPerformance[] = auditors.map((auditor) => {
+        const totalInspections = auditor.inspectionsAsChief.length;
+        const passedInspections = auditor.inspectionsAsChief.filter(
+          (i) => i.inspectionResult === "ผ่าน" || i.inspectionResult === "PASSED"
+        ).length;
+        const failedInspections = totalInspections - passedInspections;
+        const passRate = totalInspections > 0
+          ? Math.round((passedInspections / totalInspections) * 100 * 100) / 100
+          : 0;
+
+        return {
+          auditorId: auditor.auditorId,
+          auditorName: auditor.user.name,
+          totalInspections,
+          passedInspections,
+          failedInspections,
+          passRate,
+        };
+      });
+
+      // Filter to only show auditors with inspections
+      const activeAuditors = auditorPerformances.filter((a) => a.totalInspections > 0);
+
+      const totalInspections = activeAuditors.reduce((sum, a) => sum + a.totalInspections, 0);
+      const averagePassRate = activeAuditors.length > 0
+        ? Math.round(
+            (activeAuditors.reduce((sum, a) => sum + a.passRate, 0) / activeAuditors.length) * 100
+          ) / 100
+        : 0;
+
+      return {
+        auditors: activeAuditors.sort((a, b) => b.totalInspections - a.totalInspections),
+        totalInspections,
+        averagePassRate,
+      };
+    } catch (error) {
+      console.error("Error getting auditor performance report:", error);
+      throw error;
+    }
   }
 }
