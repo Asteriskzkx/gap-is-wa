@@ -13,7 +13,6 @@
 .imageSection {
   display: none;
   position: relative;
-  /* background-color: var(--secondary-color, #f0fdf4); */
 }
 
 @media (min-width: 1024px) {

@@ -68,7 +68,7 @@ export default function LoginPage() {
 
           {error && <div className={styles.errorAlert}>{error}</div>}
 
-          <form onSubmit={handleSubmit} className={styles.form}>
+          <form onSubmit={handleSubmit} className={styles.form} noValidate>
             <div className={styles.formGroup}>
               <label htmlFor="role" className={styles.label}>
                 เข้าสู่ระบบในฐานะ
@@ -103,7 +103,7 @@ export default function LoginPage() {
               <PrimaryInputText
                 id="email"
                 name="email"
-                type="email"
+                type="text"
                 value={email}
                 onChange={(value) => {
                   setEmail(value);
@@ -111,7 +111,6 @@ export default function LoginPage() {
                 }}
                 placeholder="email@example.com"
                 autoComplete="email"
-                required
                 invalid={!!emailError}
                 errorMessage={emailError}
               />
@@ -131,7 +130,6 @@ export default function LoginPage() {
                 }}
                 placeholder="••••••••"
                 autoComplete="current-password"
-                required
                 feedback={false}
                 toggleMask={true}
                 invalid={!!passwordError}
@@ -144,6 +142,7 @@ export default function LoginPage() {
                 type="submit"
                 label="เข้าสู่ระบบ"
                 loading={isLoading}
+                disabled={isLoading}
                 fullWidth
               />
             </div>
