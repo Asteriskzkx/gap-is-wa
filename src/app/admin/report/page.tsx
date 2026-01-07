@@ -593,7 +593,7 @@ export default function AdminReportPage() {
           <Button
             label="ส่งออก PDF"
             icon="pi pi-file-pdf"
-            className="p-button-success"
+            className="p-button-success p-2"
             onClick={() => setShowExportDialog(true)}
           />
         </div>
@@ -609,13 +609,13 @@ export default function AdminReportPage() {
               <Button
                 label="ยกเลิก"
                 icon="pi pi-times"
-                className="p-button-text"
+                className="p-button-text p-2"
                 onClick={() => setShowExportDialog(false)}
               />
               <Button
                 label={exporting ? "กำลังส่งออก..." : "ส่งออก PDF"}
                 icon="pi pi-file-pdf"
-                className="p-button-success"
+                className="p-button-success p-2"
                 onClick={handleExportPDF}
                 disabled={exporting || !Object.values(exportSections).some(Boolean)}
                 loading={exporting}
@@ -624,11 +624,31 @@ export default function AdminReportPage() {
           }
         >
           <div className="flex flex-col gap-3 py-2">
+            {/* Select All */}
+            <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
+              <Checkbox
+                inputId="export-all"
+                checked={Object.values(exportSections).every(Boolean)}
+                onChange={(e) => {
+                  const checked = e.checked ?? false;
+                  setExportSections({
+                    users: checked,
+                    inspections: checked,
+                    rubberFarms: checked,
+                    certificates: checked,
+                    auditors: checked,
+                  });
+                }}
+                className="border border-gray-300 rounded"
+              />
+              <label htmlFor="export-all" className="cursor-pointer font-medium">✅ เลือกทั้งหมด</label>
+            </div>
             <div className="flex items-center gap-2">
               <Checkbox
                 inputId="export-users"
                 checked={exportSections.users}
                 onChange={(e) => setExportSections({ ...exportSections, users: e.checked ?? false })}
+                className="border border-gray-300 rounded"
               />
               <label htmlFor="export-users" className="cursor-pointer">📊 รายงานผู้ใช้งาน</label>
             </div>
@@ -637,6 +657,7 @@ export default function AdminReportPage() {
                 inputId="export-inspections"
                 checked={exportSections.inspections}
                 onChange={(e) => setExportSections({ ...exportSections, inspections: e.checked ?? false })}
+                className="border border-gray-300 rounded"
               />
               <label htmlFor="export-inspections" className="cursor-pointer">📋 รายงานการตรวจประเมิน</label>
             </div>
@@ -645,6 +666,7 @@ export default function AdminReportPage() {
                 inputId="export-rubberFarms"
                 checked={exportSections.rubberFarms}
                 onChange={(e) => setExportSections({ ...exportSections, rubberFarms: e.checked ?? false })}
+                className="border border-gray-300 rounded"
               />
               <label htmlFor="export-rubberFarms" className="cursor-pointer">🌳 รายงานแปลงสวนยางพารา</label>
             </div>
@@ -653,6 +675,7 @@ export default function AdminReportPage() {
                 inputId="export-certificates"
                 checked={exportSections.certificates}
                 onChange={(e) => setExportSections({ ...exportSections, certificates: e.checked ?? false })}
+                className="border border-gray-300 rounded"
               />
               <label htmlFor="export-certificates" className="cursor-pointer">📜 รายงานใบรับรอง</label>
             </div>
@@ -661,6 +684,7 @@ export default function AdminReportPage() {
                 inputId="export-auditors"
                 checked={exportSections.auditors}
                 onChange={(e) => setExportSections({ ...exportSections, auditors: e.checked ?? false })}
+                className="border border-gray-300 rounded"
               />
               <label htmlFor="export-auditors" className="cursor-pointer">👤 รายงานประสิทธิภาพผู้ตรวจ</label>
             </div>
