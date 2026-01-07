@@ -4,7 +4,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 // Route handler for /api/v1/users/change-password
 export async function POST(req: NextRequest) {
-  const { authorized, error } = await checkAuthorization(req, [
+  const { authorized, error, session } = await checkAuthorization(req, [
+    "FARMER",
     "AUDITOR",
     "COMMITTEE",
     "ADMIN",
@@ -17,5 +18,5 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  return userController.changePassword(req);
+  return userController.changePassword(req, session);
 }

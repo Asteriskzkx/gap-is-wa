@@ -1,14 +1,10 @@
 import { checkAuthorization } from "@/lib/session";
+import { UserRegistrationFactoryService } from "@/services/UserRegistrationFactoryService";
 import { NextRequest, NextResponse } from "next/server";
 import { UserModel, UserRole } from "../models/UserModel";
 import { UserService } from "../services/UserService";
 import { requireValidId } from "../utils/ParamUtils";
 import { BaseController } from "./BaseController";
-import { FarmerService } from "@/services/FarmerService";
-import { AuditorService } from "@/services/AuditorService";
-import { CommitteeService } from "@/services/CommitteeService";
-import { UserRegistrationFactoryService } from "@/services/UserRegistrationFactoryService";
-import { th } from "zod/v4/locales";
 
 export class UserController extends BaseController<UserModel> {
   private userService: UserService;
@@ -105,26 +101,34 @@ export class UserController extends BaseController<UserModel> {
     }
   }
 
-  async changePassword(req: NextRequest): Promise<NextResponse> {
+  async changePassword(req: NextRequest, session?: any): Promise<NextResponse> {
     try {
       const data = await req.json();
-      const { userId, currentPassword, newPassword } = data;
+      const { currentPassword, newPassword } = data;
 
-      if (!userId || !currentPassword || !newPassword) {
+      if (!currentPassword || !newPassword) {
         return NextResponse.json(
           {
-            message: "User ID, current password, and new password are required",
+            message: "Current password and new password are required",
           },
           { status: 400 }
         );
       }
 
-      // ใช้ requireValidId เพื่อตรวจสอบและแปลงค่า userId
-      let userIdNum: number;
-      try {
-        userIdNum = requireValidId(userId, "userId");
-      } catch (error: any) {
-        return NextResponse.json({ message: error.message }, { status: 400 });
+      // Get userId from session
+      if (!session?.user?.id) {
+        return NextResponse.json(
+          { message: "User session not found" },
+          { status: 401 }
+        );
+      }
+
+      const userIdNum = Number.parseInt(session.user.id);
+      if (Number.isNaN(userIdNum)) {
+        return NextResponse.json(
+          { message: "Invalid user ID in session" },
+          { status: 400 }
+        );
       }
 
       const success = await this.userService.changePassword(
