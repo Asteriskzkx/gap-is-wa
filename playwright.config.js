@@ -35,14 +35,13 @@ export default defineConfig({
     // Base URL to use in actions like `await page.goto('/')`
     baseURL: "http://localhost:3000",
 
-    // Collect trace when retrying the failed test
     trace: "on-first-retry",
+    // screenshot: "only-on-failure",
+    // video: "retain-on-failure",
 
-    // Screenshot on failure
-    screenshot: "only-on-failure",
-
-    // Video on failure
-    video: "retain-on-failure",
+    // trace: "on",
+    screenshot: "on",
+    video: "on",
   },
 
   // Configure projects for major browsers
