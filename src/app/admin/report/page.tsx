@@ -67,6 +67,14 @@ export default function AdminReportPage() {
   const [loading, setLoading] = useState(true);
   const [loadingNewUsers, setLoadingNewUsers] = useState(false);
 
+  // Helper function to format date as YYYY-MM-DD in local timezone
+  const formatDateLocal = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
   useEffect(() => {
     const fetchReportData = async () => {
       try {
@@ -75,8 +83,8 @@ export default function AdminReportPage() {
         
         // If dates are selected, add them to the query
         if (dates && dates[0] && dates[1]) {
-          const startDate = dates[0].toISOString().split("T")[0];
-          const endDate = dates[1].toISOString().split("T")[0];
+          const startDate = formatDateLocal(dates[0]);
+          const endDate = formatDateLocal(dates[1]);
           url += `?startDate=${startDate}&endDate=${endDate}`;
         }
         
@@ -104,8 +112,8 @@ export default function AdminReportPage() {
         
         // If dates are selected, add them to the query
         if (dates && dates[0] && dates[1]) {
-          const startDate = dates[0].toISOString().split("T")[0];
-          const endDate = dates[1].toISOString().split("T")[0];
+          const startDate = formatDateLocal(dates[0]);
+          const endDate = formatDateLocal(dates[1]);
           url += `?startDate=${startDate}&endDate=${endDate}`;
         }
         
@@ -133,6 +141,22 @@ export default function AdminReportPage() {
     }
 
     const filteredRoles = reportData.countByRole.filter((r) => r.count > 0);
+    
+    // ถ้าไม่มีข้อมูลเลย ให้แสดง chart ว่างสีเทา
+    if (filteredRoles.length === 0) {
+      return {
+        labels: ["ไม่มีข้อมูล"],
+        datasets: [
+          {
+            data: [1],
+            backgroundColor: ["#d1d5db"],
+            borderColor: ["#9ca3af"],
+            borderWidth: 1,
+          },
+        ],
+      };
+    }
+    
     return {
       labels: filteredRoles.map((r) => ROLE_LABELS[r.role] || r.role),
       datasets: [
@@ -308,7 +332,7 @@ export default function AdminReportPage() {
 
           {/* Card Area */}
           {/* All-member-chart */}
-          <div id="all-member-chart" className="mb-6 scroll-mt-8">
+          <div id="card-area" className="mb-6 scroll-mt-8">
             <PrimaryCard className="w-full max-w-md h-auto px-6">
               <div id="all-member-content" className="flex items-center gap-4 p-4">
                 <div className="flex flex-col items-start ">
@@ -323,6 +347,13 @@ export default function AdminReportPage() {
                   )}
                   
                 </div>
+                {dates && dates[0] && !dates[1] && (
+                  <div className="">
+                    <p className="text-sm text-gray-500">
+                      วันที่ {dates[0].toLocaleDateString("th-TH")}
+                    </p>
+                  </div>
+                )}
                 {dates && dates[0] && dates[1] && (
                   <div className="">
                     <p className="text-sm text-gray-500">
@@ -332,6 +363,8 @@ export default function AdminReportPage() {
                 )}
               </div>
             </PrimaryCard>
+            
+            
           </div>
 
           {/* Chart Area  */}

@@ -29,8 +29,12 @@ export async function GET(req: NextRequest) {
       startDate = earliestUser || new Date("2020-01-01");
       endDate = new Date();
     } else {
-      startDate = new Date(startDateParam);
-      endDate = new Date(endDateParam);
+      // Parse date as local time (YYYY-MM-DD -> local midnight)
+      const [startYear, startMonth, startDay] = startDateParam.split("-").map(Number);
+      const [endYear, endMonth, endDay] = endDateParam.split("-").map(Number);
+      
+      startDate = new Date(startYear, startMonth - 1, startDay, 0, 0, 0, 0);
+      endDate = new Date(endYear, endMonth - 1, endDay, 23, 59, 59, 999);
 
       if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
         return NextResponse.json(
@@ -39,9 +43,6 @@ export async function GET(req: NextRequest) {
         );
       }
     }
-
-    // Set end date to end of day
-    endDate.setHours(23, 59, 59, 999);
 
     const report = await adminReportService.getNewUsersByDateRange(
       startDate,
