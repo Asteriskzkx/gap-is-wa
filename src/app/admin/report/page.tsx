@@ -49,8 +49,8 @@ export default function AdminReportPage() {
           </p>
         </div>
         {/* Content Area */}
-        {/* Header Area */}
-        <div className="mt-8 bg-white rounded-lg shadow p-6">
+        <div className="mt-8 flex flex-col bg-white rounded-lg shadow p-6">
+          {/* Header Section of Content Contain Filter*/}
           <div className="flex flex-wrap items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">
               กราฟแสดงข้อมูลรายงาน
@@ -80,8 +80,7 @@ export default function AdminReportPage() {
             </div>
           </div>
 
-          {/* Graph Area */}
-
+          {/* Card Area */}
           {/* All-member-chart */}
           <div id="all-member-chart" className="mb-6 scroll-mt-8">
             <PrimaryCard className="w-full max-w-md h-auto px-6">
@@ -99,6 +98,7 @@ export default function AdminReportPage() {
             </PrimaryCard>
           </div>
 
+          {/* Chart Area  */}
           {/* Pie Chart */}
           <div id="chart-pie" className="mb-6 scroll-mt-8">
             <PrimaryCard className="p-5 w-full max-w-md flex items-center justify-center">
