@@ -216,6 +216,8 @@ export default function AdminReportPage() {
     data,
     options: {
       responsive: true,
+      maintainAspectRatio: true,
+      aspectRatio: 1,
       plugins: {
         legend: { position: "bottom" },
       },
@@ -227,6 +229,7 @@ export default function AdminReportPage() {
     data: lineChartData,
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       plugins: {
         legend: {
           position: "bottom",
@@ -334,8 +337,8 @@ export default function AdminReportPage() {
           {/* Chart Area  */}
           {/* Pie Chart */}
           <div id="chart-area" className="flex flex-wrap gap-6">
-            <div id="chart-pie" className="mb-6 scroll-mt-8">
-              <PrimaryCard className="p-5 w-full max-w-md flex items-center justify-center">
+            <div id="chart-pie" className="mb-6 scroll-mt-8 w-full max-w-md">
+              <PrimaryCard className="p-5 h-auto">
                 <p className="mb-2 text-lg text-center">
                   สัดส่วนผู้ใช้ในระบบ
                   {dates && dates[0] && dates[1] ? "" : " (ทั้งหมด)"}
@@ -351,8 +354,8 @@ export default function AdminReportPage() {
             </div>
 
             {/* Line Chart - New Users by Date */}
-            <div id="chart-line" className="mb-6 scroll-mt-8 flex-1 min-w-[300px]">
-              <PrimaryCard className="p-5 w-full">
+            <div id="chart-line" className="mb-6 scroll-mt-8 flex-1 min-w-56 overflow-x-auto">
+              <PrimaryCard className="p-5 overflow-x-auto">
                 <p className="mb-2 text-lg text-center">
                   จำนวนผู้ใช้ใหม่แยกตามบทบาท
                   {dates && dates[0] && dates[1] ? "" : " (ทั้งหมด)"}
@@ -362,7 +365,9 @@ export default function AdminReportPage() {
                     <p>กำลังโหลดข้อมูล...</p>
                   </div>
                 ) : (
-                  <canvas ref={lineChartRef} id="lineChart"></canvas>
+                  <div className="h-[358px]">
+                    <canvas ref={lineChartRef} id="lineChart"></canvas>
+                  </div>
                 )}
               </PrimaryCard>
             </div>
