@@ -32,7 +32,7 @@ interface FormData {
   firstName: string;
   lastName: string;
   identificationNumber: string;
-  birthDate: Date | null;
+  birthDate: string;
   gender: string;
   houseNo: string;
   villageName: string;
@@ -97,7 +97,7 @@ export function useRegisterForm() {
     firstName: "",
     lastName: "",
     identificationNumber: "",
-    birthDate: null,
+    birthDate: "",
     gender: "ชาย",
     houseNo: "",
     villageName: "",
@@ -334,6 +334,8 @@ export function useRegisterForm() {
   const validatePassword = (password: string) => {
     if (!password) return "กรุณากรอกรหัสผ่าน";
     if (password.length < 8) return "รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร";
+    if (!/[A-Z]/.test(password)) return "รหัสผ่านต้องมีตัวพิมพ์ใหญ่";
+    if (!/\d/.test(password)) return "รหัสผ่านต้องมีตัวเลข";
     return "";
   };
 
@@ -493,9 +495,7 @@ export function useRegisterForm() {
     setError("");
 
     try {
-      const birthDateString = formData.birthDate
-        ? formData.birthDate.toISOString().split("T")[0]
-        : "";
+      const birthDateString = formData.birthDate || "";
 
       const response = await fetch("/api/v1/farmers/register", {
         method: "POST",

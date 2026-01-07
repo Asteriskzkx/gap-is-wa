@@ -151,10 +151,10 @@ button {
 #thdpk-container .react-datepicker__input-container input,
 .thdpk-input {
   /* Reset any global overrides */
-  padding: 0.625rem 0.75rem !important;
+  padding: 0.5rem 0.75rem !important;
   border: 1px solid #cbd5e1 !important;
   border-radius: 0.375rem !important;
-  font-size: 1rem !important;
+  font-size: 0.875rem !important;
   line-height: 1.5 !important;
   color: #1e293b !important;
   background: white !important;
@@ -1742,7 +1742,10 @@ input.p-inputtext:disabled {
 
 .p-multiselect-panel .p-checkbox .p-checkbox-box.p-highlight,
 .p-multiselect-panel .p-checkbox.p-highlight .p-checkbox-box,
-.p-multiselect-panel .p-multiselect-item.p-highlight .p-checkbox .p-checkbox-box,
+.p-multiselect-panel
+  .p-multiselect-item.p-highlight
+  .p-checkbox
+  .p-checkbox-box,
 .p-multiselect-panel .p-checkbox-checked .p-checkbox-box {
   border-color: #16a34a;
   background: #16a34a;
@@ -1755,7 +1758,11 @@ input.p-inputtext:disabled {
 }
 
 /* Ensure checkbox icon is visible when checked */
-.p-multiselect-panel .p-multiselect-item.p-highlight .p-checkbox .p-checkbox-box .p-checkbox-icon,
+.p-multiselect-panel
+  .p-multiselect-item.p-highlight
+  .p-checkbox
+  .p-checkbox-box
+  .p-checkbox-icon,
 .p-multiselect-panel .p-multiselect-item.p-highlight .p-checkbox-box .p-icon {
   display: inline-flex !important;
   color: #ffffff;

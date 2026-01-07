@@ -4,17 +4,20 @@ import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 
-// Import reusable components
+// components and hooks
+import CheckIcon from "@/components/icons/CheckIcon";
 import PrimaryAutoComplete from "@/components/ui/PrimaryAutoComplete";
 import PrimaryButton from "@/components/ui/PrimaryButton";
-import PrimaryCalendar from "@/components/ui/PrimaryCalendar";
 import PrimaryDropdown from "@/components/ui/PrimaryDropdown";
 import PrimaryInputMask from "@/components/ui/PrimaryInputMask";
 import PrimaryInputText from "@/components/ui/PrimaryInputText";
 import PrimaryPassword from "@/components/ui/PrimaryPassword";
 import { useRegisterForm } from "@/hooks/useRegisterForm";
+import { Message } from "primereact/message";
+import { ThaiDatePicker } from "thaidatepicker-react";
+
+// styles
 import styles from "./register.module.css";
-import CheckIcon from "@/components/icons/CheckIcon";
 
 export default function FarmerRegisterPage() {
   const {
@@ -360,22 +363,32 @@ export default function FarmerRegisterPage() {
                   <label htmlFor="birthDate" className={styles.label}>
                     วันเดือนปีเกิด <span className={styles.required}>*</span>
                   </label>
-                  <PrimaryCalendar
-                    id="birthDate"
-                    name="birthDate"
-                    value={formData.birthDate}
-                    onChange={(value) =>
-                      setFormData((prev) => ({ ...prev, birthDate: value }))
-                    }
-                    placeholder="เลือกวันเกิด"
-                    dateFormat="dd/mm/yy"
-                    showIcon
-                    minDate={new Date("1900-01-01")}
-                    maxDate={new Date()}
-                    required
-                    invalid={!!errors.birthDate}
-                    errorMessage={errors.birthDate}
-                  />
+                  <div id="thdpk-container">
+                    <ThaiDatePicker
+                      id="birthDate"
+                      value={formData.birthDate}
+                      minDate={new Date("1900-01-01")}
+                      maxDate={new Date()}
+                      onChange={(christDate: string) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          birthDate: christDate,
+                        }))
+                      }
+                      placeholder="เลือกวันเกิด"
+                    />
+                  </div>
+                  {errors.birthDate && (
+                    <Message
+                      severity="error"
+                      text={errors.birthDate}
+                      className="mt-1 w-full"
+                      pt={{
+                        root: { className: "rounded-md" },
+                        text: { className: "text-sm" },
+                      }}
+                    />
+                  )}
                 </div>
 
                 <div className={styles.formGroup}>
