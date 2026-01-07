@@ -88,6 +88,9 @@ export function useRegisterForm() {
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
 
+  // สำหรับการยอมรับเงื่อนไข
+  const [termsAccepted, setTermsAccepted] = useState(false);
+
   // Form data
   const [formData, setFormData] = useState<FormData>({
     email: "",
@@ -442,8 +445,10 @@ export function useRegisterForm() {
       return false;
     }
 
-    const cleanedPhone = formData.phoneNumber.replaceAll("-", "");
-    if (cleanedPhone.length !== 9) {
+    const cleanedPhone = formData.phoneNumber
+      .replaceAll("-", "")
+      .replaceAll("_", "");
+    if (cleanedPhone.length !== 9 || !/^\d+$/.test(cleanedPhone)) {
       const phoneError = "เบอร์โทรศัพท์ต้องเป็นตัวเลข 9 หลัก";
       setErrors((prev) => ({ ...prev, phoneNumber: phoneError }));
       setError(phoneError);
@@ -457,8 +462,10 @@ export function useRegisterForm() {
       return false;
     }
 
-    const cleanedMobile = formData.mobilePhoneNumber.replaceAll("-", "");
-    if (cleanedMobile.length !== 10) {
+    const cleanedMobile = formData.mobilePhoneNumber
+      .replaceAll("-", "")
+      .replaceAll("_", "");
+    if (cleanedMobile.length !== 10 || !/^\d+$/.test(cleanedMobile)) {
       const mobileError = "เบอร์โทรศัพท์มือถือต้องเป็นตัวเลข 10 หลัก";
       setErrors((prev) => ({ ...prev, mobilePhoneNumber: mobileError }));
       setError(mobileError);
@@ -481,6 +488,10 @@ export function useRegisterForm() {
   };
 
   const prevStep = () => {
+    // Reset terms acceptance when leaving step 4
+    if (step === 4) {
+      setTermsAccepted(false);
+    }
     setStep(step - 1);
     setError("");
   };
@@ -555,6 +566,7 @@ export function useRegisterForm() {
     isLoadingProvinces,
     isCheckingEmail,
     isEmailVerified,
+    termsAccepted,
 
     // Options
     namePrefixOptions,
@@ -567,6 +579,7 @@ export function useRegisterForm() {
     setFormData,
     setErrors,
     setError,
+    setTermsAccepted,
     nextStep,
     prevStep,
     handleSubmit,

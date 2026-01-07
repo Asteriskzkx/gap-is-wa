@@ -29,6 +29,7 @@ export default function FarmerRegisterPage() {
     isLoadingProvinces,
     isCheckingEmail,
     isEmailVerified,
+    termsAccepted,
     namePrefixOptions,
     genderOptions,
     provinceOptions,
@@ -37,6 +38,7 @@ export default function FarmerRegisterPage() {
     amphures,
     tambons,
     setFormData,
+    setTermsAccepted,
     nextStep,
     prevStep,
     handleSubmit,
@@ -354,6 +356,7 @@ export default function FarmerRegisterPage() {
                     mask="9-9999-99999-99-9"
                     placeholder="X-XXXX-XXXXX-XX-X"
                     required
+                    autoClear={false}
                     invalid={!!errors.identificationNumber}
                     errorMessage={errors.identificationNumber}
                   />
@@ -636,9 +639,9 @@ export default function FarmerRegisterPage() {
                     onChange={(value) =>
                       setFormData((prev) => ({ ...prev, phoneNumber: value }))
                     }
+                    autoClear={false}
                     mask="9-9999-9999"
                     placeholder="0-XXXX-XXXX"
-                    required
                     invalid={!!errors.phoneNumber}
                     errorMessage={errors.phoneNumber}
                   />
@@ -659,9 +662,9 @@ export default function FarmerRegisterPage() {
                         mobilePhoneNumber: value,
                       }))
                     }
+                    autoClear={false}
                     mask="99-9999-9999"
                     placeholder="0X-XXXX-XXXX"
-                    required
                     invalid={!!errors.mobilePhoneNumber}
                     errorMessage={errors.mobilePhoneNumber}
                   />
@@ -673,6 +676,7 @@ export default function FarmerRegisterPage() {
                       id="terms"
                       name="terms"
                       type="checkbox"
+                      checked={termsAccepted}
                       required
                       className={styles.termsCheckbox}
                       onInvalid={(e) => {
@@ -681,6 +685,7 @@ export default function FarmerRegisterPage() {
                         );
                       }}
                       onChange={(e) => {
+                        setTermsAccepted(e.target.checked);
                         e.target.setCustomValidity("");
                       }}
                     />
@@ -742,6 +747,7 @@ export default function FarmerRegisterPage() {
                   icon="pi pi-check"
                   label="ลงทะเบียน"
                   color="success"
+                  disabled={isLoading}
                 />
               )}
             </div>
