@@ -1,7 +1,11 @@
 "use client";
 
 import AdminLayout from "@/components/layout/AdminLayout";
-import { PrimaryCard, PrimaryDropdown, PrimaryMultiSelect } from "@/components/ui";
+import {
+  PrimaryCard,
+  PrimaryDropdown,
+  PrimaryMultiSelect,
+} from "@/components/ui";
 import { Button } from "primereact/button";
 import { Calendar } from "primereact/calendar";
 import { useMemo, useState } from "react";
@@ -9,43 +13,6 @@ import { useChart } from "@/hooks/useChart";
 
 export default function AdminReportPage() {
   const [dates, setDates] = useState<(Date | null)[] | null>(null);
-
-  // const OptionForReport = [
-  //   { value: "user-management", label: "รายงานผู้ใช้ในระบบ" },
-  // ];
-  // const [selectedReport, setSelectedReport] = useState<string[]>([]);
-  // const reportCategories = [
-  //   {
-  //     label: "รายงานหมวดการจัดการผู้ใช้",
-  //     code: "User Management",
-  //     items: [
-  //       { value: "user-list", label: "รายงานรายการผู้ใช้" },
-  //       { value: "user-activity", label: "รายงานกิจกรรมผู้ใช้" },
-  //     ],
-  //   },
-  //   {
-  //     label: "รายงานหมวดการจัดการข้อมูลทางการเกษตร",
-  //     code: "Agricultural Data Management",
-  //     items: [
-  //       { value: "crop-yield", label: "รายงานผลผลิตทางการเกษตร" },
-  //       { value: "pest-control", label: "รายงานการควบคุมศัตรูพืช" },
-  //     ],
-  //   },
-  // ];
-
-  // const groupTemplate = (option: any) => {
-  //   return (
-  //     <div className="flex align-items-center">
-  //       <img
-  //         alt={option.label}
-  //         src="https://primefaces.org/cdn/primereact/images/flag/flag_placeholder.png"
-  //         className={`mr-2 flag flag-${option.code.toLowerCase()}`}
-  //         style={{ width: "18px" }}
-  //       />
-  //       <div>{option.label}</div>
-  //     </div>
-  //   );
-  // };
 
   const data = useMemo(
     () => ({
@@ -89,27 +56,53 @@ export default function AdminReportPage() {
               กราฟแสดงข้อมูลรายงาน
             </h2>
             <div className="items-center justify-end gap-2 mb-6">
-              <div className="w-auto max-w-96">
-                {" "}
-                <Calendar showIcon 
+              <div className="w-auto">
+                <Calendar
+                  showIcon
                   className=""
                   value={dates}
-                  placeholder="เลือกช่วงเวลาในการแสดงแผนผัง"
+                  placeholder="เลือกช่วงวันที่แสดงแผนผัง"
                   onChange={(e) => setDates(e.value ?? null)}
                   selectionMode="range"
                   readOnlyInput
                   hideOnRangeSelection
+                  footerTemplate={() => (
+                    <div className="flex justify-end m-3">
+                      <Button
+                        label="ล้างวันที่"
+                        className="p-button-text p-button-danger p-2"
+                        onClick={() => setDates(null)}
+                      />
+                    </div>
+                  )}
                 />
               </div>
             </div>
           </div>
 
           {/* Graph Area */}
+
+          {/* All-member-chart */}
+          <div id="all-member-chart" className="mb-6 scroll-mt-8">
+            <PrimaryCard className="w-full max-w-md h-auto px-6">
+              <div id="all-member-content" className="flex items-center gap-4 p-4">
+                <div className="flex flex-col items-start ">
+                  <p className="text-lg text-left">ผู้ใช้ทั้งหมดในระบบ</p>
+                  {/* TODO: Change to use real data */}
+                  <p className="text-2xl font-bold">150 คน</p>
+                  
+                </div>
+                {dates && <div className="">
+                 <p className="text-lg text-left">ในช่วงวันที่</p>
+                </div>}
+              </div>
+            </PrimaryCard>
+          </div>
+
           {/* Pie Chart */}
-          
           <div id="chart-pie" className="mb-6 scroll-mt-8">
-            <PrimaryCard className="p-5 size-96 flex items-center justify-center">
-              <p className="mb-2 text-xl text-center">จำนวนผู้ใช้ในแต่ละบทบาท</p>
+            <PrimaryCard className="p-5 w-full max-w-md flex items-center justify-center">
+              <p className="mb-2 text-lg text-center">สัดส่วนผู้ใช้ในระบบ</p>
               <canvas ref={pieChartRef} id="pieChart"></canvas>
             </PrimaryCard>
           </div>
