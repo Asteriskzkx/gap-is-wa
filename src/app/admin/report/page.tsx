@@ -330,41 +330,63 @@ export default function AdminReportPage() {
             </div>
           </div>
 
-          {/* Card Area */}
-          {/* All-member-chart */}
+          {/* Card Area - 5 columns: Total + 4 Roles */}
           <div id="card-area" className="mb-6 scroll-mt-8">
-            <PrimaryCard className="w-full max-w-md h-auto px-6">
-              <div id="all-member-content" className="flex items-center gap-4 p-4">
-                <div className="flex flex-col items-start ">
-                  <p className="text-lg text-left">
-                    ผู้ใช้ทั้งหมดในระบบ
-                    {dates && dates[0] && dates[1] ? "" : " (ทั้งหมด)"}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+              {/* All Members Card */}
+              <div className="bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center border-2 border-gray-400">
+                <p className="text-sm text-gray-600 mb-1 text-center">
+                  {dates && dates[0] && dates[1] ? "ผู้ใช้ทั้งหมด" : "ผู้ใช้ทั้งหมด"}
+                </p>
+                {loading ? (
+                  <p className="text-3xl font-bold text-gray-400">...</p>
+                ) : (
+                  <p className="text-3xl font-bold text-gray-700">
+                    {reportData?.totalUsers ?? 0}
                   </p>
-                  {loading ? (
-                    <p className="text-2xl font-bold text-gray-400">กำลังโหลด...</p>
-                  ) : (
-                    <p className="text-2xl font-bold">{reportData?.totalUsers ?? 0} คน</p>
-                  )}
-                  
-                </div>
-                {dates && dates[0] && !dates[1] && (
-                  <div className="">
-                    <p className="text-sm text-gray-500">
-                      วันที่ {dates[0].toLocaleDateString("th-TH")}
-                    </p>
-                  </div>
                 )}
-                {dates && dates[0] && dates[1] && (
-                  <div className="">
-                    <p className="text-sm text-gray-500">
-                      {dates[0].toLocaleDateString("th-TH")} - {dates[1].toLocaleDateString("th-TH")}
-                    </p>
-                  </div>
-                )}
+                <p className="text-xs text-gray-500">คน</p>
               </div>
-            </PrimaryCard>
-            
-            
+
+              {/* Role Cards */}
+              {loading ? (
+                <>
+                  {[1, 2, 3, 4].map((i) => (
+                    <div
+                      key={i}
+                      className="bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center border-2 border-gray-200"
+                    >
+                      <p className="text-sm text-gray-400 mb-1">กำลังโหลด...</p>
+                      <p className="text-3xl font-bold text-gray-300">-</p>
+                      <p className="text-xs text-gray-400">คน</p>
+                    </div>
+                  ))}
+                </>
+              ) : (
+                ["ADMIN", "COMMITTEE", "FARMER", "AUDITOR"].map((role) => {
+                  const roleData = reportData?.countByRole.find((r) => r.role === role);
+                  const count = roleData?.count ?? 0;
+                  return (
+                    <div
+                      key={role}
+                      className="bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center border-2"
+                      style={{ borderColor: ROLE_COLORS[role] || "#9ca3af" }}
+                    >
+                      <p className="text-sm text-gray-600 mb-1 text-center">
+                        {ROLE_LABELS[role] || role}
+                      </p>
+                      <p
+                        className="text-3xl font-bold"
+                        style={{ color: ROLE_COLORS[role] || "#9ca3af" }}
+                      >
+                        {count}
+                      </p>
+                      <p className="text-xs text-gray-500">คน</p>
+                    </div>
+                  );
+                })
+              )}
+            </div>
           </div>
 
           {/* Chart Area  */}
@@ -374,7 +396,7 @@ export default function AdminReportPage() {
               <PrimaryCard className="p-5 h-auto">
                 <p className="mb-2 text-lg text-center">
                   สัดส่วนผู้ใช้ในระบบ
-                  {dates && dates[0] && dates[1] ? "" : " (ทั้งหมด)"}
+                  {dates && dates[0] && dates[1] ? " (ตามช่วงวันที่เลือก)" : " (ทั้งหมด)"}
                 </p>
                 {loading ? (
                   <div className="flex items-center justify-center h-64 text-gray-400">
@@ -391,7 +413,7 @@ export default function AdminReportPage() {
               <PrimaryCard className="p-5 overflow-x-auto">
                 <p className="mb-2 text-lg text-center">
                   จำนวนผู้ใช้ใหม่แยกตามบทบาท
-                  {dates && dates[0] && dates[1] ? "" : " (ทั้งหมด)"}
+                  {dates && dates[0] && dates[1] ? " (ตามช่วงวันที่เลือก)" : " (ทั้งหมด)"}
                 </p>
                 {loadingNewUsers ? (
                   <div className="flex items-center justify-center h-64 text-gray-400">
