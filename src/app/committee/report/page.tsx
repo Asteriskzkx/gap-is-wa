@@ -305,7 +305,7 @@ export default function CommitteeReportPage() {
                 className="border border-gray-300 rounded"
               />
               <label htmlFor="export-all" className="cursor-pointer font-medium">
-                ✅ เลือกทั้งหมด
+                เลือกทั้งหมด
               </label>
             </div>
             <div className="flex items-center gap-2">
@@ -318,7 +318,7 @@ export default function CommitteeReportPage() {
                 className="border border-gray-300 rounded"
               />
               <label htmlFor="export-cert" className="cursor-pointer">
-                📜 รายงานใบรับรอง
+                รายงานใบรับรอง
               </label>
             </div>
             <div className="flex items-center gap-2">
@@ -331,7 +331,7 @@ export default function CommitteeReportPage() {
                 className="border border-gray-300 rounded"
               />
               <label htmlFor="export-expiry" className="cursor-pointer">
-                ⏰ แจ้งเตือนใบรับรองใกล้หมดอายุ
+                แจ้งเตือนใบรับรองใกล้หมดอายุ
               </label>
             </div>
             <div className="flex items-center gap-2">
@@ -344,7 +344,7 @@ export default function CommitteeReportPage() {
                 className="border border-gray-300 rounded"
               />
               <label htmlFor="export-inspection" className="cursor-pointer">
-                📋 รายงานการตรวจประเมิน
+                รายงานการตรวจประเมิน
               </label>
             </div>
             <div className="flex items-center gap-2">
@@ -357,7 +357,7 @@ export default function CommitteeReportPage() {
                 className="border border-gray-300 rounded"
               />
               <label htmlFor="export-auditor" className="cursor-pointer">
-                👤 รายงานประสิทธิภาพผู้ตรวจ
+                รายงานประสิทธิภาพผู้ตรวจ
               </label>
             </div>
           </div>
@@ -397,7 +397,7 @@ export default function CommitteeReportPage() {
 
         {/* ==================== CERTIFICATE STATS ==================== */}
         <div ref={certificateStatsRef} className="mt-6 flex flex-col bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">📜 รายงานใบรับรอง</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">รายงานใบรับรอง</h2>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center border-2 border-blue-600">
@@ -450,434 +450,7 @@ export default function CommitteeReportPage() {
           </div>
         </div>
 
-        {/* ==================== EXPIRY ALERTS ==================== */}
-        <div ref={expiryAlertsRef} className="mt-8 flex flex-col bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">
-            ⏰ แจ้งเตือนใบรับรองใกล้หมดอายุ
-          </h2>
-
-          <div className="space-y-8">
-            {/* ===== ภายใน 30 วัน ===== */}
-            <div className="border-2 border-red-200 rounded-lg p-4 bg-red-50/30">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-red-700 flex items-center gap-2">
-                  🔴 ภายใน 30 วัน
-                  <span className="bg-red-500 text-white text-sm px-2 py-0.5 rounded-full">
-                    {reportData?.certificateExpiryAlerts.expiring30Days.length ?? 0}
-                  </span>
-                </h3>
-                {reportData && reportData.certificateExpiryAlerts.expiring30Days.length > 0 && (
-                  <span className="text-sm text-gray-500">
-                    แสดง {Math.min(expiry30DisplayCount, reportData.certificateExpiryAlerts.expiring30Days.length)} จาก{" "}
-                    {reportData.certificateExpiryAlerts.expiring30Days.length} รายการ
-                  </span>
-                )}
-              </div>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-red-100">
-                    <tr>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase">รหัส</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase">เกษตรกร</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase">ที่ตั้งแปลง</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase">จังหวัด</th>
-                      <th className="px-4 py-2 text-center text-xs font-medium text-gray-600 uppercase">วันหมดอายุ</th>
-                      <th className="px-4 py-2 text-center text-xs font-medium text-gray-600 uppercase">เหลืออีก</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {loading ? (
-                      <tr><td colSpan={6} className="px-4 py-4 text-center text-gray-400">กำลังโหลด...</td></tr>
-                    ) : (reportData?.certificateExpiryAlerts.expiring30Days.length ?? 0) === 0 ? (
-                      <tr><td colSpan={6} className="px-4 py-4 text-center text-gray-400">ไม่มีใบรับรองใกล้หมดอายุ</td></tr>
-                    ) : (
-                      reportData?.certificateExpiryAlerts.expiring30Days.slice(0, expiry30DisplayCount).map((cert, idx) => (
-                        <tr key={cert.certificateId} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                          <td className="px-4 py-2 text-sm text-gray-900">#{cert.certificateId}</td>
-                          <td className="px-4 py-2 text-sm text-gray-900">{cert.farmerName}</td>
-                          <td className="px-4 py-2 text-sm text-gray-900">{cert.farmLocation}</td>
-                          <td className="px-4 py-2 text-sm text-gray-900">{cert.province}</td>
-                          <td className="px-4 py-2 text-sm text-gray-900 text-center">{new Date(cert.expiryDate).toLocaleDateString("th-TH")}</td>
-                          <td className="px-4 py-2 text-sm text-center">
-                            <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">{cert.daysUntilExpiry} วัน</span>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              {reportData && reportData.certificateExpiryAlerts.expiring30Days.length > 5 && (
-                <div className="flex justify-center gap-2 mt-3">
-                  {expiry30DisplayCount < reportData.certificateExpiryAlerts.expiring30Days.length && (
-                    <Button
-                      label={`ดูเพิ่มเติม (${reportData.certificateExpiryAlerts.expiring30Days.length - expiry30DisplayCount} รายการ)`}
-                      className="p-button-outlined p-button-sm p-button-danger"
-                      icon="pi pi-chevron-down"
-                      onClick={() => setExpiry30DisplayCount((prev) => Math.min(prev + 5, reportData.certificateExpiryAlerts.expiring30Days.length))}
-                    />
-                  )}
-                  {expiry30DisplayCount > 5 && (
-                    <Button label="แสดงน้อยลง" className="p-button-text p-button-sm" icon="pi pi-chevron-up" onClick={() => setExpiry30DisplayCount(5)} />
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* ===== 31-60 วัน ===== */}
-            <div className="border-2 border-yellow-200 rounded-lg p-4 bg-yellow-50/30">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-yellow-700 flex items-center gap-2">
-                  🟡 31-60 วัน
-                  <span className="bg-yellow-500 text-white text-sm px-2 py-0.5 rounded-full">
-                    {reportData?.certificateExpiryAlerts.expiring60Days.length ?? 0}
-                  </span>
-                </h3>
-                {reportData && reportData.certificateExpiryAlerts.expiring60Days.length > 0 && (
-                  <span className="text-sm text-gray-500">
-                    แสดง {Math.min(expiry60DisplayCount, reportData.certificateExpiryAlerts.expiring60Days.length)} จาก{" "}
-                    {reportData.certificateExpiryAlerts.expiring60Days.length} รายการ
-                  </span>
-                )}
-              </div>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-yellow-100">
-                    <tr>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase">รหัส</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase">เกษตรกร</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase">ที่ตั้งแปลง</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase">จังหวัด</th>
-                      <th className="px-4 py-2 text-center text-xs font-medium text-gray-600 uppercase">วันหมดอายุ</th>
-                      <th className="px-4 py-2 text-center text-xs font-medium text-gray-600 uppercase">เหลืออีก</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {loading ? (
-                      <tr><td colSpan={6} className="px-4 py-4 text-center text-gray-400">กำลังโหลด...</td></tr>
-                    ) : (reportData?.certificateExpiryAlerts.expiring60Days.length ?? 0) === 0 ? (
-                      <tr><td colSpan={6} className="px-4 py-4 text-center text-gray-400">ไม่มีใบรับรองใกล้หมดอายุ</td></tr>
-                    ) : (
-                      reportData?.certificateExpiryAlerts.expiring60Days.slice(0, expiry60DisplayCount).map((cert, idx) => (
-                        <tr key={cert.certificateId} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                          <td className="px-4 py-2 text-sm text-gray-900">#{cert.certificateId}</td>
-                          <td className="px-4 py-2 text-sm text-gray-900">{cert.farmerName}</td>
-                          <td className="px-4 py-2 text-sm text-gray-900">{cert.farmLocation}</td>
-                          <td className="px-4 py-2 text-sm text-gray-900">{cert.province}</td>
-                          <td className="px-4 py-2 text-sm text-gray-900 text-center">{new Date(cert.expiryDate).toLocaleDateString("th-TH")}</td>
-                          <td className="px-4 py-2 text-sm text-center">
-                            <span className="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">{cert.daysUntilExpiry} วัน</span>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              {reportData && reportData.certificateExpiryAlerts.expiring60Days.length > 5 && (
-                <div className="flex justify-center gap-2 mt-3">
-                  {expiry60DisplayCount < reportData.certificateExpiryAlerts.expiring60Days.length && (
-                    <Button
-                      label={`ดูเพิ่มเติม (${reportData.certificateExpiryAlerts.expiring60Days.length - expiry60DisplayCount} รายการ)`}
-                      className="p-button-outlined p-button-sm p-button-warning"
-                      icon="pi pi-chevron-down"
-                      onClick={() => setExpiry60DisplayCount((prev) => Math.min(prev + 5, reportData.certificateExpiryAlerts.expiring60Days.length))}
-                    />
-                  )}
-                  {expiry60DisplayCount > 5 && (
-                    <Button label="แสดงน้อยลง" className="p-button-text p-button-sm" icon="pi pi-chevron-up" onClick={() => setExpiry60DisplayCount(5)} />
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* ===== 61-90 วัน ===== */}
-            <div className="border-2 border-blue-200 rounded-lg p-4 bg-blue-50/30">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-blue-700 flex items-center gap-2">
-                  🔵 61-90 วัน
-                  <span className="bg-blue-500 text-white text-sm px-2 py-0.5 rounded-full">
-                    {reportData?.certificateExpiryAlerts.expiring90Days.length ?? 0}
-                  </span>
-                </h3>
-                {reportData && reportData.certificateExpiryAlerts.expiring90Days.length > 0 && (
-                  <span className="text-sm text-gray-500">
-                    แสดง {Math.min(expiry90DisplayCount, reportData.certificateExpiryAlerts.expiring90Days.length)} จาก{" "}
-                    {reportData.certificateExpiryAlerts.expiring90Days.length} รายการ
-                  </span>
-                )}
-              </div>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-blue-100">
-                    <tr>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase">รหัส</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase">เกษตรกร</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase">ที่ตั้งแปลง</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase">จังหวัด</th>
-                      <th className="px-4 py-2 text-center text-xs font-medium text-gray-600 uppercase">วันหมดอายุ</th>
-                      <th className="px-4 py-2 text-center text-xs font-medium text-gray-600 uppercase">เหลืออีก</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {loading ? (
-                      <tr><td colSpan={6} className="px-4 py-4 text-center text-gray-400">กำลังโหลด...</td></tr>
-                    ) : (reportData?.certificateExpiryAlerts.expiring90Days.length ?? 0) === 0 ? (
-                      <tr><td colSpan={6} className="px-4 py-4 text-center text-gray-400">ไม่มีใบรับรองใกล้หมดอายุ</td></tr>
-                    ) : (
-                      reportData?.certificateExpiryAlerts.expiring90Days.slice(0, expiry90DisplayCount).map((cert, idx) => (
-                        <tr key={cert.certificateId} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                          <td className="px-4 py-2 text-sm text-gray-900">#{cert.certificateId}</td>
-                          <td className="px-4 py-2 text-sm text-gray-900">{cert.farmerName}</td>
-                          <td className="px-4 py-2 text-sm text-gray-900">{cert.farmLocation}</td>
-                          <td className="px-4 py-2 text-sm text-gray-900">{cert.province}</td>
-                          <td className="px-4 py-2 text-sm text-gray-900 text-center">{new Date(cert.expiryDate).toLocaleDateString("th-TH")}</td>
-                          <td className="px-4 py-2 text-sm text-center">
-                            <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">{cert.daysUntilExpiry} วัน</span>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              {reportData && reportData.certificateExpiryAlerts.expiring90Days.length > 5 && (
-                <div className="flex justify-center gap-2 mt-3">
-                  {expiry90DisplayCount < reportData.certificateExpiryAlerts.expiring90Days.length && (
-                    <Button
-                      label={`ดูเพิ่มเติม (${reportData.certificateExpiryAlerts.expiring90Days.length - expiry90DisplayCount} รายการ)`}
-                      className="p-button-outlined p-button-sm"
-                      icon="pi pi-chevron-down"
-                      onClick={() => setExpiry90DisplayCount((prev) => Math.min(prev + 5, reportData.certificateExpiryAlerts.expiring90Days.length))}
-                    />
-                  )}
-                  {expiry90DisplayCount > 5 && (
-                    <Button label="แสดงน้อยลง" className="p-button-text p-button-sm" icon="pi pi-chevron-up" onClick={() => setExpiry90DisplayCount(5)} />
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* ==================== INSPECTION STATS ==================== */}
-        <div ref={inspectionStatsRef} className="mt-8 flex flex-col bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">📋 รายงานการตรวจประเมิน</h2>
-
-          {/* Summary Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-            <div className="bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center border-2 border-blue-600">
-              <p className="text-sm text-gray-600 mb-1 text-center">ตรวจทั้งหมด</p>
-              {loading ? (
-                <p className="text-3xl font-bold text-gray-300">...</p>
-              ) : (
-                <p className="text-3xl font-bold text-blue-600">
-                  {reportData?.inspectionStats.totalInspections ?? 0}
-                </p>
-              )}
-              <p className="text-xs text-gray-500">ครั้ง</p>
-            </div>
-
-            <div className="bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center border-2 border-green-500">
-              <p className="text-sm text-gray-600 mb-1 text-center">ผ่าน</p>
-              {loading ? (
-                <p className="text-3xl font-bold text-gray-300">...</p>
-              ) : (
-                <p className="text-3xl font-bold text-green-500">
-                  {reportData?.inspectionStats.passedInspections ?? 0}
-                </p>
-              )}
-              <p className="text-xs text-gray-500">ครั้ง</p>
-            </div>
-
-            <div className="bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center border-2 border-red-500">
-              <p className="text-sm text-gray-600 mb-1 text-center">ไม่ผ่าน</p>
-              {loading ? (
-                <p className="text-3xl font-bold text-gray-300">...</p>
-              ) : (
-                <p className="text-3xl font-bold text-red-500">
-                  {reportData?.inspectionStats.failedInspections ?? 0}
-                </p>
-              )}
-              <p className="text-xs text-gray-500">ครั้ง</p>
-            </div>
-
-            <div className="bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center border-2 border-yellow-500">
-              <p className="text-sm text-gray-600 mb-1 text-center">รอดำเนินการ</p>
-              {loading ? (
-                <p className="text-3xl font-bold text-gray-300">...</p>
-              ) : (
-                <p className="text-3xl font-bold text-yellow-500">
-                  {reportData?.inspectionStats.pendingInspections ?? 0}
-                </p>
-              )}
-              <p className="text-xs text-gray-500">ครั้ง</p>
-            </div>
-
-            <div className="bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center border-2 border-teal-600">
-              <p className="text-sm text-gray-600 mb-1 text-center">อัตราผ่าน</p>
-              {loading ? (
-                <p className="text-3xl font-bold text-gray-300">...</p>
-              ) : (
-                <p className={`text-3xl font-bold ${getPassRateColor(reportData?.inspectionStats.passRate ?? 0)}`}>
-                  {reportData?.inspectionStats.passRate ?? 0}%
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* By Type */}
-          <div className="mb-6">
-            <h3 className="text-lg font-medium text-gray-800 mb-3">แยกตามประเภทการตรวจ</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {loading ? (
-                <p className="text-gray-400">กำลังโหลด...</p>
-              ) : reportData?.inspectionsByType.length === 0 ? (
-                <p className="text-gray-400">ไม่มีข้อมูล</p>
-              ) : (
-                reportData?.inspectionsByType.map((type) => (
-                  <div key={type.typeId} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                    <p className="text-sm text-gray-600 mb-2">{type.typeName}</p>
-                    <p className="text-2xl font-bold text-gray-800 mb-2">
-                      {type.count} <span className="text-sm font-normal">ครั้ง</span>
-                    </p>
-                    <div className="flex gap-3 text-sm">
-                      <span className="text-green-600">✓ ผ่าน {type.passed}</span>
-                      <span className="text-red-600">✗ ไม่ผ่าน {type.failed}</span>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          {/* By Status */}
-          <div>
-            <h3 className="text-lg font-medium text-gray-800 mb-3">แยกตามสถานะ</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {loading ? (
-                <p className="text-gray-400">กำลังโหลด...</p>
-              ) : reportData?.inspectionsByStatus.length === 0 ? (
-                <p className="text-gray-400">ไม่มีข้อมูล</p>
-              ) : (
-                reportData?.inspectionsByStatus.map((status) => (
-                  <div
-                    key={status.status}
-                    className="bg-gray-50 rounded-lg p-3 border border-gray-200 text-center"
-                  >
-                    <p className="text-xs text-gray-500">{status.status}</p>
-                    <p className="text-xl font-bold text-gray-700">{status.count}</p>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* ==================== AUDITOR PERFORMANCE ==================== */}
-        <div ref={auditorPerformanceRef} className="mt-8 flex flex-col bg-white rounded-lg shadow p-6 mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">👤 รายงานประสิทธิภาพผู้ตรวจ</h2>
-
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                    ผู้ตรวจ
-                  </th>
-                  <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">
-                    ตรวจทั้งหมด
-                  </th>
-                  <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">
-                    ผ่าน
-                  </th>
-                  <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">
-                    ไม่ผ่าน
-                  </th>
-                  <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">
-                    รอดำเนินการ
-                  </th>
-                  <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">
-                    อัตราผ่าน
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {loading ? (
-                  <tr>
-                    <td colSpan={6} className="px-4 py-4 text-center text-gray-400">
-                      กำลังโหลด...
-                    </td>
-                  </tr>
-                ) : reportData?.auditorPerformances.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-4 py-4 text-center text-gray-400">
-                      ไม่มีข้อมูลผู้ตรวจ
-                    </td>
-                  </tr>
-                ) : (
-                  reportData?.auditorPerformances.map((auditor, idx) => (
-                    <tr key={auditor.auditorId} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                      <td className="px-4 py-2 text-sm text-gray-900 font-medium">
-                        {auditor.auditorName}
-                      </td>
-                      <td className="px-4 py-2 text-sm text-gray-900 text-center">
-                        {auditor.totalInspections}
-                      </td>
-                      <td className="px-4 py-2 text-sm text-green-600 text-center font-medium">
-                        {auditor.passedInspections}
-                      </td>
-                      <td className="px-4 py-2 text-sm text-red-600 text-center font-medium">
-                        {auditor.failedInspections}
-                      </td>
-                      <td className="px-4 py-2 text-sm text-yellow-600 text-center font-medium">
-                        {auditor.pendingInspections}
-                      </td>
-                      <td className="px-4 py-2 text-sm text-center">
-                        <span
-                          className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            auditor.passRate >= 80
-                              ? "bg-green-100 text-green-800"
-                              : auditor.passRate >= 50
-                                ? "bg-yellow-100 text-yellow-800"
-                                : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {auditor.passRate}%
-                        </span>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Average Pass Rate */}
-          {reportData && reportData.auditorPerformances.length > 0 && (
-            <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-700 font-medium">
-                  อัตราการผ่านเฉลี่ยของผู้ตรวจทั้งหมด
-                </span>
-                <span
-                  className={`text-2xl font-bold ${getPassRateColor(
-                    Math.round(
-                      reportData.auditorPerformances.reduce((sum, a) => sum + a.passRate, 0) /
-                        reportData.auditorPerformances.length
-                    )
-                  )}`}
-                >
-                  {Math.round(
-                    reportData.auditorPerformances.reduce((sum, a) => sum + a.passRate, 0) /
-                      reportData.auditorPerformances.length
-                  )}
-                  %
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
+        
       </div>
     </CommitteeLayout>
   );
