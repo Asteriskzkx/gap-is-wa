@@ -1,10 +1,6 @@
 // tests/farmerApplicationsNew/farmerApplicationsNew.spec.js (Playwright E2E Tests)
 import { test, expect } from "@playwright/test";
 
-const BASE_URL = "http://localhost:3000";
-const LOGIN_URL = BASE_URL;
-const APPLICATION_URL = `${BASE_URL}/farmer/applications/new`;
-
 // ข้อมูลผู้ใช้สำหรับการทดสอบ
 const TEST_USER = {
   email: process.env.E2E_TEST_USER_EMAIL,
@@ -13,7 +9,7 @@ const TEST_USER = {
 
 // Helper function สำหรับ login
 async function loginAsFarmer(page) {
-  await page.goto(LOGIN_URL);
+  await page.goto("/");
 
   // เลือก Role เกษตรกร
   await page.click('button:has-text("เกษตรกร")');
@@ -34,7 +30,7 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
     // Login ก่อนทุก test
     await loginAsFarmer(page);
     // ไปที่หน้ายื่นขอใบรับรอง
-    await page.goto(APPLICATION_URL);
+    await page.goto("/farmer/applications/new");
     // รอให้หน้าโหลดเสร็จ
     await expect(
       page.getByRole("heading", { name: "ยื่นขอใบรับรองแหล่งผลิต" })
@@ -509,7 +505,7 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
 
 // Helper function สำหรับกรอก Step 1 ให้สำเร็จ
 async function completeStep1(page) {
-  await page.goto(APPLICATION_URL);
+  await page.goto("/farmer/applications/new");
   await expect(
     page.getByRole("heading", { name: "ยื่นขอใบรับรองแหล่งผลิต" })
   ).toBeVisible({ timeout: 10000 });
@@ -1761,7 +1757,7 @@ test.describe("3. Form Validation - Step 3: ยืนยันข้อมูล
 test.describe("4. UI/UX และ Navigation", () => {
   test.beforeEach(async ({ page }) => {
     await loginAsFarmer(page);
-    await page.goto(APPLICATION_URL);
+    await page.goto("/farmer/applications/new");
     await expect(
       page.getByRole("heading", { name: "ยื่นขอใบรับรองแหล่งผลิต" })
     ).toBeVisible({ timeout: 10000 });

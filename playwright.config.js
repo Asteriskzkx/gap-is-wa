@@ -1,4 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
+import { loadEnvConfig } from "@next/env";
+
+// Load .env/.env.local the same way Next.js does, so Playwright tests can read
+// process.env.E2E_* values without requiring users to manually export them.
+loadEnvConfig(process.cwd());
 
 /**
  * Playwright Configuration
