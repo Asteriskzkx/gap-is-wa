@@ -244,9 +244,6 @@ export const useRubberFarmForm = () => {
       return `รายการที่ ${itemNumber}: กรุณาเลือกเดือนที่เริ่มกรีด`;
     }
 
-    if (detail.totalProduction === 0) {
-      return `รายการที่ ${itemNumber}: กรุณากรอกผลผลิตรวมให้ถูกต้อง`;
-    }
     if (!detail.totalProduction || detail.totalProduction < 0) {
       return `รายการที่ ${itemNumber}: กรุณากรอกผลผลิตรวม`;
     }
