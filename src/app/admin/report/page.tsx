@@ -532,6 +532,7 @@ export default function AdminReportPage() {
     data,
     options: {
       responsive: true,
+      animation: false,
       maintainAspectRatio: true,
       aspectRatio: 1,
       plugins: {
@@ -545,6 +546,7 @@ export default function AdminReportPage() {
     data: lineChartData,
     options: {
       responsive: true,
+      animation: false,
       maintainAspectRatio: false,
       plugins: {
         legend: {
@@ -694,8 +696,8 @@ export default function AdminReportPage() {
         {/* Global Date Filter Section */}
         <div className="mt-8 flex flex-col bg-white rounded-lg shadow p-4">
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <span className="text-gray-700 font-medium">📅 ช่วงวันที่:</span>
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className="text-gray-700 font-medium whitespace-nowrap">📅 ช่วงวันที่:</span>
               <Calendar
                 showIcon
                 value={dates}
@@ -705,6 +707,7 @@ export default function AdminReportPage() {
                 readOnlyInput
                 hideOnRangeSelection
                 dateFormat="dd/mm/yy"
+                style={{ minWidth: "250px" }}
                 footerTemplate={() => (
                   <div className="flex justify-end m-3">
                     <Button
@@ -717,7 +720,7 @@ export default function AdminReportPage() {
               />
             </div>
             <p className="text-sm text-gray-500">
-              * ช่วงวันที่นี้ใช้กับ รายงานผู้ใช้งาน (กราฟผู้ใช้ใหม่ตามชั่วโมง)
+              * ช่วงวันที่นี้ใช้กับรายงานทุกประเภท
             </p>
           </div>
         </div>
