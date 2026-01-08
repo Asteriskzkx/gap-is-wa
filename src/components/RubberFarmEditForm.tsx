@@ -1,18 +1,18 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { formStyles } from "@/styles/formStyles";
 import { useFormStepper } from "@/hooks/useFormStepper";
 import { useRubberFarmEditForm } from "@/hooks/useRubberFarmEditForm";
 import { useThailandAddressForForm } from "@/hooks/useThailandAddressForForm";
-import { StepIndicator } from "./farmer/StepIndicator";
-import { FarmSelectionStep } from "./farmer/FarmSelectionStep";
-import { FarmInfoStep } from "./farmer/FarmInfoStep";
-import { PlantingDetailsStep } from "./farmer/PlantingDetailsStep";
-import { EditConfirmationStep } from "./farmer/EditConfirmationStep";
-import { AlertMessage } from "./farmer/AlertMessage";
-import { PrimaryButton } from "./ui";
+import { formStyles } from "@/styles/formStyles";
 import { DataTablePageEvent, DataTableSortEvent } from "primereact/datatable";
+import React, { useEffect } from "react";
+import { AlertMessage } from "./farmer/AlertMessage";
+import { EditConfirmationStep } from "./farmer/EditConfirmationStep";
+import { FarmInfoStep } from "./farmer/FarmInfoStep";
+import { FarmSelectionStep } from "./farmer/FarmSelectionStep";
+import { PlantingDetailsStep } from "./farmer/PlantingDetailsStep";
+import { StepIndicator } from "./farmer/StepIndicator";
+import { PrimaryButton } from "./ui";
 
 export default function RubberFarmEditForm() {
   const maxSteps = 4; // เพิ่มเป็น 4 steps: เลือกฟาร์ม, ข้อมูลฟาร์ม, รายละเอียดการปลูก, ยืนยัน
