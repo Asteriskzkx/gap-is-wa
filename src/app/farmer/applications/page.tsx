@@ -140,7 +140,7 @@ export default function FarmerApplicationsPage() {
                 },
                 {
                   field: "inspectionDateAndTime",
-                  header: "กำหนดตรวจประเมิน",
+                  header: "กำหนดการตรวจประเมิน",
                   body: (rowData: ApplicationItem) =>
                     rowData.inspection?.inspectionDateAndTime
                       ? formatThaiDate(rowData.inspection.inspectionDateAndTime)

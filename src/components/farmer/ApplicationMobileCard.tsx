@@ -65,7 +65,7 @@ export const ApplicationMobileCard: React.FC<ApplicationCardProps> = ({
           <div className="flex items-start mt-1">
             <CalendarIcon className="h-4 w-4 mt-0.5 mr-1.5 text-gray-500 flex-shrink-0" />
             <span>
-              กำหนดตรวจประเมิน:{" "}
+              กำหนดการตรวจประเมิน:{" "}
               {formatThaiDate(inspection.inspectionDateAndTime)}
             </span>
           </div>
