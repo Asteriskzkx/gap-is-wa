@@ -22,7 +22,7 @@ export default defineConfig({
 
   // Opt out of parallel tests on CI
   // workers: process.env.CI ? 1 : undefined,
-  workers: 4,
+  workers: 2,
 
   // Reporter to use
   reporter: [

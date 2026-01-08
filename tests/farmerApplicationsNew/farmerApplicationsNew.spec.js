@@ -1757,3 +1757,159 @@ test.describe("3. Form Validation - Step 3: ยืนยันข้อมูล
     await page.waitForURL(/\/farmer\/applications/, { timeout: 15000 });
   });
 });
+
+test.describe("4. UI/UX และ Navigation", () => {
+  test.beforeEach(async ({ page }) => {
+    await loginAsFarmer(page);
+    await page.goto(APPLICATION_URL);
+    await expect(
+      page.getByRole("heading", { name: "ยื่นขอใบรับรองแหล่งผลิต" })
+    ).toBeVisible({ timeout: 10000 });
+  });
+
+  test("TC-047: แสดง Step Indicator", async ({ page }) => {
+    const formContainer = page.locator("div.bg-white.shadow-md.rounded-lg.p-6");
+    const stepIndicator = formContainer.locator("div.mb-8").first();
+
+    await expect(
+      stepIndicator.getByText("ข้อมูลสวนยาง", { exact: true })
+    ).toBeVisible();
+    await expect(
+      stepIndicator.getByText("รายละเอียดการปลูก", { exact: true })
+    ).toBeVisible();
+    await expect(
+      stepIndicator.getByText("ยืนยันข้อมูล", { exact: true })
+    ).toBeVisible();
+
+    await expect(
+      stepIndicator.getByText("ขั้นตอนที่ 1", { exact: true })
+    ).toBeVisible();
+    await expect(
+      stepIndicator.getByText("ขั้นตอนที่ 2", { exact: true })
+    ).toBeVisible();
+    await expect(
+      stepIndicator.getByText("ขั้นตอนที่ 3", { exact: true })
+    ).toBeVisible();
+  });
+
+  test("TC-048: ตรวจสอบ responsive design", async ({ page }) => {
+    // Desktop
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.reload();
+    await expect(
+      page.getByRole("heading", { name: "ยื่นขอใบรับรองแหล่งผลิต" })
+    ).toBeVisible({ timeout: 10000 });
+    await expect(
+      page.getByRole("heading", { name: "ข้อมูลสวนยาง" })
+    ).toBeVisible();
+
+    // Tablet
+    await page.setViewportSize({ width: 820, height: 1180 });
+    await page.reload();
+    await expect(
+      page.getByRole("heading", { name: "ยื่นขอใบรับรองแหล่งผลิต" })
+    ).toBeVisible({ timeout: 10000 });
+    await expect(
+      page.getByRole("heading", { name: "ข้อมูลสวนยาง" })
+    ).toBeVisible();
+
+    // Mobile
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.reload();
+    await expect(
+      page.getByRole("heading", { name: "ยื่นขอใบรับรองแหล่งผลิต" })
+    ).toBeVisible({ timeout: 10000 });
+    await expect(
+      page.getByText("ขั้นตอนที่ 1: ข้อมูลสวนยาง", { exact: true })
+    ).toBeVisible();
+  });
+
+  test("TC-049: กดปุ่มกลับไปหน้าหลักจาก Step 1", async ({ page }) => {
+    await page.getByRole("button", { name: "กลับไปหน้าหลัก" }).click();
+    await page.waitForURL(/\/farmer\/dashboard/, { timeout: 10000 });
+    await expect(page).toHaveURL(/\/farmer\/dashboard/);
+  });
+
+  test("TC-050: ตรวจสอบการแสดง error message", async ({ page }) => {
+    // ไม่กรอกข้อมูล แล้วกดถัดไป
+    await page.getByRole("button", { name: "ถัดไป" }).click();
+
+    const errorAlert = page
+      .locator("div.bg-red-50")
+      .filter({ hasText: "กรุณากรอกข้อมูลสวนยางให้ครบถ้วน" });
+    await expect(errorAlert).toHaveCount(1);
+    await expect(errorAlert.first()).toBeVisible();
+  });
+
+  test("TC-051: ตรวจสอบการแสดง success message", async ({ page }) => {
+    // ทำ Step 1-3 ให้สำเร็จ แล้วตรวจสอบ success alert สีเขียว
+    await completeStep1(page);
+    await completeStep2(page);
+
+    await page.locator('input[id="confirm"]').scrollIntoViewIfNeeded();
+    await page.check('input[id="confirm"]');
+    await expect(page.locator('input[id="confirm"]')).toBeChecked();
+
+    const submitButton = page.locator('button[type="submit"]').last();
+    await submitButton.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(300);
+    await submitButton.click();
+
+    const successAlert = page
+      .locator("div.bg-green-50")
+      .filter({ hasText: /บันทึกข้อมูลสำเร็จ กำลังนำคุณไปยังหน้าติดตามสถานะ/ });
+    await expect(successAlert).toHaveCount(1, { timeout: 10000 });
+    await expect(successAlert.first()).toBeVisible();
+  });
+
+  test("TC-052: ตรวจสอบ autocomplete (จังหวัด/อำเภอ/ตำบล)", async ({
+    page,
+  }) => {
+    const provinceInput = page.locator('[id*="provinceId"] input');
+    await provinceInput.click();
+    await provinceInput.clear();
+    await provinceInput.pressSequentially("สง");
+
+    // ควรมีรายการที่ขึ้นต้นด้วย "สง" เช่น "สงขลา"
+    await expect(page.locator('[role="option"]:has-text("สงขลา")')).toBeVisible(
+      { timeout: 10000 }
+    );
+  });
+
+  test("TC-053: ตรวจสอบการ disable dropdown อำเภอ", async ({ page }) => {
+    const amphureButton = page.locator('[id*="amphureId"] button');
+    await expect(amphureButton).toBeDisabled();
+  });
+
+  test("TC-054: ตรวจสอบการ disable dropdown ตำบล", async ({ page }) => {
+    // เลือกจังหวัด แต่ยังไม่เลือกอำเภอ
+    const provinceInput = page.locator('[id*="provinceId"] input');
+    await page.click('[id*="provinceId"] button', { timeout: 10000 });
+    await page.waitForSelector('[role="option"]', { timeout: 10000 });
+    await page.click('[role="option"]:has-text("สงขลา")');
+    await page.keyboard.press("Escape");
+    await expect(provinceInput).toHaveValue("สงขลา", { timeout: 30000 });
+
+    const tambonButton = page.locator('[id*="tambonId"] button');
+    await expect(tambonButton).toBeDisabled();
+  });
+
+  test("TC-055: ตรวจสอบแผนที่โต้ตอบได้", async ({ page }) => {
+    // เลื่อนลงไปหาแผนที่ แล้วคลิกเพื่อเปลี่ยนพิกัด
+    const coordsText = page.locator("text=/^พิกัด:/");
+    await coordsText.scrollIntoViewIfNeeded();
+    await expect(coordsText).toBeVisible({ timeout: 10000 });
+    const before = await coordsText.textContent();
+
+    const mapContainer = page.locator(".leaflet-container");
+    await mapContainer.scrollIntoViewIfNeeded();
+    await mapContainer.waitFor({ state: "visible", timeout: 10000 });
+    await mapContainer.click({ position: { x: 120, y: 120 } });
+
+    // ควรมีหมุดอยู่บนแผนที่ และพิกัดต้องเปลี่ยน
+    await expect(page.locator(".leaflet-marker-icon")).toHaveCount(1, {
+      timeout: 10000,
+    });
+    await expect(coordsText).not.toHaveText(before || "", { timeout: 10000 });
+  });
+});
