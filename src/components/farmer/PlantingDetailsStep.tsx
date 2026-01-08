@@ -81,7 +81,7 @@ interface PlantingDetailsStepProps {
   updatePlantingDetail: (
     index: number,
     field: keyof PlantingDetail,
-    value: string | number | Date
+    value: string | number | Date | undefined
   ) => void;
   addPlantingDetail: () => void;
   removePlantingDetail: (index: number) => void;
@@ -197,9 +197,13 @@ export const PlantingDetailsStep: React.FC<PlantingDetailsStepProps> = ({
                 <PrimaryInputNumber
                   id={`numberOfTapping-${index}`}
                   name={`numberOfTapping-${index}`}
-                  value={detail.numberOfTapping || null}
+                  value={detail.numberOfTapping ?? null}
                   onChange={(value) =>
-                    updatePlantingDetail(index, "numberOfTapping", value || 0)
+                    updatePlantingDetail(
+                      index,
+                      "numberOfTapping",
+                      value ?? undefined
+                    )
                   }
                   min={0}
                   max={100000}
@@ -218,9 +222,13 @@ export const PlantingDetailsStep: React.FC<PlantingDetailsStepProps> = ({
                 <PrimaryInputNumber
                   id={`ageOfRubber-${index}`}
                   name={`ageOfRubber-${index}`}
-                  value={detail.ageOfRubber || null}
+                  value={detail.ageOfRubber ?? null}
                   onChange={(value) =>
-                    updatePlantingDetail(index, "ageOfRubber", value || 0)
+                    updatePlantingDetail(
+                      index,
+                      "ageOfRubber",
+                      value ?? undefined
+                    )
                   }
                   min={0}
                   max={100000}
@@ -292,9 +300,13 @@ export const PlantingDetailsStep: React.FC<PlantingDetailsStepProps> = ({
                 <PrimaryInputNumber
                   id={`totalProduction-${index}`}
                   name={`totalProduction-${index}`}
-                  value={detail.totalProduction || null}
+                  value={detail.totalProduction ?? null}
                   onChange={(value) =>
-                    updatePlantingDetail(index, "totalProduction", value || 0)
+                    updatePlantingDetail(
+                      index,
+                      "totalProduction",
+                      value ?? undefined
+                    )
                   }
                   min={0}
                   max={100000}

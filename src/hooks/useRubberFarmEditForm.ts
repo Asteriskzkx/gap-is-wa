@@ -9,11 +9,11 @@ export interface PlantingDetail {
   specie: string;
   areaOfPlot: number;
   numberOfRubber: number;
-  numberOfTapping: number;
-  ageOfRubber: number;
+  numberOfTapping?: number;
+  ageOfRubber?: number;
   yearOfTapping: string;
   monthOfTapping: string;
-  totalProduction: number;
+  totalProduction?: number;
   version?: number;
 }
 
@@ -255,9 +255,18 @@ export const useRubberFarmEditForm = () => {
               monthOfTapping: detail.monthOfTapping || new Date().toISOString(),
               areaOfPlot: Number(detail.areaOfPlot) || 0,
               numberOfRubber: Number(detail.numberOfRubber) || 0,
-              numberOfTapping: Number(detail.numberOfTapping) || 0,
-              ageOfRubber: Number(detail.ageOfRubber) || 0,
-              totalProduction: Number(detail.totalProduction) || 0,
+              numberOfTapping:
+                detail.numberOfTapping !== undefined
+                  ? Number(detail.numberOfTapping)
+                  : undefined,
+              ageOfRubber:
+                detail.ageOfRubber !== undefined
+                  ? Number(detail.ageOfRubber)
+                  : undefined,
+              totalProduction:
+                detail.totalProduction !== undefined
+                  ? Number(detail.totalProduction)
+                  : undefined,
               version: detail.version,
             })
           );
@@ -305,7 +314,7 @@ export const useRubberFarmEditForm = () => {
   const updatePlantingDetail = (
     index: number,
     field: keyof PlantingDetail,
-    value: string | number | Date
+    value: string | number | Date | undefined
   ) => {
     const updatedDetails = [...plantingDetails];
 
@@ -316,7 +325,10 @@ export const useRubberFarmEditForm = () => {
       field === "ageOfRubber" ||
       field === "totalProduction"
     ) {
-      updatedDetails[index][field] = parseFloat(value as string) || 0;
+      updatedDetails[index][field] =
+        value === undefined
+          ? undefined
+          : ((parseFloat(value as string) || 0) as any);
     } else if (field === "specie") {
       updatedDetails[index][field] = String(value);
     } else if (field === "yearOfTapping" || field === "monthOfTapping") {
@@ -352,11 +364,11 @@ export const useRubberFarmEditForm = () => {
       specie: "",
       areaOfPlot: 0,
       numberOfRubber: 0,
-      numberOfTapping: 0,
-      ageOfRubber: 0,
+      numberOfTapping: undefined,
+      ageOfRubber: undefined,
       yearOfTapping: new Date().toISOString(),
       monthOfTapping: new Date().toISOString(),
-      totalProduction: 0,
+      totalProduction: undefined,
     };
     setPlantingDetails([...plantingDetails, newDetail]);
   };
@@ -386,7 +398,7 @@ export const useRubberFarmEditForm = () => {
       !rubberFarm.province ||
       !rubberFarm.productDistributionType
     ) {
-      setError("กรุณากรอกข้อมูลฟาร์มให้ครบถ้วน");
+      setError("กรุณากรอกข้อมูลสวนยางให้ครบถ้วน");
       return false;
     }
     setError("");
@@ -395,41 +407,78 @@ export const useRubberFarmEditForm = () => {
 
   // Validate planting details
   const validatePlantingDetails = (): boolean => {
-    const validDetails = plantingDetails.filter(
-      (detail) =>
-        detail.specie &&
-        detail.areaOfPlot > 0 &&
-        detail.numberOfRubber > 0 &&
-        detail.numberOfTapping >= 0 &&
-        detail.ageOfRubber >= 0 &&
-        detail.yearOfTapping &&
-        detail.monthOfTapping &&
-        detail.totalProduction >= 0
-    );
-
-    if (validDetails.length === 0) {
-      setError("กรุณากรอกข้อมูลรายละเอียดการปลูกอย่างน้อย 1 รายการให้ครบถ้วน");
+    if (plantingDetails.length === 0) {
+      setError("กรุณาเพิ่มรายละเอียดการปลูกอย่างน้อย 1 รายการ");
       return false;
     }
 
-    const incompleteDetails = plantingDetails.filter(
-      (detail) =>
-        detail.specie &&
-        (detail.areaOfPlot <= 0 ||
-          detail.numberOfRubber <= 0 ||
-          !detail.numberOfTapping ||
-          detail.numberOfTapping < 0 ||
-          !detail.ageOfRubber ||
-          detail.ageOfRubber < 0 ||
-          !detail.yearOfTapping ||
-          !detail.monthOfTapping ||
-          !detail.totalProduction ||
-          detail.totalProduction < 0)
-    );
+    for (let i = 0; i < plantingDetails.length; i++) {
+      const detail = plantingDetails[i];
+      const itemNumber = i + 1;
 
-    if (incompleteDetails.length > 0) {
-      setError("กรุณากรอกข้อมูลให้ครบถ้วนในทุกรายการที่เลือกพันธุ์ยางแล้ว");
-      return false;
+      if (!detail.specie || detail.specie.trim() === "") {
+        setError(`รายการที่ ${itemNumber}: กรุณาเลือกพันธุ์ยางพารา`);
+        return false;
+      }
+
+      if (detail.areaOfPlot === 0) {
+        setError(`รายการที่ ${itemNumber}: กรุณากรอกพื้นที่แปลงให้ถูกต้อง`);
+        return false;
+      }
+      if (!detail.areaOfPlot || detail.areaOfPlot < 0) {
+        setError(`รายการที่ ${itemNumber}: กรุณากรอกพื้นที่แปลง`);
+        return false;
+      }
+
+      if (detail.numberOfRubber === 0) {
+        setError(
+          `รายการที่ ${itemNumber}: กรุณากรอกจำนวนต้นยางทั้งหมดให้ถูกต้อง`
+        );
+        return false;
+      }
+      if (!detail.numberOfRubber || detail.numberOfRubber < 0) {
+        setError(`รายการที่ ${itemNumber}: กรุณากรอกจำนวนต้นยางทั้งหมด`);
+        return false;
+      }
+
+      if (detail.numberOfTapping === undefined) {
+        setError(`รายการที่ ${itemNumber}: กรุณากรอกจำนวนต้นกรีดที่กรีดได้`);
+        return false;
+      }
+      if (detail.numberOfTapping < 0) {
+        setError(
+          `รายการที่ ${itemNumber}: กรุณากรอกจำนวนต้นกรีดที่กรีดได้ให้ถูกต้อง`
+        );
+        return false;
+      }
+
+      if (detail.ageOfRubber === undefined) {
+        setError(`รายการที่ ${itemNumber}: กรุณากรอกอายุต้นยาง`);
+        return false;
+      }
+      if (detail.ageOfRubber < 0) {
+        setError(`รายการที่ ${itemNumber}: กรุณากรอกอายุต้นยางให้ถูกต้อง`);
+        return false;
+      }
+
+      if (!detail.yearOfTapping || detail.yearOfTapping === "") {
+        setError(`รายการที่ ${itemNumber}: กรุณาเลือกปีที่เริ่มกรีด`);
+        return false;
+      }
+
+      if (!detail.monthOfTapping || detail.monthOfTapping === "") {
+        setError(`รายการที่ ${itemNumber}: กรุณาเลือกเดือนที่เริ่มกรีด`);
+        return false;
+      }
+
+      if (detail.totalProduction === undefined) {
+        setError(`รายการที่ ${itemNumber}: กรุณากรอกผลผลิตรวม`);
+        return false;
+      }
+      if (detail.totalProduction < 0) {
+        setError(`รายการที่ ${itemNumber}: กรุณากรอกผลผลิตรวมให้ถูกต้อง`);
+        return false;
+      }
     }
 
     setError("");
@@ -465,11 +514,20 @@ export const useRubberFarmEditForm = () => {
           specie: detail.specie,
           areaOfPlot: Number(detail.areaOfPlot),
           numberOfRubber: Number(detail.numberOfRubber),
-          numberOfTapping: Number(detail.numberOfTapping) || 0,
-          ageOfRubber: Number(detail.ageOfRubber) || 0,
+          numberOfTapping:
+            detail.numberOfTapping !== undefined
+              ? Number(detail.numberOfTapping)
+              : undefined,
+          ageOfRubber:
+            detail.ageOfRubber !== undefined
+              ? Number(detail.ageOfRubber)
+              : undefined,
           yearOfTapping: detail.yearOfTapping,
           monthOfTapping: detail.monthOfTapping,
-          totalProduction: Number(detail.totalProduction) || 0,
+          totalProduction:
+            detail.totalProduction !== undefined
+              ? Number(detail.totalProduction)
+              : undefined,
           version: detail.version,
         }));
 
@@ -481,11 +539,20 @@ export const useRubberFarmEditForm = () => {
           specie: detail.specie,
           areaOfPlot: Number(detail.areaOfPlot),
           numberOfRubber: Number(detail.numberOfRubber),
-          numberOfTapping: Number(detail.numberOfTapping) || 0,
-          ageOfRubber: Number(detail.ageOfRubber) || 0,
+          numberOfTapping:
+            detail.numberOfTapping !== undefined
+              ? Number(detail.numberOfTapping)
+              : undefined,
+          ageOfRubber:
+            detail.ageOfRubber !== undefined
+              ? Number(detail.ageOfRubber)
+              : undefined,
           yearOfTapping: detail.yearOfTapping,
           monthOfTapping: detail.monthOfTapping,
-          totalProduction: Number(detail.totalProduction) || 0,
+          totalProduction:
+            detail.totalProduction !== undefined
+              ? Number(detail.totalProduction)
+              : undefined,
         }));
 
       // Prepare single payload with all data
