@@ -7,11 +7,11 @@ interface PlantingDetail {
   specie: string;
   areaOfPlot: number;
   numberOfRubber: number;
-  numberOfTapping: number;
-  ageOfRubber: number;
+  numberOfTapping?: number;
+  ageOfRubber?: number;
   yearOfTapping: string;
   monthOfTapping: string;
-  totalProduction: number;
+  totalProduction?: number;
 }
 
 interface RubberFarm {
@@ -125,11 +125,11 @@ export const EditConfirmationStep: React.FC<EditConfirmationStepProps> = ({
                 />
                 <SummaryItem
                   label="จำนวนต้นกรีดที่กรีดได้ (ต้น)"
-                  value={detail.numberOfTapping}
+                  value={detail.numberOfTapping ?? 0}
                 />
                 <SummaryItem
                   label="อายุต้นยาง (ปี)"
-                  value={detail.ageOfRubber}
+                  value={detail.ageOfRubber ?? 0}
                 />
                 <SummaryItem
                   label="ปีที่เริ่มกรีด"
@@ -141,7 +141,7 @@ export const EditConfirmationStep: React.FC<EditConfirmationStepProps> = ({
                 />
                 <SummaryItem
                   label="ผลผลิตรวม (กก./ปี)"
-                  value={detail.totalProduction}
+                  value={(detail.totalProduction ?? 0).toFixed(2)}
                 />
               </div>
             </div>
