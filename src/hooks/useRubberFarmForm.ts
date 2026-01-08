@@ -8,11 +8,11 @@ export interface PlantingDetail {
   specie: string;
   areaOfPlot: number;
   numberOfRubber: number;
-  numberOfTapping: number;
-  ageOfRubber: number;
+  numberOfTapping?: number;
+  ageOfRubber?: number;
   yearOfTapping: string;
   monthOfTapping: string;
-  totalProduction: number;
+  totalProduction?: number;
 }
 
 export interface RubberFarm {
@@ -38,11 +38,11 @@ const initialPlantingDetail: PlantingDetail = {
   specie: "",
   areaOfPlot: 0,
   numberOfRubber: 0,
-  numberOfTapping: 0,
-  ageOfRubber: 0,
+  numberOfTapping: undefined,
+  ageOfRubber: undefined,
   yearOfTapping: new Date().toISOString(),
   monthOfTapping: new Date().toISOString(),
-  totalProduction: 0,
+  totalProduction: undefined,
 };
 
 const initialRubberFarm: RubberFarm = {
@@ -121,7 +121,7 @@ export const useRubberFarmForm = () => {
   const updatePlantingDetail = (
     index: number,
     field: keyof PlantingDetail,
-    value: string | number | Date
+    value: string | number | Date | undefined
   ) => {
     const updatedDetails = [...plantingDetails];
 
@@ -228,12 +228,18 @@ export const useRubberFarmForm = () => {
       return `รายการที่ ${itemNumber}: กรุณากรอกจำนวนต้นยางทั้งหมด`;
     }
 
-    if (detail.numberOfTapping == null || detail.numberOfTapping < 0) {
+    if (detail.numberOfTapping === undefined) {
       return `รายการที่ ${itemNumber}: กรุณากรอกจำนวนต้นกรีดที่กรีดได้`;
     }
+    if (detail.numberOfTapping < 0) {
+      return `รายการที่ ${itemNumber}: กรุณากรอกจำนวนต้นกรีดที่กรีดได้ให้ถูกต้อง`;
+    }
 
-    if (detail.ageOfRubber == null || detail.ageOfRubber < 0) {
+    if (detail.ageOfRubber === undefined) {
       return `รายการที่ ${itemNumber}: กรุณากรอกอายุต้นยาง`;
+    }
+    if (detail.ageOfRubber < 0) {
+      return `รายการที่ ${itemNumber}: กรุณากรอกอายุต้นยางให้ถูกต้อง`;
     }
 
     if (!detail.yearOfTapping || detail.yearOfTapping === "") {
@@ -244,8 +250,11 @@ export const useRubberFarmForm = () => {
       return `รายการที่ ${itemNumber}: กรุณาเลือกเดือนที่เริ่มกรีด`;
     }
 
-    if (detail.totalProduction == null || detail.totalProduction < 0) {
+    if (detail.totalProduction === undefined) {
       return `รายการที่ ${itemNumber}: กรุณากรอกผลผลิตรวม`;
+    }
+    if (detail.totalProduction < 0) {
+      return `รายการที่ ${itemNumber}: กรุณากรอกผลผลิตรวมให้ถูกต้อง`;
     }
 
     return null;
