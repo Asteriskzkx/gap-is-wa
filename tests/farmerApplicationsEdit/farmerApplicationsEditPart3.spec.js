@@ -199,6 +199,46 @@ async function setInputNumberById(page, id, value) {
   await clearAndType(input, String(value));
 }
 
+async function clearInputNumberById(page, id) {
+  const input = page.locator(`input[id="${id}"]`).first();
+  await expect(input).toBeVisible({ timeout: 10000 });
+  await clearAndType(input, "");
+}
+
+async function selectYearByText(page, { id, yearText }) {
+  const wrapper = page.locator(`#${id}`);
+  await expect(wrapper).toBeVisible({ timeout: 10000 });
+  await wrapper.locator("button").first().click();
+  await page.waitForSelector(".p-yearpicker", { timeout: 10000 });
+  await page.click(`.p-yearpicker .p-yearpicker-year:has-text("${yearText}")`);
+}
+
+async function selectMonthByText(page, { id, monthText }) {
+  await page.locator(`#${id}`).click();
+  await page.click(`li:has-text("${monthText}")`);
+}
+
+async function fillPlantingDetailItem(page, index) {
+  await selectFromAutoCompleteByTyping(page, {
+    name: `specie-${index}`,
+    query: "RR",
+    option: "RRIT 251",
+  });
+  await setInputNumberById(page, `areaOfPlot-${index}`, 10.5);
+  await setInputNumberById(page, `numberOfRubber-${index}`, 500);
+  await setInputNumberById(page, `numberOfTapping-${index}`, 400);
+  await setInputNumberById(page, `ageOfRubber-${index}`, 8);
+  await selectYearByText(page, {
+    id: `yearOfTapping-${index}`,
+    yearText: "2022",
+  });
+  await selectMonthByText(page, {
+    id: `monthOfTapping-${index}`,
+    monthText: "มกราคม",
+  });
+  await setInputNumberById(page, `totalProduction-${index}`, 1500.5);
+}
+
 async function ensureStep3ValidAndGoNext(page) {
   for (let attempt = 1; attempt <= 6; attempt++) {
     await getFormNextButton(page).click();
@@ -280,9 +320,7 @@ test.describe("Farmer Applications Edit — Part 3 (Step 3: รายละเ�
     await gotoEditStep3(page);
   });
 
-  test("TC-001: แสดงหน้ารายละเอียดการปลูกและมีอย่างน้อย 1 รายการ", async ({
-    page,
-  }) => {
+  test("TC-027: โหลดรายละเอียดการปลูกที่มีอยู่", async ({ page }) => {
     await expect(
       page.getByRole("heading", { name: "รายละเอียดการปลูก", exact: true })
     ).toBeVisible();
@@ -292,9 +330,91 @@ test.describe("Farmer Applications Edit — Part 3 (Step 3: รายละเ�
     await expect(specieInput).toBeVisible();
   });
 
-  test("TC-002: ไม่เลือกพันธุ์ยางพารา — แสดง error รายการที่ 1", async ({
+  test("TC-028: เพิ่มรายการปลูกใหม่ และกรอกครบถ้วนแล้วไป Step 4 ได้", async ({
     page,
   }) => {
+    const deleteButtons = page.getByRole("button", { name: "ลบรายการ" });
+    const initialDeleteCount = await deleteButtons.count();
+
+    await page.getByRole("button", { name: "เพิ่มรายการปลูก" }).click();
+    await expect(page.getByText("รายการที่ 2")).toBeVisible({ timeout: 10000 });
+
+    const deleteCountAfterAdd = await deleteButtons.count();
+    expect(deleteCountAfterAdd).toBeGreaterThan(initialDeleteCount);
+
+    await fillPlantingDetailItem(page, 1);
+
+    await getFormNextButton(page).click();
+    await expect(
+      page.getByRole("heading", {
+        name: "ตรวจสอบและยืนยันข้อมูล",
+        exact: true,
+      })
+    ).toBeVisible({ timeout: 10000 });
+  });
+
+  test("TC-029: ลบรายการปลูกที่มีอยู่ 1 รายการ", async ({ page }) => {
+    // The UI only shows the delete button when there are 2+ items.
+    await page.getByRole("button", { name: "เพิ่มรายการปลูก" }).click();
+    await expect(page.getByText("รายการที่ 2")).toBeVisible({ timeout: 10000 });
+
+    const deleteButtons = page.getByRole("button", { name: "ลบรายการ" });
+    await expect(deleteButtons).toHaveCount(2);
+
+    // Delete the existing (first) item.
+    await deleteButtons.first().click();
+
+    // The remaining item becomes "รายการที่ 1", so "รายการที่ 2" should disappear.
+    await expect(page.getByText("รายการที่ 2")).toHaveCount(0);
+  });
+
+  test("TC-030: ลบรายการปลูกที่เพิ่งเพิ่ม", async ({ page }) => {
+    await page.getByRole("button", { name: "เพิ่มรายการปลูก" }).click();
+    await expect(page.getByText("รายการที่ 2")).toBeVisible({ timeout: 10000 });
+
+    const deleteButtons = page.getByRole("button", { name: "ลบรายการ" });
+    const before = await deleteButtons.count();
+    await expect(before).toBeGreaterThan(1);
+
+    await deleteButtons.nth(before - 1).click();
+    await expect(page.getByText("รายการที่ 2")).toHaveCount(0);
+  });
+
+  test("TC-031: ลบจนไม่เหลือรายการปลูก แล้วกดถัดไป", async ({ page }) => {
+    // The UI hides the delete button when only 1 item remains.
+    // To validate the empty-state rule, intercept the farm-details API
+    // so Step 3 starts with 0 plantingDetails.
+    await page.route(
+      /\/api\/v1\/rubber-farms\/\d+$/,
+      async (route) => {
+        const response = await route.fetch();
+        const json = await response.json();
+        json.plantingDetails = [];
+        await route.fulfill({
+          status: response.status(),
+          headers: {
+            ...response.headers(),
+            "content-type": "application/json",
+          },
+          body: JSON.stringify(json),
+        });
+      },
+      { times: 1 }
+    );
+
+    await gotoEditStep3(page);
+
+    await expect(page.getByText("รายการที่ 1")).toHaveCount(0);
+
+    await getFormNextButton(page).click();
+    await expect(
+      getErrorAlert(page).filter({
+        hasText: "กรุณาเพิ่มรายละเอียดการปลูกอย่างน้อย 1 รายการ",
+      })
+    ).toBeVisible({ timeout: 10000 });
+  });
+
+  test("TC-032: ไม่เลือกพันธุ์ยางพารา แล้วกดถัดไป", async ({ page }) => {
     // In edit mode, existing data is often prefilled. Clearing the AutoComplete
     // input text may not update the underlying state, so we instead:
     // 1) add a new (empty) planting item
@@ -317,9 +437,18 @@ test.describe("Farmer Applications Edit — Part 3 (Step 3: รายละเ�
     ).toBeVisible();
   });
 
-  test("TC-003: กรอกพื้นที่แปลง 0 — แสดง error รายการที่ 1", async ({
-    page,
-  }) => {
+  test("TC-033: ไม่กรอกพื้นที่แปลง แล้วกดถัดไป", async ({ page }) => {
+    await clearInputNumberById(page, "areaOfPlot-0");
+
+    await getFormNextButton(page).click();
+    await expect(
+      getErrorAlert(page).filter({
+        hasText: "รายการที่ 1: กรุณากรอกพื้นที่แปลง",
+      })
+    ).toBeVisible({ timeout: 10000 });
+  });
+
+  test("TC-034: กรอกพื้นที่แปลงเป็น 0 แล้วกดถัดไป", async ({ page }) => {
     await setInputNumberById(page, "areaOfPlot-0", 0);
 
     await getFormNextButton(page).click();
@@ -330,9 +459,18 @@ test.describe("Farmer Applications Edit — Part 3 (Step 3: รายละเ�
     ).toBeVisible();
   });
 
-  test("TC-004: กรอกจำนวนต้นยางทั้งหมด 0 — แสดง error รายการที่ 1", async ({
-    page,
-  }) => {
+  test("TC-035: ไม่กรอกจำนวนต้นยางทั้งหมด แล้วกดถัดไป", async ({ page }) => {
+    await clearInputNumberById(page, "numberOfRubber-0");
+
+    await getFormNextButton(page).click();
+    await expect(
+      getErrorAlert(page).filter({
+        hasText: "รายการที่ 1: กรุณากรอกจำนวนต้นยางทั้งหมด",
+      })
+    ).toBeVisible({ timeout: 10000 });
+  });
+
+  test("TC-036: กรอกจำนวนต้นยางทั้งหมดเป็น 0 แล้วกดถัดไป", async ({ page }) => {
     await setInputNumberById(page, "numberOfRubber-0", 0);
 
     await getFormNextButton(page).click();
@@ -343,34 +481,21 @@ test.describe("Farmer Applications Edit — Part 3 (Step 3: รายละเ�
     ).toBeVisible();
   });
 
-  test("TC-005: เพิ่ม/ลบรายการปลูก (รายการที่ 2)", async ({ page }) => {
-    await page.getByRole("button", { name: "เพิ่มรายการปลูก" }).click();
-    await expect(page.getByText("รายการที่ 2")).toBeVisible({ timeout: 10000 });
-
-    // When there are 2 items, there will be 2 "ลบรายการ" buttons.
-    // Click the second one to remove item #2.
-    await page.getByRole("button", { name: "ลบรายการ" }).nth(1).click();
-
-    await expect(page.getByText("รายการที่ 2")).toHaveCount(0);
-  });
-
-  test("TC-006: กดปุ่มย้อนกลับจาก Step 3 กลับไป Step 2 และถัดไปกลับมาได้", async ({
-    page,
-  }) => {
+  test("TC-037: กดปุ่มย้อนกลับจาก Step 3 กลับ Step 2", async ({ page }) => {
     await getFormBackButton(page).click();
     await expect(
       page.getByRole("heading", { name: "ข้อมูลสวนยาง", exact: true })
     ).toBeVisible({ timeout: 10000 });
 
-    await ensureCanProceedFromStep2(page);
-    await expect(
-      page.getByRole("heading", { name: "รายละเอียดการปลูก", exact: true })
-    ).toBeVisible({ timeout: 10000 });
+    const villageInput = page
+      .locator('input[name="villageName"]')
+      .or(page.getByLabel("หมู่บ้าน/ชุมชน"))
+      .first();
+    await expect(villageInput).toBeVisible({ timeout: 10000 });
+    await expect(villageInput).not.toHaveValue("");
   });
 
-  test("TC-007: กดถัดไปจาก Step 3 ไป Step 4 (ตรวจสอบและยืนยันข้อมูล)", async ({
-    page,
-  }) => {
+  test("TC-038: กรอกข้อมูล Step 3 ถูกต้องแล้วไป Step 4", async ({ page }) => {
     await ensureStep3ValidAndGoNext(page);
     await expect(
       page.getByRole("heading", {
