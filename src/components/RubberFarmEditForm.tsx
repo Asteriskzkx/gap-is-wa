@@ -16,7 +16,6 @@ import { DataTablePageEvent, DataTableSortEvent } from "primereact/datatable";
 
 export default function RubberFarmEditForm() {
   const maxSteps = 4; // เพิ่มเป็น 4 steps: เลือกฟาร์ม, ข้อมูลฟาร์ม, รายละเอียดการปลูก, ยืนยัน
-  const [isConfirmed, setIsConfirmed] = useState(false);
 
   // Custom step labels for Edit Form
   const editFormStepLabels = [
@@ -56,6 +55,8 @@ export default function RubberFarmEditForm() {
     setError,
     success,
     farmerId,
+    isConfirmed,
+    setIsConfirmed,
   } = useRubberFarmEditForm();
 
   const { step, nextStep, prevStep, isFirstStep, isLastStep } =
@@ -92,6 +93,10 @@ export default function RubberFarmEditForm() {
 
   const handlePrevStep = () => {
     if (step > 1) {
+      // Reset confirmation checkbox when leaving step 4
+      if (step === 4) {
+        setIsConfirmed(false);
+      }
       prevStep();
       setError("");
     }

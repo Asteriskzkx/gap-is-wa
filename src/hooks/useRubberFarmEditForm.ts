@@ -74,6 +74,7 @@ export const useRubberFarmEditForm = () => {
   const [deletedPlantingDetailIds, setDeletedPlantingDetailIds] = useState<
     number[]
   >([]);
+  const [isConfirmed, setIsConfirmed] = useState(false);
 
   // Pagination state
   const [farmsPagination, setFarmsPagination] = useState({
@@ -597,5 +598,7 @@ export const useRubberFarmEditForm = () => {
     setError,
     success,
     farmerId,
+    isConfirmed,
+    setIsConfirmed,
   };
 };
