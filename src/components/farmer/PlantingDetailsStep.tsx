@@ -157,7 +157,7 @@ export const PlantingDetailsStep: React.FC<PlantingDetailsStepProps> = ({
                   onChange={(value) =>
                     updatePlantingDetail(index, "areaOfPlot", value || 0)
                   }
-                  min={0}
+                  min={1}
                   max={100000}
                   maxFractionDigits={2}
                 />
@@ -180,7 +180,7 @@ export const PlantingDetailsStep: React.FC<PlantingDetailsStepProps> = ({
                   onChange={(value) =>
                     updatePlantingDetail(index, "numberOfRubber", value || 0)
                   }
-                  min={0}
+                  min={1}
                   max={100000}
                   maxFractionDigits={0}
                 />
