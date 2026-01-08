@@ -4,12 +4,12 @@ const BASE_URL = process.env.E2E_BASE_URL || "http://localhost:3000";
 
 const USERS = {
   withFarms: {
-    email: "test@email.com",
-    password: "Password123",
+    email: process.env.E2E_TEST_USER_EMAIL,
+    password: process.env.E2E_TEST_USER_PASSWORD,
   },
   noFarms: {
-    email: "testmail11812025@mail.com",
-    password: "MXQ5hP2Yn@MsqZF",
+    email: process.env.E2E_TEST_USER_NO_FARMS_EMAIL,
+    password: process.env.E2E_TEST_USER_NO_FARMS_PASSWORD,
   },
 };
 

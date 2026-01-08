@@ -7,8 +7,8 @@ const APPLICATION_URL = `${BASE_URL}/farmer/applications/new`;
 
 // ข้อมูลผู้ใช้สำหรับการทดสอบ
 const TEST_USER = {
-  email: "test@email.com",
-  password: "Password123",
+  email: process.env.E2E_TEST_USER_EMAIL,
+  password: process.env.E2E_TEST_USER_PASSWORD,
 };
 
 // Helper function สำหรับ login
