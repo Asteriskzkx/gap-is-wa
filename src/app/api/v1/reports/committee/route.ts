@@ -1,0 +1,44 @@
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { CommitteeReportService } from "@/services/CommitteeReportService";
+
+export async function GET(request: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Parse query params
+    const { searchParams } = new URL(request.url);
+    const startDateParam = searchParams.get("startDate");
+    const endDateParam = searchParams.get("endDate");
+
+    // Parse dates as local time (not UTC)
+    let startDate: Date | undefined;
+    let endDate: Date | undefined;
+
+    if (startDateParam) {
+      // Parse YYYY-MM-DD as local time
+      const [year, month, day] = startDateParam.split("-").map(Number);
+      startDate = new Date(year, month - 1, day, 0, 0, 0, 0);
+    }
+
+    if (endDateParam) {
+      // Parse YYYY-MM-DD as local time
+      const [year, month, day] = endDateParam.split("-").map(Number);
+      endDate = new Date(year, month - 1, day, 23, 59, 59, 999);
+    }
+
+    const report = await CommitteeReportService.getCommitteeReport(startDate, endDate);
+
+    return NextResponse.json(report);
+  } catch (error) {
+    console.error("Error fetching committee report:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
+}
