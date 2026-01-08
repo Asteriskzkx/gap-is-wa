@@ -32,7 +32,7 @@ interface FormData {
   firstName: string;
   lastName: string;
   identificationNumber: string;
-  birthDate: Date | null;
+  birthDate: string;
   gender: string;
   houseNo: string;
   villageName: string;
@@ -88,6 +88,9 @@ export function useRegisterForm() {
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
 
+  // สำหรับการยอมรับเงื่อนไข
+  const [termsAccepted, setTermsAccepted] = useState(false);
+
   // Form data
   const [formData, setFormData] = useState<FormData>({
     email: "",
@@ -97,7 +100,7 @@ export function useRegisterForm() {
     firstName: "",
     lastName: "",
     identificationNumber: "",
-    birthDate: null,
+    birthDate: "",
     gender: "ชาย",
     houseNo: "",
     villageName: "",
@@ -334,6 +337,8 @@ export function useRegisterForm() {
   const validatePassword = (password: string) => {
     if (!password) return "กรุณากรอกรหัสผ่าน";
     if (password.length < 8) return "รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร";
+    if (!/[A-Z]/.test(password)) return "รหัสผ่านต้องมีตัวพิมพ์ใหญ่";
+    if (!/\d/.test(password)) return "รหัสผ่านต้องมีตัวเลข";
     return "";
   };
 
@@ -440,8 +445,10 @@ export function useRegisterForm() {
       return false;
     }
 
-    const cleanedPhone = formData.phoneNumber.replaceAll("-", "");
-    if (cleanedPhone.length !== 9) {
+    const cleanedPhone = formData.phoneNumber
+      .replaceAll("-", "")
+      .replaceAll("_", "");
+    if (cleanedPhone.length !== 9 || !/^\d+$/.test(cleanedPhone)) {
       const phoneError = "เบอร์โทรศัพท์ต้องเป็นตัวเลข 9 หลัก";
       setErrors((prev) => ({ ...prev, phoneNumber: phoneError }));
       setError(phoneError);
@@ -455,8 +462,10 @@ export function useRegisterForm() {
       return false;
     }
 
-    const cleanedMobile = formData.mobilePhoneNumber.replaceAll("-", "");
-    if (cleanedMobile.length !== 10) {
+    const cleanedMobile = formData.mobilePhoneNumber
+      .replaceAll("-", "")
+      .replaceAll("_", "");
+    if (cleanedMobile.length !== 10 || !/^\d+$/.test(cleanedMobile)) {
       const mobileError = "เบอร์โทรศัพท์มือถือต้องเป็นตัวเลข 10 หลัก";
       setErrors((prev) => ({ ...prev, mobilePhoneNumber: mobileError }));
       setError(mobileError);
@@ -479,6 +488,10 @@ export function useRegisterForm() {
   };
 
   const prevStep = () => {
+    // Reset terms acceptance when leaving step 4
+    if (step === 4) {
+      setTermsAccepted(false);
+    }
     setStep(step - 1);
     setError("");
   };
@@ -493,9 +506,7 @@ export function useRegisterForm() {
     setError("");
 
     try {
-      const birthDateString = formData.birthDate
-        ? formData.birthDate.toISOString().split("T")[0]
-        : "";
+      const birthDateString = formData.birthDate || "";
 
       const response = await fetch("/api/v1/farmers/register", {
         method: "POST",
@@ -555,6 +566,7 @@ export function useRegisterForm() {
     isLoadingProvinces,
     isCheckingEmail,
     isEmailVerified,
+    termsAccepted,
 
     // Options
     namePrefixOptions,
@@ -567,6 +579,7 @@ export function useRegisterForm() {
     setFormData,
     setErrors,
     setError,
+    setTermsAccepted,
     nextStep,
     prevStep,
     handleSubmit,

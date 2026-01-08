@@ -1,13 +1,12 @@
 import {
-  PrismaClient,
   Committee as PrismaCommittee,
   User as PrismaUser,
 } from "@prisma/client";
-import { BaseRepository } from "./BaseRepository";
+import { OptimisticLockError } from "../errors/OptimisticLockError";
+import { BaseMapper } from "../mappers/BaseMapper";
 import { CommitteeModel } from "../models/CommitteeModel";
 import { UserRole } from "../models/UserModel";
-import { BaseMapper } from "../mappers/BaseMapper";
-import { OptimisticLockError } from "../errors/OptimisticLockError";
+import { BaseRepository } from "./BaseRepository";
 
 export class CommitteeRepository extends BaseRepository<CommitteeModel> {
   constructor(mapper: BaseMapper<any, CommitteeModel>) {
@@ -121,8 +120,10 @@ export class CommitteeRepository extends BaseRepository<CommitteeModel> {
 
       // Prepare committee data - only include defined values
       const committeeData: any = { updatedAt: new Date() };
-      if (data.namePrefix !== undefined) committeeData.namePrefix = data.namePrefix;
-      if (data.firstName !== undefined) committeeData.firstName = data.firstName;
+      if (data.namePrefix !== undefined)
+        committeeData.namePrefix = data.namePrefix;
+      if (data.firstName !== undefined)
+        committeeData.firstName = data.firstName;
       if (data.lastName !== undefined) committeeData.lastName = data.lastName;
 
       // Start a transaction to update both User and Committee
@@ -217,8 +218,10 @@ export class CommitteeRepository extends BaseRepository<CommitteeModel> {
         version: currentVersion + 1,
         updatedAt: new Date(),
       };
-      if (data.namePrefix !== undefined) committeeData.namePrefix = data.namePrefix;
-      if (data.firstName !== undefined) committeeData.firstName = data.firstName;
+      if (data.namePrefix !== undefined)
+        committeeData.namePrefix = data.namePrefix;
+      if (data.firstName !== undefined)
+        committeeData.firstName = data.firstName;
       if (data.lastName !== undefined) committeeData.lastName = data.lastName;
 
       // Start a transaction to update both User and Committee

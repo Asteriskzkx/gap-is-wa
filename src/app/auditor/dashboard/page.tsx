@@ -11,6 +11,7 @@ import {
   CheckCircleIcon,
   ChevronRightIcon,
   FileIcon,
+  FindInPageIcon,
   HomeIcon,
   NaturePeopleIcon,
   TextClipboardIcon,
@@ -170,13 +171,15 @@ export default function AuditorDashboardPage() {
   };
 
   const getActionCardDescription = (index: number): string => {
-    if (index === 0)
-      return "ดำเนินการตรวจประเมินแหล่งผลิตยางพาราตามมาตรฐานจีเอพี";
-    if (index === 1) return "กำหนดและแจ้งวันตรวจประเมินแหล่งผลิตแก่เกษตรกร";
-    if (index === 2) return "สรุปและบันทึกผลการตรวจประเมินแหล่งผลิตยางพารา";
-    if (index === 3)
-      return "จัดเก็บข้อมูลสำคัญของสวนยางพาราที่ได้รับการตรวจประเมิน";
-    return "บันทึกรายละเอียดคำแนะนำและข้อบกพร่องที่พบระหว่างการตรวจ";
+      if (index === 0)
+        return "ดำเนินการตรวจประเมินแหล่งผลิตยางพาราตามมาตรฐานจีเอพี";
+      if (index === 1) return "กำหนดและแจ้งวันตรวจประเมินแหล่งผลิตแก่เกษตรกร";
+      if (index === 2) return "สรุปและบันทึกผลการตรวจประเมินแหล่งผลิตยางพารา";
+      if (index === 3)
+        return "จัดเก็บข้อมูลสำคัญของสวนยางพาราที่ได้รับการตรวจประเมิน";
+      if (index === 4)
+      return "บันทึกรายละเอียดคำแนะนำและข้อบกพร่องที่พบระหว่างการตรวจ";
+    return "ดูรายงานสรุปข้อมูลต่างๆ";
   };
 
   // Navigation menu items
@@ -210,6 +213,11 @@ export default function AuditorDashboardPage() {
       title: "บันทึกการให้คำปรึกษาและข้อบกพร่อง",
       href: "/auditor/consultations",
       icon: <ChatBubbleIcon className="h-6 w-6" />,
+    },
+    {
+      title: "ตรวจสอบรายงาน",
+      href: "/auditor/report",
+      icon: <FindInPageIcon className="h-6 w-6" />,
     },
   ];
 

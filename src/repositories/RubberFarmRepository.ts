@@ -1,7 +1,7 @@
-import { PrismaClient, RubberFarm as PrismaRubberFarm } from "@prisma/client";
-import { BaseRepository } from "./BaseRepository";
-import { RubberFarmModel } from "../models/RubberFarmModel";
+import { RubberFarm as PrismaRubberFarm } from "@prisma/client";
 import { BaseMapper } from "../mappers/BaseMapper";
+import { RubberFarmModel } from "../models/RubberFarmModel";
+import { BaseRepository } from "./BaseRepository";
 
 export class RubberFarmRepository extends BaseRepository<RubberFarmModel> {
   constructor(mapper: BaseMapper<any, RubberFarmModel>) {

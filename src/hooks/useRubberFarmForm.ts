@@ -8,11 +8,11 @@ export interface PlantingDetail {
   specie: string;
   areaOfPlot: number;
   numberOfRubber: number;
-  numberOfTapping: number;
-  ageOfRubber: number;
+  numberOfTapping?: number;
+  ageOfRubber?: number;
   yearOfTapping: string;
   monthOfTapping: string;
-  totalProduction: number;
+  totalProduction?: number;
 }
 
 export interface RubberFarm {
@@ -38,11 +38,11 @@ const initialPlantingDetail: PlantingDetail = {
   specie: "",
   areaOfPlot: 0,
   numberOfRubber: 0,
-  numberOfTapping: 0,
-  ageOfRubber: 0,
+  numberOfTapping: undefined,
+  ageOfRubber: undefined,
   yearOfTapping: new Date().toISOString(),
   monthOfTapping: new Date().toISOString(),
-  totalProduction: 0,
+  totalProduction: undefined,
 };
 
 const initialRubberFarm: RubberFarm = {
@@ -71,6 +71,7 @@ export const useRubberFarmForm = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [farmerId, setFarmerId] = useState<number | null>(null);
+  const [isConfirmed, setIsConfirmed] = useState(false);
 
   const [plantingDetails, setPlantingDetails] = useState<PlantingDetail[]>([
     { ...initialPlantingDetail },
@@ -120,7 +121,7 @@ export const useRubberFarmForm = () => {
   const updatePlantingDetail = (
     index: number,
     field: keyof PlantingDetail,
-    value: string | number | Date
+    value: string | number | Date | undefined
   ) => {
     const updatedDetails = [...plantingDetails];
 
@@ -162,7 +163,7 @@ export const useRubberFarmForm = () => {
       !rubberFarm.province ||
       !rubberFarm.productDistributionType
     ) {
-      setError("กรุณากรอกข้อมูลฟาร์มให้ครบถ้วน");
+      setError("กรุณากรอกข้อมูลสวนยางให้ครบถ้วน");
       return false;
     }
     // ตรวจสอบตำแหน่งบนแผนที่ (ไม่อนุญาตให้เป็นค่าเริ่มต้น [0,0])
@@ -213,20 +214,32 @@ export const useRubberFarmForm = () => {
       return `รายการที่ ${itemNumber}: กรุณาเลือกพันธุ์ยางพารา`;
     }
 
-    if (!detail.areaOfPlot || detail.areaOfPlot <= 0) {
+    if (detail.areaOfPlot === 0) {
+      return `รายการที่ ${itemNumber}: กรุณากรอกพื้นที่แปลงให้ถูกต้อง`;
+    }
+    if (!detail.areaOfPlot || detail.areaOfPlot < 0) {
       return `รายการที่ ${itemNumber}: กรุณากรอกพื้นที่แปลง`;
     }
 
-    if (!detail.numberOfRubber || detail.numberOfRubber <= 0) {
+    if (detail.numberOfRubber === 0) {
+      return `รายการที่ ${itemNumber}: กรุณากรอกจำนวนต้นยางทั้งหมดให้ถูกต้อง`;
+    }
+    if (!detail.numberOfRubber || detail.numberOfRubber < 0) {
       return `รายการที่ ${itemNumber}: กรุณากรอกจำนวนต้นยางทั้งหมด`;
     }
 
-    if (!detail.numberOfTapping || detail.numberOfTapping <= 0) {
+    if (detail.numberOfTapping === undefined) {
       return `รายการที่ ${itemNumber}: กรุณากรอกจำนวนต้นกรีดที่กรีดได้`;
     }
+    if (detail.numberOfTapping < 0) {
+      return `รายการที่ ${itemNumber}: กรุณากรอกจำนวนต้นกรีดที่กรีดได้ให้ถูกต้อง`;
+    }
 
-    if (!detail.ageOfRubber || detail.ageOfRubber <= 0) {
+    if (detail.ageOfRubber === undefined) {
       return `รายการที่ ${itemNumber}: กรุณากรอกอายุต้นยาง`;
+    }
+    if (detail.ageOfRubber < 0) {
+      return `รายการที่ ${itemNumber}: กรุณากรอกอายุต้นยางให้ถูกต้อง`;
     }
 
     if (!detail.yearOfTapping || detail.yearOfTapping === "") {
@@ -237,8 +250,11 @@ export const useRubberFarmForm = () => {
       return `รายการที่ ${itemNumber}: กรุณาเลือกเดือนที่เริ่มกรีด`;
     }
 
-    if (!detail.totalProduction || detail.totalProduction <= 0) {
+    if (detail.totalProduction === undefined) {
       return `รายการที่ ${itemNumber}: กรุณากรอกผลผลิตรวม`;
+    }
+    if (detail.totalProduction < 0) {
+      return `รายการที่ ${itemNumber}: กรุณากรอกผลผลิตรวมให้ถูกต้อง`;
     }
 
     return null;
@@ -351,5 +367,7 @@ export const useRubberFarmForm = () => {
     setError,
     success,
     farmerId,
+    isConfirmed,
+    setIsConfirmed,
   };
 };

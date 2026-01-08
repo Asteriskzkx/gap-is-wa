@@ -17,3 +17,7 @@ ssl/*.pfx
 # Azure deployment logs
 .azure/
 azure-deploy.log
+
+#playwright files
+test-results/
+/playwright-report/

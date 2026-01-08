@@ -1,10 +1,7 @@
-import {
-  PrismaClient,
-  AuditorInspection as PrismaAuditorInspection,
-} from "@prisma/client";
-import { BaseRepository } from "./BaseRepository";
-import { AuditorInspectionModel } from "../models/AuditorInspectionModel";
+import { AuditorInspection as PrismaAuditorInspection } from "@prisma/client";
 import { BaseMapper } from "../mappers/BaseMapper";
+import { AuditorInspectionModel } from "../models/AuditorInspectionModel";
+import { BaseRepository } from "./BaseRepository";
 
 export class AuditorInspectionRepository extends BaseRepository<AuditorInspectionModel> {
   constructor(mapper: BaseMapper<any, AuditorInspectionModel>) {

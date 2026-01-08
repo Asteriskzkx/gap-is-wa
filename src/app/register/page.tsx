@@ -4,17 +4,20 @@ import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 
-// Import reusable components
+// components and hooks
+import CheckIcon from "@/components/icons/CheckIcon";
 import PrimaryAutoComplete from "@/components/ui/PrimaryAutoComplete";
 import PrimaryButton from "@/components/ui/PrimaryButton";
-import PrimaryCalendar from "@/components/ui/PrimaryCalendar";
 import PrimaryDropdown from "@/components/ui/PrimaryDropdown";
 import PrimaryInputMask from "@/components/ui/PrimaryInputMask";
 import PrimaryInputText from "@/components/ui/PrimaryInputText";
 import PrimaryPassword from "@/components/ui/PrimaryPassword";
 import { useRegisterForm } from "@/hooks/useRegisterForm";
+import { Message } from "primereact/message";
+import { ThaiDatePicker } from "thaidatepicker-react";
+
+// styles
 import styles from "./register.module.css";
-import CheckIcon from "@/components/icons/CheckIcon";
 
 export default function FarmerRegisterPage() {
   const {
@@ -26,6 +29,7 @@ export default function FarmerRegisterPage() {
     isLoadingProvinces,
     isCheckingEmail,
     isEmailVerified,
+    termsAccepted,
     namePrefixOptions,
     genderOptions,
     provinceOptions,
@@ -34,6 +38,7 @@ export default function FarmerRegisterPage() {
     amphures,
     tambons,
     setFormData,
+    setTermsAccepted,
     nextStep,
     prevStep,
     handleSubmit,
@@ -351,6 +356,7 @@ export default function FarmerRegisterPage() {
                     mask="9-9999-99999-99-9"
                     placeholder="X-XXXX-XXXXX-XX-X"
                     required
+                    autoClear={false}
                     invalid={!!errors.identificationNumber}
                     errorMessage={errors.identificationNumber}
                   />
@@ -360,22 +366,32 @@ export default function FarmerRegisterPage() {
                   <label htmlFor="birthDate" className={styles.label}>
                     วันเดือนปีเกิด <span className={styles.required}>*</span>
                   </label>
-                  <PrimaryCalendar
-                    id="birthDate"
-                    name="birthDate"
-                    value={formData.birthDate}
-                    onChange={(value) =>
-                      setFormData((prev) => ({ ...prev, birthDate: value }))
-                    }
-                    placeholder="เลือกวันเกิด"
-                    dateFormat="dd/mm/yy"
-                    showIcon
-                    minDate={new Date("1900-01-01")}
-                    maxDate={new Date()}
-                    required
-                    invalid={!!errors.birthDate}
-                    errorMessage={errors.birthDate}
-                  />
+                  <div id="thdpk-container">
+                    <ThaiDatePicker
+                      id="birthDate"
+                      value={formData.birthDate}
+                      minDate={new Date("1900-01-01")}
+                      maxDate={new Date()}
+                      onChange={(christDate: string) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          birthDate: christDate,
+                        }))
+                      }
+                      placeholder="เลือกวันเกิด"
+                    />
+                  </div>
+                  {errors.birthDate && (
+                    <Message
+                      severity="error"
+                      text={errors.birthDate}
+                      className="mt-1 w-full"
+                      pt={{
+                        root: { className: "rounded-md" },
+                        text: { className: "text-sm" },
+                      }}
+                    />
+                  )}
                 </div>
 
                 <div className={styles.formGroup}>
@@ -623,9 +639,9 @@ export default function FarmerRegisterPage() {
                     onChange={(value) =>
                       setFormData((prev) => ({ ...prev, phoneNumber: value }))
                     }
+                    autoClear={false}
                     mask="9-9999-9999"
                     placeholder="0-XXXX-XXXX"
-                    required
                     invalid={!!errors.phoneNumber}
                     errorMessage={errors.phoneNumber}
                   />
@@ -646,9 +662,9 @@ export default function FarmerRegisterPage() {
                         mobilePhoneNumber: value,
                       }))
                     }
+                    autoClear={false}
                     mask="99-9999-9999"
                     placeholder="0X-XXXX-XXXX"
-                    required
                     invalid={!!errors.mobilePhoneNumber}
                     errorMessage={errors.mobilePhoneNumber}
                   />
@@ -660,6 +676,7 @@ export default function FarmerRegisterPage() {
                       id="terms"
                       name="terms"
                       type="checkbox"
+                      checked={termsAccepted}
                       required
                       className={styles.termsCheckbox}
                       onInvalid={(e) => {
@@ -668,6 +685,7 @@ export default function FarmerRegisterPage() {
                         );
                       }}
                       onChange={(e) => {
+                        setTermsAccepted(e.target.checked);
                         e.target.setCustomValidity("");
                       }}
                     />
@@ -729,6 +747,7 @@ export default function FarmerRegisterPage() {
                   icon="pi pi-check"
                   label="ลงทะเบียน"
                   color="success"
+                  disabled={isLoading}
                 />
               )}
             </div>

@@ -68,7 +68,6 @@ export default function ChangePasswordDialog({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          userId: Number.parseInt(session?.user?.id || "0"),
           currentPassword,
           newPassword,
         }),

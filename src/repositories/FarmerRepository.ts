@@ -1,13 +1,9 @@
-import {
-  PrismaClient,
-  Farmer as PrismaFarmer,
-  User as PrismaUser,
-} from "@prisma/client";
-import { BaseRepository } from "./BaseRepository";
+import { Farmer as PrismaFarmer, User as PrismaUser } from "@prisma/client";
+import { OptimisticLockError } from "../errors/OptimisticLockError";
+import { BaseMapper } from "../mappers/BaseMapper";
 import { FarmerModel } from "../models/FarmerModel";
 import { UserRole } from "../models/UserModel";
-import { BaseMapper } from "../mappers/BaseMapper";
-import { OptimisticLockError } from "../errors/OptimisticLockError";
+import { BaseRepository } from "./BaseRepository";
 
 export class FarmerRepository extends BaseRepository<FarmerModel> {
   constructor(mapper: BaseMapper<any, FarmerModel>) {
@@ -23,6 +19,7 @@ export class FarmerRepository extends BaseRepository<FarmerModel> {
           hashedPassword: model.hashedPassword,
           name: model.name,
           role: UserRole.FARMER,
+          requirePasswordChange: model.requirePasswordChange ?? false,
           farmer: {
             create: {
               namePrefix: model.namePrefix,
@@ -62,14 +59,12 @@ export class FarmerRepository extends BaseRepository<FarmerModel> {
 
   async findById(id: number): Promise<FarmerModel | null> {
     try {
-      
       const farmer = await this.prisma.farmer.findUnique({
         where: { farmerId: id },
         include: {
           user: true,
         },
       });
-
 
       return farmer && farmer.user
         ? this.mapToModel(farmer.user, farmer)
@@ -105,9 +100,6 @@ export class FarmerRepository extends BaseRepository<FarmerModel> {
           user: true,
         },
       });
-
-      console.log("=== DEBUG findAll farmers ===");
-      console.log("All farmers:", farmers.map(f => ({ farmerId: f.farmerId, userId: f.userId, firstName: f.firstName })));
 
       return farmers
         .filter((farmer) => farmer.user !== null)
@@ -211,7 +203,6 @@ export class FarmerRepository extends BaseRepository<FarmerModel> {
     currentVersion: number
   ): Promise<FarmerModel> {
     try {
-
       // First, find the farmer to get the userId and verify version
       const existingFarmer = await this.prisma.farmer.findUnique({
         where: { farmerId: id },
@@ -242,28 +233,36 @@ export class FarmerRepository extends BaseRepository<FarmerModel> {
         version: currentVersion + 1,
         updatedAt: new Date(),
       };
-      if (data.namePrefix !== undefined) farmerData.namePrefix = data.namePrefix;
+      if (data.namePrefix !== undefined)
+        farmerData.namePrefix = data.namePrefix;
       if (data.firstName !== undefined) farmerData.firstName = data.firstName;
       if (data.lastName !== undefined) farmerData.lastName = data.lastName;
-      if (data.identificationNumber !== undefined) farmerData.identificationNumber = data.identificationNumber;
+      if (data.identificationNumber !== undefined)
+        farmerData.identificationNumber = data.identificationNumber;
       if (data.birthDate !== undefined) {
         // Convert string to Date if needed
-        farmerData.birthDate = typeof data.birthDate === 'string' 
-          ? new Date(data.birthDate) 
-          : data.birthDate;
+        farmerData.birthDate =
+          typeof data.birthDate === "string"
+            ? new Date(data.birthDate)
+            : data.birthDate;
       }
       if (data.gender !== undefined) farmerData.gender = data.gender;
       if (data.houseNo !== undefined) farmerData.houseNo = data.houseNo;
-      if (data.villageName !== undefined) farmerData.villageName = data.villageName;
+      if (data.villageName !== undefined)
+        farmerData.villageName = data.villageName;
       if (data.moo !== undefined) farmerData.moo = data.moo;
       if (data.road !== undefined) farmerData.road = data.road;
       if (data.alley !== undefined) farmerData.alley = data.alley;
-      if (data.subDistrict !== undefined) farmerData.subDistrict = data.subDistrict;
+      if (data.subDistrict !== undefined)
+        farmerData.subDistrict = data.subDistrict;
       if (data.district !== undefined) farmerData.district = data.district;
-      if (data.provinceName !== undefined) farmerData.provinceName = data.provinceName;
+      if (data.provinceName !== undefined)
+        farmerData.provinceName = data.provinceName;
       if (data.zipCode !== undefined) farmerData.zipCode = data.zipCode;
-      if (data.phoneNumber !== undefined) farmerData.phoneNumber = data.phoneNumber;
-      if (data.mobilePhoneNumber !== undefined) farmerData.mobilePhoneNumber = data.mobilePhoneNumber;
+      if (data.phoneNumber !== undefined)
+        farmerData.phoneNumber = data.phoneNumber;
+      if (data.mobilePhoneNumber !== undefined)
+        farmerData.mobilePhoneNumber = data.mobilePhoneNumber;
 
       // Start a transaction to update both User and Farmer
       const [updatedUser, updatedFarmer] = await this.prisma.$transaction([

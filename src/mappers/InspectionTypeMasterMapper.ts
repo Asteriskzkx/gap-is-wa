@@ -1,7 +1,4 @@
-import {
-  PrismaClient,
-  InspectionTypeMaster as PrismaInspectionTypeMaster,
-} from "@prisma/client";
+import { InspectionTypeMaster as PrismaInspectionTypeMaster } from "@prisma/client";
 
 import { InspectionTypeMasterModel } from "@/models/InspectionTypeMaster";
 import { BaseMapper } from "./BaseMapper";

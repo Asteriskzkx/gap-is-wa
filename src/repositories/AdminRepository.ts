@@ -1,13 +1,9 @@
-import {
-  PrismaClient,
-  Admin as PrismaAdmin,
-  User as PrismaUser,
-} from "@prisma/client";
-import { BaseRepository } from "./BaseRepository";
+import { Admin as PrismaAdmin, User as PrismaUser } from "@prisma/client";
+import { OptimisticLockError } from "../errors/OptimisticLockError";
+import { BaseMapper } from "../mappers/BaseMapper";
 import { AdminModel } from "../models/AdminModel";
 import { UserRole } from "../models/UserModel";
-import { BaseMapper } from "../mappers/BaseMapper";
-import { OptimisticLockError } from "../errors/OptimisticLockError";
+import { BaseRepository } from "./BaseRepository";
 
 export class AdminRepository extends BaseRepository<AdminModel> {
   constructor(mapper: BaseMapper<any, AdminModel>) {

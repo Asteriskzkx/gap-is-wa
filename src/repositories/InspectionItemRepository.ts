@@ -1,10 +1,7 @@
-import {
-  PrismaClient,
-  InspectionItem as PrismaInspectionItem,
-} from "@prisma/client";
-import { BaseRepository } from "./BaseRepository";
-import { InspectionItemModel } from "../models/InspectionItemModel";
+import { InspectionItem as PrismaInspectionItem } from "@prisma/client";
 import { BaseMapper } from "../mappers/BaseMapper";
+import { InspectionItemModel } from "../models/InspectionItemModel";
+import { BaseRepository } from "./BaseRepository";
 
 export class InspectionItemRepository extends BaseRepository<InspectionItemModel> {
   constructor(mapper: BaseMapper<any, InspectionItemModel>) {

@@ -68,9 +68,12 @@ export const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
               />
               <SummaryItem
                 label="จำนวนต้นยางที่กรีดได้ (ต้น)"
-                value={detail.numberOfTapping}
+                value={detail.numberOfTapping ?? 0}
               />
-              <SummaryItem label="อายุต้นยาง (ปี)" value={detail.ageOfRubber} />
+              <SummaryItem
+                label="อายุต้นยาง (ปี)"
+                value={detail.ageOfRubber ?? 0}
+              />
               <SummaryItem
                 label="ปีที่เริ่มกรีด"
                 value={formatThaiDate(detail.yearOfTapping, "year")}
@@ -81,7 +84,7 @@ export const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
               />
               <SummaryItem
                 label="ผลผลิตรวม (กก./ปี)"
-                value={detail.totalProduction.toFixed(2)}
+                value={(detail.totalProduction ?? 0).toFixed(2)}
               />
             </div>
           </div>

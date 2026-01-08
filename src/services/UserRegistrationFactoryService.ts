@@ -1,8 +1,8 @@
 import { UserRole } from "@/models/UserModel";
-import { FarmerService } from "./FarmerService";
+import { AdminService } from "./AdminService";
 import { AuditorService } from "./AuditorService";
 import { CommitteeService } from "./CommitteeService";
-import { AdminService } from "./AdminService";
+import { FarmerService } from "./FarmerService";
 
 interface UserRegistrationData {
   role: UserRole;
@@ -24,7 +24,10 @@ export class UserRegistrationFactoryService {
 
     switch (data.role) {
       case UserRole.FARMER:
-        return await this.farmerService.registerFarmer(data);
+        return await this.farmerService.registerFarmer({
+          ...data,
+          requirePasswordChange: true, // Admin สร้างให้บังคับเปลี่ยน password
+        });
       case UserRole.AUDITOR:
         return await this.auditorService.registerAuditor(data);
       case UserRole.COMMITTEE:
