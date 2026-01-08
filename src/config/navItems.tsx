@@ -69,6 +69,11 @@ export const auditorNavItems = [
     href: "/auditor/consultations",
     icon: <ChatBubbleIcon className="h-6 w-6" />,
   },
+  {
+    title: "ตรวจสอบรายงาน",
+    href: "/auditor/report",
+    icon: <FindInPageIcon className="h-6 w-6" />,
+  },
 ];
 
 export const committeeNavItems = [
@@ -96,6 +101,11 @@ export const committeeNavItems = [
     title: "ยกเลิกใบรับรองแหล่งผลิตจีเอพี",
     href: "/committee/certifications/revoke",
     icon: <CancelIcon className="h-6 w-6" />,
+  },
+   {
+    title: "ตรวจสอบรายงาน",
+    href: "/committee/report",
+    icon: <FindInPageIcon className="h-6 w-6" />,
   },
 ];
 
