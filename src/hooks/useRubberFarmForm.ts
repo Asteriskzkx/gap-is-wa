@@ -71,6 +71,7 @@ export const useRubberFarmForm = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [farmerId, setFarmerId] = useState<number | null>(null);
+  const [isConfirmed, setIsConfirmed] = useState(false);
 
   const [plantingDetails, setPlantingDetails] = useState<PlantingDetail[]>([
     { ...initialPlantingDetail },
@@ -351,5 +352,7 @@ export const useRubberFarmForm = () => {
     setError,
     success,
     farmerId,
+    isConfirmed,
+    setIsConfirmed,
   };
 };

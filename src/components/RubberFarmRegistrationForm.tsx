@@ -17,7 +17,6 @@ import { formStyles } from "@/styles/formStyles";
 export default function RubberFarmRegistrationForm() {
   const router = useRouter();
   const maxSteps = 3;
-  const [isConfirmed, setIsConfirmed] = React.useState(false);
 
   // Custom Hooks
   const {
@@ -35,6 +34,8 @@ export default function RubberFarmRegistrationForm() {
     error,
     setError,
     success,
+    isConfirmed,
+    setIsConfirmed,
   } = useRubberFarmForm();
 
   const { step, nextStep, prevStep, isFirstStep, isLastStep } =
@@ -61,6 +62,10 @@ export default function RubberFarmRegistrationForm() {
 
   const handlePrevStep = () => {
     if (step > 1) {
+      // Reset confirmation checkbox when leaving step 3
+      if (step === 3) {
+        setIsConfirmed(false);
+      }
       prevStep();
       setError("");
     }
