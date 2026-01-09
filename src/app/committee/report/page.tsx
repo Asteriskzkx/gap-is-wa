@@ -583,7 +583,7 @@ export default function CommitteeReportPage() {
                 className="border border-gray-300 rounded"
               />
               <label htmlFor="export-my-stats" className="cursor-pointer">
-                ประสิทธิภาพของฉัน
+                รายงานประสิทธิภาพของฉัน
               </label>
             </div>
             <div className="flex items-center gap-2">
@@ -609,7 +609,7 @@ export default function CommitteeReportPage() {
                 className="border border-gray-300 rounded"
               />
               <label htmlFor="export-expiry" className="cursor-pointer">
-                แจ้งเตือนใบรับรองใกล้หมดอายุ
+                รายงานใบรับรองใกล้หมดอายุ
               </label>
             </div>
             <div className="flex items-center gap-2">
@@ -680,11 +680,8 @@ export default function CommitteeReportPage() {
         {reportData?.myCommitteeStats && (
           <div ref={myCommitteeStatsRef} className="mt-6 flex flex-col bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg shadow p-6 border border-blue-200">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
-                <span className="text-white text-xl">👤</span>
-              </div>
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">ประสิทธิภาพของฉัน</h2>
+                <h2 className="text-xl font-semibold text-gray-900">รายงานประสิทธิภาพของฉัน</h2>
                 <p className="text-sm text-gray-600">{reportData.myCommitteeStats.committeeName}</p>
               </div>
             </div>
