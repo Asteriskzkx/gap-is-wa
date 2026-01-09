@@ -1,4 +1,4 @@
-# แผนการทดสอบ (Playwright E2E) — ตรวจสอบเหตุการณ์ในระบบ (Audit Logs)
+# แผนการทดสอบตรวจสอบเหตุการณ์ในระบบ (Playwright E2E Testing)
 
 เอกสารนี้คงไว้เฉพาะกรณีที่ทดสอบได้จริงด้วย Playwright แบบ End-to-End โดยอิง UI จากหน้า `src/app/admin/audit-logs/page.tsx` และพฤติกรรม fetch/filter จาก `src/hooks/useAdminAuditLogs.ts`
 
