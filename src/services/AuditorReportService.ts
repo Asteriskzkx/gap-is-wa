@@ -118,7 +118,7 @@ export class AuditorReportService {
         (i) => i.inspectionResult === "ไม่ผ่าน" || i.inspectionResult === "FAILED"
       ).length;
       const pendingInspections = inspections.filter(
-        (i) => !i.inspectionResult || i.inspectionResult === ""
+        (i) => !i.inspectionResult || i.inspectionResult === "" || i.inspectionStatus === "รอการตรวจประเมิน"
       ).length;
       const completedInspections = passedInspections + failedInspections;
       const passRate = completedInspections > 0
