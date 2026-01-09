@@ -94,11 +94,6 @@ export default function CommitteeReportPage() {
   const inspectionStatsRef = useRef<HTMLDivElement>(null);
   const auditorPerformanceRef = useRef<HTMLDivElement>(null);
 
-  // Expiry alerts display counts
-  const [expiry30DisplayCount, setExpiry30DisplayCount] = useState(5);
-  const [expiry60DisplayCount, setExpiry60DisplayCount] = useState(5);
-  const [expiry90DisplayCount, setExpiry90DisplayCount] = useState(5);
-
   // Helper function to format date as YYYY-MM-DD in local timezone
   const formatDateLocal = (date: Date): string => {
     const year = date.getFullYear();
@@ -235,12 +230,6 @@ export default function CommitteeReportPage() {
     } finally {
       setExporting(false);
     }
-  };
-
-  const getPassRateColor = (rate: number) => {
-    if (rate >= 80) return "text-green-600";
-    if (rate >= 50) return "text-yellow-600";
-    return "text-red-600";
   };
 
   return (
