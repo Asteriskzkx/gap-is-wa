@@ -31,7 +31,10 @@ export async function GET(request: Request) {
       endDate = new Date(year, month - 1, day, 23, 59, 59, 999);
     }
 
-    const report = await CommitteeReportService.getCommitteeReport(startDate, endDate);
+    // Get userId from session for personal committee stats
+    const userId = session.user.id ? Number(session.user.id) : undefined;
+
+    const report = await CommitteeReportService.getCommitteeReport(startDate, endDate, userId);
 
     return NextResponse.json(report);
   } catch (error) {

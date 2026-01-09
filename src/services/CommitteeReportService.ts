@@ -59,6 +59,26 @@ export interface AuditorPerformance {
   passRate: number;
 }
 
+// My Committee Stats (for current logged-in committee)
+export interface MyCommitteeStats {
+  committeeName: string;
+  totalCertificatesIssued: number;
+  certificatesThisMonth: number;
+  certificatesThisYear: number;
+  recentCertificates: {
+    certificateId: number;
+    farmerName: string;
+    farmLocation: string;
+    province: string;
+    effectiveDate: string;
+    expiryDate: string;
+  }[];
+  monthlyIssuance: {
+    month: string;
+    count: number;
+  }[];
+}
+
 // Summary
 export interface CommitteeReportSummary {
   certificateStats: CertificateStats;
@@ -67,6 +87,7 @@ export interface CommitteeReportSummary {
   inspectionsByType: InspectionByType[];
   inspectionsByStatus: InspectionByStatus[];
   auditorPerformances: AuditorPerformance[];
+  myCommitteeStats?: MyCommitteeStats;
 }
 
 // Type definitions for Prisma queries
@@ -98,7 +119,8 @@ export class CommitteeReportService {
    */
   static async getCommitteeReport(
     startDate?: Date,
-    endDate?: Date
+    endDate?: Date,
+    userId?: number
   ): Promise<CommitteeReportSummary> {
     const now = new Date();
 
@@ -333,6 +355,90 @@ export class CommitteeReportService {
       .filter((a: AuditorPerformance) => a.totalInspections > 0)
       .sort((a: AuditorPerformance, b: AuditorPerformance) => b.totalInspections - a.totalInspections);
 
+    // ==================== My Committee Stats ====================
+    let myCommitteeStats: MyCommitteeStats | undefined;
+
+    if (userId) {
+      const committee = await prisma.committee.findUnique({
+        where: { userId },
+        include: {
+          committeeCertificates: {
+            include: {
+              certificate: {
+                include: {
+                  inspection: {
+                    include: {
+                      rubberFarm: {
+                        include: {
+                          farmer: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            orderBy: {
+              createdAt: "desc",
+            },
+          },
+        },
+      });
+
+      if (committee) {
+        const allCertificates = committee.committeeCertificates;
+        const totalCertificatesIssued = allCertificates.length;
+
+        // This month
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const certificatesThisMonth = allCertificates.filter(
+          (cc) => cc.createdAt >= startOfMonth
+        ).length;
+
+        // This year
+        const startOfYear = new Date(now.getFullYear(), 0, 1);
+        const certificatesThisYear = allCertificates.filter(
+          (cc) => cc.createdAt >= startOfYear
+        ).length;
+
+        // Recent certificates (last 10)
+        const recentCertificates = allCertificates.slice(0, 10).map((cc) => {
+          const cert = cc.certificate;
+          const farm = cert.inspection.rubberFarm;
+          const farmer = farm.farmer;
+          return {
+            certificateId: cert.certificateId,
+            farmerName: `${farmer.firstName} ${farmer.lastName}`,
+            farmLocation: `หมู่ ${farm.moo} ${farm.villageName}`,
+            province: farm.province,
+            effectiveDate: cert.effectiveDate.toISOString(),
+            expiryDate: cert.expiryDate.toISOString(),
+          };
+        });
+
+        // Monthly issuance (last 12 months)
+        const monthlyIssuance: { month: string; count: number }[] = [];
+        for (let i = 11; i >= 0; i--) {
+          const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          const nextMonthDate = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+          const count = allCertificates.filter(
+            (cc) => cc.createdAt >= monthDate && cc.createdAt < nextMonthDate
+          ).length;
+          const monthName = monthDate.toLocaleDateString("th-TH", { month: "short", year: "2-digit" });
+          monthlyIssuance.push({ month: monthName, count });
+        }
+
+        myCommitteeStats = {
+          committeeName: `${committee.namePrefix}${committee.firstName} ${committee.lastName}`,
+          totalCertificatesIssued,
+          certificatesThisMonth,
+          certificatesThisYear,
+          recentCertificates,
+          monthlyIssuance,
+        };
+      }
+    }
+
     return {
       certificateStats,
       certificateExpiryAlerts,
@@ -340,6 +446,7 @@ export class CommitteeReportService {
       inspectionsByType,
       inspectionsByStatus,
       auditorPerformances,
+      myCommitteeStats,
     };
   }
 }
