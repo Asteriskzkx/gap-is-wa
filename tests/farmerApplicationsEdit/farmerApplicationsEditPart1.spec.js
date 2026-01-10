@@ -1,7 +1,5 @@
 import { test, expect } from "@playwright/test";
 
-const BASE_URL = process.env.E2E_BASE_URL || "http://localhost:3000";
-
 const USERS = {
   withFarms: {
     email: process.env.E2E_TEST_USER_EMAIL,
@@ -15,7 +13,7 @@ const USERS = {
 
 async function loginAsFarmer(page, { email, password }) {
   // Login page is the root route (same as the New flow tests).
-  await page.goto(`${BASE_URL}/`, { waitUntil: "domcontentloaded" });
+  await page.goto("/", { waitUntil: "domcontentloaded" });
 
   // Select role: เกษตรกร
   await page.getByRole("button", { name: "เกษตรกร" }).click();
@@ -68,7 +66,7 @@ test.describe("Farmer Applications Edit — Part 1 (Step 1: เลือกส�
     page,
   }) => {
     await loginAsFarmer(page, USERS.withFarms);
-    await page.goto(`${BASE_URL}/farmer/applications/edit`, {
+    await page.goto("/farmer/applications/edit", {
       waitUntil: "domcontentloaded",
     });
 
@@ -94,7 +92,7 @@ test.describe("Farmer Applications Edit — Part 1 (Step 1: เลือกส�
       await route.continue();
     });
 
-    await page.goto(`${BASE_URL}/farmer/applications/edit`, {
+    await page.goto("/farmer/applications/edit", {
       waitUntil: "domcontentloaded",
     });
 
@@ -110,7 +108,7 @@ test.describe("Farmer Applications Edit — Part 1 (Step 1: เลือกส�
     page,
   }) => {
     await loginAsFarmer(page, USERS.noFarms);
-    await page.goto(`${BASE_URL}/farmer/applications/edit`, {
+    await page.goto("/farmer/applications/edit", {
       waitUntil: "domcontentloaded",
     });
 
@@ -128,7 +126,7 @@ test.describe("Farmer Applications Edit — Part 1 (Step 1: เลือกส�
     page,
   }) => {
     await loginAsFarmer(page, USERS.noFarms);
-    await page.goto(`${BASE_URL}/farmer/applications/edit`, {
+    await page.goto("/farmer/applications/edit", {
       waitUntil: "domcontentloaded",
     });
 
@@ -140,7 +138,7 @@ test.describe("Farmer Applications Edit — Part 1 (Step 1: เลือกส�
     page,
   }) => {
     await loginAsFarmer(page, USERS.withFarms);
-    await page.goto(`${BASE_URL}/farmer/applications/edit`, {
+    await page.goto("/farmer/applications/edit", {
       waitUntil: "domcontentloaded",
     });
 
@@ -159,7 +157,7 @@ test.describe("Farmer Applications Edit — Part 1 (Step 1: เลือกส�
     page,
   }) => {
     await loginAsFarmer(page, USERS.withFarms);
-    await page.goto(`${BASE_URL}/farmer/applications/edit`, {
+    await page.goto("/farmer/applications/edit", {
       waitUntil: "domcontentloaded",
     });
 
@@ -172,7 +170,7 @@ test.describe("Farmer Applications Edit — Part 1 (Step 1: เลือกส�
     page,
   }) => {
     await loginAsFarmer(page, USERS.withFarms);
-    await page.goto(`${BASE_URL}/farmer/applications/edit`, {
+    await page.goto("/farmer/applications/edit", {
       waitUntil: "domcontentloaded",
     });
 
@@ -190,7 +188,7 @@ test.describe("Farmer Applications Edit — Part 1 (Step 1: เลือกส�
     page,
   }) => {
     await loginAsFarmer(page, USERS.withFarms);
-    await page.goto(`${BASE_URL}/farmer/applications/edit`, {
+    await page.goto("/farmer/applications/edit", {
       waitUntil: "domcontentloaded",
     });
 
@@ -211,7 +209,7 @@ test.describe("Farmer Applications Edit — Part 1 (Step 1: เลือกส�
     page,
   }) => {
     await loginAsFarmer(page, USERS.withFarms);
-    await page.goto(`${BASE_URL}/farmer/applications/edit`, {
+    await page.goto("/farmer/applications/edit", {
       waitUntil: "domcontentloaded",
     });
 
@@ -230,7 +228,7 @@ test.describe("Farmer Applications Edit — Part 1 (Step 1: เลือกส�
     page,
   }) => {
     await loginAsFarmer(page, USERS.withFarms);
-    await page.goto(`${BASE_URL}/farmer/applications/edit`, {
+    await page.goto("/farmer/applications/edit", {
       waitUntil: "domcontentloaded",
     });
 
@@ -257,7 +255,7 @@ test.describe("Farmer Applications Edit — Part 1 (Step 1: เลือกส�
     page,
   }) => {
     await loginAsFarmer(page, USERS.withFarms);
-    await page.goto(`${BASE_URL}/farmer/applications/edit`, {
+    await page.goto("/farmer/applications/edit", {
       waitUntil: "domcontentloaded",
     });
 
@@ -284,7 +282,7 @@ test.describe("Farmer Applications Edit — Part 1 (Step 1: เลือกส�
       });
     });
 
-    await page.goto(`${BASE_URL}/farmer/applications/edit`, {
+    await page.goto("/farmer/applications/edit", {
       waitUntil: "domcontentloaded",
     });
 
@@ -297,7 +295,7 @@ test.describe("Farmer Applications Edit — Part 1 (Step 1: เลือกส�
     page,
   }) => {
     await loginAsFarmer(page, USERS.withFarms);
-    await page.goto(`${BASE_URL}/farmer/applications/edit`, {
+    await page.goto("/farmer/applications/edit", {
       waitUntil: "domcontentloaded",
     });
 

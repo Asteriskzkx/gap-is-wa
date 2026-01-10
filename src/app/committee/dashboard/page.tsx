@@ -13,6 +13,7 @@ import {
   CancelIcon,
   CheckCircleIcon,
   EditIcon,
+  FindInPageIcon,
   HomeIcon,
   StacksIcon,
   TextClipboardIcon,
@@ -60,6 +61,11 @@ export default function CommitteeDashboardPage() {
       href: "/committee/certifications/revoke",
       icon: <CancelIcon className="h-6 w-6" />,
     },
+    {
+      title: "ตรวจสอบรายงาน",
+      href: "/committee/report",
+      icon: <FindInPageIcon className="h-6 w-6" />,
+    }
   ];
 
   const processSummaryData = async () => {

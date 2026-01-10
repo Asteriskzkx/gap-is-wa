@@ -8,7 +8,6 @@ export async function GET(req: NextRequest) {
     "AUDITOR",
     "ADMIN",
     "COMMITTEE",
-    "FARMER",
   ]);
 
   if (!authorized) {

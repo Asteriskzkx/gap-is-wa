@@ -102,7 +102,7 @@ export const committeeNavItems = [
     href: "/committee/certifications/revoke",
     icon: <CancelIcon className="h-6 w-6" />,
   },
-   {
+  {
     title: "ตรวจสอบรายงาน",
     href: "/committee/report",
     icon: <FindInPageIcon className="h-6 w-6" />,

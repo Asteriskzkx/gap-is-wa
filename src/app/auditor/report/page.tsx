@@ -315,7 +315,7 @@ export default function AuditorReportPage() {
                 className="border border-gray-300 rounded"
               />
               <label htmlFor="export-stats" className="cursor-pointer">
-                📊 สรุปผลงาน
+                รายงานประสิทธิภาพของฉัน
               </label>
             </div>
             <div className="flex items-center gap-2">
@@ -328,7 +328,7 @@ export default function AuditorReportPage() {
                 className="border border-gray-300 rounded"
               />
               <label htmlFor="export-recent" className="cursor-pointer">
-                🕐 การตรวจล่าสุด
+                รายงานการตรวจล่าสุด
               </label>
             </div>
             <div className="flex items-center gap-2">
@@ -341,7 +341,7 @@ export default function AuditorReportPage() {
                 className="border border-gray-300 rounded"
               />
               <label htmlFor="export-farms" className="cursor-pointer">
-                🌳 แปลงที่ตรวจแล้ว
+                รายงานแปลงที่ตรวจแล้ว
               </label>
             </div>
           </div>
@@ -379,7 +379,7 @@ export default function AuditorReportPage() {
 
         {/* ==================== MY PERFORMANCE SUMMARY ==================== */}
         <div ref={statsRef} className="mt-6 flex flex-col bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">📊 สรุปผลงานของฉัน</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">รายงานประสิทธิภาพของฉัน</h2>
 
           {/* Performance Summary Cards */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
@@ -497,7 +497,7 @@ export default function AuditorReportPage() {
 
         {/* ==================== RECENT INSPECTIONS ==================== */}
         <div ref={recentInspectionsRef} className="mt-8 flex flex-col bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">🕐 การตรวจล่าสุด</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">รายงานการตรวจล่าสุด</h2>
 
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
@@ -562,7 +562,7 @@ export default function AuditorReportPage() {
         {/* ==================== INSPECTED FARMS ==================== */}
         <div ref={inspectedFarmsRef} className="mt-8 flex flex-col bg-white rounded-lg shadow p-6 mb-8">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">🌳 แปลงที่ตรวจแล้ว</h2>
+            <h2 className="text-xl font-semibold text-gray-900">รายงานแปลงที่ตรวจแล้ว</h2>
             {reportData && reportData.inspectedFarms.length > 0 && (
               <span className="text-sm text-gray-500">
                 แสดง {Math.min(farmsDisplayCount, reportData.inspectedFarms.length)} จาก{" "}

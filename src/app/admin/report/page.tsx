@@ -652,7 +652,7 @@ export default function AdminReportPage() {
                 onChange={(e) => setExportSections({ ...exportSections, users: e.checked ?? false })}
                 className="border border-gray-300 rounded"
               />
-              <label htmlFor="export-users" className="cursor-pointer">📊 รายงานผู้ใช้งาน</label>
+              <label htmlFor="export-users" className="cursor-pointer">รายงานผู้ใช้งาน</label>
             </div>
             <div className="flex items-center gap-2">
               <Checkbox
@@ -728,7 +728,7 @@ export default function AdminReportPage() {
         {/* User Report Section */}
         <div ref={userReportRef} className="mt-6 flex flex-col bg-white rounded-lg shadow p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-6">
-            📊 รายงานผู้ใช้งาน
+            รายงานผู้ใช้งาน
           </h2>
 
           {/* Card Area - 5 columns: Total + 4 Roles */}

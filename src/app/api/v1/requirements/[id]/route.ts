@@ -11,7 +11,6 @@ export async function GET(
     "AUDITOR",
     "ADMIN",
     "COMMITTEE",
-    "FARMER",
   ]);
 
   if (!authorized) {
