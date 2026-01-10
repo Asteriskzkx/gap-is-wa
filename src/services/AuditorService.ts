@@ -3,6 +3,7 @@ import { AuditorModel } from "../models/AuditorModel";
 import { AuditorRepository } from "../repositories/AuditorRepository";
 import { InspectionTypeMasterRepository } from "../repositories/InspectionTypeMasterRepository"; // เพิ่มการนำเข้า
 import { RubberFarmRepository } from "../repositories/RubberFarmRepository"; // เพิ่มการนำเข้า
+import { AuditLogService } from "./AuditLogService";
 import { BaseService } from "./BaseService";
 import { FarmerService } from "./FarmerService";
 import { UserService } from "./UserService";
@@ -14,6 +15,7 @@ export class AuditorService extends BaseService<AuditorModel> {
   private readonly rubberFarmRepository: RubberFarmRepository;
   private readonly inspectionTypeMasterRepository: InspectionTypeMasterRepository;
   private readonly inspectionRepository: InspectionRepository;
+  private readonly auditLogService: AuditLogService;
 
   constructor(
     auditorRepository: AuditorRepository,
@@ -21,7 +23,8 @@ export class AuditorService extends BaseService<AuditorModel> {
     farmerService: FarmerService,
     rubberFarmRepository: RubberFarmRepository,
     inspectionTypeMasterRepository: InspectionTypeMasterRepository,
-    inspectionRepository: InspectionRepository
+    inspectionRepository: InspectionRepository,
+    auditLogService: AuditLogService
   ) {
     super(auditorRepository);
     this.auditorRepository = auditorRepository;
@@ -30,6 +33,7 @@ export class AuditorService extends BaseService<AuditorModel> {
     this.rubberFarmRepository = rubberFarmRepository;
     this.inspectionTypeMasterRepository = inspectionTypeMasterRepository;
     this.inspectionRepository = inspectionRepository;
+    this.auditLogService = auditLogService;
   }
 
   async login(
@@ -68,6 +72,7 @@ export class AuditorService extends BaseService<AuditorModel> {
     namePrefix: string;
     firstName: string;
     lastName: string;
+    createdBy?: number;
   }): Promise<AuditorModel> {
     try {
       // Check if user already exists
@@ -95,7 +100,27 @@ export class AuditorService extends BaseService<AuditorModel> {
         auditorData.lastName
       );
 
-      return await this.create(auditorModel);
+      const created = await this.create(auditorModel);
+
+      // Log creation
+      if (this.auditLogService && created) {
+        const {
+          createdAt: newCreatedAt,
+          updatedAt: newUpdatedAt,
+          ...newData
+        } = created.toJSON();
+
+        await this.auditLogService.logAction(
+          "Auditor",
+          "CREATE",
+          (created as any).auditorId,
+          auditorData.createdBy || undefined,
+          undefined,
+          newData
+        );
+      }
+
+      return created;
     } catch (error) {
       this.handleServiceError(error);
       throw error;

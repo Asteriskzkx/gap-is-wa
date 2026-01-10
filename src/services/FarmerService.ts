@@ -1,17 +1,23 @@
-import { BaseService } from "./BaseService";
 import { FarmerModel } from "../models/FarmerModel";
 import { FarmerRepository } from "../repositories/FarmerRepository";
+import { AuditLogService } from "./AuditLogService";
+import { BaseService } from "./BaseService";
 import { UserService } from "./UserService";
-import { OptimisticLockError } from "../errors/OptimisticLockError";
 
 export class FarmerService extends BaseService<FarmerModel> {
   private farmerRepository: FarmerRepository;
   private userService: UserService;
+  private auditLogService: AuditLogService;
 
-  constructor(farmerRepository: FarmerRepository, userService: UserService) {
+  constructor(
+    farmerRepository: FarmerRepository,
+    userService: UserService,
+    auditLogService: AuditLogService
+  ) {
     super(farmerRepository);
     this.farmerRepository = farmerRepository;
     this.userService = userService;
+    this.auditLogService = auditLogService;
   }
 
   async login(
@@ -65,6 +71,7 @@ export class FarmerService extends BaseService<FarmerModel> {
     phoneNumber: string;
     mobilePhoneNumber: string;
     requirePasswordChange?: boolean;
+    createdBy?: number;
   }): Promise<FarmerModel> {
     try {
       // Check if user already exists
@@ -104,7 +111,27 @@ export class FarmerService extends BaseService<FarmerModel> {
         farmerData.requirePasswordChange
       );
 
-      return await this.create(farmerModel);
+      const created = await this.create(farmerModel);
+
+      // Log creation (if audit service available). If `createdBy` provided (admin), include it; otherwise omit userId for self-registration.
+      if (this.auditLogService && created) {
+        const {
+          createdAt: newCreatedAt,
+          updatedAt: newUpdatedAt,
+          ...newData
+        } = created.toJSON();
+
+        await this.auditLogService.logAction(
+          "Farmer",
+          "CREATE",
+          (created as any).farmerId,
+          farmerData.createdBy || undefined,
+          undefined,
+          newData
+        );
+      }
+
+      return created;
     } catch (error) {
       this.handleServiceError(error);
       throw error;

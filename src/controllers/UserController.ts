@@ -21,10 +21,24 @@ export class UserController extends BaseController<UserModel> {
 
   async createUser(req: NextRequest): Promise<NextResponse> {
     try {
+      // Ensure caller is authorized (should be ADMIN) and capture creator id
+      const { authorized, session, error } = await checkAuthorization(req, [
+        "ADMIN",
+      ]);
+
+      if (!authorized || !session) {
+        return NextResponse.json(
+          { message: error || "Unauthorized" },
+          { status: 401 }
+        );
+      }
+
       const data = await req.json();
+      // attach admin user id as creator so downstream services can log it
+      const payload = { ...data, createdBy: Number(session.user.id) };
 
       const createdUser =
-        await this.UserRegistrationFactoryService.createUserWithRole(data);
+        await this.UserRegistrationFactoryService.createUserWithRole(payload);
 
       // remove sensitive fields
       const userJson = createdUser.toJSON();

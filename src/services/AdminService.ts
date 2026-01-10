@@ -1,17 +1,24 @@
-import { BaseService } from "./BaseService";
 import { AdminModel } from "../models/AdminModel";
-import { AdminRepository } from "../repositories/AdminRepository";
-import { UserService } from "./UserService";
 import { UserModel, UserRole } from "../models/UserModel";
+import { AdminRepository } from "../repositories/AdminRepository";
+import { AuditLogService } from "./AuditLogService";
+import { BaseService } from "./BaseService";
+import { UserService } from "./UserService";
 
 export class AdminService extends BaseService<AdminModel> {
   private adminRepository: AdminRepository;
   private userService: UserService;
+  private auditLogService: AuditLogService;
 
-  constructor(adminRepository: AdminRepository, userService: UserService) {
+  constructor(
+    adminRepository: AdminRepository,
+    userService: UserService,
+    auditLogService: AuditLogService
+  ) {
     super(adminRepository);
     this.adminRepository = adminRepository;
     this.userService = userService;
+    this.auditLogService = auditLogService;
   }
 
   async login(
@@ -50,6 +57,7 @@ export class AdminService extends BaseService<AdminModel> {
     namePrefix: string;
     firstName: string;
     lastName: string;
+    createdBy?: number;
   }): Promise<AdminModel> {
     try {
       // Check if user already exists
@@ -74,7 +82,27 @@ export class AdminService extends BaseService<AdminModel> {
         adminData.lastName
       );
 
-      return await this.create(adminModel);
+      const created = await this.create(adminModel);
+
+      // Log creation
+      if (this.auditLogService && created) {
+        const {
+          createdAt: newCreatedAt,
+          updatedAt: newUpdatedAt,
+          ...newData
+        } = created.toJSON();
+
+        await this.auditLogService.logAction(
+          "Admin",
+          "CREATE",
+          (created as any).adminId,
+          adminData.createdBy || undefined,
+          undefined,
+          newData
+        );
+      }
+
+      return created;
     } catch (error) {
       this.handleServiceError(error);
       throw error;
