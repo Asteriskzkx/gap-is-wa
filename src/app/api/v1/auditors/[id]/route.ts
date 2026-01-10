@@ -7,10 +7,9 @@ export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const { authorized, error } = await checkAuthorization(req, [
+  const { authorized, error, session } = await checkAuthorization(req, [
     "AUDITOR",
     "ADMIN",
-    "COMMITTEE",
   ]);
 
   if (!authorized) {
@@ -20,6 +19,10 @@ export async function GET(
     );
   }
 
+  if (session?.user?.role === "AUDITOR") {
+    return auditorController.getCurrentAuditor(req);
+  }
+
   return auditorController.getById(req, { params });
 }
 
@@ -27,7 +30,7 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const { authorized, error } = await checkAuthorization(req, [
+  const { authorized, error, session } = await checkAuthorization(req, [
     "AUDITOR",
     "ADMIN",
   ]);
@@ -37,6 +40,19 @@ export async function PUT(
       { message: error || "Unauthorized" },
       { status: 401 }
     );
+  }
+
+  // หาก role เป็น AUDITOR ต้องตรวจสอบว่าแก้ไขข้อมูลของตัวเองเท่านั้น
+  if (session?.user?.role === "AUDITOR") {
+    const requestedAuditorId = Number.parseInt(params.id, 10);
+    const currentAuditorId = session.user.roleData?.auditorId;
+
+    if (!currentAuditorId || requestedAuditorId !== currentAuditorId) {
+      return NextResponse.json(
+        { message: "คุณสามารถแก้ไขข้อมูลของตัวเองเท่านั้น" },
+        { status: 403 }
+      );
+    }
   }
 
   return auditorController.updateAuditorProfile(req, { params });
