@@ -5,6 +5,7 @@ import { AdminService } from "../services/AdminService";
 import { UserRole } from "../models/UserModel";
 import { requireValidId, isValidId } from "../utils/ParamUtils";
 import { OptimisticLockError } from "../errors/OptimisticLockError";
+import { checkAuthorization } from "@/lib/session";
 
 export class AdminController extends BaseController<AdminModel> {
   private adminService: AdminService;
@@ -123,13 +124,28 @@ export class AdminController extends BaseController<AdminModel> {
         return NextResponse.json({ message: error.message }, { status: 400 });
       }
 
+      // capture actor id from session for audit logging
+      const { authorized, session, error } = await checkAuthorization(req, [
+        "ADMIN",
+      ]);
+
+      if (!authorized || !session) {
+        return NextResponse.json(
+          { message: error || "Unauthorized" },
+          { status: 401 }
+        );
+      }
+
+      const actorId = Number(session.user.id);
+
       const data = await req.json();
       const { version, ...updateData } = data;
 
       const updatedAdmin = await this.adminService.updateAdminProfile(
         adminId,
         updateData,
-        version
+        version,
+        actorId
       );
 
       if (!updatedAdmin) {

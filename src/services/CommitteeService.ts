@@ -122,7 +122,8 @@ export class CommitteeService extends BaseService<CommitteeModel> {
   async updateCommitteeProfile(
     committeeId: number,
     data: Partial<CommitteeModel>,
-    currentVersion?: number
+    currentVersion?: number,
+    userId?: number
   ): Promise<CommitteeModel | null> {
     try {
       // If updating email, check if it's already in use by another account
@@ -143,15 +144,69 @@ export class CommitteeService extends BaseService<CommitteeModel> {
       }
 
       if (currentVersion !== undefined) {
+        // ดึงข้อมูลเก่าก่อน update (สำหรับ log)
+        const oldRecord = await this.committeeRepository.findById(committeeId);
+
         // Use optimistic locking
-        return await this.committeeRepository.updateWithLock(
+        const updated = await this.committeeRepository.updateWithLock(
           committeeId,
           data,
           currentVersion
         );
+
+        // Log การ update
+        if (updated && oldRecord) {
+          const {
+            createdAt: oldCreatedAt,
+            updatedAt: oldUpdatedAt,
+            ...oldData
+          } = oldRecord.toJSON();
+          const {
+            createdAt: newCreatedAt,
+            updatedAt: newUpdatedAt,
+            ...newData
+          } = updated.toJSON();
+
+          await this.auditLogService.logAction(
+            "Committee",
+            "UPDATE",
+            committeeId,
+            userId || undefined,
+            oldData,
+            newData
+          );
+        }
+
+        return updated;
       } else {
         // Fallback to regular update
-        return await this.update(committeeId, data);
+        const oldRecord = await this.committeeRepository.findById(committeeId);
+
+        const updated = await this.update(committeeId, data);
+
+        if (updated && oldRecord) {
+          const {
+            createdAt: oldCreatedAt,
+            updatedAt: oldUpdatedAt,
+            ...oldData
+          } = oldRecord.toJSON();
+          const {
+            createdAt: newCreatedAt,
+            updatedAt: newUpdatedAt,
+            ...newData
+          } = updated.toJSON();
+
+          await this.auditLogService.logAction(
+            "Committee",
+            "UPDATE",
+            committeeId,
+            userId || undefined,
+            oldData,
+            newData
+          );
+        }
+
+        return updated;
       }
     } catch (error) {
       this.handleServiceError(error);
