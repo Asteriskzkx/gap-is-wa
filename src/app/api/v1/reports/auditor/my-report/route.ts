@@ -1,17 +1,22 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { checkAuthorization } from "@/lib/session";
 import { AuditorReportService } from "@/services/AuditorReportService";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
+  const { authorized, error, session } = await checkAuthorization(request, [
+    "AUDITOR",
+  ]);
 
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+  if (!authorized) {
+    return NextResponse.json(
+      { message: error || "Unauthorized" },
+      { status: 401 }
+    );
+  }
+
+  try {
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Parse date parameters
@@ -24,7 +29,9 @@ export async function GET(request: NextRequest) {
 
     if (startDateStr && endDateStr) {
       // Parse as local time
-      const [startYear, startMonth, startDay] = startDateStr.split("-").map(Number);
+      const [startYear, startMonth, startDay] = startDateStr
+        .split("-")
+        .map(Number);
       const [endYear, endMonth, endDay] = endDateStr.split("-").map(Number);
 
       startDate = new Date(startYear, startMonth - 1, startDay, 0, 0, 0, 0);
@@ -32,7 +39,11 @@ export async function GET(request: NextRequest) {
     }
 
     const userId = parseInt(session.user.id);
-    const report = await AuditorReportService.getMyInspectionReport(userId, startDate, endDate);
+    const report = await AuditorReportService.getMyInspectionReport(
+      userId,
+      startDate,
+      endDate
+    );
 
     return NextResponse.json(report);
   } catch (error) {

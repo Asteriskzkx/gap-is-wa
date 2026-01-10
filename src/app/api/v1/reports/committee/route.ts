@@ -1,12 +1,21 @@
-import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { checkAuthorization } from "@/lib/session";
 import { CommitteeReportService } from "@/services/CommitteeReportService";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+  const { authorized, error, session } = await checkAuthorization(request, [
+    "COMMITTEE",
+  ]);
+
+  if (!authorized) {
+    return NextResponse.json(
+      { message: error || "Unauthorized" },
+      { status: 401 }
+    );
+  }
+
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
+    if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -34,7 +43,11 @@ export async function GET(request: Request) {
     // Get userId from session for personal committee stats
     const userId = session.user.id ? Number(session.user.id) : undefined;
 
-    const report = await CommitteeReportService.getCommitteeReport(startDate, endDate, userId);
+    const report = await CommitteeReportService.getCommitteeReport(
+      startDate,
+      endDate,
+      userId
+    );
 
     return NextResponse.json(report);
   } catch (error) {
