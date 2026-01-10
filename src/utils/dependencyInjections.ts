@@ -104,7 +104,7 @@ const auditLogRepository = new AuditLogRepository(auditLogMapper);
 
 const auditLogService = new AuditLogService(auditLogRepository);
 
-const userService = new UserService(userRepository);
+const userService = new UserService(userRepository, auditLogService);
 const farmerService = new FarmerService(
   farmerRepository,
   userService,

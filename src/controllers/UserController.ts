@@ -342,4 +342,47 @@ export class UserController extends BaseController<UserModel> {
       return this.handleControllerError(error);
     }
   }
+
+  async delete(
+    req: NextRequest,
+    { params }: { params: { id: string } }
+  ): Promise<NextResponse> {
+    try {
+      let userId: number;
+      try {
+        userId = requireValidId(params.id, "userId");
+      } catch (error: any) {
+        return NextResponse.json({ message: error.message }, { status: 400 });
+      }
+
+      const { authorized, session, error } = await checkAuthorization(req, [
+        "ADMIN",
+      ]);
+
+      if (!authorized) {
+        return NextResponse.json(
+          { message: error || "Unauthorized" },
+          { status: 401 }
+        );
+      }
+
+      const actorId = session ? Number(session.user.id) : undefined;
+
+      const isDeleted = await this.userService.delete(userId, actorId);
+
+      if (!isDeleted) {
+        return NextResponse.json(
+          { message: "User not found or could not be deleted" },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json(
+        { message: "User deleted successfully" },
+        { status: 200 }
+      );
+    } catch (error) {
+      return this.handleControllerError(error);
+    }
+  }
 }
