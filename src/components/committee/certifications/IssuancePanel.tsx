@@ -1,16 +1,16 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
 import { StepIndicator } from "@/components/farmer/StepIndicator";
-import PrimaryCalendar from "@/components/ui/PrimaryCalendar";
 import PrimaryButton from "@/components/ui/PrimaryButton";
+import PrimaryCalendar from "@/components/ui/PrimaryCalendar";
 import PrimaryUpload from "@/components/ui/PrimaryUpload";
+import { useEffect, useState } from "react";
 
 interface Props {
-  inspection: any;
-  onIssued: () => void;
-  onBack?: () => void;
-  showStepIndicator?: boolean;
+  readonly inspection: any;
+  readonly onIssued: () => void;
+  readonly onBack?: () => void;
+  readonly showStepIndicator?: boolean;
 }
 
 export default function IssuancePanel({
@@ -158,7 +158,7 @@ export default function IssuancePanel({
           className="block text-sm text-gray-600 mb-2"
           htmlFor="certificateUpload"
         >
-          ไฟล์ใบรับรอง (PDF)
+          ไฟล์ใบรับรอง (PDF) จำนวน 1 ไฟล์
         </label>
         <PrimaryUpload
           tableReference="Certificate"
@@ -167,6 +167,10 @@ export default function IssuancePanel({
           accept="application/pdf"
           multiple={false}
           maxFileSize={10 * 1024 * 1024} // 10 MB
+          fileValidator={(file) =>
+            file.type === "application/pdf" ||
+            file.name.toLowerCase().endsWith(".pdf")
+          }
         />
       </div>
 

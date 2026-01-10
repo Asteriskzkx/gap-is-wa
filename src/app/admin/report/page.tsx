@@ -661,7 +661,7 @@ export default function AdminReportPage() {
                 onChange={(e) => setExportSections({ ...exportSections, inspections: e.checked ?? false })}
                 className="border border-gray-300 rounded"
               />
-              <label htmlFor="export-inspections" className="cursor-pointer">📋 รายงานการตรวจประเมิน</label>
+              <label htmlFor="export-inspections" className="cursor-pointer">รายงานการตรวจประเมิน</label>
             </div>
             <div className="flex items-center gap-2">
               <Checkbox
@@ -670,7 +670,7 @@ export default function AdminReportPage() {
                 onChange={(e) => setExportSections({ ...exportSections, rubberFarms: e.checked ?? false })}
                 className="border border-gray-300 rounded"
               />
-              <label htmlFor="export-rubberFarms" className="cursor-pointer">🌳 รายงานแปลงสวนยางพารา</label>
+              <label htmlFor="export-rubberFarms" className="cursor-pointer">รายงานแปลงสวนยางพารา</label>
             </div>
             <div className="flex items-center gap-2">
               <Checkbox
@@ -679,7 +679,7 @@ export default function AdminReportPage() {
                 onChange={(e) => setExportSections({ ...exportSections, certificates: e.checked ?? false })}
                 className="border border-gray-300 rounded"
               />
-              <label htmlFor="export-certificates" className="cursor-pointer">📜 รายงานใบรับรอง</label>
+              <label htmlFor="export-certificates" className="cursor-pointer">รายงานใบรับรอง</label>
             </div>
             <div className="flex items-center gap-2">
               <Checkbox
@@ -688,7 +688,7 @@ export default function AdminReportPage() {
                 onChange={(e) => setExportSections({ ...exportSections, auditors: e.checked ?? false })}
                 className="border border-gray-300 rounded"
               />
-              <label htmlFor="export-auditors" className="cursor-pointer">👤 รายงานประสิทธิภาพผู้ตรวจ</label>
+              <label htmlFor="export-auditors" className="cursor-pointer">รายงานประสิทธิภาพผู้ตรวจ</label>
             </div>
           </div>
         </Dialog>
@@ -833,7 +833,7 @@ export default function AdminReportPage() {
         {/* ==================== INSPECTION REPORTS ==================== */}
         <div ref={inspectionReportRef} className="mt-8 flex flex-col bg-white rounded-lg shadow p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-6">
-            📋 รายงานการตรวจประเมิน
+            รายงานการตรวจประเมิน
           </h2>
 
           {/* Inspection Summary Cards */}
@@ -932,7 +932,7 @@ export default function AdminReportPage() {
         {/* ==================== RUBBER FARM REPORTS ==================== */}
         <div ref={rubberFarmReportRef} className="mt-8 flex flex-col bg-white rounded-lg shadow p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-6">
-            🌳 รายงานแปลงสวนยางพารา
+            รายงานแปลงสวนยางพารา
           </h2>
 
           {/* Farm Summary Cards */}
@@ -1035,7 +1035,7 @@ export default function AdminReportPage() {
         {/* ==================== CERTIFICATE REPORTS ==================== */}
         <div ref={certificateReportRef} className="mt-8 flex flex-col bg-white rounded-lg shadow p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-6">
-            📜 รายงานใบรับรอง
+            รายงานใบรับรอง
           </h2>
 
           {/* Certificate Summary Cards */}
@@ -1091,7 +1091,7 @@ export default function AdminReportPage() {
 
           {/* Expiring Alerts */}
           <div>
-            <h3 className="text-lg font-medium text-gray-800 mb-3">⚠️ ใบรับรองใกล้หมดอายุ</h3>
+            <h3 className="text-lg font-medium text-gray-800 mb-3">ใบรับรองใกล้หมดอายุ</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-red-50 rounded-lg p-4 border border-red-200">
                 <p className="text-sm text-red-600">ภายใน 30 วัน</p>
@@ -1132,7 +1132,7 @@ export default function AdminReportPage() {
         {/* ==================== AUDITOR PERFORMANCE REPORTS ==================== */}
         <div ref={auditorReportRef} className="mt-8 flex flex-col bg-white rounded-lg shadow p-6 mb-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-6">
-            👤 รายงานประสิทธิภาพผู้ตรวจประเมิน
+            รายงานประสิทธิภาพผู้ตรวจประเมิน
           </h2>
 
           {/* Performance Summary Cards */}
