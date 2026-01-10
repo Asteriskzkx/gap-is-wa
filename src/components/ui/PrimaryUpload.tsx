@@ -13,20 +13,23 @@ interface Props {
   readonly accept?: string;
   readonly maxFileSize?: number;
   readonly multiple?: boolean;
+  readonly fileValidator?: (file: File) => boolean;
 }
 
 const buildCacheKey = (tableReference: string, cacheKey?: string) => {
   return `fileUploadCache:${tableReference}:${cacheKey ?? "pending"}`;
 };
 
-export default function PrimaryUpload({
-  tableReference,
-  idReference,
-  cacheKey,
-  accept = ".pdf",
-  maxFileSize = 10 * 1024 * 1024,
-  multiple = true,
-}: Props) {
+export default function PrimaryUpload(props: Props) {
+  const {
+    tableReference,
+    idReference,
+    cacheKey,
+    accept = ".pdf",
+    maxFileSize = 10 * 1024 * 1024,
+    multiple = true,
+    fileValidator,
+  } = props;
   const fuRef = React.useRef<any>(null);
 
   const buildKey = React.useCallback(
@@ -164,11 +167,20 @@ export default function PrimaryUpload({
       : [];
     if (!asFiles.length) return;
 
+    // กรองไฟล์ด้วย fileValidator ถ้ามี
+    const filteredFiles = fileValidator
+      ? asFiles.filter(fileValidator)
+      : asFiles;
+    if (!filteredFiles.length) {
+      alert("กรุณาเลือกไฟล์ที่ถูกต้องตามที่ระบบกำหนด");
+      return;
+    }
+
     if (idReference) {
       const form = new FormData();
       form.append("tableReference", tableReference);
       form.append("idReference", String(idReference));
-      for (const f of asFiles) form.append("file", f, f.name);
+      for (const f of filteredFiles) form.append("file", f, f.name);
       const resp = await fetch("/api/v1/files/upload", {
         method: "POST",
         body: form,
@@ -180,7 +192,7 @@ export default function PrimaryUpload({
     }
 
     try {
-      await cacheFiles(asFiles);
+      await cacheFiles(filteredFiles);
     } catch (err) {
       console.error("PrimaryUpload cache error:", err);
     }
@@ -190,16 +202,30 @@ export default function PrimaryUpload({
     const asFiles: File[] = Array.isArray(event?.files) ? event.files : [];
     if (!asFiles.length) return;
 
+    // กรองไฟล์ด้วย fileValidator ถ้ามี
+    const filteredFiles = fileValidator
+      ? asFiles.filter(fileValidator)
+      : asFiles;
+
+    if (fileValidator && asFiles.length > filteredFiles.length) {
+      // clear ทั้งหมด
+      fuRef.current?.clear();
+      alert("กรุณาเลือกไฟล์ที่ถูกต้องตามที่ระบบกำหนด");
+      return;
+    }
+
+    if (!filteredFiles.length) return;
+
     console.info(
       "PrimaryUpload.onSelect: user selected files",
-      asFiles.map((f) => f.name)
+      filteredFiles.map((f) => f.name)
     );
 
     if (idReference) {
       const form = new FormData();
       form.append("tableReference", tableReference);
       form.append("idReference", String(idReference));
-      for (const f of asFiles) form.append("file", f, f.name);
+      for (const f of filteredFiles) form.append("file", f, f.name);
       try {
         const resp = await fetch("/api/v1/files/upload", {
           method: "POST",
@@ -220,7 +246,7 @@ export default function PrimaryUpload({
     }
 
     try {
-      await cacheFiles(asFiles);
+      await cacheFiles(filteredFiles);
     } catch (err) {
       console.error("PrimaryUpload onSelect cache error:", err);
     }
