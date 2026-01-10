@@ -368,7 +368,7 @@ export class CommitteeReportService {
           (i: Inspection) =>
             !i.inspectionResult ||
             i.inspectionResult === "" ||
-            i.inspectionResult === "รอการตรวจประเมิน"
+            i.inspectionResult === "รอผลการตรวจประเมิน"
         ).length;
 
         const completed = passed + failed;
