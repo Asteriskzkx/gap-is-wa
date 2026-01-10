@@ -644,7 +644,7 @@ export default function CommitteeReportPage() {
         {/* Global Date Filter Section */}
         <div className="flex flex-col bg-white rounded-lg shadow p-4">
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-3 flex-nowrap">
+            <div className="flex items-center gap-3 flex-wrap">
               <span className="text-gray-700 font-medium whitespace-nowrap">📅 ช่วงวันที่:</span>
               <Calendar
                 showIcon
