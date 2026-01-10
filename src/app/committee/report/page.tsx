@@ -55,16 +55,6 @@ interface InspectionByStatus {
   count: number;
 }
 
-interface AuditorPerformance {
-  auditorId: number;
-  auditorName: string;
-  totalInspections: number;
-  passedInspections: number;
-  failedInspections: number;
-  pendingInspections: number;
-  passRate: number;
-}
-
 interface MyCommitteeStats {
   committeeName: string;
   totalCertificatesIssued: number;
@@ -90,7 +80,6 @@ interface CommitteeReportSummary {
   inspectionStats: InspectionStats;
   inspectionsByType: InspectionByType[];
   inspectionsByStatus: InspectionByStatus[];
-  auditorPerformances: AuditorPerformance[];
   myCommitteeStats?: MyCommitteeStats;
 }
 
@@ -101,7 +90,6 @@ export default function CommitteeReportPage() {
     inspectionStats: CommitteeReportSummary["inspectionStats"] | null;
     inspectionsByType: CommitteeReportSummary["inspectionsByType"];
     inspectionsByStatus: CommitteeReportSummary["inspectionsByStatus"];
-    auditorPerformances: CommitteeReportSummary["auditorPerformances"];
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [chartLoading, setChartLoading] = useState(false);
@@ -113,7 +101,7 @@ export default function CommitteeReportPage() {
     certificateStats: true,
     expiryAlerts: true,
     inspectionStats: true,
-    auditorPerformance: true,
+    charts: true,
   });
   const [exporting, setExporting] = useState(false);
 
@@ -122,7 +110,6 @@ export default function CommitteeReportPage() {
   const certificateStatsRef = useRef<HTMLDivElement>(null);
   const expiryAlertsRef = useRef<HTMLDivElement>(null);
   const inspectionStatsRef = useRef<HTMLDivElement>(null);
-  const auditorPerformanceRef = useRef<HTMLDivElement>(null);
   const chartsRef = useRef<HTMLDivElement>(null);
 
   // Helper function to format date as YYYY-MM-DD in local timezone
@@ -157,7 +144,6 @@ export default function CommitteeReportPage() {
             inspectionStats: data.inspectionStats,
             inspectionsByType: data.inspectionsByType,
             inspectionsByStatus: data.inspectionsByStatus,
-            auditorPerformances: data.auditorPerformances,
           });
         }
       } catch (error) {
@@ -179,7 +165,6 @@ export default function CommitteeReportPage() {
             inspectionStats: reportData.inspectionStats,
             inspectionsByType: reportData.inspectionsByType,
             inspectionsByStatus: reportData.inspectionsByStatus,
-            auditorPerformances: reportData.auditorPerformances,
           });
         }
         return;
@@ -195,7 +180,6 @@ export default function CommitteeReportPage() {
             inspectionStats: data.inspectionStats,
             inspectionsByType: data.inspectionsByType,
             inspectionsByStatus: data.inspectionsByStatus,
-            auditorPerformances: data.auditorPerformances,
           });
         }
       } catch (error) {
@@ -283,37 +267,6 @@ export default function CommitteeReportPage() {
           label: "ไม่ผ่าน",
           data: chartData.inspectionsByType.map((t) => t.failed),
           backgroundColor: "#ef4444",
-        },
-      ],
-    };
-  }, [chartData]);
-
-  // Bar Chart: Auditor Performance (Top 10)
-  const auditorPerformanceChartData = useMemo(() => {
-    if (!chartData?.auditorPerformances || chartData.auditorPerformances.length === 0) {
-      return {
-        labels: ["ไม่มีข้อมูล"],
-        datasets: [{ data: [0], backgroundColor: ["#d1d5db"] }],
-      };
-    }
-    const top10 = chartData.auditorPerformances.slice(0, 10);
-    return {
-      labels: top10.map((a) => a.auditorName),
-      datasets: [
-        {
-          label: "ผ่าน",
-          data: top10.map((a) => a.passedInspections),
-          backgroundColor: "#22c55e",
-        },
-        {
-          label: "ไม่ผ่าน",
-          data: top10.map((a) => a.failedInspections),
-          backgroundColor: "#ef4444",
-        },
-        {
-          label: "รอดำเนินการ",
-          data: top10.map((a) => a.pendingInspections),
-          backgroundColor: "#f59e0b",
         },
       ],
     };
@@ -489,12 +442,13 @@ export default function CommitteeReportPage() {
       if (exportSections.expiryAlerts && expiryAlertsRef.current) {
         await addSectionToPDF(expiryAlertsRef);
       }
+      if (exportSections.charts && chartsRef.current) {
+        await addSectionToPDF(chartsRef);
+      }
       if (exportSections.inspectionStats && inspectionStatsRef.current) {
         await addSectionToPDF(inspectionStatsRef);
       }
-      if (exportSections.auditorPerformance && auditorPerformanceRef.current) {
-        await addSectionToPDF(auditorPerformanceRef);
-      }
+      
 
       // Download PDF
       const dateStr = new Date().toISOString().split("T")[0];
@@ -564,7 +518,7 @@ export default function CommitteeReportPage() {
                     certificateStats: checked,
                     expiryAlerts: checked,
                     inspectionStats: checked,
-                    auditorPerformance: checked,
+                    charts: checked,
                   });
                 }}
                 className="border border-gray-300 rounded"
@@ -627,15 +581,15 @@ export default function CommitteeReportPage() {
             </div>
             <div className="flex items-center gap-2">
               <Checkbox
-                inputId="export-auditor"
-                checked={exportSections.auditorPerformance}
+                inputId="export-charts"
+                checked={exportSections.charts}
                 onChange={(e) =>
-                  setExportSections({ ...exportSections, auditorPerformance: e.checked ?? false })
+                  setExportSections({ ...exportSections, charts: e.checked ?? false })
                 }
                 className="border border-gray-300 rounded"
               />
-              <label htmlFor="export-auditor" className="cursor-pointer">
-                รายงานประสิทธิภาพผู้ตรวจ
+              <label htmlFor="export-charts" className="cursor-pointer">
+                แผนภูมิสรุปข้อมูล
               </label>
             </div>
           </div>
@@ -678,7 +632,7 @@ export default function CommitteeReportPage() {
 
         {/* ==================== MY COMMITTEE STATS ==================== */}
         {reportData?.myCommitteeStats && (
-          <div ref={myCommitteeStatsRef} className="mt-6 flex flex-col bg-white rounded-lg shadow p-6 border border">
+          <div ref={myCommitteeStatsRef} className="mt-6 flex flex-col bg-white rounded-lg shadow p-6 border">
             <div className="flex items-center gap-3 mb-6">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">รายงานประสิทธิภาพของฉัน</h2>
