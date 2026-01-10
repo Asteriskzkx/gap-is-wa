@@ -570,7 +570,7 @@ export default function CommitteeReportPage() {
                 className="border border-gray-300 rounded"
               />
               <label htmlFor="export-all" className="cursor-pointer font-medium">
-                เลือกทั้งหมด
+                ✅ เลือกทั้งหมด
               </label>
             </div>
             <div className="flex items-center gap-2">
@@ -678,7 +678,7 @@ export default function CommitteeReportPage() {
 
         {/* ==================== MY COMMITTEE STATS ==================== */}
         {reportData?.myCommitteeStats && (
-          <div ref={myCommitteeStatsRef} className="mt-6 flex flex-col bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg shadow p-6 border border-blue-200">
+          <div ref={myCommitteeStatsRef} className="mt-6 flex flex-col bg-white rounded-lg shadow p-6 border border">
             <div className="flex items-center gap-3 mb-6">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">รายงานประสิทธิภาพของฉัน</h2>
