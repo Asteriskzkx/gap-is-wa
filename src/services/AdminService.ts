@@ -1,17 +1,24 @@
-import { BaseService } from "./BaseService";
 import { AdminModel } from "../models/AdminModel";
-import { AdminRepository } from "../repositories/AdminRepository";
-import { UserService } from "./UserService";
 import { UserModel, UserRole } from "../models/UserModel";
+import { AdminRepository } from "../repositories/AdminRepository";
+import { AuditLogService } from "./AuditLogService";
+import { BaseService } from "./BaseService";
+import { UserService } from "./UserService";
 
 export class AdminService extends BaseService<AdminModel> {
   private adminRepository: AdminRepository;
   private userService: UserService;
+  private auditLogService: AuditLogService;
 
-  constructor(adminRepository: AdminRepository, userService: UserService) {
+  constructor(
+    adminRepository: AdminRepository,
+    userService: UserService,
+    auditLogService: AuditLogService
+  ) {
     super(adminRepository);
     this.adminRepository = adminRepository;
     this.userService = userService;
+    this.auditLogService = auditLogService;
   }
 
   async login(
@@ -50,6 +57,7 @@ export class AdminService extends BaseService<AdminModel> {
     namePrefix: string;
     firstName: string;
     lastName: string;
+    createdBy?: number;
   }): Promise<AdminModel> {
     try {
       // Check if user already exists
@@ -74,7 +82,27 @@ export class AdminService extends BaseService<AdminModel> {
         adminData.lastName
       );
 
-      return await this.create(adminModel);
+      const created = await this.create(adminModel);
+
+      // Log creation
+      if (this.auditLogService && created) {
+        const {
+          createdAt: newCreatedAt,
+          updatedAt: newUpdatedAt,
+          ...newData
+        } = created.toJSON();
+
+        await this.auditLogService.logAction(
+          "Admin",
+          "CREATE",
+          (created as any).adminId,
+          adminData.createdBy || undefined,
+          undefined,
+          newData
+        );
+      }
+
+      return created;
     } catch (error) {
       this.handleServiceError(error);
       throw error;
@@ -93,7 +121,8 @@ export class AdminService extends BaseService<AdminModel> {
   async updateAdminProfile(
     adminId: number,
     data: Partial<AdminModel>,
-    currentVersion?: number
+    currentVersion?: number,
+    userId?: number
   ): Promise<AdminModel | null> {
     try {
       // If updating email, check if it's already in use by another account
@@ -112,15 +141,69 @@ export class AdminService extends BaseService<AdminModel> {
       }
 
       if (currentVersion !== undefined) {
+        // ดึงข้อมูลเก่าก่อน update (สำหรับ log)
+        const oldRecord = await this.adminRepository.findById(adminId);
+
         // Use optimistic locking
-        return await this.adminRepository.updateWithLock(
+        const updated = await this.adminRepository.updateWithLock(
           adminId,
           data,
           currentVersion
         );
+
+        // Log การ update
+        if (updated && oldRecord) {
+          const {
+            createdAt: oldCreatedAt,
+            updatedAt: oldUpdatedAt,
+            ...oldData
+          } = oldRecord.toJSON();
+          const {
+            createdAt: newCreatedAt,
+            updatedAt: newUpdatedAt,
+            ...newData
+          } = updated.toJSON();
+
+          await this.auditLogService.logAction(
+            "Admin",
+            "UPDATE",
+            adminId,
+            userId || undefined,
+            oldData,
+            newData
+          );
+        }
+
+        return updated;
       } else {
         // Fallback to regular update
-        return await this.update(adminId, data);
+        const oldRecord = await this.adminRepository.findById(adminId);
+
+        const updated = await this.update(adminId, data);
+
+        if (updated && oldRecord) {
+          const {
+            createdAt: oldCreatedAt,
+            updatedAt: oldUpdatedAt,
+            ...oldData
+          } = oldRecord.toJSON();
+          const {
+            createdAt: newCreatedAt,
+            updatedAt: newUpdatedAt,
+            ...newData
+          } = updated.toJSON();
+
+          await this.auditLogService.logAction(
+            "Admin",
+            "UPDATE",
+            adminId,
+            userId || undefined,
+            oldData,
+            newData
+          );
+        }
+
+        return updated;
       }
     } catch (error) {
       this.handleServiceError(error);

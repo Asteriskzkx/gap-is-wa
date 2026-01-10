@@ -2,7 +2,7 @@ import { checkAuthorization } from "@/lib/session";
 import { farmerController } from "@/utils/dependencyInjections";
 import { NextRequest, NextResponse } from "next/server";
 
-// Route handlers for a specific farmer by ID
+// Route handlers for /api/v1/farmers/[id]
 export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }

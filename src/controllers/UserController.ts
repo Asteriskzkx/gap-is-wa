@@ -21,10 +21,24 @@ export class UserController extends BaseController<UserModel> {
 
   async createUser(req: NextRequest): Promise<NextResponse> {
     try {
+      // Ensure caller is authorized (should be ADMIN) and capture creator id
+      const { authorized, session, error } = await checkAuthorization(req, [
+        "ADMIN",
+      ]);
+
+      if (!authorized || !session) {
+        return NextResponse.json(
+          { message: error || "Unauthorized" },
+          { status: 401 }
+        );
+      }
+
       const data = await req.json();
+      // attach admin user id as creator so downstream services can log it
+      const payload = { ...data, createdBy: Number(session.user.id) };
 
       const createdUser =
-        await this.UserRegistrationFactoryService.createUserWithRole(data);
+        await this.UserRegistrationFactoryService.createUserWithRole(payload);
 
       // remove sensitive fields
       const userJson = createdUser.toJSON();
@@ -322,6 +336,49 @@ export class UserController extends BaseController<UserModel> {
           skip,
           take,
         },
+        { status: 200 }
+      );
+    } catch (error) {
+      return this.handleControllerError(error);
+    }
+  }
+
+  async delete(
+    req: NextRequest,
+    { params }: { params: { id: string } }
+  ): Promise<NextResponse> {
+    try {
+      let userId: number;
+      try {
+        userId = requireValidId(params.id, "userId");
+      } catch (error: any) {
+        return NextResponse.json({ message: error.message }, { status: 400 });
+      }
+
+      const { authorized, session, error } = await checkAuthorization(req, [
+        "ADMIN",
+      ]);
+
+      if (!authorized) {
+        return NextResponse.json(
+          { message: error || "Unauthorized" },
+          { status: 401 }
+        );
+      }
+
+      const actorId = session ? Number(session.user.id) : undefined;
+
+      const isDeleted = await this.userService.delete(userId, actorId);
+
+      if (!isDeleted) {
+        return NextResponse.json(
+          { message: "User not found or could not be deleted" },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json(
+        { message: "User deleted successfully" },
         { status: 200 }
       );
     } catch (error) {

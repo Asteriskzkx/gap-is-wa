@@ -1,7 +1,3 @@
-import { BaseService } from "./BaseService";
-import { UserModel } from "../models/UserModel";
-import { UserRepository } from "../repositories/UserRepository";
-import bcrypt from "bcrypt";
 import { UserRole } from "@/models/UserModel";
 import {
   AdminInfo,
@@ -11,13 +7,23 @@ import {
   NormalizedUser,
 } from "@/types/UserType";
 import { prisma } from "@/utils/db";
+import bcrypt from "bcrypt";
+import { UserModel } from "../models/UserModel";
+import { UserRepository } from "../repositories/UserRepository";
+import { AuditLogService } from "./AuditLogService";
+import { BaseService } from "./BaseService";
 
 export class UserService extends BaseService<UserModel> {
   private readonly userRepository: UserRepository;
+  private readonly auditLogService: AuditLogService;
 
-  constructor(userRepository: UserRepository) {
+  constructor(
+    userRepository: UserRepository,
+    auditLogService: AuditLogService
+  ) {
     super(userRepository);
     this.userRepository = userRepository;
+    this.auditLogService = auditLogService;
   }
 
   async findByEmail(email: string): Promise<UserModel | null> {
@@ -263,6 +269,38 @@ export class UserService extends BaseService<UserModel> {
       this.handleServiceError(error);
       console.error("Error finding users with filter:", error);
       return { users: [], total: 0 };
+    }
+  }
+
+  async delete(userId: number, actorId?: number): Promise<boolean> {
+    try {
+      // Get old record before deletion for audit log
+      const oldRecord = await this.userRepository.findById(userId);
+
+      if (!oldRecord) {
+        return false;
+      }
+
+      // Delete the record
+      const isDeleted = await this.repository.delete(userId);
+
+      if (isDeleted && this.auditLogService && userId) {
+        const { createdAt, updatedAt, ...oldData } = oldRecord.toJSON();
+
+        await this.auditLogService.logAction(
+          "User",
+          "DELETE",
+          userId,
+          actorId,
+          oldData,
+          void 0
+        );
+      }
+
+      return isDeleted;
+    } catch (error) {
+      this.handleServiceError(error);
+      return false;
     }
   }
 }

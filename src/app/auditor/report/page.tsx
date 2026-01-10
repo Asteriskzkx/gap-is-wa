@@ -215,7 +215,7 @@ export default function AuditorReportPage() {
   };
 
   const getResultBadge = (result: string | null) => {
-    if (!result || result === "") return <span className="text-gray-400">รอผล</span>;
+    if (!result || result === "" || result === "PENDING" || result === "รอผลการตรวจประเมิน") return <span className="text-gray-400">รอผล</span>;
     if (result === "ผ่าน" || result === "PASSED") {
       return (
         <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">

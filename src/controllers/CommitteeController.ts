@@ -152,6 +152,21 @@ export class CommitteeController extends BaseController<CommitteeModel> {
         return NextResponse.json({ message: error.message }, { status: 400 });
       }
 
+      // capture actor id from session for audit logging
+      const { authorized, session, error } = await checkAuthorization(req, [
+        "ADMIN",
+        "COMMITTEE",
+      ]);
+
+      if (!authorized || !session) {
+        return NextResponse.json(
+          { message: error || "Unauthorized" },
+          { status: 401 }
+        );
+      }
+
+      const actorId = Number(session.user.id);
+
       const data = await req.json();
       const { version, ...updateData } = data;
 
@@ -159,7 +174,8 @@ export class CommitteeController extends BaseController<CommitteeModel> {
         await this.committeeService.updateCommitteeProfile(
           committeeId,
           updateData,
-          version
+          version,
+          actorId
         );
 
       if (!updatedCommittee) {
