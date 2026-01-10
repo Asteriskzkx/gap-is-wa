@@ -48,6 +48,7 @@ interface InspectionByType {
   count: number;
   passed: number;
   failed: number;
+  pending?: number;
 }
 
 interface InspectionByStatus {
@@ -978,6 +979,8 @@ export default function CommitteeReportPage() {
                     <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">ทั้งหมด</th>
                     <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">ผ่าน</th>
                     <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">ไม่ผ่าน</th>
+                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">รอดำเนินการ</th>
+
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -987,6 +990,7 @@ export default function CommitteeReportPage() {
                       <td className="px-4 py-3 text-sm text-center text-gray-900">{type.count}</td>
                       <td className="px-4 py-3 text-sm text-center text-green-600 font-medium">{type.passed}</td>
                       <td className="px-4 py-3 text-sm text-center text-red-600 font-medium">{type.failed}</td>
+                      <td className="px-4 py-3 text-sm text-center text-yellow-600 font-medium">{type.pending}</td>
                     </tr>
                   ))}
                   {(!chartData?.inspectionsByType || chartData.inspectionsByType.length === 0) && (

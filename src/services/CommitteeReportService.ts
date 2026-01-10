@@ -49,6 +49,7 @@ export interface InspectionByType {
   count: number;
   passed: number;
   failed: number;
+  pending?: number;
 }
 
 export interface InspectionByStatus {
@@ -309,6 +310,7 @@ export class CommitteeReportService {
           count: 0,
           passed: 0,
           failed: 0,
+          pending: 0,
         });
       }
 
@@ -325,6 +327,11 @@ export class CommitteeReportService {
         inspection.inspectionResult === "FAILED"
       ) {
         typeData.failed++;
+      } else if (
+        inspection.inspectionResult === "PENDING" ||
+        inspection.inspectionResult === "รอผลการตรวจประเมิน"
+      ) {
+        typeData.pending!++;
       }
     }
 
