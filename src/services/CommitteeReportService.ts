@@ -278,7 +278,7 @@ export class CommitteeReportService {
     ).length;
     const pendingInspections = inspections.filter(
       (i: InspectionWithType) =>
-        !i.inspectionResult || i.inspectionResult === ""
+        !i.inspectionResult || i.inspectionResult === "รอผลการตรวจประเมิน"
     ).length;
 
     const completedInspections = passedInspections + failedInspections;
@@ -366,9 +366,7 @@ export class CommitteeReportService {
         ).length;
         const pending = auditorInspections.filter(
           (i: Inspection) =>
-            !i.inspectionResult ||
-            i.inspectionResult === "" ||
-            i.inspectionResult === "รอผลการตรวจประเมิน"
+            !i.inspectionResult || i.inspectionResult === "รอผลการตรวจประเมิน"
         ).length;
 
         const completed = passed + failed;
