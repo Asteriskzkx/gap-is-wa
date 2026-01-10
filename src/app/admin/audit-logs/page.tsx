@@ -30,6 +30,7 @@ const ActionCell = ({ action }: { action: string }) => {
 
 const TableNameCell = ({ tableName }: { tableName: string }) => {
   const tableLabelMap: Record<string, string> = {
+    User: "ผู้ใช้ (User)",
     Farmer: "เกษตรกร (Farmer)",
     Auditor: "ผู้ตรวจประเมิน (Auditor)",
     Committee: "คณะกรรมการ (Committee)",
@@ -130,6 +131,7 @@ export default function AuditLogsPage() {
   // Table name options
   const tableNameOptions = useMemo(
     () => [
+      { label: "ผู้ใช้ (User)", value: "User" },
       { label: "เกษตรกร (Farmer)", value: "Farmer" },
       { label: "ผู้ตรวจประเมิน (Auditor)", value: "Auditor" },
       { label: "คณะกรรมการ (Committee)", value: "Committee" },
