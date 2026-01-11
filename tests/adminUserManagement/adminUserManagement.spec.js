@@ -347,12 +347,12 @@ test.describe("รายการผู้ใช้: ตัวกรอง/ต�
       .filter({ hasText: /เลือก Role|BASIC|FARMER|AUDITOR|COMMITTEE|ADMIN/ })
       .first();
     await roleDropdown.click();
-    await page.getByRole("option", { name: "ADMIN", exact: true }).click();
 
-    // รอให้ API response กลับมา
-    await page.waitForResponse(
-      (res) => res.url().includes(PATH_API) && res.url().includes("role=ADMIN")
-    );
+    // Start waiting for the filtered API response before clicking the option
+    await Promise.all([
+      page.waitForResponse((res) => res.url().includes(PATH_API) && res.url().includes("role=ADMIN")),
+      page.getByRole("option", { name: "ADMIN", exact: true }).click(),
+    ]);
 
     // 2) ตารางเปลี่ยนเป็นชุดข้อมูลตามที่ mock ไว้
     await expect(page.getByText("admin@test.com")).toBeVisible({
