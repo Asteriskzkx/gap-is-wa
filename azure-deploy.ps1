@@ -16,6 +16,16 @@ $DB_NAME = "gapdb"
 $CONTAINER_ENV = ("gap-is-wa-env-{0}" -f $SUFFIX)
 $CONTAINER_APP = ("gap-is-wa-app-{0}" -f $SUFFIX)
 
+Write-Host "Generated resource names (suffix=$SUFFIX):" -ForegroundColor Cyan
+Write-Host "  Resource Group   : $RESOURCE_GROUP" -ForegroundColor Gray
+Write-Host "  Location         : $LOCATION" -ForegroundColor Gray
+Write-Host "  ACR              : $CONTAINER_REGISTRY" -ForegroundColor Gray
+Write-Host "  Postgres Server  : $DB_SERVER_NAME" -ForegroundColor Gray
+Write-Host "  Postgres DB      : $DB_NAME" -ForegroundColor Gray
+Write-Host "  Container Env    : $CONTAINER_ENV" -ForegroundColor Gray
+Write-Host "  Container App    : $CONTAINER_APP" -ForegroundColor Gray
+Write-Host "" 
+
 function Ensure-AzExtension {
   param(
     [Parameter(Mandatory = $true)][string]$Name
@@ -49,6 +59,24 @@ function Ensure-AzProviderRegistered {
     if ($state -ne "Registered") {
       throw "Provider $Namespace is not registered yet (state=$state). Try again in a few minutes."
     }
+  }
+}
+
+function Ensure-DockerRunning {
+  try {
+    docker info | Out-Null
+  } catch {
+    throw "Docker is not running. Start Docker Desktop (Linux containers) and retry."
+  }
+}
+
+function Assert-LastExitCode {
+  param(
+    [Parameter(Mandatory = $true)][string]$StepName
+  )
+
+  if ($LASTEXITCODE -ne 0) {
+    throw "$StepName failed (exit code $LASTEXITCODE)."
   }
 }
 
@@ -150,26 +178,38 @@ az acr update --name $CONTAINER_REGISTRY --admin-enabled true | Out-Null
 
 $ACR_USERNAME = az acr credential show --name $CONTAINER_REGISTRY --query username -o tsv
 $ACR_PASSWORD = az acr credential show --name $CONTAINER_REGISTRY --query "passwords[0].value" -o tsv
+$ACR_LOGIN_SERVER = az acr show --name $CONTAINER_REGISTRY --query loginServer -o tsv
 
 Write-Host "✓ Container Registry created" -ForegroundColor Green
 Write-Host ""
 
 # Build and Push Docker Image
 Write-Host "Building and pushing Docker image..." -ForegroundColor Yellow
-az acr build `
-  --registry $CONTAINER_REGISTRY `
-  --image gap-is-wa:latest `
-  .
+Ensure-DockerRunning
+az acr login --name $CONTAINER_REGISTRY | Out-Null
+Assert-LastExitCode -StepName "az acr login"
+
+docker build --platform linux/amd64 -t "$ACR_LOGIN_SERVER/gap-is-wa:latest" .
+Assert-LastExitCode -StepName "docker build (gap-is-wa)"
+
+docker push "$ACR_LOGIN_SERVER/gap-is-wa:latest"
+Assert-LastExitCode -StepName "docker push (gap-is-wa)"
+
 Write-Host "✓ Docker image built and pushed" -ForegroundColor Green
 Write-Host ""
 
 # Build and Push Migration Image
 Write-Host "Building and pushing Prisma migration image..." -ForegroundColor Yellow
-az acr build `
-  --registry $CONTAINER_REGISTRY `
-  --image gap-is-wa-migrate:latest `
-  --file Dockerfile.migrate `
-  .
+Ensure-DockerRunning
+az acr login --name $CONTAINER_REGISTRY | Out-Null
+Assert-LastExitCode -StepName "az acr login"
+
+docker build --platform linux/amd64 -f Dockerfile.migrate -t "$ACR_LOGIN_SERVER/gap-is-wa-migrate:latest" .
+Assert-LastExitCode -StepName "docker build (gap-is-wa-migrate)"
+
+docker push "$ACR_LOGIN_SERVER/gap-is-wa-migrate:latest"
+Assert-LastExitCode -StepName "docker push (gap-is-wa-migrate)"
+
 Write-Host "✓ Migration image built and pushed" -ForegroundColor Green
 Write-Host ""
 
@@ -288,3 +328,21 @@ Write-Host "- Monitor your Azure credit usage in Azure Portal"
 Write-Host "- Set up budget alerts to avoid unexpected charges"
 Write-Host ""
 Write-Host "Happy deploying! 🚀" -ForegroundColor Green
+
+# Write a small machine-readable summary for follow-up commands
+$summary = [ordered]@{
+  timestamp = (Get-Date).ToString("s")
+  subscriptionId = (az account show --query id -o tsv)
+  resourceGroup = $RESOURCE_GROUP
+  location = $LOCATION
+  acrName = $CONTAINER_REGISTRY
+  postgresServer = $DB_SERVER_NAME
+  postgresDatabase = $DB_NAME
+  containerAppEnvironment = $CONTAINER_ENV
+  containerAppName = $CONTAINER_APP
+  migrateJobName = $MIGRATE_JOB
+  fqdn = $APP_URL
+  url = "https://$APP_URL"
+}
+$summary | ConvertTo-Json -Depth 5 | Out-File -Encoding UTF8 -FilePath "deploy-output.json"
+Write-Host "Wrote deployment summary: deploy-output.json" -ForegroundColor Cyan
