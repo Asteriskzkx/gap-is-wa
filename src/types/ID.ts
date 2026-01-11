@@ -12,7 +12,7 @@ export type UserID = ID;
 // ประเภทเฉพาะสำหรับ ID ของเกษตรกร
 export type FarmerID = ID;
 
-// ประเภทเฉพาะสำหรับ ID ของผู้ตรวจสอบ
+// ประเภทเฉพาะสำหรับ ID ของผู้ตรวจประเมิน
 export type AuditorID = ID;
 
 // ประเภทเฉพาะสำหรับ ID ของคณะกรรมการ
@@ -27,10 +27,10 @@ export type AdminID = ID;
  * @returns ค่า ID ที่เป็นเลขจำนวนเต็ม
  */
 export function createID(id: number): ID {
-    if (!Number.isInteger(id) || id <= 0) {
-        throw new Error(`Invalid ID: ${id}. ID must be a positive integer.`);
-    }
-    return id;
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new Error(`Invalid ID: ${id}. ID must be a positive integer.`);
+  }
+  return id;
 }
 
 /**
@@ -39,9 +39,11 @@ export function createID(id: number): ID {
  * @returns ค่า ID ที่แปลงแล้ว
  */
 export function parseID(idStr: string): ID {
-    const id = parseInt(idStr, 10);
-    if (isNaN(id) || id <= 0) {
-        throw new Error(`Invalid ID string: ${idStr}. ID must be a positive integer.`);
-    }
-    return id;
+  const id = parseInt(idStr, 10);
+  if (isNaN(id) || id <= 0) {
+    throw new Error(
+      `Invalid ID string: ${idStr}. ID must be a positive integer.`
+    );
+  }
+  return id;
 }
