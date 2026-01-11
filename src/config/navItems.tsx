@@ -36,11 +36,6 @@ export const adminNavItems = [
     href: "/admin/report",
     icon: <FindInPageIcon className="h-6 w-6" />,
   },
-  {
-    title: "ทดสอบระบบ",
-    href: "/admin/report",
-    icon: <FindInPageIcon className="h-6 w-6" />,
-  },
 ];
 
 export const auditorNavItems = [
