@@ -421,10 +421,11 @@ export const AddUserDialog: React.FC<Props> = ({
             </span>
 
             <span className="flex flex-col">
-              <label className="text-sm mb-1">
+              <label htmlFor="firstName" className="text-sm mb-1">
                 ชื่อ <span className="text-red-500">*</span>
               </label>
               <PrimaryInputText
+                id="firstName"
                 value={firstName}
                 onChange={(v) => {
                   setFirstName(v);
@@ -442,10 +443,11 @@ export const AddUserDialog: React.FC<Props> = ({
             </span>
 
             <span className="flex flex-col">
-              <label className="text-sm mb-1">
+              <label htmlFor='lastName' className="text-sm mb-1">
                 นามสกุล <span className="text-red-500">*</span>
               </label>
               <PrimaryInputText
+                id="lastName"
                 value={lastName}
                 onChange={(v) => {
                   setLastName(v);
@@ -463,10 +465,11 @@ export const AddUserDialog: React.FC<Props> = ({
             </span>
 
             <span className="flex flex-col">
-              <label className="text-sm mb-1">
+              <label htmlFor="email" className="text-sm mb-1">
                 อีเมล <span className="text-red-500">*</span>
               </label>
               <PrimaryInputText
+                id="email"
                 value={email}
                 onChange={(v) => {
                   setEmail(v);
