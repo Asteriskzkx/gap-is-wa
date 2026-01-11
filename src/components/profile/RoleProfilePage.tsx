@@ -95,14 +95,14 @@ function formatIdNumber(id: string | null | undefined): string {
 function avatarBg(role: Role): string {
   switch (role) {
     case "FARMER":
-      return "bg-green-600";
+      return "bg-green-100 text-green-600";
     case "AUDITOR":
-      return "bg-blue-600";
+      return "bg-blue-100 text-blue-600";
     case "COMMITTEE":
-      return "bg-indigo-600";
+      return "bg-indigo-100 text-indigo-500";
     case "ADMIN":
     default:
-      return "bg-indigo-700";
+      return "bg-indigo-100 text-indigo-500";
   }
 }
 
@@ -351,7 +351,7 @@ function SimpleRoleProfile({ role, user, onSaved }: Readonly<Props>) {
             <div
               className={`h-14 w-14 rounded-full ${avatarBg(
                 role
-              )} text-white flex items-center justify-center text-xl font-semibold`}
+              )} flex items-center justify-center text-xl font-medium`}
             >
               {avatarLetter}
             </div>
@@ -533,7 +533,7 @@ function FarmerProfileSidebar({
         <div
           className={`h-14 w-14 rounded-full ${avatarBg(
             role
-          )} text-white flex items-center justify-center text-xl font-semibold`}
+          )} flex items-center justify-center text-xl font-medium`}
         >
           {avatarLetter}
         </div>
