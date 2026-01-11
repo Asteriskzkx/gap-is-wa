@@ -172,12 +172,6 @@ az acr create `
   --resource-group $RESOURCE_GROUP `
   --name $CONTAINER_REGISTRY `
   --sku Basic
-
-# Enable admin user for easier Container Apps image pull (good for student/demo environments)
-az acr update --name $CONTAINER_REGISTRY --admin-enabled true | Out-Null
-
-$ACR_USERNAME = az acr credential show --name $CONTAINER_REGISTRY --query username -o tsv
-$ACR_PASSWORD = az acr credential show --name $CONTAINER_REGISTRY --query "passwords[0].value" -o tsv
 $ACR_LOGIN_SERVER = az acr show --name $CONTAINER_REGISTRY --query loginServer -o tsv
 
 Write-Host "✓ Container Registry created" -ForegroundColor Green
@@ -255,17 +249,9 @@ az containerapp job create `
   --replica-timeout 1800 `
   --replica-retry-limit 1 `
   --image "$CONTAINER_REGISTRY.azurecr.io/gap-is-wa-migrate:latest" `
-  --registry-server "$CONTAINER_REGISTRY.azurecr.io" `
-  --registry-username $ACR_USERNAME `
-  --registry-password $ACR_PASSWORD `
   --cpu 0.5 `
   --memory 1.0Gi `
-  --env-vars "DATABASE_URL=$DATABASE_URL" "DEFAULT_ADMIN_EMAIL=$DEFAULT_ADMIN_EMAIL" "DEFAULT_ADMIN_PASSWORD=$DEFAULT_ADMIN_PASSWORD_PLAIN" "DEFAULT_ADMIN_NAME=$DEFAULT_ADMIN_NAME" | Out-Null
-
-Write-Host "Starting migration job..." -ForegroundColor Yellow
-az containerapp job start --name $MIGRATE_JOB --resource-group $RESOURCE_GROUP | Out-Null
-Write-Host "✓ Migration job started (check logs if needed)" -ForegroundColor Green
-Write-Host ""
+  | Out-Null
 
 # Deploy Container App
 Write-Host "Deploying Container App: $CONTAINER_APP" -ForegroundColor Yellow
@@ -276,15 +262,76 @@ az containerapp create `
   --image "$CONTAINER_REGISTRY.azurecr.io/gap-is-wa:latest" `
   --target-port 3000 `
   --ingress external `
-  --registry-server "$CONTAINER_REGISTRY.azurecr.io" `
-  --registry-username $ACR_USERNAME `
-  --registry-password $ACR_PASSWORD `
   --cpu 0.5 `
   --memory 1.0Gi `
   --min-replicas 0 `
-  --max-replicas 3 `
-  --env-vars "NODE_ENV=production" "DATABASE_URL=$DATABASE_URL" "NEXTAUTH_SECRET=$NEXTAUTH_SECRET" "DEFAULT_PASSWORD=$DEFAULT_PASSWORD" "DEFAULT_ADMIN_EMAIL=$DEFAULT_ADMIN_EMAIL" "DEFAULT_ADMIN_PASSWORD=$DEFAULT_ADMIN_PASSWORD_PLAIN" "DEFAULT_ADMIN_NAME=$DEFAULT_ADMIN_NAME" "POSTGRES_SSL=true"
+  --max-replicas 2 `
+  --env-vars "NODE_ENV=production" "POSTGRES_SSL=true"
 Write-Host "✓ Container App deployed" -ForegroundColor Green
+Write-Host ""
+
+# Security hardening: use managed identity for ACR pulls, then disable ACR admin
+Write-Host "Configuring managed identity + AcrPull for ACR image pulls..." -ForegroundColor Yellow
+az containerapp identity assign -n $CONTAINER_APP -g $RESOURCE_GROUP --system-assigned | Out-Null
+az containerapp job identity assign -n $MIGRATE_JOB -g $RESOURCE_GROUP --system-assigned | Out-Null
+
+$ACR_ID = az acr show --name $CONTAINER_REGISTRY --query id -o tsv
+$APP_PRINCIPAL_ID = az containerapp show -n $CONTAINER_APP -g $RESOURCE_GROUP --query identity.principalId -o tsv
+$JOB_PRINCIPAL_ID = az containerapp job show -n $MIGRATE_JOB -g $RESOURCE_GROUP --query identity.principalId -o tsv
+
+az role assignment create --assignee-object-id $APP_PRINCIPAL_ID --assignee-principal-type ServicePrincipal --role AcrPull --scope $ACR_ID | Out-Null
+az role assignment create --assignee-object-id $JOB_PRINCIPAL_ID --assignee-principal-type ServicePrincipal --role AcrPull --scope $ACR_ID | Out-Null
+
+az containerapp registry set -n $CONTAINER_APP -g $RESOURCE_GROUP --server $ACR_LOGIN_SERVER --identity system | Out-Null
+az containerapp job registry set -n $MIGRATE_JOB -g $RESOURCE_GROUP --server $ACR_LOGIN_SERVER --identity system | Out-Null
+
+az acr update --name $CONTAINER_REGISTRY --admin-enabled false | Out-Null
+Write-Host "✓ Managed identity configured; ACR admin disabled" -ForegroundColor Green
+Write-Host ""
+
+# RBAC propagation can take a short time; give it a moment before starting the job.
+Start-Sleep -Seconds 20
+
+# Store sensitive values as Container Apps secrets and reference them via secretref
+Write-Host "Storing secrets and configuring env vars via secretref..." -ForegroundColor Yellow
+az containerapp secret set -n $CONTAINER_APP -g $RESOURCE_GROUP --secrets `
+  "dburl=$DATABASE_URL" `
+  "nextauthsecret=$NEXTAUTH_SECRET" `
+  "defaultpwd=$DEFAULT_PASSWORD" `
+  "adminemail=$DEFAULT_ADMIN_EMAIL" `
+  "adminpwd=$DEFAULT_ADMIN_PASSWORD_PLAIN" `
+  "adminname=$DEFAULT_ADMIN_NAME" | Out-Null
+
+az containerapp update -n $CONTAINER_APP -g $RESOURCE_GROUP --set-env-vars `
+  "DATABASE_URL=secretref:dburl" `
+  "NEXTAUTH_SECRET=secretref:nextauthsecret" `
+  "DEFAULT_PASSWORD=secretref:defaultpwd" `
+  "DEFAULT_ADMIN_EMAIL=secretref:adminemail" `
+  "DEFAULT_ADMIN_PASSWORD=secretref:adminpwd" `
+  "DEFAULT_ADMIN_NAME=secretref:adminname" | Out-Null
+
+az containerapp job secret set -n $MIGRATE_JOB -g $RESOURCE_GROUP --secrets `
+  "dburl=$DATABASE_URL" `
+  "adminemail=$DEFAULT_ADMIN_EMAIL" `
+  "adminpwd=$DEFAULT_ADMIN_PASSWORD_PLAIN" `
+  "adminname=$DEFAULT_ADMIN_NAME" | Out-Null
+
+az containerapp job update -n $MIGRATE_JOB -g $RESOURCE_GROUP --set-env-vars `
+  "DATABASE_URL=secretref:dburl" `
+  "DEFAULT_ADMIN_EMAIL=secretref:adminemail" `
+  "DEFAULT_ADMIN_PASSWORD=secretref:adminpwd" `
+  "DEFAULT_ADMIN_NAME=secretref:adminname" | Out-Null
+
+$activeRevision = az containerapp revision list -n $CONTAINER_APP -g $RESOURCE_GROUP --query '[?properties.active==`true`].name | [0]' -o tsv
+if ($activeRevision) {
+  az containerapp revision restart -n $CONTAINER_APP -g $RESOURCE_GROUP --revision $activeRevision | Out-Null
+}
+Write-Host "✓ Secrets configured" -ForegroundColor Green
+Write-Host ""
+
+Write-Host "Starting migration job..." -ForegroundColor Yellow
+az containerapp job start --name $MIGRATE_JOB --resource-group $RESOURCE_GROUP | Out-Null
+Write-Host "✓ Migration job started (check logs if needed)" -ForegroundColor Green
 Write-Host ""
 
 # Get the application URL
