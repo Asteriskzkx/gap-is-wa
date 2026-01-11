@@ -70,6 +70,17 @@ function Ensure-DockerRunning {
   }
 }
 
+function Get-GitShortSha {
+  try {
+    $sha = (git rev-parse --short HEAD).Trim()
+    if (-not [string]::IsNullOrWhiteSpace($sha)) { return $sha }
+  } catch {
+  }
+
+  # Fallback to time-based tag when git is unavailable
+  return (Get-Date -Format "yyyyMMdd-HHmmss")
+}
+
 function Assert-LastExitCode {
   param(
     [Parameter(Mandatory = $true)][string]$StepName
@@ -183,11 +194,23 @@ Ensure-DockerRunning
 az acr login --name $CONTAINER_REGISTRY | Out-Null
 Assert-LastExitCode -StepName "az acr login"
 
-docker build --platform linux/amd64 -t "$ACR_LOGIN_SERVER/gap-is-wa:latest" .
+$IMAGE_TAG = Get-GitShortSha
+Write-Host "Using image tag: $IMAGE_TAG" -ForegroundColor Cyan
+
+$APP_IMAGE_SHA = "$ACR_LOGIN_SERVER/gap-is-wa:$IMAGE_TAG"
+$APP_IMAGE_LATEST = "$ACR_LOGIN_SERVER/gap-is-wa:latest"
+
+docker build --platform linux/amd64 -t $APP_IMAGE_SHA .
 Assert-LastExitCode -StepName "docker build (gap-is-wa)"
 
-docker push "$ACR_LOGIN_SERVER/gap-is-wa:latest"
+docker push $APP_IMAGE_SHA
 Assert-LastExitCode -StepName "docker push (gap-is-wa)"
+
+docker tag $APP_IMAGE_SHA $APP_IMAGE_LATEST
+Assert-LastExitCode -StepName "docker tag (gap-is-wa latest)"
+
+docker push $APP_IMAGE_LATEST
+Assert-LastExitCode -StepName "docker push (gap-is-wa latest)"
 
 Write-Host "✓ Docker image built and pushed" -ForegroundColor Green
 Write-Host ""
@@ -198,11 +221,20 @@ Ensure-DockerRunning
 az acr login --name $CONTAINER_REGISTRY | Out-Null
 Assert-LastExitCode -StepName "az acr login"
 
-docker build --platform linux/amd64 -f Dockerfile.migrate -t "$ACR_LOGIN_SERVER/gap-is-wa-migrate:latest" .
+$MIGRATE_IMAGE_SHA = "$ACR_LOGIN_SERVER/gap-is-wa-migrate:$IMAGE_TAG"
+$MIGRATE_IMAGE_LATEST = "$ACR_LOGIN_SERVER/gap-is-wa-migrate:latest"
+
+docker build --platform linux/amd64 -f Dockerfile.migrate -t $MIGRATE_IMAGE_SHA .
 Assert-LastExitCode -StepName "docker build (gap-is-wa-migrate)"
 
-docker push "$ACR_LOGIN_SERVER/gap-is-wa-migrate:latest"
+docker push $MIGRATE_IMAGE_SHA
 Assert-LastExitCode -StepName "docker push (gap-is-wa-migrate)"
+
+docker tag $MIGRATE_IMAGE_SHA $MIGRATE_IMAGE_LATEST
+Assert-LastExitCode -StepName "docker tag (gap-is-wa-migrate latest)"
+
+docker push $MIGRATE_IMAGE_LATEST
+Assert-LastExitCode -StepName "docker push (gap-is-wa-migrate latest)"
 
 Write-Host "✓ Migration image built and pushed" -ForegroundColor Green
 Write-Host ""
@@ -248,7 +280,7 @@ az containerapp job create `
   --trigger-type Manual `
   --replica-timeout 1800 `
   --replica-retry-limit 1 `
-  --image "$CONTAINER_REGISTRY.azurecr.io/gap-is-wa-migrate:latest" `
+  --image "$CONTAINER_REGISTRY.azurecr.io/gap-is-wa-migrate:$IMAGE_TAG" `
   --cpu 0.5 `
   --memory 1.0Gi `
   | Out-Null
@@ -259,7 +291,7 @@ az containerapp create `
   --name $CONTAINER_APP `
   --resource-group $RESOURCE_GROUP `
   --environment $CONTAINER_ENV `
-  --image "$CONTAINER_REGISTRY.azurecr.io/gap-is-wa:latest" `
+  --image "$CONTAINER_REGISTRY.azurecr.io/gap-is-wa:$IMAGE_TAG" `
   --target-port 3000 `
   --ingress external `
   --cpu 0.5 `
