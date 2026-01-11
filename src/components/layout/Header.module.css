@@ -63,6 +63,12 @@
   align-items: center;
 }
 
+.userArea {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .userButton {
   display: flex;
   align-items: center;

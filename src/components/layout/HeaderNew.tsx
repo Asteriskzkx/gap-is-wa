@@ -95,13 +95,7 @@ export default function Header({
         </div>
         <div className={styles.rightSection}>
           <div className="relative">
-            <button
-              className={styles.userButton}
-              onClick={(e) => {
-                setDropdownOpen(!dropdownOpen);
-                menuRef.current?.toggle(e);
-              }}
-            >
+            <div className={styles.userArea}>
               <span className={`${styles.userName} ${styles.userNameHidden}`}>
                 {user.isLoading ? (
                   <div className={styles.loadingSkeleton}></div>
@@ -112,16 +106,26 @@ export default function Header({
                   </>
                 )}
               </span>
-              <div className={`${styles.avatar} ${avatarClass}`}>
-                {!user.isLoading && user.firstName.charAt(0)}
-              </div>
 
-              <ChevronBottomIcon
-                className={`${styles.chevronIcon} ${
-                  dropdownOpen ? styles.rotated : ""
-                }`}
-              />
-            </button>
+              <button
+                type="button"
+                className={styles.userButton}
+                aria-haspopup="menu"
+                aria-expanded={dropdownOpen}
+                aria-controls="header-user-menu"
+                onClick={(e) => menuRef.current?.toggle(e)}
+              >
+                <div className={`${styles.avatar} ${avatarClass}`}>
+                  {!user.isLoading && user.firstName.charAt(0)}
+                </div>
+
+                <ChevronBottomIcon
+                  className={`${styles.chevronIcon} ${
+                    dropdownOpen ? styles.rotated : ""
+                  }`}
+                />
+              </button>
+            </div>
 
             <PrimeMenu
               model={menuItems}
@@ -129,6 +133,8 @@ export default function Header({
               ref={menuRef}
               id="header-user-menu"
               className="mt-2"
+              onShow={() => setDropdownOpen(true)}
+              onHide={() => setDropdownOpen(false)}
             />
           </div>
         </div>

@@ -36,7 +36,7 @@ export default function AuditorEditForm({ user, onSuccess }: Props) {
       } catch {}
       throw new Error(msg);
     }
-    
+
     const updated: AuditorInfo = await res.json();
     return updated;
   };
@@ -45,11 +45,11 @@ export default function AuditorEditForm({ user, onSuccess }: Props) {
     <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">
-          แก้ไขข้อมูลของ ผู้ตรวจสอบ
+          แก้ไขข้อมูลของ ผู้ตรวจประเมิน
         </h1>
       </div>
       <div className="bg-white rounded-lg shadow p-6">
-         <p className="text-lg font-bold mb-4">
+        <p className="text-lg font-bold mb-4">
           คุณกำลังแก้ไขข้อมูลผู้ใช้ชื่อ{" "}
           {[
             `${user.auditor?.namePrefix ?? ""}${user.auditor?.firstName ?? ""}`,
@@ -64,8 +64,8 @@ export default function AuditorEditForm({ user, onSuccess }: Props) {
           defaultValues={initialValues}
           onSubmit={submit}
           onSuccess={onSuccess}
-          successMessage="บันทึกข้อมูลผู้ตรวจสอบเรียบร้อย"
-          errorMessage="บันทึกข้อมูลผู้ตรวจสอบไม่สำเร็จ"
+          successMessage="บันทึกข้อมูลผู้ตรวจประเมินเรียบร้อย"
+          errorMessage="บันทึกข้อมูลผู้ตรวจประเมินไม่สำเร็จ"
         />
       </div>
     </div>
