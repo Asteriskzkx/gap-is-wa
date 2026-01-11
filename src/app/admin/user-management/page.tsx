@@ -437,9 +437,12 @@ export default function AdminUserManagementPage() {
                   className="p-2 flex-1"
                   onClick={async () => {
                     try {
-                      await fetch(`/api/v1/users/${selectedId}`, {
+                      const response = await fetch(`/api/v1/users/${selectedId}`, {
                         method: "DELETE",
                       });
+                      if (!response.ok) {
+                        throw new Error("Delete failed");
+                      }
                       setDeleteVisible(false);
                       await fetchUsers(first, rows, currentFilters, currentSort); 
                       showSuccessDelete();
