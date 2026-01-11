@@ -608,25 +608,7 @@ function FarmerProfileSidebar({
   );
 }
 
-function FarmerProfileDetails({
-  isEditing,
-  base,
-  setBase,
-  extra,
-  setExtra,
-  errors,
-  userId,
-  isLoadingAddress,
-  province,
-  district,
-  subDistrict,
-  provinceOptions,
-  districtOptions,
-  subDistrictOptions,
-  onProvinceChange,
-  onDistrictChange,
-  onSubDistrictChange,
-}: Readonly<{
+type FarmerProfileDetailsProps = Readonly<{
   isEditing: boolean;
   base: BaseFormState;
   setBase: (updater: (prev: BaseFormState) => BaseFormState) => void;
@@ -644,327 +626,452 @@ function FarmerProfileDetails({
   onProvinceChange: (value: string) => void;
   onDistrictChange: (value: string) => void;
   onSubDistrictChange: (value: string) => void;
+}>;
+
+function FarmerPersonalCard({
+  isEditing,
+  base,
+  setBase,
+  extra,
+  setExtra,
+  errors,
+}: Readonly<{
+  isEditing: boolean;
+  base: BaseFormState;
+  setBase: (updater: (prev: BaseFormState) => BaseFormState) => void;
+  extra: FarmerFormState;
+  setExtra: (updater: (prev: FarmerFormState) => FarmerFormState) => void;
+  errors: Record<string, string>;
+}>) {
+  const birthDateText = extra.birthDate
+    ? extra.birthDate.toLocaleDateString("th-TH")
+    : "";
+
+  return (
+    <Card title="ข้อมูลส่วนตัว">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FieldRow label="คำนำหน้า">
+          {isEditing ? (
+            <PrimaryDropdown
+              value={base.namePrefix}
+              options={NAME_PREFIX_OPTIONS}
+              onChange={(value) =>
+                setBase((p) => ({ ...p, namePrefix: value }))
+              }
+              placeholder="คำนำหน้า"
+              required
+              invalid={!!errors.namePrefix}
+              errorMessage={errors.namePrefix}
+            />
+          ) : (
+            <TextValue value={base.namePrefix} />
+          )}
+        </FieldRow>
+        <div />
+
+        <FieldRow label="ชื่อ">
+          {isEditing ? (
+            <PrimaryInputText
+              value={base.firstName}
+              onChange={(value) => setBase((p) => ({ ...p, firstName: value }))}
+              placeholder="ชื่อ"
+              required
+              maxLength={100}
+              invalid={!!errors.firstName}
+              errorMessage={errors.firstName}
+            />
+          ) : (
+            <TextValue value={base.firstName} />
+          )}
+        </FieldRow>
+
+        <FieldRow label="นามสกุล">
+          {isEditing ? (
+            <PrimaryInputText
+              value={base.lastName}
+              onChange={(value) => setBase((p) => ({ ...p, lastName: value }))}
+              placeholder="นามสกุล"
+              required
+              maxLength={100}
+              invalid={!!errors.lastName}
+              errorMessage={errors.lastName}
+            />
+          ) : (
+            <TextValue value={base.lastName} />
+          )}
+        </FieldRow>
+
+        <FieldRow label="เลขบัตรประชาชน">
+          {isEditing ? (
+            <PrimaryInputMask
+              value={extra.identificationNumber}
+              onChange={(value) =>
+                setExtra((p) => ({ ...p, identificationNumber: value }))
+              }
+              mask="9-9999-99999-99-9"
+              placeholder="X-XXXX-XXXXX-XX-X"
+              required
+              invalid={!!errors.identificationNumber}
+              errorMessage={errors.identificationNumber}
+            />
+          ) : (
+            <TextValue value={extra.identificationNumber} />
+          )}
+        </FieldRow>
+
+        <FieldRow label="วันเดือนปีเกิด">
+          {isEditing ? (
+            <PrimaryCalendar
+              value={extra.birthDate}
+              onChange={(value) =>
+                setExtra((p) => ({ ...p, birthDate: value }))
+              }
+              placeholder="เลือกวันเดือนปีเกิด"
+              required
+              invalid={!!errors.birthDate}
+              errorMessage={errors.birthDate}
+              maxDate={new Date()}
+            />
+          ) : (
+            <TextValue value={birthDateText} />
+          )}
+        </FieldRow>
+
+        <FieldRow label="เพศ">
+          {isEditing ? (
+            <PrimaryDropdown
+              value={extra.gender}
+              options={GENDER_OPTIONS}
+              onChange={(value) => setExtra((p) => ({ ...p, gender: value }))}
+              placeholder="เลือกเพศ"
+              required
+              invalid={!!errors.gender}
+              errorMessage={errors.gender}
+            />
+          ) : (
+            <TextValue value={extra.gender} />
+          )}
+        </FieldRow>
+      </div>
+    </Card>
+  );
+}
+
+function FarmerAccountCard({
+  isEditing,
+  base,
+  setBase,
+  errors,
+  userId,
+}: Readonly<{
+  isEditing: boolean;
+  base: BaseFormState;
+  setBase: (updater: (prev: BaseFormState) => BaseFormState) => void;
+  errors: Record<string, string>;
+  userId: number;
 }>) {
   return (
+    <Card title="ข้อมูลบัญชี">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FieldRow label="อีเมล">
+          {isEditing ? (
+            <PrimaryInputText
+              value={base.email}
+              onChange={(value) => setBase((p) => ({ ...p, email: value }))}
+              placeholder="อีเมล"
+              required
+              type="email"
+              maxLength={100}
+              invalid={!!errors.email}
+              errorMessage={errors.email}
+            />
+          ) : (
+            <TextValue value={base.email} />
+          )}
+        </FieldRow>
+        <FieldRow label="รหัสผู้ใช้">
+          <TextValue value={String(userId ?? "-")} />
+        </FieldRow>
+      </div>
+    </Card>
+  );
+}
+
+function FarmerAddressCard({
+  isEditing,
+  extra,
+  setExtra,
+  errors,
+  isLoadingAddress,
+  province,
+  district,
+  subDistrict,
+  provinceOptions,
+  districtOptions,
+  subDistrictOptions,
+  onProvinceChange,
+  onDistrictChange,
+  onSubDistrictChange,
+}: Readonly<{
+  isEditing: boolean;
+  extra: FarmerFormState;
+  setExtra: (updater: (prev: FarmerFormState) => FarmerFormState) => void;
+  errors: Record<string, string>;
+  isLoadingAddress: boolean;
+  province: string;
+  district: string;
+  subDistrict: string;
+  provinceOptions: Array<{ label: string; value: string }>;
+  districtOptions: Array<{ label: string; value: string }>;
+  subDistrictOptions: Array<{ label: string; value: string }>;
+  onProvinceChange: (value: string) => void;
+  onDistrictChange: (value: string) => void;
+  onSubDistrictChange: (value: string) => void;
+}>) {
+  const provincePlaceholder = isLoadingAddress
+    ? "กำลังโหลด..."
+    : "เลือกจังหวัด";
+  const districtPlaceholder = province ? "เลือกอำเภอ" : "เลือกจังหวัดก่อน";
+  const subDistrictPlaceholder = district ? "เลือกตำบล" : "เลือกอำเภอก่อน";
+  const districtDisabled = isLoadingAddress || !province;
+  const subDistrictDisabled = isLoadingAddress || !province || !district;
+
+  return (
+    <Card title="ข้อมูลที่อยู่">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FieldRow label="บ้านเลขที่">
+          {isEditing ? (
+            <PrimaryInputText
+              value={extra.houseNo}
+              onChange={(value) => setExtra((p) => ({ ...p, houseNo: value }))}
+              placeholder="บ้านเลขที่"
+              required
+              invalid={!!errors.houseNo}
+              errorMessage={errors.houseNo}
+            />
+          ) : (
+            <TextValue value={extra.houseNo} />
+          )}
+        </FieldRow>
+
+        <FieldRow label="ชื่อหมู่บ้าน">
+          {isEditing ? (
+            <PrimaryInputText
+              value={extra.villageName}
+              onChange={(value) =>
+                setExtra((p) => ({ ...p, villageName: value }))
+              }
+              placeholder="ชื่อหมู่บ้าน"
+            />
+          ) : (
+            <TextValue value={extra.villageName} />
+          )}
+        </FieldRow>
+
+        <FieldRow label="หมู่">
+          {isEditing ? (
+            <PrimaryInputText
+              value={extra.moo}
+              onChange={(value) => setExtra((p) => ({ ...p, moo: value }))}
+              placeholder="หมู่"
+              required
+              invalid={!!errors.moo}
+              errorMessage={errors.moo}
+            />
+          ) : (
+            <TextValue value={extra.moo} />
+          )}
+        </FieldRow>
+
+        <FieldRow label="ถนน">
+          {isEditing ? (
+            <PrimaryInputText
+              value={extra.road}
+              onChange={(value) => setExtra((p) => ({ ...p, road: value }))}
+              placeholder="ถนน"
+            />
+          ) : (
+            <TextValue value={extra.road} />
+          )}
+        </FieldRow>
+
+        <FieldRow label="ซอย">
+          {isEditing ? (
+            <PrimaryInputText
+              value={extra.alley}
+              onChange={(value) => setExtra((p) => ({ ...p, alley: value }))}
+              placeholder="ซอย"
+            />
+          ) : (
+            <TextValue value={extra.alley} />
+          )}
+        </FieldRow>
+        <div />
+
+        <FieldRow label="จังหวัด">
+          {isEditing ? (
+            <PrimaryDropdown
+              value={province}
+              options={provinceOptions}
+              onChange={onProvinceChange}
+              placeholder={provincePlaceholder}
+              disabled={isLoadingAddress}
+              filter
+              required
+              invalid={!!errors.provinceName}
+              errorMessage={errors.provinceName}
+            />
+          ) : (
+            <TextValue value={province} />
+          )}
+        </FieldRow>
+
+        <FieldRow label="อำเภอ">
+          {isEditing ? (
+            <PrimaryDropdown
+              value={district}
+              options={districtOptions}
+              onChange={onDistrictChange}
+              placeholder={districtPlaceholder}
+              disabled={districtDisabled}
+              filter
+              required
+              invalid={!!errors.district}
+              errorMessage={errors.district}
+            />
+          ) : (
+            <TextValue value={district} />
+          )}
+        </FieldRow>
+
+        <FieldRow label="ตำบล">
+          {isEditing ? (
+            <PrimaryDropdown
+              value={subDistrict}
+              options={subDistrictOptions}
+              onChange={onSubDistrictChange}
+              placeholder={subDistrictPlaceholder}
+              disabled={subDistrictDisabled}
+              filter
+              required
+              invalid={!!errors.subDistrict}
+              errorMessage={errors.subDistrict}
+            />
+          ) : (
+            <TextValue value={subDistrict} />
+          )}
+        </FieldRow>
+
+        <FieldRow label="รหัสไปรษณีย์">
+          {isEditing ? (
+            <PrimaryInputText
+              value={extra.zipCode}
+              onChange={(value) => setExtra((p) => ({ ...p, zipCode: value }))}
+              placeholder="รหัสไปรษณีย์"
+            />
+          ) : (
+            <TextValue value={extra.zipCode} />
+          )}
+        </FieldRow>
+      </div>
+    </Card>
+  );
+}
+
+function FarmerContactCard({
+  isEditing,
+  extra,
+  setExtra,
+  errors,
+}: Readonly<{
+  isEditing: boolean;
+  extra: FarmerFormState;
+  setExtra: (updater: (prev: FarmerFormState) => FarmerFormState) => void;
+  errors: Record<string, string>;
+}>) {
+  return (
+    <Card title="ข้อมูลติดต่อ">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FieldRow label="เบอร์บ้าน">
+          {isEditing ? (
+            <PrimaryInputMask
+              value={extra.phoneNumber}
+              onChange={(value) =>
+                setExtra((p) => ({ ...p, phoneNumber: value }))
+              }
+              mask="99-999-9999"
+              placeholder="02-123-4567"
+            />
+          ) : (
+            <TextValue value={extra.phoneNumber} />
+          )}
+        </FieldRow>
+
+        <FieldRow label="เบอร์มือถือ">
+          {isEditing ? (
+            <PrimaryInputMask
+              value={extra.mobilePhoneNumber}
+              onChange={(value) =>
+                setExtra((p) => ({ ...p, mobilePhoneNumber: value }))
+              }
+              mask="999-999-9999"
+              placeholder="081-234-5678"
+              required
+              invalid={!!errors.mobilePhoneNumber}
+              errorMessage={errors.mobilePhoneNumber}
+            />
+          ) : (
+            <TextValue value={extra.mobilePhoneNumber} />
+          )}
+        </FieldRow>
+      </div>
+    </Card>
+  );
+}
+
+function FarmerProfileDetails(props: FarmerProfileDetailsProps) {
+  return (
     <div className="space-y-6">
-      <Card title="ข้อมูลส่วนตัว">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FieldRow label="คำนำหน้า">
-            {isEditing ? (
-              <PrimaryDropdown
-                value={base.namePrefix}
-                options={NAME_PREFIX_OPTIONS}
-                onChange={(value) =>
-                  setBase((p) => ({ ...p, namePrefix: value }))
-                }
-                placeholder="คำนำหน้า"
-                required
-                invalid={!!errors.namePrefix}
-                errorMessage={errors.namePrefix}
-              />
-            ) : (
-              <TextValue value={base.namePrefix} />
-            )}
-          </FieldRow>
-          <div />
-          <FieldRow label="ชื่อ">
-            {isEditing ? (
-              <PrimaryInputText
-                value={base.firstName}
-                onChange={(value) =>
-                  setBase((p) => ({ ...p, firstName: value }))
-                }
-                placeholder="ชื่อ"
-                required
-                maxLength={100}
-                invalid={!!errors.firstName}
-                errorMessage={errors.firstName}
-              />
-            ) : (
-              <TextValue value={base.firstName} />
-            )}
-          </FieldRow>
-          <FieldRow label="นามสกุล">
-            {isEditing ? (
-              <PrimaryInputText
-                value={base.lastName}
-                onChange={(value) =>
-                  setBase((p) => ({ ...p, lastName: value }))
-                }
-                placeholder="นามสกุล"
-                required
-                maxLength={100}
-                invalid={!!errors.lastName}
-                errorMessage={errors.lastName}
-              />
-            ) : (
-              <TextValue value={base.lastName} />
-            )}
-          </FieldRow>
+      <FarmerPersonalCard
+        isEditing={props.isEditing}
+        base={props.base}
+        setBase={props.setBase}
+        extra={props.extra}
+        setExtra={props.setExtra}
+        errors={props.errors}
+      />
 
-          <FieldRow label="เลขบัตรประชาชน">
-            {isEditing ? (
-              <PrimaryInputMask
-                value={extra.identificationNumber}
-                onChange={(value) =>
-                  setExtra((p) => ({ ...p, identificationNumber: value }))
-                }
-                mask="9-9999-99999-99-9"
-                placeholder="X-XXXX-XXXXX-XX-X"
-                required
-                invalid={!!errors.identificationNumber}
-                errorMessage={errors.identificationNumber}
-              />
-            ) : (
-              <TextValue value={extra.identificationNumber} />
-            )}
-          </FieldRow>
+      <FarmerAccountCard
+        isEditing={props.isEditing}
+        base={props.base}
+        setBase={props.setBase}
+        errors={props.errors}
+        userId={props.userId}
+      />
 
-          <FieldRow label="วันเดือนปีเกิด">
-            {isEditing ? (
-              <PrimaryCalendar
-                value={extra.birthDate}
-                onChange={(value) =>
-                  setExtra((p) => ({ ...p, birthDate: value }))
-                }
-                placeholder="เลือกวันเดือนปีเกิด"
-                required
-                invalid={!!errors.birthDate}
-                errorMessage={errors.birthDate}
-                maxDate={new Date()}
-              />
-            ) : (
-              <TextValue
-                value={
-                  extra.birthDate
-                    ? extra.birthDate.toLocaleDateString("th-TH")
-                    : ""
-                }
-              />
-            )}
-          </FieldRow>
+      <FarmerAddressCard
+        isEditing={props.isEditing}
+        extra={props.extra}
+        setExtra={props.setExtra}
+        errors={props.errors}
+        isLoadingAddress={props.isLoadingAddress}
+        province={props.province}
+        district={props.district}
+        subDistrict={props.subDistrict}
+        provinceOptions={props.provinceOptions}
+        districtOptions={props.districtOptions}
+        subDistrictOptions={props.subDistrictOptions}
+        onProvinceChange={props.onProvinceChange}
+        onDistrictChange={props.onDistrictChange}
+        onSubDistrictChange={props.onSubDistrictChange}
+      />
 
-          <FieldRow label="เพศ">
-            {isEditing ? (
-              <PrimaryDropdown
-                value={extra.gender}
-                options={GENDER_OPTIONS}
-                onChange={(value) => setExtra((p) => ({ ...p, gender: value }))}
-                placeholder="เลือกเพศ"
-                required
-                invalid={!!errors.gender}
-                errorMessage={errors.gender}
-              />
-            ) : (
-              <TextValue value={extra.gender} />
-            )}
-          </FieldRow>
-        </div>
-      </Card>
-
-      <Card title="ข้อมูลบัญชี">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FieldRow label="อีเมล">
-            {isEditing ? (
-              <PrimaryInputText
-                value={base.email}
-                onChange={(value) => setBase((p) => ({ ...p, email: value }))}
-                placeholder="อีเมล"
-                required
-                type="email"
-                maxLength={100}
-                invalid={!!errors.email}
-                errorMessage={errors.email}
-              />
-            ) : (
-              <TextValue value={base.email} />
-            )}
-          </FieldRow>
-          <FieldRow label="รหัสผู้ใช้">
-            <TextValue value={String(userId ?? "-")} />
-          </FieldRow>
-        </div>
-      </Card>
-
-      <Card title="ข้อมูลที่อยู่">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FieldRow label="บ้านเลขที่">
-            {isEditing ? (
-              <PrimaryInputText
-                value={extra.houseNo}
-                onChange={(value) =>
-                  setExtra((p) => ({ ...p, houseNo: value }))
-                }
-                placeholder="บ้านเลขที่"
-                required
-                invalid={!!errors.houseNo}
-                errorMessage={errors.houseNo}
-              />
-            ) : (
-              <TextValue value={extra.houseNo} />
-            )}
-          </FieldRow>
-
-          <FieldRow label="ชื่อหมู่บ้าน">
-            {isEditing ? (
-              <PrimaryInputText
-                value={extra.villageName}
-                onChange={(value) =>
-                  setExtra((p) => ({ ...p, villageName: value }))
-                }
-                placeholder="ชื่อหมู่บ้าน"
-              />
-            ) : (
-              <TextValue value={extra.villageName} />
-            )}
-          </FieldRow>
-
-          <FieldRow label="หมู่">
-            {isEditing ? (
-              <PrimaryInputText
-                value={extra.moo}
-                onChange={(value) => setExtra((p) => ({ ...p, moo: value }))}
-                placeholder="หมู่"
-                required
-                invalid={!!errors.moo}
-                errorMessage={errors.moo}
-              />
-            ) : (
-              <TextValue value={extra.moo} />
-            )}
-          </FieldRow>
-
-          <FieldRow label="ถนน">
-            {isEditing ? (
-              <PrimaryInputText
-                value={extra.road}
-                onChange={(value) => setExtra((p) => ({ ...p, road: value }))}
-                placeholder="ถนน"
-              />
-            ) : (
-              <TextValue value={extra.road} />
-            )}
-          </FieldRow>
-
-          <FieldRow label="ซอย">
-            {isEditing ? (
-              <PrimaryInputText
-                value={extra.alley}
-                onChange={(value) => setExtra((p) => ({ ...p, alley: value }))}
-                placeholder="ซอย"
-              />
-            ) : (
-              <TextValue value={extra.alley} />
-            )}
-          </FieldRow>
-          <div />
-
-          <FieldRow label="จังหวัด">
-            {isEditing ? (
-              <PrimaryDropdown
-                value={province}
-                options={provinceOptions}
-                onChange={onProvinceChange}
-                placeholder={isLoadingAddress ? "กำลังโหลด..." : "เลือกจังหวัด"}
-                disabled={isLoadingAddress}
-                filter
-                required
-                invalid={!!errors.provinceName}
-                errorMessage={errors.provinceName}
-              />
-            ) : (
-              <TextValue value={province} />
-            )}
-          </FieldRow>
-
-          <FieldRow label="อำเภอ">
-            {isEditing ? (
-              <PrimaryDropdown
-                value={district}
-                options={districtOptions}
-                onChange={onDistrictChange}
-                placeholder={province ? "เลือกอำเภอ" : "เลือกจังหวัดก่อน"}
-                disabled={isLoadingAddress || !province}
-                filter
-                required
-                invalid={!!errors.district}
-                errorMessage={errors.district}
-              />
-            ) : (
-              <TextValue value={district} />
-            )}
-          </FieldRow>
-
-          <FieldRow label="ตำบล">
-            {isEditing ? (
-              <PrimaryDropdown
-                value={subDistrict}
-                options={subDistrictOptions}
-                onChange={onSubDistrictChange}
-                placeholder={district ? "เลือกตำบล" : "เลือกอำเภอก่อน"}
-                disabled={isLoadingAddress || !province || !district}
-                filter
-                required
-                invalid={!!errors.subDistrict}
-                errorMessage={errors.subDistrict}
-              />
-            ) : (
-              <TextValue value={subDistrict} />
-            )}
-          </FieldRow>
-
-          <FieldRow label="รหัสไปรษณีย์">
-            {isEditing ? (
-              <PrimaryInputText
-                value={extra.zipCode}
-                onChange={(value) =>
-                  setExtra((p) => ({ ...p, zipCode: value }))
-                }
-                placeholder="รหัสไปรษณีย์"
-              />
-            ) : (
-              <TextValue value={extra.zipCode} />
-            )}
-          </FieldRow>
-        </div>
-      </Card>
-
-      <Card title="ข้อมูลติดต่อ">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FieldRow label="เบอร์บ้าน">
-            {isEditing ? (
-              <PrimaryInputMask
-                value={extra.phoneNumber}
-                onChange={(value) =>
-                  setExtra((p) => ({ ...p, phoneNumber: value }))
-                }
-                mask="99-999-9999"
-                placeholder="02-123-4567"
-              />
-            ) : (
-              <TextValue value={extra.phoneNumber} />
-            )}
-          </FieldRow>
-
-          <FieldRow label="เบอร์มือถือ">
-            {isEditing ? (
-              <PrimaryInputMask
-                value={extra.mobilePhoneNumber}
-                onChange={(value) =>
-                  setExtra((p) => ({ ...p, mobilePhoneNumber: value }))
-                }
-                mask="999-999-9999"
-                placeholder="081-234-5678"
-                required
-                invalid={!!errors.mobilePhoneNumber}
-                errorMessage={errors.mobilePhoneNumber}
-              />
-            ) : (
-              <TextValue value={extra.mobilePhoneNumber} />
-            )}
-          </FieldRow>
-        </div>
-      </Card>
+      <FarmerContactCard
+        isEditing={props.isEditing}
+        extra={props.extra}
+        setExtra={props.setExtra}
+        errors={props.errors}
+      />
     </div>
   );
 }
