@@ -475,7 +475,7 @@ function SimpleRoleProfile({ role, user, onSaved }: Readonly<Props>) {
           <Card title="ข้อมูลบัญชีผู้ใช้">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FieldRow label="อีเมล">
-                <div className="space-y-1">
+                <div>
                   <TextValue value={form.email} />
                   {errors.email ? (
                     <div className="text-xs text-red-600">{errors.email}</div>
@@ -745,7 +745,7 @@ function FarmerAccountCard({
     <Card title="ข้อมูลบัญชีผู้ใช้">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FieldRow label="อีเมล">
-          <div className="space-y-1">
+          <div>
             <TextValue value={base.email} />
             {errors.email ? (
               <div className="text-xs text-red-600">{errors.email}</div>
@@ -794,10 +794,8 @@ function FarmerAddressCard({
   const provincePlaceholder = isLoadingAddress
     ? "กำลังโหลด..."
     : "เลือกจังหวัด";
-  const districtPlaceholder = province ? "เลือกอำเภอ/เขต" : "เลือกจังหวัดก่อน";
-  const subDistrictPlaceholder = district
-    ? "เลือกตำบล/แขวง"
-    : "เลือกอำเภอ/เขตก่อน";
+  const districtPlaceholder = "เลือกอำเภอ/เขต";
+  const subDistrictPlaceholder = "เลือกตำบล/แขวง";
   const districtDisabled = isLoadingAddress || !province;
   const subDistrictDisabled = isLoadingAddress || !province || !district;
 
