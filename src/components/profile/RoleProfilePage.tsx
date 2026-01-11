@@ -2,12 +2,12 @@
 
 import type { NormalizedUser } from "@/types/UserType";
 import { useSession } from "next-auth/react";
-import { Button } from "primereact/button";
 import { Tag } from "primereact/tag";
-import { Toast } from "primereact/toast";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import toast from "react-hot-toast";
 import PrimaryCalendar from "@/components/ui/PrimaryCalendar";
+import PrimaryButton from "@/components/ui/PrimaryButton";
 import PrimaryDropdown from "@/components/ui/PrimaryDropdown";
 import PrimaryInputMask from "@/components/ui/PrimaryInputMask";
 import PrimaryInputText from "@/components/ui/PrimaryInputText";
@@ -195,7 +195,6 @@ function getRoleData(user: NormalizedUser, role: Role) {
 }
 
 function SimpleRoleProfile({ role, user, onSaved }: Readonly<Props>) {
-  const toastRef = useRef<Toast | null>(null);
   const { update } = useSession();
 
   const roleData = getRoleData(user, role);
@@ -295,12 +294,7 @@ function SimpleRoleProfile({ role, user, onSaved }: Readonly<Props>) {
     const v = validate();
     if (Object.keys(v).length > 0) {
       setErrors(v);
-      toastRef.current?.show({
-        severity: "error",
-        summary: "ไม่สำเร็จ",
-        detail: "กรุณากรอกข้อมูลให้ครบถ้วน",
-        life: 3000,
-      });
+      toast.error("กรุณากรอกข้อมูลให้ครบถ้วน");
       return;
     }
 
@@ -330,23 +324,13 @@ function SimpleRoleProfile({ role, user, onSaved }: Readonly<Props>) {
       onSaved(updated);
       await update();
 
-      toastRef.current?.show({
-        severity: "success",
-        summary: "สำเร็จ",
-        detail: "บันทึกข้อมูลโปรไฟล์เรียบร้อย",
-        life: 2500,
-      });
+      toast.success("บันทึกข้อมูลโปรไฟล์เรียบร้อย");
 
       setErrors({});
       setIsEditing(false);
       initialRef.current = JSON.stringify(form);
     } catch (e: any) {
-      toastRef.current?.show({
-        severity: "error",
-        summary: "ไม่สำเร็จ",
-        detail: e?.message || "บันทึกไม่สำเร็จ",
-        life: 3000,
-      });
+      toast.error(e?.message || "บันทึกไม่สำเร็จ");
     } finally {
       setSaving(false);
     }
@@ -363,7 +347,6 @@ function SimpleRoleProfile({ role, user, onSaved }: Readonly<Props>) {
     <ProfileShell
       left={
         <Card>
-          <Toast ref={toastRef} />
           <div className="flex items-center gap-4">
             <div
               className={`h-14 w-14 rounded-full ${avatarBg(
@@ -388,36 +371,37 @@ function SimpleRoleProfile({ role, user, onSaved }: Readonly<Props>) {
           <div className="mt-6 flex flex-col gap-2">
             {isEditing ? (
               <div className="flex gap-2">
-                <Button
+                <PrimaryButton
                   label="บันทึก"
                   icon="pi pi-save"
-                  severity="success"
+                  color="success"
                   onClick={save}
                   disabled={!isDirty || saving}
                   loading={saving}
                   className="flex-1"
                 />
-                <Button
+                <PrimaryButton
                   label="ยกเลิก"
                   icon="pi pi-times"
-                  severity="secondary"
+                  color="secondary"
                   onClick={cancel}
                   disabled={saving}
                   className="flex-1"
                 />
               </div>
             ) : (
-              <Button
+              <PrimaryButton
                 label="แก้ไขโปรไฟล์"
                 icon="pi pi-pencil"
+                color="info"
                 onClick={() => setIsEditing(true)}
                 className="w-full"
               />
             )}
-            <Button
+            <PrimaryButton
               label="ตั้งค่า"
               icon="pi pi-cog"
-              severity="secondary"
+              color="secondary"
               className="w-full"
               onClick={() => {
                 globalThis.location.href = `/${role.toLowerCase()}/settings`;
@@ -567,37 +551,38 @@ function FarmerProfileSidebar({
       <div className="mt-6 flex flex-col gap-2">
         {isEditing ? (
           <div className="flex gap-2">
-            <Button
+            <PrimaryButton
               label="บันทึก"
               icon="pi pi-save"
-              severity="success"
+              color="success"
               onClick={onSave}
               disabled={!isDirty || saving}
               loading={saving}
               className="flex-1"
             />
-            <Button
+            <PrimaryButton
               label="ยกเลิก"
               icon="pi pi-times"
-              severity="secondary"
+              color="secondary"
               onClick={onCancel}
               disabled={saving}
               className="flex-1"
             />
           </div>
         ) : (
-          <Button
+          <PrimaryButton
             label="แก้ไขโปรไฟล์"
             icon="pi pi-pencil"
+            color="info"
             onClick={onEdit}
             className="w-full"
           />
         )}
 
-        <Button
+        <PrimaryButton
           label="ตั้งค่า"
           icon="pi pi-cog"
-          severity="secondary"
+          color="secondary"
           className="w-full"
           onClick={() => {
             globalThis.location.href = "/farmer/settings";
@@ -1077,7 +1062,6 @@ function FarmerProfileDetails(props: FarmerProfileDetailsProps) {
 }
 
 function FarmerProfile({ role, user, onSaved }: Readonly<Props>) {
-  const toastRef = useRef<Toast | null>(null);
   const { update } = useSession();
 
   const farmer = user.farmer;
@@ -1362,12 +1346,7 @@ function FarmerProfile({ role, user, onSaved }: Readonly<Props>) {
     const v = validate();
     if (Object.keys(v).length > 0) {
       setErrors(v);
-      toastRef.current?.show({
-        severity: "error",
-        summary: "ไม่สำเร็จ",
-        detail: "กรุณากรอกข้อมูลให้ครบถ้วน",
-        life: 3000,
-      });
+      toast.error("กรุณากรอกข้อมูลให้ครบถ้วน");
       return;
     }
 
@@ -1417,23 +1396,13 @@ function FarmerProfile({ role, user, onSaved }: Readonly<Props>) {
       onSaved(updated);
       await update();
 
-      toastRef.current?.show({
-        severity: "success",
-        summary: "สำเร็จ",
-        detail: "บันทึกข้อมูลโปรไฟล์เรียบร้อย",
-        life: 2500,
-      });
+      toast.success("บันทึกข้อมูลโปรไฟล์เรียบร้อย");
 
       setErrors({});
       setIsEditing(false);
       initialRef.current = serializeValue(base, extra);
     } catch (e: any) {
-      toastRef.current?.show({
-        severity: "error",
-        summary: "ไม่สำเร็จ",
-        detail: e?.message || "บันทึกไม่สำเร็จ",
-        life: 3000,
-      });
+      toast.error(e?.message || "บันทึกไม่สำเร็จ");
     } finally {
       setSaving(false);
     }
@@ -1466,21 +1435,18 @@ function FarmerProfile({ role, user, onSaved }: Readonly<Props>) {
   return (
     <ProfileShell
       left={
-        <>
-          <Toast ref={toastRef} />
-          <FarmerProfileSidebar
-            role={role}
-            displayName={displayName}
-            email={String(user.email ?? "")}
-            avatarLetter={avatarLetter}
-            isEditing={isEditing}
-            isDirty={isDirty}
-            saving={saving}
-            onEdit={() => setIsEditing(true)}
-            onSave={save}
-            onCancel={cancel}
-          />
-        </>
+        <FarmerProfileSidebar
+          role={role}
+          displayName={displayName}
+          email={String(user.email ?? "")}
+          avatarLetter={avatarLetter}
+          isEditing={isEditing}
+          isDirty={isDirty}
+          saving={saving}
+          onEdit={() => setIsEditing(true)}
+          onSave={save}
+          onCancel={cancel}
+        />
       }
       right={
         <FarmerProfileDetails
