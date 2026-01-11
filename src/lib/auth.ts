@@ -70,14 +70,30 @@ export const authOptions: NextAuthOptions = {
         // อัพเดท iat (issued at) เพื่อต่ออายุ session
         token.iat = Math.floor(Date.now() / 1000);
 
-        // Re-fetch user data to get latest requirePasswordChange value
+        // Re-fetch user data to keep session fresh (requirePasswordChange + roleData for profile edits)
         if (token.id) {
           const updatedUser = await prisma.user.findUnique({
             where: { userId: Number.parseInt(token.id) },
-            select: { requirePasswordChange: true },
+            include: {
+              farmer: true,
+              auditor: true,
+              committee: true,
+              admin: true,
+            },
           });
+
           if (updatedUser) {
             token.requirePasswordChange = updatedUser.requirePasswordChange;
+            token.role = updatedUser.role;
+            token.roleData =
+              updatedUser.farmer ||
+              updatedUser.auditor ||
+              updatedUser.committee ||
+              updatedUser.admin;
+
+            // Keep defaults in sync too
+            (token as any).email = updatedUser.email;
+            (token as any).name = updatedUser.name;
           }
         }
       }
