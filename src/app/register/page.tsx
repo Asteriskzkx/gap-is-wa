@@ -225,7 +225,10 @@ export default function FarmerRegisterPage() {
                     placeholder="รหัสผ่านอย่างน้อย 8 ตัวอักษร"
                     required
                     autoComplete="new-password"
-                    feedback={false}
+                    feedback
+                    weakLabel="อ่อนแอ"
+                    mediumLabel="ปานกลาง"
+                    strongLabel="แข็งแรง"
                     toggleMask
                     invalid={!!errors.password}
                     errorMessage={errors.password}
