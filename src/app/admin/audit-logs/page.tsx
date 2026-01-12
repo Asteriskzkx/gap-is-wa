@@ -449,6 +449,8 @@ export default function AuditLogsPage() {
       <Dialog
         header="ล้างข้อมูลเก่า"
         visible={showDeleteDialog}
+        blockScroll={true}
+        draggable={false}
         style={{ width: "500px" }}
         onHide={() => setShowDeleteDialog(false)}
         footer={

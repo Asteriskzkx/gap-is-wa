@@ -513,6 +513,8 @@ export default function AdminUserManagementPage() {
           <Dialog
             header="ยืนยันการลบ"
             visible={deleteVisible}
+            blockScroll={true}
+            draggable={false}
             style={{ width: "25rem" }}
             onHide={() => setDeleteVisible(false)}
           >
