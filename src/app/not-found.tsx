@@ -2,7 +2,6 @@
 
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function NotFound() {

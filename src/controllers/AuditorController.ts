@@ -171,6 +171,13 @@ export class AuditorController extends BaseController<AuditorModel> {
       const data = await req.json();
       const { version, ...updateData } = data;
 
+      if (version === undefined) {
+        return NextResponse.json(
+          { message: "กรุณาระบุ version สำหรับ optimistic locking" },
+          { status: 400 }
+        );
+      }
+
       const updatedAuditor = await this.auditorService.updateAuditorProfile(
         auditorId,
         updateData,

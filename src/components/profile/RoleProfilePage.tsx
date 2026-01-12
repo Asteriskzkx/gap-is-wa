@@ -962,8 +962,8 @@ function FarmerContactCard({
               onChange={(value) =>
                 setExtra((p) => ({ ...p, phoneNumber: value }))
               }
-              mask="99-999-9999"
-              placeholder="02-123-4567"
+              mask="0-9999-9999"
+              placeholder="0-XXXX-XXXX"
             />
           ) : (
             <TextValue value={extra.phoneNumber} />
@@ -977,8 +977,8 @@ function FarmerContactCard({
               onChange={(value) =>
                 setExtra((p) => ({ ...p, mobilePhoneNumber: value }))
               }
-              mask="999-999-9999"
-              placeholder="081-234-5678"
+              mask="09-9999-9999"
+              placeholder="0X-XXXX-XXXX"
               required
               invalid={!!errors.mobilePhoneNumber}
               errorMessage={errors.mobilePhoneNumber}

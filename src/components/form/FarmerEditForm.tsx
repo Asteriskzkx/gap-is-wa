@@ -1,9 +1,15 @@
-import { NormalizedUser, FarmerInfo } from "@/types/UserType";
-import { InputText } from "primereact/inputtext";
-import React, { useMemo, useState, useCallback, useRef, useEffect } from "react";
-import BaseUserForm, { BaseUserFormValues } from "./BaseUserForm";
-import { PrimaryCalendar, PrimaryInputMask, PrimaryDropdown } from "../ui";
 import useThaiAddress from "@/hooks/useThaiAddress";
+import { FarmerInfo, NormalizedUser } from "@/types/UserType";
+import { InputText } from "primereact/inputtext";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { PrimaryCalendar, PrimaryDropdown, PrimaryInputMask } from "../ui";
+import BaseUserForm, { BaseUserFormValues } from "./BaseUserForm";
 
 type Props = {
   user: NormalizedUser;
@@ -31,7 +37,10 @@ const formatIdNumber = (id: string | null | undefined): string => {
   if (!id) return "";
   const digits = id.replace(/\D/g, "");
   if (digits.length !== 13) return id;
-  return `${digits[0]}-${digits.slice(1, 5)}-${digits.slice(5, 10)}-${digits.slice(10, 12)}-${digits[12]}`;
+  return `${digits[0]}-${digits.slice(1, 5)}-${digits.slice(
+    5,
+    10
+  )}-${digits.slice(10, 12)}-${digits[12]}`;
 };
 
 // Helper to create extra state from farmer data
@@ -66,7 +75,10 @@ export default function FarmerEditForm({ user, onSuccess }: Props) {
   );
 
   const [extra, setExtra] = useState(() => createExtraFromFarmer(user.farmer));
-  const initialExtra = useMemo(() => createExtraFromFarmer(user.farmer), [user]);
+  const initialExtra = useMemo(
+    () => createExtraFromFarmer(user.farmer),
+    [user]
+  );
   const initialExtraRef = useRef(createExtraFromFarmer(user.farmer));
 
   // Sync extra state when user.farmer changes (e.g., after successful save)
@@ -94,11 +106,14 @@ export default function FarmerEditForm({ user, onSuccess }: Props) {
     }
   }, [pendingReset, extra]);
 
-  const onChangeExtra = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    if (!name) return;
-    setExtra((prev) => ({ ...prev, [name]: value }));
-  }, []);
+  const onChangeExtra = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const { name, value } = e.target;
+      if (!name) return;
+      setExtra((prev) => ({ ...prev, [name]: value }));
+    },
+    []
+  );
 
   // Thai address cascade state
   const {
@@ -152,28 +167,52 @@ export default function FarmerEditForm({ user, onSuccess }: Props) {
         setProvince(matchedProvince);
         const districts = getDistricts(matchedProvince);
         const matchedDistrict = findMatchingOption(initialDistrict, districts);
-        
+
         if (matchedDistrict) {
           setDistrict(matchedDistrict);
-          const subDistricts = getSubDistricts(matchedProvince, matchedDistrict);
-          const matchedSubDistrict = findMatchingOption(initialSubDistrict, subDistricts);
-          
+          const subDistricts = getSubDistricts(
+            matchedProvince,
+            matchedDistrict
+          );
+          const matchedSubDistrict = findMatchingOption(
+            initialSubDistrict,
+            subDistricts
+          );
+
           if (matchedSubDistrict) {
             setSubDistrict(matchedSubDistrict);
-            setZipCode(initialZipCode || getZipCode(matchedProvince, matchedDistrict, matchedSubDistrict));
+            setZipCode(
+              initialZipCode ||
+                getZipCode(matchedProvince, matchedDistrict, matchedSubDistrict)
+            );
           }
         }
       }
-      
+
       setIsInitialized(true);
-      setLastSyncedExtra(JSON.stringify({
-        provinceName: extra.provinceName,
-        district: extra.district,
-        subDistrict: extra.subDistrict,
-        zipCode: extra.zipCode,
-      }));
+      setLastSyncedExtra(
+        JSON.stringify({
+          provinceName: extra.provinceName,
+          district: extra.district,
+          subDistrict: extra.subDistrict,
+          zipCode: extra.zipCode,
+        })
+      );
     }
-  }, [isLoadingAddress, provinces, user.farmer, getDistricts, getSubDistricts, getZipCode, findMatchingOption, isInitialized, extra.provinceName, extra.district, extra.subDistrict, extra.zipCode]);
+  }, [
+    isLoadingAddress,
+    provinces,
+    user.farmer,
+    getDistricts,
+    getSubDistricts,
+    getZipCode,
+    findMatchingOption,
+    isInitialized,
+    extra.provinceName,
+    extra.district,
+    extra.subDistrict,
+    extra.zipCode,
+  ]);
 
   // Dropdown options
   const provinceOptions = useMemo(
@@ -182,14 +221,20 @@ export default function FarmerEditForm({ user, onSuccess }: Props) {
   );
 
   const districtOptions = useMemo(
-    () => (province ? getDistricts(province).map((d) => ({ label: d, value: d })) : []),
+    () =>
+      province
+        ? getDistricts(province).map((d) => ({ label: d, value: d }))
+        : [],
     [province, getDistricts]
   );
 
   const subDistrictOptions = useMemo(
     () =>
       province && district
-        ? getSubDistricts(province, district).map((s) => ({ label: s, value: s }))
+        ? getSubDistricts(province, district).map((s) => ({
+            label: s,
+            value: s,
+          }))
         : [],
     [province, district, getSubDistricts]
   );
@@ -229,12 +274,15 @@ export default function FarmerEditForm({ user, onSuccess }: Props) {
     }));
   }, []);
 
-  const onSubDistrictChange = useCallback((value: string) => {
-    setSubDistrict(value);
-    const z = getZipCode(province, district, value);
-    setZipCode(z);
-    setExtra((prev) => ({ ...prev, subDistrict: value, zipCode: z }));
-  }, [getZipCode, province, district]);
+  const onSubDistrictChange = useCallback(
+    (value: string) => {
+      setSubDistrict(value);
+      const z = getZipCode(province, district, value);
+      setZipCode(z);
+      setExtra((prev) => ({ ...prev, subDistrict: value, zipCode: z }));
+    },
+    [getZipCode, province, district]
+  );
 
   // Sync local cascades when extra changes (e.g., reset button)
   useEffect(() => {
@@ -244,23 +292,36 @@ export default function FarmerEditForm({ user, onSuccess }: Props) {
       subDistrict: extra.subDistrict,
       zipCode: extra.zipCode,
     });
-    
-    if (isInitialized && !isLoadingAddress && currentExtraKey !== lastSyncedExtra) {
+
+    if (
+      isInitialized &&
+      !isLoadingAddress &&
+      currentExtraKey !== lastSyncedExtra
+    ) {
       const matchedProvince = findMatchingOption(extra.provinceName, provinces);
-      
+
       if (matchedProvince) {
         setProvince(matchedProvince);
         const districts = getDistricts(matchedProvince);
         const matchedDistrict = findMatchingOption(extra.district, districts);
-        
+
         if (matchedDistrict) {
           setDistrict(matchedDistrict);
-          const subDistricts = getSubDistricts(matchedProvince, matchedDistrict);
-          const matchedSubDistrict = findMatchingOption(extra.subDistrict, subDistricts);
-          
+          const subDistricts = getSubDistricts(
+            matchedProvince,
+            matchedDistrict
+          );
+          const matchedSubDistrict = findMatchingOption(
+            extra.subDistrict,
+            subDistricts
+          );
+
           if (matchedSubDistrict) {
             setSubDistrict(matchedSubDistrict);
-            setZipCode(extra.zipCode || getZipCode(matchedProvince, matchedDistrict, matchedSubDistrict));
+            setZipCode(
+              extra.zipCode ||
+                getZipCode(matchedProvince, matchedDistrict, matchedSubDistrict)
+            );
           } else {
             setSubDistrict("");
             setZipCode("");
@@ -276,38 +337,66 @@ export default function FarmerEditForm({ user, onSuccess }: Props) {
         setSubDistrict("");
         setZipCode("");
       }
-      
+
       setLastSyncedExtra(currentExtraKey);
     }
-  }, [extra.provinceName, extra.district, extra.subDistrict, extra.zipCode, isInitialized, isLoadingAddress, provinces, getDistricts, getSubDistricts, getZipCode, findMatchingOption, lastSyncedExtra]);
+  }, [
+    extra.provinceName,
+    extra.district,
+    extra.subDistrict,
+    extra.zipCode,
+    isInitialized,
+    isLoadingAddress,
+    provinces,
+    getDistricts,
+    getSubDistricts,
+    getZipCode,
+    findMatchingOption,
+    lastSyncedExtra,
+  ]);
 
   // Reset function that resets both extra and local cascade state
   const resetToInitial = React.useCallback(() => {
     // Use ref values (preserved original)
     const resetData = initialExtraRef.current;
-    
+
     // Update extra state first
     setExtra({ ...resetData });
-    
+
     // Also reset local cascade state directly
     if (provinces.length > 0) {
-      const matchedProvince = findMatchingOption(resetData.provinceName, provinces);
-      
+      const matchedProvince = findMatchingOption(
+        resetData.provinceName,
+        provinces
+      );
+
       if (matchedProvince) {
         setProvince(matchedProvince);
-        
+
         const districts = getDistricts(matchedProvince);
-        const matchedDistrict = findMatchingOption(resetData.district, districts);
-        
+        const matchedDistrict = findMatchingOption(
+          resetData.district,
+          districts
+        );
+
         if (matchedDistrict) {
           setDistrict(matchedDistrict);
-          
-          const subDistricts = getSubDistricts(matchedProvince, matchedDistrict);
-          const matchedSubDistrict = findMatchingOption(resetData.subDistrict, subDistricts);
-          
+
+          const subDistricts = getSubDistricts(
+            matchedProvince,
+            matchedDistrict
+          );
+          const matchedSubDistrict = findMatchingOption(
+            resetData.subDistrict,
+            subDistricts
+          );
+
           if (matchedSubDistrict) {
             setSubDistrict(matchedSubDistrict);
-            setZipCode(resetData.zipCode || getZipCode(matchedProvince, matchedDistrict, matchedSubDistrict));
+            setZipCode(
+              resetData.zipCode ||
+                getZipCode(matchedProvince, matchedDistrict, matchedSubDistrict)
+            );
           } else {
             setSubDistrict("");
             setZipCode("");
@@ -324,27 +413,36 @@ export default function FarmerEditForm({ user, onSuccess }: Props) {
         setZipCode("");
       }
     }
-    
+
     // Update lastSyncedExtra to prevent useEffect from overwriting
-    setLastSyncedExtra(JSON.stringify({
-      provinceName: resetData.provinceName,
-      district: resetData.district,
-      subDistrict: resetData.subDistrict,
-      zipCode: resetData.zipCode,
-    }));
-    
+    setLastSyncedExtra(
+      JSON.stringify({
+        provinceName: resetData.provinceName,
+        district: resetData.district,
+        subDistrict: resetData.subDistrict,
+        zipCode: resetData.zipCode,
+      })
+    );
+
     // Set pending reset flag - the useEffect will increment resetKey after state is updated
     setPendingReset(true);
-    
+
     // Clear errors
     setErrors({});
-  }, [provinces, findMatchingOption, getDistricts, getSubDistricts, getZipCode]);
+  }, [
+    provinces,
+    findMatchingOption,
+    getDistricts,
+    getSubDistricts,
+    getZipCode,
+  ]);
 
   const validate = useCallback((): Record<string, string> => {
     const errs: Record<string, string> = {};
-    
+
     const idDigits = (extra.identificationNumber || "").replace(/\D/g, "");
-    if (idDigits.length !== 13) errs.identificationNumber = "เลขบัตรประชาชนต้องมี 13 หลัก";
+    if (idDigits.length !== 13)
+      errs.identificationNumber = "เลขบัตรประชาชนต้องมี 13 หลัก";
     if (!extra.birthDate) errs.birthDate = "กรุณาเลือกวันเดือนปีเกิด";
     if (!extra.gender?.trim()) errs.gender = "กรุณาเลือกเพศ";
     if (!extra.houseNo?.trim()) errs.houseNo = "กรุณากรอกบ้านเลขที่";
@@ -352,14 +450,16 @@ export default function FarmerEditForm({ user, onSuccess }: Props) {
     const mooStr = (extra.moo ?? "").toString().trim();
     const mooNum = mooStr === "" ? NaN : Number(mooStr);
     if (Number.isNaN(mooNum)) errs.moo = "กรุณากรอกหมู่เป็นตัวเลข";
-    else if (mooNum < 0 || mooNum > 1000) errs.moo = "กรุณากรอกหมู่ระหว่าง 0-1000";
+    else if (mooNum < 0 || mooNum > 1000)
+      errs.moo = "กรุณากรอกหมู่ระหว่าง 0-1000";
 
     if (!province) errs.province = "กรุณาเลือกจังหวัด";
     if (!district) errs.district = "กรุณาเลือกอำเภอ";
     if (!subDistrict) errs.subDistrict = "กรุณาเลือกตำบล";
 
     const mobileDigits = (extra.mobilePhoneNumber || "").replace(/\D/g, "");
-    if (mobileDigits.length !== 10) errs.mobilePhoneNumber = "กรุณากรอกเบอร์มือถือ 10 หลัก";
+    if (mobileDigits.length !== 10)
+      errs.mobilePhoneNumber = "กรุณากรอกเบอร์มือถือ 10 หลัก";
 
     return errs;
   }, [extra, province, district, subDistrict]);
@@ -373,7 +473,7 @@ export default function FarmerEditForm({ user, onSuccess }: Props) {
     const payload = {
       ...values,
       ...extra,
-      moo: Number(extra.moo) ,
+      moo: Number(extra.moo),
       birthDate: extra.birthDate
         ? new Date(extra.birthDate).toISOString().split("T")[0]
         : null,
@@ -399,7 +499,7 @@ export default function FarmerEditForm({ user, onSuccess }: Props) {
       } catch {}
       throw new Error(msg);
     }
-    
+
     const updated: FarmerInfo = await res.json();
     return updated;
   };
@@ -435,7 +535,9 @@ export default function FarmerEditForm({ user, onSuccess }: Props) {
         >
           {/* Extra farmer fields inside the same form so the submit button stays at the bottom */}
           <div className="space-y-3 mt-4">
-            <h3 className="font-semibold text-center pt-4">ข้อมูลเพิ่มเติมของเกษตรกร</h3>
+            <h3 className="font-semibold text-center pt-4">
+              ข้อมูลเพิ่มเติมของเกษตรกร
+            </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -509,7 +611,7 @@ export default function FarmerEditForm({ user, onSuccess }: Props) {
               </div>
               <div>
                 <label className="block text-sm mb-1" htmlFor="phoneNumber">
-                  เบอร์โทรศัพท์บ้าน
+                  เบอร์โทรศัพท์
                 </label>
                 <PrimaryInputMask
                   key={`ph-${resetKey}`}
@@ -519,8 +621,8 @@ export default function FarmerEditForm({ user, onSuccess }: Props) {
                   onChange={(value) =>
                     setExtra((prev) => ({ ...prev, phoneNumber: value }))
                   }
-                  mask="99-999-9999"
-                  placeholder="0X-XXX-XXXX"
+                  mask="0-9999-9999"
+                  placeholder="0-XXXX-XXXX"
                   autoClear={false}
                 />
               </div>
@@ -539,8 +641,8 @@ export default function FarmerEditForm({ user, onSuccess }: Props) {
                   onChange={(value) =>
                     setExtra((prev) => ({ ...prev, mobilePhoneNumber: value }))
                   }
-                  mask="999-999-9999"
-                  placeholder="0XX-XXX-XXXX"
+                  mask="09-9999-9999"
+                  placeholder="0X-XXXX-XXXX"
                   autoClear={false}
                   required
                   invalid={!!errors.mobilePhoneNumber}

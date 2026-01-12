@@ -46,6 +46,21 @@ export default function FarmerRegisterPage() {
     checkDuplicateEmail,
   } = useRegisterForm();
 
+  const getStepCircleClass = (s: number) => {
+    if (s === step) return styles.stepCircleActive;
+    if (s < step) return styles.stepCircleCompleted;
+    return styles.stepCircleInactive;
+  };
+
+  const getStepLabelClass = (s: number) => {
+    if (s === step) return styles.stepLabelActive;
+    if (s < step) return styles.stepLabelCompleted;
+    return styles.stepLabelInactive;
+  };
+
+  const getStepConnectorClass = (s: number) =>
+    s < step ? styles.stepConnectorActive : styles.stepConnectorInactive;
+
   return (
     <div className={styles.registerContainer}>
       <div className={styles.contentWrapper}>
@@ -74,13 +89,9 @@ export default function FarmerRegisterPage() {
                 <React.Fragment key={s}>
                   <div className={styles.stepItem}>
                     <div
-                      className={`${styles.stepCircle} ${
-                        s === step
-                          ? styles.stepCircleActive
-                          : s < step
-                          ? styles.stepCircleCompleted
-                          : styles.stepCircleInactive
-                      }`}
+                      className={`${styles.stepCircle} ${getStepCircleClass(
+                        s
+                      )}`}
                     >
                       {s < step ? (
                         <CheckIcon className={styles.checkIcon} />
@@ -90,13 +101,7 @@ export default function FarmerRegisterPage() {
                     </div>
 
                     <div
-                      className={`${styles.stepLabel} ${
-                        s === step
-                          ? styles.stepLabelActive
-                          : s < step
-                          ? styles.stepLabelCompleted
-                          : styles.stepLabelInactive
-                      }`}
+                      className={`${styles.stepLabel} ${getStepLabelClass(s)}`}
                     >
                       {s === 1 && "บัญชีผู้ใช้"}
                       {s === 2 && "ข้อมูลส่วนตัว"}
@@ -108,11 +113,9 @@ export default function FarmerRegisterPage() {
                   {index < 3 && (
                     <div className={styles.stepConnector}>
                       <div
-                        className={`${styles.stepConnectorLine} ${
-                          s < step
-                            ? styles.stepConnectorActive
-                            : styles.stepConnectorInactive
-                        }`}
+                        className={`${
+                          styles.stepConnectorLine
+                        } ${getStepConnectorClass(s)}`}
                       />
                     </div>
                   )}
@@ -126,16 +129,12 @@ export default function FarmerRegisterPage() {
             <div className={styles.stepIndicators}>
               <div className={styles.stepIndicatorsContainer}>
                 {[1, 2, 3, 4].map((s, index) => {
-                  const getStepClass = () => {
-                    if (s === step) return styles.stepCircleActive;
-                    if (s < step) return styles.stepCircleCompleted;
-                    return styles.stepCircleInactive;
-                  };
-
                   return (
                     <React.Fragment key={s}>
                       <div
-                        className={`${styles.stepDotMobile} ${getStepClass()}`}
+                        className={`${
+                          styles.stepDotMobile
+                        } ${getStepCircleClass(s)}`}
                       >
                         {s < step ? (
                           <CheckIcon className={styles.checkIconMobile} />
@@ -145,11 +144,9 @@ export default function FarmerRegisterPage() {
                       </div>
                       {index < 3 && (
                         <div
-                          className={`${styles.stepConnectorMobile} ${
-                            s < step
-                              ? styles.stepConnectorActive
-                              : styles.stepConnectorInactive
-                          }`}
+                          className={`${
+                            styles.stepConnectorMobile
+                          } ${getStepConnectorClass(s)}`}
                         />
                       )}
                     </React.Fragment>
@@ -228,7 +225,10 @@ export default function FarmerRegisterPage() {
                     placeholder="รหัสผ่านอย่างน้อย 8 ตัวอักษร"
                     required
                     autoComplete="new-password"
-                    feedback={false}
+                    feedback
+                    weakLabel="อ่อนแอ"
+                    mediumLabel="ปานกลาง"
+                    strongLabel="แข็งแรง"
                     toggleMask
                     invalid={!!errors.password}
                     errorMessage={errors.password}
@@ -630,7 +630,7 @@ export default function FarmerRegisterPage() {
 
                 <div className={styles.formGroup}>
                   <label htmlFor="phoneNumber" className={styles.label}>
-                    เบอร์โทรศัพท์ <span className={styles.required}>*</span>
+                    เบอร์โทรศัพท์
                   </label>
                   <PrimaryInputMask
                     id="phoneNumber"
@@ -640,7 +640,7 @@ export default function FarmerRegisterPage() {
                       setFormData((prev) => ({ ...prev, phoneNumber: value }))
                     }
                     autoClear={false}
-                    mask="9-9999-9999"
+                    mask="0-9999-9999"
                     placeholder="0-XXXX-XXXX"
                     invalid={!!errors.phoneNumber}
                     errorMessage={errors.phoneNumber}
@@ -663,7 +663,7 @@ export default function FarmerRegisterPage() {
                       }))
                     }
                     autoClear={false}
-                    mask="99-9999-9999"
+                    mask="09-9999-9999"
                     placeholder="0X-XXXX-XXXX"
                     invalid={!!errors.mobilePhoneNumber}
                     errorMessage={errors.mobilePhoneNumber}

@@ -56,6 +56,43 @@ export const FarmInfoStep: React.FC<FarmInfoStepProps> = ({
     { label: "ยางก้อนถ้วย", value: "ยางก้อนถ้วย" },
   ];
 
+  const handleProvinceChange = (value: any) => {
+    const provinceId = Number(value) || 0;
+    updateFarmData("provinceId", provinceId);
+    updateFarmData(
+      "province",
+      provinces.find((p) => p.id === provinceId)?.name_th || ""
+    );
+
+    // Reset cascading fields
+    updateFarmData("amphureId", 0);
+    updateFarmData("district", "");
+    updateFarmData("tambonId", 0);
+    updateFarmData("subDistrict", "");
+  };
+
+  const handleAmphureChange = (value: any) => {
+    const amphureId = Number(value) || 0;
+    updateFarmData("amphureId", amphureId);
+    updateFarmData(
+      "district",
+      amphures.find((a) => a.id === amphureId)?.name_th || ""
+    );
+
+    // Reset cascading field
+    updateFarmData("tambonId", 0);
+    updateFarmData("subDistrict", "");
+  };
+
+  const handleTambonChange = (value: any) => {
+    const tambonId = Number(value) || 0;
+    updateFarmData("tambonId", tambonId);
+    updateFarmData(
+      "subDistrict",
+      tambons.find((t) => t.id === tambonId)?.name_th || ""
+    );
+  };
+
   return (
     <div className={formStyles.formSection}>
       <h2 className={formStyles.section.title}>ข้อมูลสวนยาง</h2>
@@ -157,7 +194,7 @@ export const FarmInfoStep: React.FC<FarmInfoStepProps> = ({
               label: province.name_th,
               value: province.id,
             }))}
-            onChange={(value) => updateFarmData("provinceId", value)}
+            onChange={handleProvinceChange}
             placeholder="เลือกจังหวัด"
             required
           />
@@ -176,7 +213,7 @@ export const FarmInfoStep: React.FC<FarmInfoStepProps> = ({
               label: amphure.name_th,
               value: amphure.id,
             }))}
-            onChange={(value) => updateFarmData("amphureId", value)}
+            onChange={handleAmphureChange}
             placeholder="เลือกอำเภอ/เขต"
             disabled={!rubberFarm.provinceId}
             required
@@ -196,7 +233,7 @@ export const FarmInfoStep: React.FC<FarmInfoStepProps> = ({
               label: tambon.name_th,
               value: tambon.id,
             }))}
-            onChange={(value) => updateFarmData("tambonId", value)}
+            onChange={handleTambonChange}
             placeholder="เลือกตำบล/แขวง"
             disabled={!rubberFarm.amphureId}
             required

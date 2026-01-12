@@ -79,7 +79,7 @@ export class RubberFarmModel extends BaseModel {
     return (
       this.farmerId > 0 &&
       this.villageName.trim().length > 0 &&
-      this.moo > 0 &&
+      this.moo >= 0 &&
       this.road.trim().length > 0 &&
       this.alley.trim().length > 0 &&
       this.subDistrict.trim().length > 0 &&

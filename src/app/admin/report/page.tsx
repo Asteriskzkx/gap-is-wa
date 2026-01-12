@@ -630,6 +630,8 @@ export default function AdminReportPage() {
         <Dialog
           header="เลือกรายงานที่ต้องการส่งออก"
           visible={showExportDialog}
+          blockScroll={true}
+          draggable={false}
           style={{ width: "450px" }}
           onHide={() => setShowExportDialog(false)}
           footer={
@@ -769,6 +771,7 @@ export default function AdminReportPage() {
                 📅 ช่วงวันที่:
               </span>
               <Calendar
+                data-testid="date-range"
                 showIcon
                 value={dates}
                 placeholder="เลือกช่วงวันที่"

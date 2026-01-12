@@ -146,7 +146,7 @@ export class FarmerModel extends UserModel {
       this.lastName.trim().length > 0 &&
       this.identificationNumber.trim().length > 0 &&
       this.gender.trim().length > 0 &&
-      this.moo > 0 &&
+      this.moo >= 0 &&
       this.subDistrict.trim().length > 0 &&
       this.district.trim().length > 0 &&
       this.provinceName.trim().length > 0 &&

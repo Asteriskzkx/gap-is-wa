@@ -141,6 +141,13 @@ export class AdminController extends BaseController<AdminModel> {
       const data = await req.json();
       const { version, ...updateData } = data;
 
+      if (version === undefined) {
+        return NextResponse.json(
+          { message: "กรุณาระบุ version สำหรับ optimistic locking" },
+          { status: 400 }
+        );
+      }
+
       const updatedAdmin = await this.adminService.updateAdminProfile(
         adminId,
         updateData,

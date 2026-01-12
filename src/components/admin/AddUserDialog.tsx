@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { Dialog } from "primereact/dialog";
-import { Button } from "primereact/button";
-import PrimaryCalendar from "@/components/ui/PrimaryCalendar";
-import PrimaryInputText from "@/components/ui/PrimaryInputText";
-import PrimaryInputMask from "@/components/ui/PrimaryInputMask";
-import PrimaryDropdown from "@/components/ui/PrimaryDropdown";
-import PrimaryAutoComplete from "@/components/ui/PrimaryAutoComplete";
+import {
+  PrimaryButton,
+  PrimaryCalendar,
+  PrimaryDropdown,
+  PrimaryInputMask,
+  PrimaryInputText,
+} from "@/components/ui";
 import thaiProvinceData from "@/data/thai-provinces.json";
+import { Dialog } from "primereact/dialog";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 type Option = { name: string; value: string };
 
@@ -16,6 +17,15 @@ export enum UserRole {
   COMMITTEE = "COMMITTEE",
   ADMIN = "ADMIN",
 }
+
+const userRoleLabelMap: Record<UserRole, string> = {
+  [UserRole.FARMER]: "เกษตรกร (FARMER)",
+  [UserRole.AUDITOR]: "ผู้ตรวจประเมิน (AUDITOR)",
+  [UserRole.COMMITTEE]: "คณะกรรมการ (COMMITTEE)",
+  [UserRole.ADMIN]: "ผู้ดูแลระบบ (ADMIN)",
+};
+
+const getRoleLabel = (role: UserRole) => userRoleLabelMap[role] ?? role;
 
 // Consolidated address state (Issue #7)
 type AddressState = {
@@ -136,6 +146,15 @@ export const AddUserDialog: React.FC<Props> = ({
     { name: "นาง", value: "นาง" },
   ];
 
+  const roleOptions = useMemo(
+    () =>
+      Object.values(UserRole).map((role) => ({
+        label: getRoleLabel(role),
+        value: role,
+      })),
+    []
+  );
+
   // Load provinces on mount
   useEffect(() => {
     const formattedProvinces = (thaiProvinceData as any[]).map(
@@ -239,7 +258,8 @@ export const AddUserDialog: React.FC<Props> = ({
 
   // Validation helpers
   const isValidId = (id: string) => id.replaceAll("-", "").length === 13;
-  const isValidMobile = (mobile: string) => mobile.replaceAll("-", "").length === 10;
+  const isValidMobile = (mobile: string) =>
+    mobile.replaceAll("-", "").length === 10;
   const isValidMoo = (moo: string) => moo !== "" && Number(moo) > 0; // Issue #3
 
   // Memoized canSubmit to prevent recalculation (Issue #5)
@@ -355,7 +375,9 @@ export const AddUserDialog: React.FC<Props> = ({
     <Dialog
       header="เพิ่มผู้ใช้ใหม่"
       visible={visible}
-      style={{ width: "42rem" }}
+      blockScroll={true}
+      draggable={false}
+      className="w-[clamp(22rem,92vw,56rem)]"
       onHide={() => {
         onHide();
         reset();
@@ -365,13 +387,13 @@ export const AddUserDialog: React.FC<Props> = ({
         {/* Role Selection */}
         <PrimaryDropdown
           value={selectedRole}
-          options={Object.values(UserRole).map((r) => ({ label: r, value: r }))}
+          options={roleOptions}
           onChange={(v) => {
             setSelectedRole(v);
             setDirty((d) => ({ ...d, selectedRole: true }));
           }}
           onBlur={() => markTouched("selectedRole")}
-          placeholder="เลือกบทบาท (Role)"
+          placeholder="เลือกบทบาท"
           required
           invalid={
             (dirty.selectedRole || touched.selectedRole) && !selectedRole
@@ -384,9 +406,7 @@ export const AddUserDialog: React.FC<Props> = ({
         />
 
         {!selectedRole && (
-          <div className="text-gray-500 text-sm">
-            เลือก Role เพื่อกรอกข้อมูล
-          </div>
+          <div className="text-gray-500 text-sm">เลือกบทบาทเพื่อกรอกข้อมูล</div>
         )}
 
         {selectedRole && (
@@ -443,7 +463,7 @@ export const AddUserDialog: React.FC<Props> = ({
             </span>
 
             <span className="flex flex-col">
-              <label htmlFor='lastName' className="text-sm mb-1">
+              <label htmlFor="lastName" className="text-sm mb-1">
                 นามสกุล <span className="text-red-500">*</span>
               </label>
               <PrimaryInputText
@@ -759,10 +779,12 @@ export const AddUserDialog: React.FC<Props> = ({
                     disabled
                     required
                     invalid={
-                      (dirty.tambonId || touched.zipCode) && address.zipCode === ""
+                      (dirty.tambonId || touched.zipCode) &&
+                      address.zipCode === ""
                     }
                     errorMessage={
-                      (dirty.tambonId || touched.zipCode) && address.zipCode === ""
+                      (dirty.tambonId || touched.zipCode) &&
+                      address.zipCode === ""
                         ? "เลือกตำบลเพื่อเติมรหัสไปรษณีย์"
                         : ""
                     }
@@ -771,7 +793,7 @@ export const AddUserDialog: React.FC<Props> = ({
 
                 {/* Phone Numbers */}
                 <span className="flex flex-col">
-                  <label className="text-sm mb-1">เบอร์โทรศัพท์บ้าน</label>
+                  <label className="text-sm mb-1">เบอร์โทรศัพท์</label>
                   <PrimaryInputMask
                     value={phoneNumber}
                     onChange={(v) => {
@@ -779,8 +801,8 @@ export const AddUserDialog: React.FC<Props> = ({
                       setDirty((d) => ({ ...d, phoneNumber: true }));
                     }}
                     onBlur={() => markTouched("phoneNumber")}
-                    mask="99-999-9999"
-                    placeholder="0X-XXX-XXXX"
+                    mask="0-9999-9999"
+                    placeholder="0-XXXX-XXXX"
                   />
                 </span>
 
@@ -795,11 +817,11 @@ export const AddUserDialog: React.FC<Props> = ({
                       setDirty((d) => ({ ...d, mobilePhoneNumber: true }));
                     }}
                     onBlur={() => markTouched("mobilePhoneNumber")}
-                    mask="999-999-9999"
+                    mask="09-9999-9999"
+                    placeholder="0X-XXXX-XXXX"
                     required
                     invalid={
-                      (dirty.mobilePhoneNumber ||
-                        touched.mobilePhoneNumber) &&
+                      (dirty.mobilePhoneNumber || touched.mobilePhoneNumber) &&
                       !isValidMobile(mobilePhoneNumber)
                     }
                     errorMessage={
@@ -811,7 +833,6 @@ export const AddUserDialog: React.FC<Props> = ({
                           : "กรุณากรอกเบอร์มือถือ"
                         : ""
                     }
-                    placeholder="0XX-XXX-XXXX"
                   />
                 </span>
               </>
@@ -821,23 +842,23 @@ export const AddUserDialog: React.FC<Props> = ({
 
         {/* Dialog Actions */}
         <div className="flex justify-end gap-3 mt-4">
-          <Button
+          <PrimaryButton
             label="ยกเลิก"
-            severity="secondary"
             icon="pi pi-times"
+            color="secondary"
+            variant="outlined"
             onClick={() => {
               onHide();
               reset();
             }}
-            className="px-4"
           />
-          <Button
+          <PrimaryButton
             label="บันทึก"
             icon="pi pi-save"
+            color="success"
             disabled={!canSubmit || loading}
             loading={loading}
             onClick={submit}
-            className="px-4"
           />
         </div>
       </div>

@@ -1,5 +1,5 @@
-import React, { useMemo } from "react";
-import { NormalizedUser, AuditorInfo } from "@/types/UserType";
+import { AuditorInfo, NormalizedUser } from "@/types/UserType";
+import { useMemo } from "react";
 import BaseUserForm, { BaseUserFormValues } from "./BaseUserForm";
 
 type Props = {

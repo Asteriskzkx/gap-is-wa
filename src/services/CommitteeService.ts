@@ -126,88 +126,60 @@ export class CommitteeService extends BaseService<CommitteeModel> {
     userId?: number
   ): Promise<CommitteeModel | null> {
     try {
+      if (currentVersion === undefined) {
+        throw new Error("version is required for optimistic locking");
+      }
+
+      // Fetch current record once (used for name calc + email uniqueness + audit log)
+      const oldRecord = await this.committeeRepository.findById(committeeId);
+      if (!oldRecord) {
+        return null;
+      }
+
+      const effectiveNamePrefix = data.namePrefix ?? oldRecord.namePrefix;
+      const effectiveFirstName = data.firstName ?? oldRecord.firstName;
+      const effectiveLastName = data.lastName ?? oldRecord.lastName;
+      data.name = `${effectiveNamePrefix}${effectiveFirstName} ${effectiveLastName}`;
+
       // If updating email, check if it's already in use by another account
       if (data.email) {
-        // First, get the current committee to find the associated userId
-        const currentCommittee = await this.committeeRepository.findById(
-          committeeId
-        );
-        if (!currentCommittee) {
-          return null;
-        }
-
         const existingUser = await this.userService.findByEmail(data.email);
-        // Only throw error if email belongs to a different user (currentCommittee.id is userId from BaseModel)
-        if (existingUser && existingUser.id !== currentCommittee.id) {
+        // Only throw error if email belongs to a different user (oldRecord.id is userId from BaseModel)
+        if (existingUser && existingUser.id !== oldRecord.id) {
           throw new Error("Email is already in use by another account");
         }
       }
 
-      if (currentVersion !== undefined) {
-        // ดึงข้อมูลเก่าก่อน update (สำหรับ log)
-        const oldRecord = await this.committeeRepository.findById(committeeId);
+      const updated = await this.committeeRepository.updateWithLock(
+        committeeId,
+        data,
+        currentVersion
+      );
 
-        // Use optimistic locking
-        const updated = await this.committeeRepository.updateWithLock(
+      // Log การ update
+      if (updated) {
+        const {
+          createdAt: oldCreatedAt,
+          updatedAt: oldUpdatedAt,
+          ...oldData
+        } = oldRecord.toJSON();
+        const {
+          createdAt: newCreatedAt,
+          updatedAt: newUpdatedAt,
+          ...newData
+        } = updated.toJSON();
+
+        await this.auditLogService.logAction(
+          "Committee",
+          "UPDATE",
           committeeId,
-          data,
-          currentVersion
+          userId || undefined,
+          oldData,
+          newData
         );
-
-        // Log การ update
-        if (updated && oldRecord) {
-          const {
-            createdAt: oldCreatedAt,
-            updatedAt: oldUpdatedAt,
-            ...oldData
-          } = oldRecord.toJSON();
-          const {
-            createdAt: newCreatedAt,
-            updatedAt: newUpdatedAt,
-            ...newData
-          } = updated.toJSON();
-
-          await this.auditLogService.logAction(
-            "Committee",
-            "UPDATE",
-            committeeId,
-            userId || undefined,
-            oldData,
-            newData
-          );
-        }
-
-        return updated;
-      } else {
-        // Fallback to regular update
-        const oldRecord = await this.committeeRepository.findById(committeeId);
-
-        const updated = await this.update(committeeId, data);
-
-        if (updated && oldRecord) {
-          const {
-            createdAt: oldCreatedAt,
-            updatedAt: oldUpdatedAt,
-            ...oldData
-          } = oldRecord.toJSON();
-          const {
-            createdAt: newCreatedAt,
-            updatedAt: newUpdatedAt,
-            ...newData
-          } = updated.toJSON();
-
-          await this.auditLogService.logAction(
-            "Committee",
-            "UPDATE",
-            committeeId,
-            userId || undefined,
-            oldData,
-            newData
-          );
-        }
-
-        return updated;
       }
+
+      return updated;
     } catch (error) {
       this.handleServiceError(error);
       throw error;

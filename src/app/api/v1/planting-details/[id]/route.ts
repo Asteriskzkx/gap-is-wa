@@ -1,18 +1,13 @@
-import { NextRequest, NextResponse } from "next/server";
-import { plantingDetailController } from "@/utils/dependencyInjections";
 import { checkAuthorization } from "@/lib/session";
+import { plantingDetailController } from "@/utils/dependencyInjections";
+import { NextRequest, NextResponse } from "next/server";
 
 // Route handlers for /api/v1/planting-details/[id]
 export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const { authorized, error } = await checkAuthorization(req, [
-    "FARMER",
-    "ADMIN",
-    "AUDITOR",
-    "COMMITTEE",
-  ]);
+  const { authorized, error } = await checkAuthorization(req, ["ADMIN"]);
 
   if (!authorized) {
     return NextResponse.json(
@@ -28,10 +23,7 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const { authorized, error } = await checkAuthorization(req, [
-    "FARMER",
-    "ADMIN",
-  ]);
+  const { authorized, error } = await checkAuthorization(req, ["ADMIN"]);
 
   if (!authorized) {
     return NextResponse.json(
@@ -47,10 +39,7 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const { authorized, error } = await checkAuthorization(req, [
-    "FARMER",
-    "ADMIN",
-  ]);
+  const { authorized, error } = await checkAuthorization(req, ["ADMIN"]);
 
   if (!authorized) {
     return NextResponse.json(
