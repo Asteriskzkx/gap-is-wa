@@ -83,10 +83,21 @@ async function loginAsCommittee(page) {
 
 // Helper to clear date range in calendar
 async function clearDateRangeInCalendar(page) {
-  const calendarInput = page.locator('input[placeholder="เลือกช่วงวันที่"]');
+   const calendarInput = page.locator('input[placeholder="เลือกช่วงวันที่"]');
+
+  // เปิด calendar
   await calendarInput.click();
-  await page.waitForSelector(".p-datepicker", { state: "visible" });
-  await page.getByRole("button", { name: "ล้างวันที่" }).click();
+
+  // รอ overlay ปรากฏแบบปลอดภัย
+  const datepicker = page.locator(".p-datepicker");
+  await datepicker.waitFor({ state: "visible" });
+
+  // รอปุ่ม "ล้างวันที่" ที่อยู่ใน overlay
+  const clearButton = datepicker.getByRole("button", { name: "ล้างวันที่" });
+  await clearButton.waitFor({ state: "visible" });
+
+  // คลิกปุ่ม
+  await clearButton.click();
 }
 
 // -------------------- Admin report tests --------------------
