@@ -30,7 +30,6 @@ type User = {
 };
 
 enum UserRole {
-  BASIC = "BASIC",
   FARMER = "FARMER",
   AUDITOR = "AUDITOR",
   COMMITTEE = "COMMITTEE",
@@ -38,7 +37,6 @@ enum UserRole {
 }
 
 const userRoleLabelMap: Record<UserRole, string> = {
-  [UserRole.BASIC]: "ผู้ใช้พื้นฐาน (BASIC)",
   [UserRole.FARMER]: "เกษตรกร (FARMER)",
   [UserRole.AUDITOR]: "ผู้ตรวจประเมิน (AUDITOR)",
   [UserRole.COMMITTEE]: "คณะกรรมการ (COMMITTEE)",
