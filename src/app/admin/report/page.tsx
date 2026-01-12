@@ -699,6 +699,7 @@ export default function AdminReportPage() {
             <div className="flex items-center gap-3 flex-wrap">
               <span className="text-gray-700 font-medium whitespace-nowrap">📅 ช่วงวันที่:</span>
               <Calendar
+                data-testid="date-range"
                 showIcon
                 value={dates}
                 placeholder="เลือกช่วงวันที่"
