@@ -86,7 +86,7 @@ export default function SettingPage() {
 
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
-      <div className="max-w-2xl">
+      <div className="max-w-full">
         <h1 className="text-2xl font-semibold text-gray-900">ตั้งค่า</h1>
         <p className="text-sm text-gray-600 mt-1">
           จัดการการตั้งค่าพื้นฐานของบัญชีผู้ใช้
