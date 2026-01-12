@@ -377,7 +377,7 @@ export const AddUserDialog: React.FC<Props> = ({
       visible={visible}
       blockScroll={true}
       draggable={false}
-      style={{ width: "42rem" }}
+      className="w-[clamp(22rem,92vw,56rem)]"
       onHide={() => {
         onHide();
         reset();
