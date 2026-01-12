@@ -170,6 +170,13 @@ export class CommitteeController extends BaseController<CommitteeModel> {
       const data = await req.json();
       const { version, ...updateData } = data;
 
+      if (version === undefined) {
+        return NextResponse.json(
+          { message: "กรุณาระบุ version สำหรับ optimistic locking" },
+          { status: 400 }
+        );
+      }
+
       const updatedCommittee =
         await this.committeeService.updateCommitteeProfile(
           committeeId,

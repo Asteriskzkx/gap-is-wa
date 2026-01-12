@@ -218,6 +218,13 @@ export class FarmerController extends BaseController<FarmerModel> {
       const data = await req.json();
       const { version, ...updateData } = data;
 
+      if (version === undefined) {
+        return NextResponse.json(
+          { message: "กรุณาระบุ version สำหรับ optimistic locking" },
+          { status: 400 }
+        );
+      }
+
       // If updating ID number, validate it
       if (updateData.identificationNumber) {
         const isValidID = await this.farmerService.validateIdentificationNumber(
