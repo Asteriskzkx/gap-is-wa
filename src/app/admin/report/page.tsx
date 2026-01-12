@@ -105,7 +105,7 @@ const ROLE_LABELS: Record<string, string> = {
   ADMIN: "ผู้ดูแลระบบ",
   COMMITTEE: "คณะกรรมการ",
   FARMER: "เกษตรกร",
-  AUDITOR: "ผู้ตรวจสอบ",
+  AUDITOR: "ผู้ตรวจประเมิน",
   BASIC: "ผู้ใช้ทั่วไป",
 };
 
@@ -132,18 +132,23 @@ const getPointStyle = (role: string): string => {
 export default function AdminReportPage() {
   const [dates, setDates] = useState<(Date | null)[] | null>(null);
   const [reportData, setReportData] = useState<UserReportSummary | null>(null);
-  const [newUsersData, setNewUsersData] = useState<NewUsersTimeSeriesReport | null>(null);
+  const [newUsersData, setNewUsersData] =
+    useState<NewUsersTimeSeriesReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingNewUsers, setLoadingNewUsers] = useState(false);
 
   // New report states
-  const [inspectionData, setInspectionData] = useState<InspectionReportSummary | null>(null);
+  const [inspectionData, setInspectionData] =
+    useState<InspectionReportSummary | null>(null);
   const [loadingInspection, setLoadingInspection] = useState(true);
-  const [rubberFarmData, setRubberFarmData] = useState<RubberFarmReportSummary | null>(null);
+  const [rubberFarmData, setRubberFarmData] =
+    useState<RubberFarmReportSummary | null>(null);
   const [loadingRubberFarm, setLoadingRubberFarm] = useState(true);
-  const [certificateData, setCertificateData] = useState<CertificateReportSummary | null>(null);
+  const [certificateData, setCertificateData] =
+    useState<CertificateReportSummary | null>(null);
   const [loadingCertificate, setLoadingCertificate] = useState(true);
-  const [auditorData, setAuditorData] = useState<AuditorPerformanceReport | null>(null);
+  const [auditorData, setAuditorData] =
+    useState<AuditorPerformanceReport | null>(null);
   const [loadingAuditor, setLoadingAuditor] = useState(true);
 
   // Pagination state for auditor table
@@ -190,14 +195,14 @@ export default function AdminReportPage() {
       try {
         setLoading(true);
         let url = "/api/v1/reports/users";
-        
+
         // If dates are selected, add them to the query
         if (dates && dates[0] && dates[1]) {
           const startDate = formatDateLocal(dates[0]);
           const endDate = formatDateLocal(dates[1]);
           url += `?startDate=${startDate}&endDate=${endDate}`;
         }
-        
+
         const response = await fetch(url);
         if (response.ok) {
           const data = await response.json();
@@ -219,14 +224,14 @@ export default function AdminReportPage() {
       try {
         setLoadingNewUsers(true);
         let url = "/api/v1/reports/users/new-users";
-        
+
         // If dates are selected, add them to the query
         if (dates && dates[0] && dates[1]) {
           const startDate = formatDateLocal(dates[0]);
           const endDate = formatDateLocal(dates[1]);
           url += `?startDate=${startDate}&endDate=${endDate}`;
         }
-        
+
         const response = await fetch(url);
         if (response.ok) {
           const data = await response.json();
@@ -334,7 +339,10 @@ export default function AdminReportPage() {
       let isFirstPage = true;
 
       // Helper function to add section to PDF
-      const addSectionToPDF = async (ref: React.RefObject<HTMLDivElement>, title: string) => {
+      const addSectionToPDF = async (
+        ref: React.RefObject<HTMLDivElement>,
+        title: string
+      ) => {
         if (!ref.current) return;
 
         const canvas = await html2canvas(ref.current, {
@@ -365,16 +373,21 @@ export default function AdminReportPage() {
 
       // Create temporary header element for Thai text rendering
       const headerDiv = document.createElement("div");
-      headerDiv.style.cssText = "position: absolute; left: -9999px; top: 0; background: white; padding: 20px; width: 800px; text-align: center; font-family: 'Sarabun', sans-serif;";
-      
+      headerDiv.style.cssText =
+        "position: absolute; left: -9999px; top: 0; background: white; padding: 20px; width: 800px; text-align: center; font-family: 'Sarabun', sans-serif;";
+
       let headerHTML = `<h1 style="font-size: 24px; font-weight: bold; margin-bottom: 10px; color: #1f2937;">รายงานสรุปข้อมูลระบบ</h1>`;
-      
+
       if (dates && dates[0] && dates[1]) {
-        headerHTML += `<p style="font-size: 14px; color: #4b5563; margin-bottom: 5px;">ช่วงวันที่: ${dates[0].toLocaleDateString("th-TH")} - ${dates[1].toLocaleDateString("th-TH")}</p>`;
+        headerHTML += `<p style="font-size: 14px; color: #4b5563; margin-bottom: 5px;">ช่วงวันที่: ${dates[0].toLocaleDateString(
+          "th-TH"
+        )} - ${dates[1].toLocaleDateString("th-TH")}</p>`;
       }
-      
-      headerHTML += `<p style="font-size: 12px; color: #6b7280;">วันที่ส่งออก: ${new Date().toLocaleDateString("th-TH")}</p>`;
-      
+
+      headerHTML += `<p style="font-size: 12px; color: #6b7280;">วันที่ส่งออก: ${new Date().toLocaleDateString(
+        "th-TH"
+      )}</p>`;
+
       headerDiv.innerHTML = headerHTML;
       document.body.appendChild(headerDiv);
 
@@ -389,9 +402,17 @@ export default function AdminReportPage() {
 
       const headerImgData = headerCanvas.toDataURL("image/png");
       const headerImgWidth = pageWidth - margin * 2;
-      const headerImgHeight = (headerCanvas.height * headerImgWidth) / headerCanvas.width;
+      const headerImgHeight =
+        (headerCanvas.height * headerImgWidth) / headerCanvas.width;
 
-      pdf.addImage(headerImgData, "PNG", margin, currentY, headerImgWidth, headerImgHeight);
+      pdf.addImage(
+        headerImgData,
+        "PNG",
+        margin,
+        currentY,
+        headerImgWidth,
+        headerImgHeight
+      );
       currentY += headerImgHeight + 5;
       isFirstPage = false;
 
@@ -433,7 +454,7 @@ export default function AdminReportPage() {
     }
 
     const filteredRoles = reportData.countByRole.filter((r) => r.count > 0);
-    
+
     // ถ้าไม่มีข้อมูลเลย ให้แสดง chart ว่างสีเทา
     if (filteredRoles.length === 0) {
       return {
@@ -448,7 +469,7 @@ export default function AdminReportPage() {
         ],
       };
     }
-    
+
     return {
       labels: filteredRoles.map((r) => ROLE_LABELS[r.role] || r.role),
       datasets: [
@@ -476,7 +497,10 @@ export default function AdminReportPage() {
       // For day and hour granularity, format nicely; for others, use directly
       if (newUsersData.granularity === "day") {
         const date = new Date(d.date);
-        return date.toLocaleDateString("th-TH", { day: "numeric", month: "short" });
+        return date.toLocaleDateString("th-TH", {
+          day: "numeric",
+          month: "short",
+        });
       } else if (newUsersData.granularity === "hour") {
         // Format: "2026-01-07 14:00" -> "14:00"
         const parts = d.date.split(" ");
@@ -557,7 +581,9 @@ export default function AdminReportPage() {
         },
         title: {
           display: true,
-          text: `จำนวนผู้ใช้ใหม่ (${getGranularityLabel(newUsersData?.granularity)})`,
+          text: `จำนวนผู้ใช้ใหม่ (${getGranularityLabel(
+            newUsersData?.granularity
+          )})`,
         },
       },
       scales: {
@@ -604,6 +630,8 @@ export default function AdminReportPage() {
         <Dialog
           header="เลือกรายงานที่ต้องการส่งออก"
           visible={showExportDialog}
+          blockScroll={true}
+          draggable={false}
           style={{ width: "450px" }}
           onHide={() => setShowExportDialog(false)}
           footer={
@@ -619,7 +647,9 @@ export default function AdminReportPage() {
                 icon="pi pi-file-pdf"
                 className="p-button-success p-2"
                 onClick={handleExportPDF}
-                disabled={exporting || !Object.values(exportSections).some(Boolean)}
+                disabled={
+                  exporting || !Object.values(exportSections).some(Boolean)
+                }
                 loading={exporting}
               />
             </div>
@@ -643,52 +673,92 @@ export default function AdminReportPage() {
                 }}
                 className="border border-gray-300 rounded"
               />
-              <label htmlFor="export-all" className="cursor-pointer font-medium">✅ เลือกทั้งหมด</label>
+              <label
+                htmlFor="export-all"
+                className="cursor-pointer font-medium"
+              >
+                ✅ เลือกทั้งหมด
+              </label>
             </div>
             <div className="flex items-center gap-2">
               <Checkbox
                 inputId="export-users"
                 checked={exportSections.users}
-                onChange={(e) => setExportSections({ ...exportSections, users: e.checked ?? false })}
+                onChange={(e) =>
+                  setExportSections({
+                    ...exportSections,
+                    users: e.checked ?? false,
+                  })
+                }
                 className="border border-gray-300 rounded"
               />
-              <label htmlFor="export-users" className="cursor-pointer">รายงานผู้ใช้งาน</label>
+              <label htmlFor="export-users" className="cursor-pointer">
+                รายงานผู้ใช้งาน
+              </label>
             </div>
             <div className="flex items-center gap-2">
               <Checkbox
                 inputId="export-inspections"
                 checked={exportSections.inspections}
-                onChange={(e) => setExportSections({ ...exportSections, inspections: e.checked ?? false })}
+                onChange={(e) =>
+                  setExportSections({
+                    ...exportSections,
+                    inspections: e.checked ?? false,
+                  })
+                }
                 className="border border-gray-300 rounded"
               />
-              <label htmlFor="export-inspections" className="cursor-pointer">รายงานการตรวจประเมิน</label>
+              <label htmlFor="export-inspections" className="cursor-pointer">
+                รายงานการตรวจประเมิน
+              </label>
             </div>
             <div className="flex items-center gap-2">
               <Checkbox
                 inputId="export-rubberFarms"
                 checked={exportSections.rubberFarms}
-                onChange={(e) => setExportSections({ ...exportSections, rubberFarms: e.checked ?? false })}
+                onChange={(e) =>
+                  setExportSections({
+                    ...exportSections,
+                    rubberFarms: e.checked ?? false,
+                  })
+                }
                 className="border border-gray-300 rounded"
               />
-              <label htmlFor="export-rubberFarms" className="cursor-pointer">รายงานแปลงสวนยางพารา</label>
+              <label htmlFor="export-rubberFarms" className="cursor-pointer">
+                รายงานแปลงสวนยางพารา
+              </label>
             </div>
             <div className="flex items-center gap-2">
               <Checkbox
                 inputId="export-certificates"
                 checked={exportSections.certificates}
-                onChange={(e) => setExportSections({ ...exportSections, certificates: e.checked ?? false })}
+                onChange={(e) =>
+                  setExportSections({
+                    ...exportSections,
+                    certificates: e.checked ?? false,
+                  })
+                }
                 className="border border-gray-300 rounded"
               />
-              <label htmlFor="export-certificates" className="cursor-pointer">รายงานใบรับรอง</label>
+              <label htmlFor="export-certificates" className="cursor-pointer">
+                รายงานใบรับรอง
+              </label>
             </div>
             <div className="flex items-center gap-2">
               <Checkbox
                 inputId="export-auditors"
                 checked={exportSections.auditors}
-                onChange={(e) => setExportSections({ ...exportSections, auditors: e.checked ?? false })}
+                onChange={(e) =>
+                  setExportSections({
+                    ...exportSections,
+                    auditors: e.checked ?? false,
+                  })
+                }
                 className="border border-gray-300 rounded"
               />
-              <label htmlFor="export-auditors" className="cursor-pointer">รายงานประสิทธิภาพผู้ตรวจ</label>
+              <label htmlFor="export-auditors" className="cursor-pointer">
+                รายงานประสิทธิภาพผู้ตรวจ
+              </label>
             </div>
           </div>
         </Dialog>
@@ -697,7 +767,9 @@ export default function AdminReportPage() {
         <div className="mt-8 flex flex-col bg-white rounded-lg shadow p-4">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-3 flex-wrap">
-              <span className="text-gray-700 font-medium whitespace-nowrap">📅 ช่วงวันที่:</span>
+              <span className="text-gray-700 font-medium whitespace-nowrap">
+                📅 ช่วงวันที่:
+              </span>
               <Calendar
                 data-testid="date-range"
                 showIcon
@@ -727,7 +799,10 @@ export default function AdminReportPage() {
         </div>
 
         {/* User Report Section */}
-        <div ref={userReportRef} className="mt-6 flex flex-col bg-white rounded-lg shadow p-6">
+        <div
+          ref={userReportRef}
+          className="mt-6 flex flex-col bg-white rounded-lg shadow p-6"
+        >
           <h2 className="text-xl font-semibold text-gray-900 mb-6">
             รายงานผู้ใช้งาน
           </h2>
@@ -738,7 +813,9 @@ export default function AdminReportPage() {
               {/* All Members Card */}
               <div className="bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center border-2 border-gray-400">
                 <p className="text-sm text-gray-600 mb-1 text-center">
-                  {dates && dates[0] && dates[1] ? "ผู้ใช้ทั้งหมด" : "ผู้ใช้ทั้งหมด"}
+                  {dates && dates[0] && dates[1]
+                    ? "ผู้ใช้ทั้งหมด"
+                    : "ผู้ใช้ทั้งหมด"}
                 </p>
                 {loading ? (
                   <p className="text-3xl font-bold text-gray-400">...</p>
@@ -766,7 +843,9 @@ export default function AdminReportPage() {
                 </>
               ) : (
                 ["ADMIN", "COMMITTEE", "FARMER", "AUDITOR"].map((role) => {
-                  const roleData = reportData?.countByRole.find((r) => r.role === role);
+                  const roleData = reportData?.countByRole.find(
+                    (r) => r.role === role
+                  );
                   const count = roleData?.count ?? 0;
                   return (
                     <div
@@ -798,7 +877,9 @@ export default function AdminReportPage() {
               <PrimaryCard className="p-5 h-auto">
                 <p className="mb-2 text-lg text-center">
                   สัดส่วนผู้ใช้ในระบบ
-                  {dates && dates[0] && dates[1] ? " (ตามช่วงวันที่เลือก)" : " (ทั้งหมด)"}
+                  {dates && dates[0] && dates[1]
+                    ? " (ตามช่วงวันที่เลือก)"
+                    : " (ทั้งหมด)"}
                 </p>
                 {loading ? (
                   <div className="flex items-center justify-center h-64 text-gray-400">
@@ -811,11 +892,16 @@ export default function AdminReportPage() {
             </div>
 
             {/* Line Chart - New Users by Date */}
-            <div id="chart-line" className="mb-6 scroll-mt-8 flex-1 min-w-56 overflow-x-auto">
+            <div
+              id="chart-line"
+              className="mb-6 scroll-mt-8 flex-1 min-w-56 overflow-x-auto"
+            >
               <PrimaryCard className="p-5 overflow-x-auto">
                 <p className="mb-2 text-lg text-center">
                   จำนวนผู้ใช้ใหม่แยกตามบทบาท
-                  {dates && dates[0] && dates[1] ? " (ตามช่วงวันที่เลือก)" : " (ทั้งหมด)"}
+                  {dates && dates[0] && dates[1]
+                    ? " (ตามช่วงวันที่เลือก)"
+                    : " (ทั้งหมด)"}
                 </p>
                 {loadingNewUsers ? (
                   <div className="flex items-center justify-center h-64 text-gray-400">
@@ -832,7 +918,10 @@ export default function AdminReportPage() {
         </div>
 
         {/* ==================== INSPECTION REPORTS ==================== */}
-        <div ref={inspectionReportRef} className="mt-8 flex flex-col bg-white rounded-lg shadow p-6">
+        <div
+          ref={inspectionReportRef}
+          className="mt-8 flex flex-col bg-white rounded-lg shadow p-6"
+        >
           <h2 className="text-xl font-semibold text-gray-900 mb-6">
             รายงานการตรวจประเมิน
           </h2>
@@ -887,7 +976,9 @@ export default function AdminReportPage() {
 
           {/* Inspection by Type */}
           <div className="mb-6">
-            <h3 className="text-lg font-medium text-gray-800 mb-3">แยกตามประเภทการตรวจ</h3>
+            <h3 className="text-lg font-medium text-gray-800 mb-3">
+              แยกตามประเภทการตรวจ
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {loadingInspection ? (
                 <p className="text-gray-400">กำลังโหลด...</p>
@@ -900,7 +991,10 @@ export default function AdminReportPage() {
                     className="bg-gray-50 rounded-lg p-4 border border-gray-200"
                   >
                     <p className="text-sm text-gray-600">{type.typeName}</p>
-                    <p className="text-2xl font-bold text-gray-800">{type.count} <span className="text-sm font-normal">ครั้ง</span></p>
+                    <p className="text-2xl font-bold text-gray-800">
+                      {type.count}{" "}
+                      <span className="text-sm font-normal">ครั้ง</span>
+                    </p>
                   </div>
                 ))
               )}
@@ -909,7 +1003,9 @@ export default function AdminReportPage() {
 
           {/* Inspection by Status */}
           <div>
-            <h3 className="text-lg font-medium text-gray-800 mb-3">แยกตามสถานะ</h3>
+            <h3 className="text-lg font-medium text-gray-800 mb-3">
+              แยกตามสถานะ
+            </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {loadingInspection ? (
                 <p className="text-gray-400">กำลังโหลด...</p>
@@ -922,7 +1018,9 @@ export default function AdminReportPage() {
                     className="bg-gray-50 rounded-lg p-3 border border-gray-200 text-center"
                   >
                     <p className="text-xs text-gray-500">{status.status}</p>
-                    <p className="text-xl font-bold text-gray-700">{status.count}</p>
+                    <p className="text-xl font-bold text-gray-700">
+                      {status.count}
+                    </p>
                   </div>
                 ))
               )}
@@ -931,7 +1029,10 @@ export default function AdminReportPage() {
         </div>
 
         {/* ==================== RUBBER FARM REPORTS ==================== */}
-        <div ref={rubberFarmReportRef} className="mt-8 flex flex-col bg-white rounded-lg shadow p-6">
+        <div
+          ref={rubberFarmReportRef}
+          className="mt-8 flex flex-col bg-white rounded-lg shadow p-6"
+        >
           <h2 className="text-xl font-semibold text-gray-900 mb-6">
             รายงานแปลงสวนยางพารา
           </h2>
@@ -977,7 +1078,9 @@ export default function AdminReportPage() {
 
           {/* By Distribution Type */}
           <div className="mb-6">
-            <h3 className="text-lg font-medium text-gray-800 mb-3">แยกตามประเภทการจำหน่าย</h3>
+            <h3 className="text-lg font-medium text-gray-800 mb-3">
+              แยกตามประเภทการจำหน่าย
+            </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {loadingRubberFarm ? (
                 <p className="text-gray-400">กำลังโหลด...</p>
@@ -989,8 +1092,13 @@ export default function AdminReportPage() {
                     key={dist.type}
                     className="bg-gray-50 rounded-lg p-3 border border-gray-200 text-center"
                   >
-                    <p className="text-xs text-gray-500">{dist.type || "ไม่ระบุ"}</p>
-                    <p className="text-xl font-bold text-gray-700">{dist.count} <span className="text-sm font-normal">แปลง</span></p>
+                    <p className="text-xs text-gray-500">
+                      {dist.type || "ไม่ระบุ"}
+                    </p>
+                    <p className="text-xl font-bold text-gray-700">
+                      {dist.count}{" "}
+                      <span className="text-sm font-normal">แปลง</span>
+                    </p>
                   </div>
                 ))
               )}
@@ -999,31 +1107,58 @@ export default function AdminReportPage() {
 
           {/* By Province - Top 5 */}
           <div>
-            <h3 className="text-lg font-medium text-gray-800 mb-3">จังหวัดที่มีแปลงมากที่สุด (Top 5)</h3>
+            <h3 className="text-lg font-medium text-gray-800 mb-3">
+              จังหวัดที่มีแปลงมากที่สุด (Top 5)
+            </h3>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">จังหวัด</th>
-                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">จำนวนแปลง</th>
-                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">พื้นที่ (ไร่)</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                      จังหวัด
+                    </th>
+                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
+                      จำนวนแปลง
+                    </th>
+                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
+                      พื้นที่ (ไร่)
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {loadingRubberFarm ? (
                     <tr>
-                      <td colSpan={3} className="px-4 py-2 text-center text-gray-400">กำลังโหลด...</td>
+                      <td
+                        colSpan={3}
+                        className="px-4 py-2 text-center text-gray-400"
+                      >
+                        กำลังโหลด...
+                      </td>
                     </tr>
                   ) : rubberFarmData?.byProvince.length === 0 ? (
                     <tr>
-                      <td colSpan={3} className="px-4 py-2 text-center text-gray-400">ไม่มีข้อมูล</td>
+                      <td
+                        colSpan={3}
+                        className="px-4 py-2 text-center text-gray-400"
+                      >
+                        ไม่มีข้อมูล
+                      </td>
                     </tr>
                   ) : (
                     rubberFarmData?.byProvince.slice(0, 5).map((prov, idx) => (
-                      <tr key={prov.province} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                        <td className="px-4 py-2 text-sm text-gray-900">{prov.province}</td>
-                        <td className="px-4 py-2 text-sm text-gray-900 text-right">{prov.count}</td>
-                        <td className="px-4 py-2 text-sm text-gray-900 text-right">{prov.totalArea}</td>
+                      <tr
+                        key={prov.province}
+                        className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                      >
+                        <td className="px-4 py-2 text-sm text-gray-900">
+                          {prov.province}
+                        </td>
+                        <td className="px-4 py-2 text-sm text-gray-900 text-right">
+                          {prov.count}
+                        </td>
+                        <td className="px-4 py-2 text-sm text-gray-900 text-right">
+                          {prov.totalArea}
+                        </td>
                       </tr>
                     ))
                   )}
@@ -1034,7 +1169,10 @@ export default function AdminReportPage() {
         </div>
 
         {/* ==================== CERTIFICATE REPORTS ==================== */}
-        <div ref={certificateReportRef} className="mt-8 flex flex-col bg-white rounded-lg shadow p-6">
+        <div
+          ref={certificateReportRef}
+          className="mt-8 flex flex-col bg-white rounded-lg shadow p-6"
+        >
           <h2 className="text-xl font-semibold text-gray-900 mb-6">
             รายงานใบรับรอง
           </h2>
@@ -1092,7 +1230,9 @@ export default function AdminReportPage() {
 
           {/* Expiring Alerts */}
           <div>
-            <h3 className="text-lg font-medium text-gray-800 mb-3">ใบรับรองใกล้หมดอายุ</h3>
+            <h3 className="text-lg font-medium text-gray-800 mb-3">
+              ใบรับรองใกล้หมดอายุ
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-red-50 rounded-lg p-4 border border-red-200">
                 <p className="text-sm text-red-600">ภายใน 30 วัน</p>
@@ -1100,7 +1240,8 @@ export default function AdminReportPage() {
                   <p className="text-2xl font-bold text-gray-300">...</p>
                 ) : (
                   <p className="text-2xl font-bold text-red-600">
-                    {certificateData?.expiringIn30Days ?? 0} <span className="text-sm font-normal">ใบ</span>
+                    {certificateData?.expiringIn30Days ?? 0}{" "}
+                    <span className="text-sm font-normal">ใบ</span>
                   </p>
                 )}
               </div>
@@ -1111,7 +1252,8 @@ export default function AdminReportPage() {
                   <p className="text-2xl font-bold text-gray-300">...</p>
                 ) : (
                   <p className="text-2xl font-bold text-orange-600">
-                    {certificateData?.expiringIn60Days ?? 0} <span className="text-sm font-normal">ใบ</span>
+                    {certificateData?.expiringIn60Days ?? 0}{" "}
+                    <span className="text-sm font-normal">ใบ</span>
                   </p>
                 )}
               </div>
@@ -1122,7 +1264,8 @@ export default function AdminReportPage() {
                   <p className="text-2xl font-bold text-gray-300">...</p>
                 ) : (
                   <p className="text-2xl font-bold text-yellow-600">
-                    {certificateData?.expiringIn90Days ?? 0} <span className="text-sm font-normal">ใบ</span>
+                    {certificateData?.expiringIn90Days ?? 0}{" "}
+                    <span className="text-sm font-normal">ใบ</span>
                   </p>
                 )}
               </div>
@@ -1131,7 +1274,10 @@ export default function AdminReportPage() {
         </div>
 
         {/* ==================== AUDITOR PERFORMANCE REPORTS ==================== */}
-        <div ref={auditorReportRef} className="mt-8 flex flex-col bg-white rounded-lg shadow p-6 mb-8">
+        <div
+          ref={auditorReportRef}
+          className="mt-8 flex flex-col bg-white rounded-lg shadow p-6 mb-8"
+        >
           <h2 className="text-xl font-semibold text-gray-900 mb-6">
             รายงานประสิทธิภาพผู้ตรวจประเมิน
           </h2>
@@ -1177,10 +1323,14 @@ export default function AdminReportPage() {
           {/* Auditor Performance Table */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-medium text-gray-800">ผลงานแต่ละผู้ตรวจ</h3>
+              <h3 className="text-lg font-medium text-gray-800">
+                ผลงานแต่ละผู้ตรวจ
+              </h3>
               {auditorData && auditorData.auditors.length > 0 && (
                 <span className="text-sm text-gray-500">
-                  แสดง {Math.min(auditorDisplayCount, auditorData.auditors.length)} จาก {auditorData.auditors.length} คน
+                  แสดง{" "}
+                  {Math.min(auditorDisplayCount, auditorData.auditors.length)}{" "}
+                  จาก {auditorData.auditors.length} คน
                 </span>
               )}
             </div>
@@ -1188,36 +1338,77 @@ export default function AdminReportPage() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">ชื่อผู้ตรวจ</th>
-                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">ตรวจทั้งหมด</th>
-                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">ผ่าน</th>
-                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">ไม่ผ่าน</th>
-                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">อัตราผ่าน</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                      ชื่อผู้ตรวจ
+                    </th>
+                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
+                      ตรวจทั้งหมด
+                    </th>
+                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
+                      ผ่าน
+                    </th>
+                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
+                      ไม่ผ่าน
+                    </th>
+                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
+                      อัตราผ่าน
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {loadingAuditor ? (
                     <tr>
-                      <td colSpan={5} className="px-4 py-2 text-center text-gray-400">กำลังโหลด...</td>
+                      <td
+                        colSpan={5}
+                        className="px-4 py-2 text-center text-gray-400"
+                      >
+                        กำลังโหลด...
+                      </td>
                     </tr>
                   ) : auditorData?.auditors.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-4 py-2 text-center text-gray-400">ไม่มีข้อมูล</td>
+                      <td
+                        colSpan={5}
+                        className="px-4 py-2 text-center text-gray-400"
+                      >
+                        ไม่มีข้อมูล
+                      </td>
                     </tr>
                   ) : (
-                    auditorData?.auditors.slice(0, auditorDisplayCount).map((auditor, idx) => (
-                      <tr key={auditor.auditorId} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                        <td className="px-4 py-2 text-sm text-gray-900">{auditor.auditorName}</td>
-                        <td className="px-4 py-2 text-sm text-gray-900 text-right">{auditor.totalInspections}</td>
-                        <td className="px-4 py-2 text-sm text-green-600 text-right">{auditor.passedInspections}</td>
-                        <td className="px-4 py-2 text-sm text-red-600 text-right">{auditor.failedInspections}</td>
-                        <td className="px-4 py-2 text-sm text-right">
-                          <span className={`font-medium ${auditor.passRate >= 80 ? "text-green-600" : auditor.passRate >= 50 ? "text-yellow-600" : "text-red-600"}`}>
-                            {auditor.passRate}%
-                          </span>
-                        </td>
-                      </tr>
-                    ))
+                    auditorData?.auditors
+                      .slice(0, auditorDisplayCount)
+                      .map((auditor, idx) => (
+                        <tr
+                          key={auditor.auditorId}
+                          className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                        >
+                          <td className="px-4 py-2 text-sm text-gray-900">
+                            {auditor.auditorName}
+                          </td>
+                          <td className="px-4 py-2 text-sm text-gray-900 text-right">
+                            {auditor.totalInspections}
+                          </td>
+                          <td className="px-4 py-2 text-sm text-green-600 text-right">
+                            {auditor.passedInspections}
+                          </td>
+                          <td className="px-4 py-2 text-sm text-red-600 text-right">
+                            {auditor.failedInspections}
+                          </td>
+                          <td className="px-4 py-2 text-sm text-right">
+                            <span
+                              className={`font-medium ${
+                                auditor.passRate >= 80
+                                  ? "text-green-600"
+                                  : auditor.passRate >= 50
+                                  ? "text-yellow-600"
+                                  : "text-red-600"
+                              }`}
+                            >
+                              {auditor.passRate}%
+                            </span>
+                          </td>
+                        </tr>
+                      ))
                   )}
                 </tbody>
               </table>
@@ -1228,10 +1419,16 @@ export default function AdminReportPage() {
               <div className="flex justify-center gap-2 mt-4">
                 {auditorDisplayCount < auditorData.auditors.length && (
                   <Button
-                    label={`ดูเพิ่มเติม (${auditorData.auditors.length - auditorDisplayCount} คน)`}
+                    label={`ดูเพิ่มเติม (${
+                      auditorData.auditors.length - auditorDisplayCount
+                    } คน)`}
                     className="p-button-outlined p-button-sm"
                     icon="pi pi-chevron-down"
-                    onClick={() => setAuditorDisplayCount((prev) => Math.min(prev + 5, auditorData.auditors.length))}
+                    onClick={() =>
+                      setAuditorDisplayCount((prev) =>
+                        Math.min(prev + 5, auditorData.auditors.length)
+                      )
+                    }
                   />
                 )}
                 {auditorDisplayCount > 5 && (

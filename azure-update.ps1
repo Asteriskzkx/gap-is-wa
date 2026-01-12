@@ -29,6 +29,25 @@ function Ensure-DockerRunning {
   }
 }
 
+function Ensure-AzLoggedIn {
+  try {
+    az account show -o none 2>$null
+    if ($LASTEXITCODE -ne 0) { throw "az account show failed" }
+  } catch {
+    throw @"
+Azure CLI is not logged in (or token cache is broken).
+
+Try:
+  az logout
+  az cache purge
+  az login --use-device-code
+
+Then verify:
+  az account show
+"@
+  }
+}
+
 function Try-ReadDeployOutput {
   $path = Join-Path -Path $PSScriptRoot -ChildPath "deploy-output.json"
   if (-not (Test-Path $path)) {
@@ -75,10 +94,27 @@ if (-not $AcrName) { throw "Missing -AcrName (or provide deploy-output.json)." }
 
 if (-not $Tag) { $Tag = Get-GitShortSha }
 
-$acrLoginServer = (az acr show -n $AcrName --query loginServer -o tsv).Trim()
-if ([string]::IsNullOrWhiteSpace($acrLoginServer)) {
-  throw "Unable to resolve ACR login server for $AcrName"
+Ensure-AzLoggedIn
+
+$acrLoginServer = (az acr show -n $AcrName --query loginServer -o tsv 2>$null)
+if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($acrLoginServer)) {
+  throw @"
+Unable to resolve ACR login server for '$AcrName'.
+
+If you saw "Decryption failed: [WinError 13]" from Azure CLI, your local token cache likely broke.
+
+Fix (PowerShell):
+  az logout
+  az cache purge
+  Remove-Item -Recurse -Force "$env:USERPROFILE\.azure\msal_token_cache*" -ErrorAction SilentlyContinue
+  Remove-Item -Recurse -Force "$env:USERPROFILE\.azure\msal_http_cache*" -ErrorAction SilentlyContinue
+  az login --use-device-code
+
+Then rerun this script.
+"@
 }
+
+$acrLoginServer = $acrLoginServer.Trim()
 
 Write-Host "Using:" -ForegroundColor Cyan
 Write-Host "  Resource Group   : $ResourceGroup" -ForegroundColor Gray

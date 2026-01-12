@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { inspectionController } from "@/utils/dependencyInjections";
 import { checkAuthorization } from "@/lib/session";
 
-// Route handler สำหรับเพิ่มผู้ตรวจสอบในการตรวจ
+// Route handler สำหรับเพิ่มผู้ตรวจประเมินในการตรวจ
 export async function POST(req: NextRequest) {
   const { authorized, error } = await checkAuthorization(req, [
     "AUDITOR",

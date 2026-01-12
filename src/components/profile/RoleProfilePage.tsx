@@ -472,25 +472,15 @@ function SimpleRoleProfile({ role, user, onSaved }: Readonly<Props>) {
             </div>
           </Card>
 
-          <Card title="ข้อมูลบัญชี">
+          <Card title="ข้อมูลบัญชีผู้ใช้">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FieldRow label="อีเมล">
-                {isEditing ? (
-                  <PrimaryInputText
-                    value={form.email}
-                    onChange={(value) =>
-                      setForm((p) => ({ ...p, email: value }))
-                    }
-                    placeholder="อีเมล"
-                    required
-                    type="email"
-                    maxLength={100}
-                    invalid={!!errors.email}
-                    errorMessage={errors.email}
-                  />
-                ) : (
+                <div>
                   <TextValue value={form.email} />
-                )}
+                  {errors.email ? (
+                    <div className="text-xs text-red-600">{errors.email}</div>
+                  ) : null}
+                </div>
               </FieldRow>
 
               <FieldRow label="รหัสผู้ใช้">
@@ -743,36 +733,24 @@ function FarmerPersonalCard({
 }
 
 function FarmerAccountCard({
-  isEditing,
   base,
-  setBase,
   errors,
   userId,
 }: Readonly<{
-  isEditing: boolean;
   base: BaseFormState;
-  setBase: (updater: (prev: BaseFormState) => BaseFormState) => void;
   errors: Record<string, string>;
   userId: number;
 }>) {
   return (
-    <Card title="ข้อมูลบัญชี">
+    <Card title="ข้อมูลบัญชีผู้ใช้">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FieldRow label="อีเมล">
-          {isEditing ? (
-            <PrimaryInputText
-              value={base.email}
-              onChange={(value) => setBase((p) => ({ ...p, email: value }))}
-              placeholder="อีเมล"
-              required
-              type="email"
-              maxLength={100}
-              invalid={!!errors.email}
-              errorMessage={errors.email}
-            />
-          ) : (
+          <div>
             <TextValue value={base.email} />
-          )}
+            {errors.email ? (
+              <div className="text-xs text-red-600">{errors.email}</div>
+            ) : null}
+          </div>
         </FieldRow>
         <FieldRow label="รหัสผู้ใช้">
           <TextValue value={String(userId ?? "-")} />
@@ -816,8 +794,8 @@ function FarmerAddressCard({
   const provincePlaceholder = isLoadingAddress
     ? "กำลังโหลด..."
     : "เลือกจังหวัด";
-  const districtPlaceholder = province ? "เลือกอำเภอ" : "เลือกจังหวัดก่อน";
-  const subDistrictPlaceholder = district ? "เลือกตำบล" : "เลือกอำเภอก่อน";
+  const districtPlaceholder = "เลือกอำเภอ/เขต";
+  const subDistrictPlaceholder = "เลือกตำบล/แขวง";
   const districtDisabled = isLoadingAddress || !province;
   const subDistrictDisabled = isLoadingAddress || !province || !district;
 
@@ -977,7 +955,7 @@ function FarmerContactCard({
   return (
     <Card title="ข้อมูลติดต่อ">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FieldRow label="เบอร์บ้าน">
+        <FieldRow label="เบอร์โทรศัพท์">
           {isEditing ? (
             <PrimaryInputMask
               value={extra.phoneNumber}
@@ -992,7 +970,7 @@ function FarmerContactCard({
           )}
         </FieldRow>
 
-        <FieldRow label="เบอร์มือถือ">
+        <FieldRow label="เบอร์โทรศัพท์มือถือ">
           {isEditing ? (
             <PrimaryInputMask
               value={extra.mobilePhoneNumber}
@@ -1027,9 +1005,7 @@ function FarmerProfileDetails(props: FarmerProfileDetailsProps) {
       />
 
       <FarmerAccountCard
-        isEditing={props.isEditing}
         base={props.base}
-        setBase={props.setBase}
         errors={props.errors}
         userId={props.userId}
       />

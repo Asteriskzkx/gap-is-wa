@@ -1024,14 +1024,15 @@ button {
   line-height: 1.5rem !important;
   color: #374151 !important;
   background: transparent !important;
+  display: flex !important;
+  align-items: center !important;
   flex: 1 !important;
 }
 
 .p-dropdown .p-dropdown-label.p-placeholder {
   color: #9ca3af !important;
   padding: 0.5rem 0.75rem !important;
-  line-height: inherit !important;
-  vertical-align: middle !important;
+  line-height: 1.5rem !important;
 }
 
 /* Dropdown Trigger Button */

@@ -24,6 +24,30 @@ interface Province {
   amphures: Amphure[];
 }
 
+const formatTambons = (tambons: any[]): Tambon[] =>
+  tambons.map((tam) => ({
+    id: tam.id,
+    name_th: tam.name_th,
+    name_en: tam.name_en,
+    zip_code: tam.zip_code,
+  }));
+
+const formatAmphures = (amphures: any[]): Amphure[] =>
+  amphures.map((amp) => ({
+    id: amp.id,
+    name_th: amp.name_th,
+    name_en: amp.name_en,
+    tambons: formatTambons(amp.tambon ?? []),
+  }));
+
+const formatProvinces = (provincesRaw: any[]): Province[] =>
+  provincesRaw.map((province) => ({
+    id: province.id,
+    name_th: province.name_th,
+    name_en: province.name_en,
+    amphures: formatAmphures(province.amphure ?? []),
+  }));
+
 interface FormData {
   email: string;
   password: string;
@@ -77,6 +101,8 @@ export function useRegisterForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [step, setStep] = useState(1);
+
+  const toDigits = (value: string) => value.replaceAll(/\D/g, "");
 
   // ข้อมูลจังหวัด อำเภอ ตำบล
   const [provinces, setProvinces] = useState<Province[]>([]);
@@ -194,24 +220,7 @@ export function useRegisterForm() {
         setIsLoadingProvinces(true);
         await new Promise((resolve) => setTimeout(resolve, 100));
 
-        const formattedProvinces = thaiProvinceData.map((province) => ({
-          id: province.id,
-          name_th: province.name_th,
-          name_en: province.name_en,
-          amphures: province.amphure.map((amp) => ({
-            id: amp.id,
-            name_th: amp.name_th,
-            name_en: amp.name_en,
-            tambons: amp.tambon.map((tam) => ({
-              id: tam.id,
-              name_th: tam.name_th,
-              name_en: tam.name_en,
-              zip_code: tam.zip_code,
-            })),
-          })),
-        }));
-
-        setProvinces(formattedProvinces);
+        setProvinces(formatProvinces(thaiProvinceData as any[]));
       } catch (err) {
         console.error("Error loading provinces:", err);
         setError("ไม่สามารถโหลดข้อมูลจังหวัดได้");
@@ -438,41 +447,34 @@ export function useRegisterForm() {
   };
 
   const validateStep4 = () => {
-    if (!formData.phoneNumber) {
-      const phoneError = "กรุณากรอกเบอร์โทรศัพท์";
-      setErrors((prev) => ({ ...prev, phoneNumber: phoneError }));
-      setError(phoneError);
+    const phoneDigits = toDigits(formData.phoneNumber);
+    const mobileDigits = toDigits(formData.mobilePhoneNumber);
+
+    // phoneNumber: optional
+    let phoneError = "";
+    if (phoneDigits.length > 0 && phoneDigits.length !== 9) {
+      phoneError = "เบอร์โทรศัพท์ต้องเป็นตัวเลข 9 หลัก";
+    }
+
+    let mobileError = "";
+    if (mobileDigits.length === 0) {
+      mobileError = "กรุณากรอกเบอร์โทรศัพท์มือถือ";
+    } else if (mobileDigits.length !== 10) {
+      mobileError = "เบอร์โทรศัพท์มือถือต้องเป็นตัวเลข 10 หลัก";
+    }
+
+    setErrors((prev) => ({
+      ...prev,
+      phoneNumber: phoneError,
+      mobilePhoneNumber: mobileError,
+    }));
+
+    const finalError = phoneError || mobileError;
+    if (finalError) {
+      setError(finalError);
       return false;
     }
 
-    const cleanedPhone = formData.phoneNumber
-      .replaceAll("-", "")
-      .replaceAll("_", "");
-    if (cleanedPhone.length !== 9 || !/^\d+$/.test(cleanedPhone)) {
-      const phoneError = "เบอร์โทรศัพท์ต้องเป็นตัวเลข 9 หลัก";
-      setErrors((prev) => ({ ...prev, phoneNumber: phoneError }));
-      setError(phoneError);
-      return false;
-    }
-
-    if (!formData.mobilePhoneNumber) {
-      const mobileError = "กรุณากรอกเบอร์โทรศัพท์มือถือ";
-      setErrors((prev) => ({ ...prev, mobilePhoneNumber: mobileError }));
-      setError(mobileError);
-      return false;
-    }
-
-    const cleanedMobile = formData.mobilePhoneNumber
-      .replaceAll("-", "")
-      .replaceAll("_", "");
-    if (cleanedMobile.length !== 10 || !/^\d+$/.test(cleanedMobile)) {
-      const mobileError = "เบอร์โทรศัพท์มือถือต้องเป็นตัวเลข 10 หลัก";
-      setErrors((prev) => ({ ...prev, mobilePhoneNumber: mobileError }));
-      setError(mobileError);
-      return false;
-    }
-
-    setErrors((prev) => ({ ...prev, phoneNumber: "", mobilePhoneNumber: "" }));
     setError("");
     return true;
   };
@@ -508,6 +510,13 @@ export function useRegisterForm() {
     try {
       const birthDateString = formData.birthDate || "";
 
+      const phoneDigits = toDigits(formData.phoneNumber);
+      const mobileDigits = toDigits(formData.mobilePhoneNumber);
+
+      const phoneNumberForApi = phoneDigits.length === 0 ? "-" : phoneDigits;
+      const mobilePhoneNumberForApi =
+        mobileDigits.length === 0 ? "-" : mobileDigits;
+
       const response = await fetch("/api/v1/farmers/register", {
         method: "POST",
         headers: {
@@ -534,8 +543,8 @@ export function useRegisterForm() {
           district: formData.district,
           provinceName: formData.provinceName,
           zipCode: formData.zipCode,
-          phoneNumber: formData.phoneNumber.replaceAll("-", ""),
-          mobilePhoneNumber: formData.mobilePhoneNumber.replaceAll("-", ""),
+          phoneNumber: phoneNumberForApi,
+          mobilePhoneNumber: mobilePhoneNumberForApi,
         }),
       });
 

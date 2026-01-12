@@ -60,6 +60,11 @@
   text-align: center;
 }
 
+/* Keep specific long phrase together (no line-breaks) */
+.noWrap {
+  white-space: nowrap;
+}
+
 /* ==================== Right Side - Form Section ==================== */
 .formSection {
   width: 100%;

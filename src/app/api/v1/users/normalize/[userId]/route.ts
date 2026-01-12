@@ -25,7 +25,5 @@ export async function GET(
     }
   }
 
-  console.log("Path userId:", userId);
-
   return userController.getUsersNormalized(req, userId);
 }

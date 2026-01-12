@@ -153,14 +153,23 @@ export class FarmerService extends BaseService<FarmerModel> {
     currentVersion?: number
   ): Promise<FarmerModel | null> {
     try {
+      if (currentVersion === undefined) {
+        throw new Error("version is required for optimistic locking");
+      }
+
+      // Fetch current record once (used for name calc + email uniqueness)
+      const currentFarmer = await this.farmerRepository.findById(farmerId);
+      if (!currentFarmer) {
+        return null;
+      }
+
+      const effectiveNamePrefix = data.namePrefix ?? currentFarmer.namePrefix;
+      const effectiveFirstName = data.firstName ?? currentFarmer.firstName;
+      const effectiveLastName = data.lastName ?? currentFarmer.lastName;
+      data.name = `${effectiveNamePrefix}${effectiveFirstName} ${effectiveLastName}`;
+
       // If updating email, check if it's already in use by another account
       if (data.email) {
-        // First, get the current farmer to find the associated userId
-        const currentFarmer = await this.farmerRepository.findById(farmerId);
-        if (!currentFarmer) {
-          return null;
-        }
-
         const existingUser = await this.userService.findByEmail(data.email);
         // Only throw error if email belongs to a different user (currentFarmer.id is userId from BaseModel)
         if (existingUser && existingUser.id !== currentFarmer.id) {
@@ -168,18 +177,11 @@ export class FarmerService extends BaseService<FarmerModel> {
         }
       }
 
-      if (currentVersion !== undefined) {
-        // Use optimistic locking
-        const result = await this.farmerRepository.updateWithLock(
-          farmerId,
-          data,
-          currentVersion
-        );
-        return result;
-      } else {
-        // Fallback to regular update
-        return await this.update(farmerId, data);
-      }
+      return await this.farmerRepository.updateWithLock(
+        farmerId,
+        data,
+        currentVersion
+      );
     } catch (error) {
       this.handleServiceError(error);
       throw error;

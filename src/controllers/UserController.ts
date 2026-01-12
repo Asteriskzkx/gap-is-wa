@@ -59,7 +59,7 @@ export class UserController extends BaseController<UserModel> {
 
       if (!email || !password || !name) {
         return NextResponse.json(
-          { message: "Email, password, and name are required" },
+          { message: "กรุณากรอกอีเมล รหัสผ่าน และชื่อ" },
           { status: 400 }
         );
       }
@@ -90,7 +90,7 @@ export class UserController extends BaseController<UserModel> {
 
       if (!email || !password) {
         return NextResponse.json(
-          { message: "Email and password are required" },
+          { message: "กรุณากรอกอีเมลและรหัสผ่าน" },
           { status: 400 }
         );
       }
@@ -99,7 +99,7 @@ export class UserController extends BaseController<UserModel> {
 
       if (!result) {
         return NextResponse.json(
-          { message: "Invalid email or password" },
+          { message: "อีเมลหรือรหัสผ่านไม่ถูกต้อง" },
           { status: 401 }
         );
       }
@@ -123,7 +123,7 @@ export class UserController extends BaseController<UserModel> {
       if (!currentPassword || !newPassword) {
         return NextResponse.json(
           {
-            message: "Current password and new password are required",
+            message: "กรุณากรอกรหัสผ่านปัจจุบันและรหัสผ่านใหม่",
           },
           { status: 400 }
         );
@@ -132,7 +132,7 @@ export class UserController extends BaseController<UserModel> {
       // Get userId from session
       if (!session?.user?.id) {
         return NextResponse.json(
-          { message: "User session not found" },
+          { message: "ไม่พบ session ของผู้ใช้" },
           { status: 401 }
         );
       }
@@ -140,7 +140,7 @@ export class UserController extends BaseController<UserModel> {
       const userIdNum = Number.parseInt(session.user.id);
       if (Number.isNaN(userIdNum)) {
         return NextResponse.json(
-          { message: "Invalid user ID in session" },
+          { message: "รหัสผู้ใช้ใน session ไม่ถูกต้อง" },
           { status: 400 }
         );
       }
@@ -153,13 +153,13 @@ export class UserController extends BaseController<UserModel> {
 
       if (!success) {
         return NextResponse.json(
-          { message: "Invalid user ID or current password" },
+          { message: "รหัสผู้ใช้หรือรหัสผ่านปัจจุบันไม่ถูกต้อง" },
           { status: 401 }
         );
       }
 
       return NextResponse.json(
-        { message: "Password changed successfully" },
+        { message: "เปลี่ยนรหัสผ่านเรียบร้อยแล้ว" },
         { status: 200 }
       );
     } catch (error) {
@@ -188,7 +188,7 @@ export class UserController extends BaseController<UserModel> {
       const userIdStr = session.user.id;
       if (!userIdStr) {
         return NextResponse.json(
-          { message: "User ID not found in session" },
+          { message: "ไม่พบรหัสผู้ใช้ใน session" },
           { status: 400 }
         );
       }
@@ -204,10 +204,7 @@ export class UserController extends BaseController<UserModel> {
       const user = await this.userService.getById(userId);
 
       if (!user) {
-        return NextResponse.json(
-          { message: "User not found" },
-          { status: 404 }
-        );
+        return NextResponse.json({ message: "ไม่พบผู้ใช้" }, { status: 404 });
       }
 
       // Remove sensitive data before returning
@@ -226,7 +223,7 @@ export class UserController extends BaseController<UserModel> {
 
       if (!email) {
         return NextResponse.json(
-          { message: "Email parameter is required" },
+          { message: "กรุณากรอกอีเมล" },
           { status: 400 }
         );
       }
@@ -263,7 +260,7 @@ export class UserController extends BaseController<UserModel> {
       const updatedUser = await this.userService.changeRole(userId, newRole);
       if (!updatedUser) {
         return NextResponse.json(
-          { message: "User not found or role unchanged" },
+          { message: "ไม่พบผู้ใช้หรือบทบาทไม่เปลี่ยนแปลง" },
           { status: 404 }
         );
       }
@@ -372,15 +369,12 @@ export class UserController extends BaseController<UserModel> {
 
       if (!isDeleted) {
         return NextResponse.json(
-          { message: "User not found or could not be deleted" },
+          { message: "ไม่พบผู้ใช้หรือไม่สามารถลบได้" },
           { status: 404 }
         );
       }
 
-      return NextResponse.json(
-        { message: "User deleted successfully" },
-        { status: 200 }
-      );
+      return NextResponse.json({ message: "ลบผู้ใช้สำเร็จ" }, { status: 200 });
     } catch (error) {
       return this.handleControllerError(error);
     }

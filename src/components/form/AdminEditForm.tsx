@@ -1,5 +1,5 @@
-import { NormalizedUser, AdminInfo } from "@/types/UserType";
-import React, { useMemo } from "react";
+import { AdminInfo, NormalizedUser } from "@/types/UserType";
+import { useMemo } from "react";
 import BaseUserForm, { BaseUserFormValues } from "./BaseUserForm";
 
 type Props = {
@@ -36,7 +36,7 @@ export default function AdminEditForm({ user, onSuccess }: Props) {
       } catch {}
       throw new Error(msg);
     }
-    
+
     const updated: AdminInfo = await res.json();
     return updated;
   };
@@ -44,11 +44,13 @@ export default function AdminEditForm({ user, onSuccess }: Props) {
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">แก้ไขข้อมูลของ ผู้ดูแลระบบ</h1>
+        <h1 className="text-2xl font-bold text-gray-900">
+          แก้ไขข้อมูลของ ผู้ดูแลระบบ
+        </h1>
       </div>
 
       <div className="bg-white rounded-lg shadow p-6">
-         <p className="text-lg font-bold mb-4">
+        <p className="text-lg font-bold mb-4">
           คุณกำลังแก้ไขข้อมูลผู้ใช้ชื่อ{" "}
           {[
             `${user.admin?.namePrefix ?? ""}${user.admin?.firstName ?? ""}`,

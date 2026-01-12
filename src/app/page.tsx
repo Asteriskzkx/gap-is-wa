@@ -40,7 +40,10 @@ export default function LoginPage() {
           />
           <div className={styles.imageCaption}>
             <h3 className={styles.captionTitle}>
-              ระบบสารสนเทศสำหรับการจัดการข้อมูลทางการเกษตรผลผลิตยางพาราตามมาตรฐานจีเอพี
+              ระบบสารสนเทศสำหรับการจัดการข้อมูลทางการเกษตรผลผลิตยางพารา
+              <span className={styles.noWrap}>
+                ตามมาตรฐานการปฏิบัติทางการเกษตรที่ดี (GAP)
+              </span>
             </h3>
             <p className={styles.captionSubtitle}>การยางแห่งประเทศไทย</p>
           </div>
@@ -62,7 +65,10 @@ export default function LoginPage() {
             </div>
             <h1 className={styles.title}>เข้าสู่ระบบ</h1>
             <p className={styles.subtitle}>
-              ระบบสารสนเทศสำหรับการจัดการข้อมูลทางการเกษตรผลผลิตยางพาราตามมาตรฐานจีเอพี
+              ระบบสารสนเทศสำหรับการจัดการข้อมูลทางการเกษตรผลผลิตยางพารา
+              <span className={styles.noWrap}>
+                ตามมาตรฐานการปฏิบัติทางการเกษตรที่ดี (GAP)
+              </span>
             </p>
           </div>
 

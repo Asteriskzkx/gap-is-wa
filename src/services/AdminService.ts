@@ -125,86 +125,59 @@ export class AdminService extends BaseService<AdminModel> {
     userId?: number
   ): Promise<AdminModel | null> {
     try {
+      if (currentVersion === undefined) {
+        throw new Error("version is required for optimistic locking");
+      }
+
+      const oldRecord = await this.adminRepository.findById(adminId);
+      if (!oldRecord) {
+        return null;
+      }
+
+      const effectiveNamePrefix = data.namePrefix ?? oldRecord.namePrefix;
+      const effectiveFirstName = data.firstName ?? oldRecord.firstName;
+      const effectiveLastName = data.lastName ?? oldRecord.lastName;
+      data.name = `${effectiveNamePrefix}${effectiveFirstName} ${effectiveLastName}`;
+
       // If updating email, check if it's already in use by another account
       if (data.email) {
-        // First, get the current admin to find the associated userId
-        const currentAdmin = await this.adminRepository.findById(adminId);
-        if (!currentAdmin) {
-          return null;
-        }
-
         const existingUser = await this.userService.findByEmail(data.email);
-        // Only throw error if email belongs to a different user (currentAdmin.id is userId from BaseModel)
-        if (existingUser && existingUser.id !== currentAdmin.id) {
+        // Only throw error if email belongs to a different user (oldRecord.id is userId from BaseModel)
+        if (existingUser && existingUser.id !== oldRecord.id) {
           throw new Error("Email is already in use by another account");
         }
       }
 
-      if (currentVersion !== undefined) {
-        // ดึงข้อมูลเก่าก่อน update (สำหรับ log)
-        const oldRecord = await this.adminRepository.findById(adminId);
+      const updated = await this.adminRepository.updateWithLock(
+        adminId,
+        data,
+        currentVersion
+      );
 
-        // Use optimistic locking
-        const updated = await this.adminRepository.updateWithLock(
+      // Log การ update
+      if (updated) {
+        const {
+          createdAt: oldCreatedAt,
+          updatedAt: oldUpdatedAt,
+          ...oldData
+        } = oldRecord.toJSON();
+        const {
+          createdAt: newCreatedAt,
+          updatedAt: newUpdatedAt,
+          ...newData
+        } = updated.toJSON();
+
+        await this.auditLogService.logAction(
+          "Admin",
+          "UPDATE",
           adminId,
-          data,
-          currentVersion
+          userId || undefined,
+          oldData,
+          newData
         );
-
-        // Log การ update
-        if (updated && oldRecord) {
-          const {
-            createdAt: oldCreatedAt,
-            updatedAt: oldUpdatedAt,
-            ...oldData
-          } = oldRecord.toJSON();
-          const {
-            createdAt: newCreatedAt,
-            updatedAt: newUpdatedAt,
-            ...newData
-          } = updated.toJSON();
-
-          await this.auditLogService.logAction(
-            "Admin",
-            "UPDATE",
-            adminId,
-            userId || undefined,
-            oldData,
-            newData
-          );
-        }
-
-        return updated;
-      } else {
-        // Fallback to regular update
-        const oldRecord = await this.adminRepository.findById(adminId);
-
-        const updated = await this.update(adminId, data);
-
-        if (updated && oldRecord) {
-          const {
-            createdAt: oldCreatedAt,
-            updatedAt: oldUpdatedAt,
-            ...oldData
-          } = oldRecord.toJSON();
-          const {
-            createdAt: newCreatedAt,
-            updatedAt: newUpdatedAt,
-            ...newData
-          } = updated.toJSON();
-
-          await this.auditLogService.logAction(
-            "Admin",
-            "UPDATE",
-            adminId,
-            userId || undefined,
-            oldData,
-            newData
-          );
-        }
-
-        return updated;
       }
+
+      return updated;
     } catch (error) {
       this.handleServiceError(error);
       throw error;
