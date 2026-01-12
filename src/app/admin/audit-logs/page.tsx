@@ -394,33 +394,29 @@ export default function AuditLogsPage() {
                 </div>
               </div>
 
-              <div className="mt-3 grid grid-cols-1 md:grid-cols-4 gap-3 items-center">
-                <div className="md:col-span-2">
-                  <PrimaryButton
-                    label="ล้างข้อมูลเก่า"
-                    icon="pi pi-trash"
-                    onClick={handleOpenDeleteDialog}
-                    color="danger"
-                    fullWidth
-                  />
-                </div>
-                <div>
-                  <PrimaryButton
-                    label="ค้นหา"
-                    icon="pi pi-search"
-                    onClick={applyFilters}
-                    fullWidth
-                  />
-                </div>
-                <div>
-                  <PrimaryButton
-                    label="ล้างตัวกรอง"
-                    icon="pi pi-refresh"
-                    onClick={clearFilters}
-                    color="secondary"
-                    fullWidth
-                  />
-                </div>
+              <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-4 md:items-center">
+                <PrimaryButton
+                  label="ล้างข้อมูลเก่า"
+                  icon="pi pi-trash"
+                  onClick={handleOpenDeleteDialog}
+                  color="danger"
+                  className="w-full md:w-auto md:justify-self-start"
+                />
+
+                <PrimaryButton
+                  label="ค้นหา"
+                  icon="pi pi-search"
+                  onClick={applyFilters}
+                  className="w-full md:w-auto md:col-start-3 md:justify-self-end"
+                />
+
+                <PrimaryButton
+                  label="ล้างตัวกรอง"
+                  icon="pi pi-refresh"
+                  onClick={clearFilters}
+                  color="secondary"
+                  className="w-full md:w-auto md:col-start-4 md:justify-self-end"
+                />
               </div>
             </div>
 

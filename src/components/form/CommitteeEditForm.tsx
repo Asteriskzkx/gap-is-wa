@@ -1,5 +1,5 @@
-import React, { useMemo } from "react";
-import { NormalizedUser, CommitteeInfo } from "@/types/UserType";
+import { CommitteeInfo, NormalizedUser } from "@/types/UserType";
+import { useMemo } from "react";
 import BaseUserForm, { BaseUserFormValues } from "./BaseUserForm";
 
 type Props = {
@@ -22,11 +22,14 @@ export default function CommitteeEditForm({ user, onSuccess }: Props) {
       ...values,
       version: user.committee?.version || 0,
     };
-    const res = await fetch(`/api/v1/committees/${user.committee?.committeeId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    const res = await fetch(
+      `/api/v1/committees/${user.committee?.committeeId}`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }
+    );
     if (!res.ok) {
       let msg = "บันทึกไม่สำเร็จ";
       try {
@@ -35,7 +38,7 @@ export default function CommitteeEditForm({ user, onSuccess }: Props) {
       } catch {}
       throw new Error(msg);
     }
-    
+
     const updated: CommitteeInfo = await res.json();
     return updated;
   };
@@ -48,10 +51,12 @@ export default function CommitteeEditForm({ user, onSuccess }: Props) {
         </h1>
       </div>
       <div className="bg-white rounded-lg shadow p-6">
-         <p className="text-lg font-bold mb-4">
+        <p className="text-lg font-bold mb-4">
           คุณกำลังแก้ไขข้อมูลผู้ใช้ชื่อ{" "}
           {[
-            `${user.committee?.namePrefix ?? ""}${user.committee?.firstName ?? ""}`,
+            `${user.committee?.namePrefix ?? ""}${
+              user.committee?.firstName ?? ""
+            }`,
             user.committee?.lastName ?? "",
           ]
             .map((s) => s.trim())
