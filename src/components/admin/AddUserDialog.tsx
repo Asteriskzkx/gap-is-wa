@@ -239,7 +239,8 @@ export const AddUserDialog: React.FC<Props> = ({
 
   // Validation helpers
   const isValidId = (id: string) => id.replaceAll("-", "").length === 13;
-  const isValidMobile = (mobile: string) => mobile.replaceAll("-", "").length === 10;
+  const isValidMobile = (mobile: string) =>
+    mobile.replaceAll("-", "").length === 10;
   const isValidMoo = (moo: string) => moo !== "" && Number(moo) > 0; // Issue #3
 
   // Memoized canSubmit to prevent recalculation (Issue #5)
@@ -355,6 +356,8 @@ export const AddUserDialog: React.FC<Props> = ({
     <Dialog
       header="เพิ่มผู้ใช้ใหม่"
       visible={visible}
+      blockScroll={true}
+      draggable={false}
       style={{ width: "42rem" }}
       onHide={() => {
         onHide();
@@ -443,7 +446,7 @@ export const AddUserDialog: React.FC<Props> = ({
             </span>
 
             <span className="flex flex-col">
-              <label htmlFor='lastName' className="text-sm mb-1">
+              <label htmlFor="lastName" className="text-sm mb-1">
                 นามสกุล <span className="text-red-500">*</span>
               </label>
               <PrimaryInputText
@@ -759,10 +762,12 @@ export const AddUserDialog: React.FC<Props> = ({
                     disabled
                     required
                     invalid={
-                      (dirty.tambonId || touched.zipCode) && address.zipCode === ""
+                      (dirty.tambonId || touched.zipCode) &&
+                      address.zipCode === ""
                     }
                     errorMessage={
-                      (dirty.tambonId || touched.zipCode) && address.zipCode === ""
+                      (dirty.tambonId || touched.zipCode) &&
+                      address.zipCode === ""
                         ? "เลือกตำบลเพื่อเติมรหัสไปรษณีย์"
                         : ""
                     }
@@ -798,8 +803,7 @@ export const AddUserDialog: React.FC<Props> = ({
                     mask="999-999-9999"
                     required
                     invalid={
-                      (dirty.mobilePhoneNumber ||
-                        touched.mobilePhoneNumber) &&
+                      (dirty.mobilePhoneNumber || touched.mobilePhoneNumber) &&
                       !isValidMobile(mobilePhoneNumber)
                     }
                     errorMessage={

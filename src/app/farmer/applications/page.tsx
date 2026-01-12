@@ -238,6 +238,7 @@ export default function FarmerApplicationsPage() {
           style={{ width: "90vw", maxWidth: "56rem" }}
           contentStyle={{ maxHeight: "70vh", overflowY: "auto" }}
           blockScroll={true}
+          draggable={false}
         >
           {selectedApplication?.inspection?.adviceAndDefect && (
             <div>

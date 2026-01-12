@@ -630,6 +630,8 @@ export default function AdminReportPage() {
         <Dialog
           header="เลือกรายงานที่ต้องการส่งออก"
           visible={showExportDialog}
+          blockScroll={true}
+          draggable={false}
           style={{ width: "450px" }}
           onHide={() => setShowExportDialog(false)}
           footer={
