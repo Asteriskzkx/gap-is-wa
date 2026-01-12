@@ -637,7 +637,7 @@ export default function FarmerRegisterPage() {
                       setFormData((prev) => ({ ...prev, phoneNumber: value }))
                     }
                     autoClear={false}
-                    mask="9-9999-9999"
+                    mask="0-9999-9999"
                     placeholder="0-XXXX-XXXX"
                     invalid={!!errors.phoneNumber}
                     errorMessage={errors.phoneNumber}
@@ -660,7 +660,7 @@ export default function FarmerRegisterPage() {
                       }))
                     }
                     autoClear={false}
-                    mask="99-9999-9999"
+                    mask="09-9999-9999"
                     placeholder="0X-XXXX-XXXX"
                     invalid={!!errors.mobilePhoneNumber}
                     errorMessage={errors.mobilePhoneNumber}

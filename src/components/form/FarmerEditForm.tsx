@@ -611,7 +611,7 @@ export default function FarmerEditForm({ user, onSuccess }: Props) {
               </div>
               <div>
                 <label className="block text-sm mb-1" htmlFor="phoneNumber">
-                  เบอร์โทรศัพท์บ้าน
+                  เบอร์โทรศัพท์
                 </label>
                 <PrimaryInputMask
                   key={`ph-${resetKey}`}
@@ -621,8 +621,8 @@ export default function FarmerEditForm({ user, onSuccess }: Props) {
                   onChange={(value) =>
                     setExtra((prev) => ({ ...prev, phoneNumber: value }))
                   }
-                  mask="99-999-9999"
-                  placeholder="0X-XXX-XXXX"
+                  mask="0-9999-9999"
+                  placeholder="0-XXXX-XXXX"
                   autoClear={false}
                 />
               </div>
@@ -641,8 +641,8 @@ export default function FarmerEditForm({ user, onSuccess }: Props) {
                   onChange={(value) =>
                     setExtra((prev) => ({ ...prev, mobilePhoneNumber: value }))
                   }
-                  mask="999-999-9999"
-                  placeholder="0XX-XXX-XXXX"
+                  mask="09-9999-9999"
+                  placeholder="0X-XXXX-XXXX"
                   autoClear={false}
                   required
                   invalid={!!errors.mobilePhoneNumber}

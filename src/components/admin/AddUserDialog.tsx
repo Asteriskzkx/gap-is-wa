@@ -776,7 +776,7 @@ export const AddUserDialog: React.FC<Props> = ({
 
                 {/* Phone Numbers */}
                 <span className="flex flex-col">
-                  <label className="text-sm mb-1">เบอร์โทรศัพท์บ้าน</label>
+                  <label className="text-sm mb-1">เบอร์โทรศัพท์</label>
                   <PrimaryInputMask
                     value={phoneNumber}
                     onChange={(v) => {
@@ -784,8 +784,8 @@ export const AddUserDialog: React.FC<Props> = ({
                       setDirty((d) => ({ ...d, phoneNumber: true }));
                     }}
                     onBlur={() => markTouched("phoneNumber")}
-                    mask="99-999-9999"
-                    placeholder="0X-XXX-XXXX"
+                    mask="0-9999-9999"
+                    placeholder="0-XXXX-XXXX"
                   />
                 </span>
 
@@ -800,7 +800,8 @@ export const AddUserDialog: React.FC<Props> = ({
                       setDirty((d) => ({ ...d, mobilePhoneNumber: true }));
                     }}
                     onBlur={() => markTouched("mobilePhoneNumber")}
-                    mask="999-999-9999"
+                    mask="09-9999-9999"
+                    placeholder="0X-XXXX-XXXX"
                     required
                     invalid={
                       (dirty.mobilePhoneNumber || touched.mobilePhoneNumber) &&
@@ -815,7 +816,6 @@ export const AddUserDialog: React.FC<Props> = ({
                           : "กรุณากรอกเบอร์มือถือ"
                         : ""
                     }
-                    placeholder="0XX-XXX-XXXX"
                   />
                 </span>
               </>
