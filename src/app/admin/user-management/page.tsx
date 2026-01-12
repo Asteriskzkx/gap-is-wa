@@ -135,7 +135,7 @@ const buildUserColumns = (args: {
       sortable: true,
       headerAlign: "center",
       bodyAlign: "center",
-      style: { width: "8%" },
+      style: { width: "9%" },
     },
     {
       field: "name",
@@ -143,7 +143,7 @@ const buildUserColumns = (args: {
       sortable: true,
       headerAlign: "left",
       bodyAlign: "left",
-      style: { width: "22%" },
+      style: { width: "18%" },
     },
     {
       field: "email",
@@ -151,7 +151,7 @@ const buildUserColumns = (args: {
       sortable: true,
       headerAlign: "left",
       bodyAlign: "left",
-      style: { width: "28%" },
+      style: { width: "27%" },
     },
     {
       field: "role",
@@ -160,7 +160,7 @@ const buildUserColumns = (args: {
       headerAlign: "center",
       bodyAlign: "center",
       body: (r: User) => <RoleTag role={r.role} />,
-      style: { width: "12%" },
+      style: { width: "20%" },
     },
     {
       field: "createdAt",
@@ -169,7 +169,7 @@ const buildUserColumns = (args: {
       headerAlign: "center",
       bodyAlign: "center",
       body: (r: User) => formatCreatedAt(r.createdAt),
-      style: { width: "15%" },
+      style: { width: "12%" },
     },
     {
       field: "actions",
@@ -178,7 +178,7 @@ const buildUserColumns = (args: {
       bodyAlign: "center",
       mobileAlign: "right",
       mobileHideLabel: true,
-      style: { width: "15%" },
+      style: { width: "13%" },
       body: (rowData: User) => (
         <UserActionsCell
           userId={rowData.userId}
