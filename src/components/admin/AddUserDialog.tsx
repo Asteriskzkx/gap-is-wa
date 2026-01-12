@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { Dialog } from "primereact/dialog";
-import { Button } from "primereact/button";
-import PrimaryCalendar from "@/components/ui/PrimaryCalendar";
-import PrimaryInputText from "@/components/ui/PrimaryInputText";
-import PrimaryInputMask from "@/components/ui/PrimaryInputMask";
-import PrimaryDropdown from "@/components/ui/PrimaryDropdown";
-import PrimaryAutoComplete from "@/components/ui/PrimaryAutoComplete";
+import {
+  PrimaryButton,
+  PrimaryCalendar,
+  PrimaryDropdown,
+  PrimaryInputMask,
+  PrimaryInputText,
+} from "@/components/ui";
 import thaiProvinceData from "@/data/thai-provinces.json";
+import { Dialog } from "primereact/dialog";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 type Option = { name: string; value: string };
 
@@ -16,6 +17,15 @@ export enum UserRole {
   COMMITTEE = "COMMITTEE",
   ADMIN = "ADMIN",
 }
+
+const userRoleLabelMap: Record<UserRole, string> = {
+  [UserRole.FARMER]: "เกษตรกร (FARMER)",
+  [UserRole.AUDITOR]: "ผู้ตรวจประเมิน (AUDITOR)",
+  [UserRole.COMMITTEE]: "คณะกรรมการ (COMMITTEE)",
+  [UserRole.ADMIN]: "ผู้ดูแลระบบ (ADMIN)",
+};
+
+const getRoleLabel = (role: UserRole) => userRoleLabelMap[role] ?? role;
 
 // Consolidated address state (Issue #7)
 type AddressState = {
@@ -135,6 +145,15 @@ export const AddUserDialog: React.FC<Props> = ({
     { name: "นางสาว", value: "นางสาว" },
     { name: "นาง", value: "นาง" },
   ];
+
+  const roleOptions = useMemo(
+    () =>
+      Object.values(UserRole).map((role) => ({
+        label: getRoleLabel(role),
+        value: role,
+      })),
+    []
+  );
 
   // Load provinces on mount
   useEffect(() => {
@@ -368,13 +387,13 @@ export const AddUserDialog: React.FC<Props> = ({
         {/* Role Selection */}
         <PrimaryDropdown
           value={selectedRole}
-          options={Object.values(UserRole).map((r) => ({ label: r, value: r }))}
+          options={roleOptions}
           onChange={(v) => {
             setSelectedRole(v);
             setDirty((d) => ({ ...d, selectedRole: true }));
           }}
           onBlur={() => markTouched("selectedRole")}
-          placeholder="เลือกบทบาท (Role)"
+          placeholder="เลือกบทบาท"
           required
           invalid={
             (dirty.selectedRole || touched.selectedRole) && !selectedRole
@@ -387,9 +406,7 @@ export const AddUserDialog: React.FC<Props> = ({
         />
 
         {!selectedRole && (
-          <div className="text-gray-500 text-sm">
-            เลือก Role เพื่อกรอกข้อมูล
-          </div>
+          <div className="text-gray-500 text-sm">เลือกบทบาทเพื่อกรอกข้อมูล</div>
         )}
 
         {selectedRole && (
@@ -825,23 +842,23 @@ export const AddUserDialog: React.FC<Props> = ({
 
         {/* Dialog Actions */}
         <div className="flex justify-end gap-3 mt-4">
-          <Button
+          <PrimaryButton
             label="ยกเลิก"
-            severity="secondary"
             icon="pi pi-times"
+            color="secondary"
+            variant="outlined"
             onClick={() => {
               onHide();
               reset();
             }}
-            className="px-4"
           />
-          <Button
+          <PrimaryButton
             label="บันทึก"
             icon="pi pi-save"
+            color="success"
             disabled={!canSubmit || loading}
             loading={loading}
             onClick={submit}
-            className="px-4"
           />
         </div>
       </div>
