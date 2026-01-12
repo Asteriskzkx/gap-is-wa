@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
-import { plantingDetailController } from "@/utils/dependencyInjections";
 import { checkAuthorization } from "@/lib/session";
+import { plantingDetailController } from "@/utils/dependencyInjections";
+import { NextRequest, NextResponse } from "next/server";
 
 // Route handlers for /api/v1/planting-details
 export async function GET(req: NextRequest) {
@@ -25,10 +25,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const { authorized, error } = await checkAuthorization(req, [
-    "FARMER",
-    "ADMIN",
-  ]);
+  const { authorized, error } = await checkAuthorization(req, ["ADMIN"]);
 
   if (!authorized) {
     return NextResponse.json(
