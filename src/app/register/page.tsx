@@ -6,7 +6,7 @@ import React from "react";
 
 // components and hooks
 import CheckIcon from "@/components/icons/CheckIcon";
-import PrimaryAutoComplete from "@/components/ui/PrimaryAutoComplete";
+
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import PrimaryDropdown from "@/components/ui/PrimaryDropdown";
 import PrimaryInputMask from "@/components/ui/PrimaryInputMask";
@@ -113,9 +113,8 @@ export default function FarmerRegisterPage() {
                   {index < 3 && (
                     <div className={styles.stepConnector}>
                       <div
-                        className={`${
-                          styles.stepConnectorLine
-                        } ${getStepConnectorClass(s)}`}
+                        className={`${styles.stepConnectorLine
+                          } ${getStepConnectorClass(s)}`}
                       />
                     </div>
                   )}
@@ -132,9 +131,8 @@ export default function FarmerRegisterPage() {
                   return (
                     <React.Fragment key={s}>
                       <div
-                        className={`${
-                          styles.stepDotMobile
-                        } ${getStepCircleClass(s)}`}
+                        className={`${styles.stepDotMobile
+                          } ${getStepCircleClass(s)}`}
                       >
                         {s < step ? (
                           <CheckIcon className={styles.checkIconMobile} />
@@ -144,9 +142,8 @@ export default function FarmerRegisterPage() {
                       </div>
                       {index < 3 && (
                         <div
-                          className={`${
-                            styles.stepConnectorMobile
-                          } ${getStepConnectorClass(s)}`}
+                          className={`${styles.stepConnectorMobile
+                            } ${getStepConnectorClass(s)}`}
                         />
                       )}
                     </React.Fragment>
@@ -542,7 +539,7 @@ export default function FarmerRegisterPage() {
                         </span>
                       </div>
                     ) : (
-                      <PrimaryAutoComplete
+                      <PrimaryDropdown
                         id="provinceId"
                         name="provinceId"
                         value={formData.provinceId}
@@ -555,6 +552,10 @@ export default function FarmerRegisterPage() {
                         }
                         placeholder="เลือกหรือพิมพ์ค้นหาจังหวัด"
                         required
+                        filter
+                        showClear
+                        emptyMessage="ไม่มีข้อมูลจังหวัด"
+                        emptyFilterMessage="ไม่พบจังหวัดที่ค้นหา"
                         invalid={!!errors.provinceId}
                         errorMessage={errors.provinceId}
                       />
@@ -565,7 +566,7 @@ export default function FarmerRegisterPage() {
                     <label htmlFor="amphureId" className={styles.label}>
                       อำเภอ/เขต <span className={styles.required}>*</span>
                     </label>
-                    <PrimaryAutoComplete
+                    <PrimaryDropdown
                       id="amphureId"
                       name="amphureId"
                       value={formData.amphureId}
@@ -576,6 +577,10 @@ export default function FarmerRegisterPage() {
                       placeholder="เลือกหรือพิมพ์ค้นหาอำเภอ/เขต"
                       disabled={amphures.length === 0 || isLoadingProvinces}
                       required
+                      filter
+                      showClear
+                      emptyMessage="ไม่มีข้อมูลอำเภอ/เขต"
+                      emptyFilterMessage="ไม่พบอำเภอ/เขตที่ค้นหา"
                       invalid={!!errors.amphureId}
                       errorMessage={errors.amphureId}
                     />
@@ -587,7 +592,7 @@ export default function FarmerRegisterPage() {
                     <label htmlFor="tambonId" className={styles.label}>
                       ตำบล/แขวง <span className={styles.required}>*</span>
                     </label>
-                    <PrimaryAutoComplete
+                    <PrimaryDropdown
                       id="tambonId"
                       name="tambonId"
                       value={formData.tambonId}
@@ -598,6 +603,10 @@ export default function FarmerRegisterPage() {
                       placeholder="เลือกหรือพิมพ์ค้นหาตำบล/แขวง"
                       disabled={tambons.length === 0}
                       required
+                      filter
+                      showClear
+                      emptyMessage="ไม่มีข้อมูลตำบล/แขวง"
+                      emptyFilterMessage="ไม่พบตำบล/แขวงที่ค้นหา"
                       invalid={!!errors.tambonId}
                       errorMessage={errors.tambonId}
                     />
