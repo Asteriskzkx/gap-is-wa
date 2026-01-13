@@ -336,10 +336,15 @@ export default function FarmerApplicationsPage() {
                       header: "สถานที่",
                       body: (rowData: ApplicationItem) => {
                         const farm = rowData.rubberFarm;
-                        return (
-                          farm.location ||
-                          `${farm.villageName} หมู่ ${farm.moo}`
-                        );
+
+                        // ป้องกันกรณี farm เป็น null/undefined
+                        if (!farm) return "";
+
+                        // แสดง villageName (ถ้าไม่มีให้เป็นว่าง)
+                        // และ เช็คว่าถ้ามี farm.moo ให้ต่อสตริง " หมู่ ..." ถ้าไม่มีไม่ต้องต่อ
+                        return `${farm.villageName || ""}${
+                          farm.moo ? ` หมู่ ${farm.moo}` : ""
+                        }`.trim();
                       },
                       sortable: true,
                       headerAlign: "center" as const,
