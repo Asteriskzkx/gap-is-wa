@@ -6,13 +6,7 @@ import { useEffect, useState } from "react";
 
 // Icons
 import {
-  ChevronRightIcon,
-  EditIcon,
-  HomeIcon,
-  PlusIcon,
-  StacksIcon,
-  TextClipboardIcon,
-  TrashIcon,
+  ChevronRightIcon
 } from "@/components/icons";
 
 // Layout
@@ -30,6 +24,8 @@ interface RubberFarm {
   villageName: string;
   location: string;
   moo: number;
+  road: string;
+  alley: string;
   subDistrict: string;
   district: string;
   province: string;
@@ -116,14 +112,30 @@ const getStatusInfo = (application: ApplicationItem) => {
 const renderFarmId = (rowData: ApplicationItem) =>
   `RF${rowData.rubberFarm.rubberFarmId.toString().padStart(5, "0")}`;
 
-const renderLocation = (rowData: ApplicationItem) => (
-  <div>
-    <p>
-      {rowData.rubberFarm.location} {rowData.rubberFarm.subDistrict}{" "}
-      {rowData.rubberFarm.district} {rowData.rubberFarm.province}
-    </p>
-  </div>
-);
+const renderLocation = (rowData: ApplicationItem) => {
+  const farm = rowData.rubberFarm;
+
+  const isValid = (val: any) =>
+    val !== null && val !== undefined && val !== "" && String(val) !== "-";
+
+  const addressParts = [
+    isValid(farm.villageName) ? farm.villageName : null,
+    isValid(farm.moo) ? `หมู่ ${farm.moo}` : null,
+    isValid(farm.road) ? `ถนน ${farm.road}` : null,
+    isValid(farm.alley) ? `ซอย ${farm.alley}` : null,
+    isValid(farm.subDistrict) ? `ต.${farm.subDistrict}` : null,
+    isValid(farm.district) ? `อ.${farm.district}` : null,
+    isValid(farm.province) ? farm.province : null,
+  ];
+
+  const formattedLocation = addressParts.filter(Boolean).join(" ");
+
+  return (
+    <div>
+      <p>{formattedLocation || "-"}</p>
+    </div>
+  );
+};
 
 const renderInspectionDate = (rowData: ApplicationItem) =>
   formatThaiDate(rowData.inspection?.inspectionDateAndTime);

@@ -338,16 +338,16 @@ export default function FarmerApplicationsPage() {
                         const farm = rowData.rubberFarm;
                         if (!farm) return "";
 
-                        // ฟังก์ชันช่วยเช็คว่าค่า "ใช้งานได้จริง" (ไม่ใช่ค่าว่าง และไม่ใช่ "-")
-                        const isValid = (value: string | number | undefined | null) => {
-                          return value !== null && value !== undefined && value !== "" && String(value) !== "-";
-                        };
+                        const isValid = (val: any) => val !== null && val !== undefined && val !== "" && String(val) !== "-";
 
-                        const village = isValid(farm.villageName) ? farm.villageName : "";
-                        const moo = isValid(farm.moo) ? `หมู่ ${farm.moo}` : "";
+                        const parts = [
+                          isValid(farm.villageName) ? farm.villageName : null,
+                          isValid(farm.moo) ? `หมู่ ${farm.moo}` : null,
+                          isValid(farm.alley) ? `ซอย${farm.alley}` : null,
+                          isValid(farm.road) ? `ถนน${farm.road}` : null
+                        ];
 
-                        // ต่อ String และจัดการช่องว่าง
-                        return `${village} ${moo}`.trim();
+                        return parts.filter(Boolean).join(" ");
                       },
                       sortable: true,
                       headerAlign: "center" as const,

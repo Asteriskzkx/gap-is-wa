@@ -11,6 +11,8 @@ export interface RubberFarm {
   farmId?: string;
   villageName: string;
   moo: number;
+  road: string;
+  alley: string;
   location?: string;
   district: string;
   province: string;
@@ -204,6 +206,8 @@ export function useFarmerApplications(initialRows = 10) {
               farmId: farm.farmId,
               villageName: farm.villageName,
               moo: farm.moo,
+              road: farm.road,
+              alley: farm.alley,
               location: farm.location,
               district: farm.district,
               province: farm.province,
