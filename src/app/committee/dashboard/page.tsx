@@ -19,6 +19,7 @@ import {
   TextClipboardIcon,
 } from "@/components/icons";
 import { useEffect, useState } from "react";
+import { committeeNavItems } from "@/config/navItems";
 
 interface CommitteeSummary {
   pendingAssessments: number;
@@ -35,38 +36,7 @@ export default function CommitteeDashboardPage() {
   });
 
   // Navigation menu items for dashboard content
-  const navItems = [
-    {
-      title: "หน้าหลัก",
-      href: "/committee/dashboard",
-      icon: <HomeIcon className="h-6 w-6" />,
-    },
-    {
-      title: "พิจารณาผลการตรวจประเมิน",
-      href: "/committee/assessments",
-      icon: <TextClipboardIcon className="h-6 w-6" />,
-    },
-    {
-      title: "ใบรับรองแหล่งผลิตจีเอพีในระบบ",
-      href: "/committee/certifications/list",
-      icon: <StacksIcon className="h-6 w-6" />,
-    },
-    {
-      title: "ออกใบรับรองแหล่งผลิตจีเอพี",
-      href: "/committee/certifications/issue",
-      icon: <EditIcon className="h-6 w-6" />,
-    },
-    {
-      title: "ยกเลิกใบรับรองแหล่งผลิตจีเอพี",
-      href: "/committee/certifications/revoke",
-      icon: <CancelIcon className="h-6 w-6" />,
-    },
-    {
-      title: "ตรวจสอบรายงาน",
-      href: "/committee/report",
-      icon: <FindInPageIcon className="h-6 w-6" />,
-    }
-  ];
+  const navItems = committeeNavItems;
 
   const processSummaryData = async () => {
     try {

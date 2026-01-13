@@ -30,6 +30,7 @@ import PrimaryDataTable from "@/components/ui/PrimaryDataTable";
 
 // Routes
 import { getInspectionSummaryRoute } from "@/lib/routeHelpers";
+import { auditorNavItems } from "@/config/navItems";
 
 interface Inspection {
   inspectionId: number;
@@ -171,55 +172,19 @@ export default function AuditorDashboardPage() {
   };
 
   const getActionCardDescription = (index: number): string => {
-      if (index === 0)
-        return "ดำเนินการตรวจประเมินแหล่งผลิตยางพาราตามมาตรฐานจีเอพี";
-      if (index === 1) return "กำหนดและแจ้งวันตรวจประเมินแหล่งผลิตแก่เกษตรกร";
-      if (index === 2) return "สรุปและบันทึกผลการตรวจประเมินแหล่งผลิตยางพารา";
-      if (index === 3)
-        return "จัดเก็บข้อมูลสำคัญของสวนยางพาราที่ได้รับการตรวจประเมิน";
-      if (index === 4)
+    if (index === 0)
+      return "ดำเนินการตรวจประเมินแหล่งผลิตยางพาราตามมาตรฐานจีเอพี";
+    if (index === 1) return "กำหนดและแจ้งวันตรวจประเมินแหล่งผลิตแก่เกษตรกร";
+    if (index === 2) return "สรุปและบันทึกผลการตรวจประเมินแหล่งผลิตยางพารา";
+    if (index === 3)
+      return "จัดเก็บข้อมูลสำคัญของสวนยางพาราที่ได้รับการตรวจประเมิน";
+    if (index === 4)
       return "บันทึกรายละเอียดคำแนะนำและข้อบกพร่องที่พบระหว่างการตรวจ";
     return "ดูรายงานสรุปข้อมูลต่างๆ";
   };
 
   // Navigation menu items
-  const navItems = [
-    {
-      title: "หน้าหลัก",
-      href: "/auditor/dashboard",
-      icon: <HomeIcon className="h-6 w-6" />,
-    },
-    {
-      title: "ตรวจประเมินสวนยางพารา",
-      href: "/auditor/inspections",
-      icon: <TextClipboardIcon className="h-6 w-6" />,
-    },
-    {
-      title: "แจ้งกำหนดการวันที่ตรวจประเมิน",
-      href: "/auditor/applications",
-      icon: <CalendarIcon className="h-6 w-6" />,
-    },
-    {
-      title: "สรุปผลการตรวจประเมิน",
-      href: "/auditor/reports",
-      icon: <FileIcon className="h-6 w-6" />,
-    },
-    {
-      title: "บันทึกข้อมูลประจำสวนยาง",
-      href: "/auditor/garden-data",
-      icon: <NaturePeopleIcon className="h-6 w-6" />,
-    },
-    {
-      title: "บันทึกการให้คำปรึกษาและข้อบกพร่อง",
-      href: "/auditor/consultations",
-      icon: <ChatBubbleIcon className="h-6 w-6" />,
-    },
-    {
-      title: "ตรวจสอบรายงาน",
-      href: "/auditor/report",
-      icon: <FindInPageIcon className="h-6 w-6" />,
-    },
-  ];
+  const navItems = auditorNavItems;
 
   const fetchInspectionData = async (auditorId: number) => {
     if (!auditorId) return;

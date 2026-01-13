@@ -23,6 +23,7 @@ import { ActionCard, EmptyApplicationsState } from "@/components/farmer";
 
 import { PrimaryCard } from "@/components/ui";
 import PrimaryDataTable from "@/components/ui/PrimaryDataTable";
+import { farmerNavItems } from "@/config/navItems";
 
 interface RubberFarm {
   rubberFarmId: number;
@@ -156,47 +157,16 @@ export default function FarmerDashboardPage() {
 
   // Helper function สำหรับกำหนด description
   const getActionCardDescription = (index: number): string => {
-    if (index === 0) return "ยื่นคำขอรับรองแหล่งผลิตยางพาราตามมาตรฐานจีเอพี";
+    if (index === 0) return "ยื่นคำขอใบรับรองแหล่งผลิตยางพาราตามมาตรฐานจีเอพี";
     if (index === 1) return "ตรวจสอบสถานะคำขอและผลการรับรองแหล่งผลิต";
     if (index === 2) return "รายละเอียดใบรับรองแหล่งผลิตที่ได้รับทั้งหมด";
     if (index === 3)
-      return "ขอแก้ไขข้อมูลใบรับรองแหล่งผลิตที่ต้องการปรับปรุงข้อมูล";
+      return "แก้ไขข้อมูลคำขอใบรับรองแหล่งผลิตที่ต้องการแก้ไขข้อมูล";
     return "ขอยกเลิกใบรับรองแหล่งผลิตที่ไม่ประสงค์จะรับรองต่อ";
   };
 
   // Navigation menu items for action cards
-  const navItems = [
-    {
-      title: "หน้าหลัก",
-      href: "/farmer/dashboard",
-      icon: <HomeIcon className="h-6 w-6" />,
-    },
-    {
-      title: "ยื่นขอใบรับรองแหล่งผลิต",
-      href: "/farmer/applications/new",
-      icon: <PlusIcon className="h-6 w-6" />,
-    },
-    {
-      title: "ติดตามสถานะการรับรอง",
-      href: "/farmer/applications",
-      icon: <TextClipboardIcon className="h-6 w-6" />,
-    },
-    {
-      title: "ใบรับรองแหล่งผลิตที่ได้รับ",
-      href: "/farmer/certificates",
-      icon: <StacksIcon className="h-6 w-6" />,
-    },
-    {
-      title: "ขอแก้ไขข้อมูลใบรับรองแหล่งผลิต",
-      href: "/farmer/applications/edit",
-      icon: <EditIcon className="h-6 w-6" />,
-    },
-    {
-      title: "ขอยกเลิกใบรับรองแหล่งผลิต",
-      href: "/farmer/applications/cancel",
-      icon: <TrashIcon className="h-6 w-6" />,
-    },
-  ];
+  const navItems = farmerNavItems;
 
   useEffect(() => {
     // ใช้ข้อมูลจาก NextAuth session
