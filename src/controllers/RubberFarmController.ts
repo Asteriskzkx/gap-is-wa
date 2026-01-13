@@ -103,6 +103,10 @@ export class RubberFarmController extends BaseController<RubberFarmModel> {
         const province = url.searchParams.get("province") || undefined;
         const district = url.searchParams.get("district") || undefined;
         const subDistrict = url.searchParams.get("subDistrict") || undefined;
+        const inspectionDate =
+          url.searchParams.get("inspectionDate") || undefined;
+        const inspectionStatus =
+          url.searchParams.get("inspectionStatus") || undefined;
         const sortField = url.searchParams.get("sortField") || undefined;
         const sortOrder = url.searchParams.get("sortOrder") as
           | "asc"
@@ -130,6 +134,8 @@ export class RubberFarmController extends BaseController<RubberFarmModel> {
             province,
             district,
             subDistrict,
+            inspectionDate,
+            inspectionStatus,
             sortField,
             sortOrder,
             multiSortMeta,
