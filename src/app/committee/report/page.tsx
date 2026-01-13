@@ -9,6 +9,7 @@ import { useEffect, useState, useRef, useMemo } from "react";
 import { useChart } from "@/hooks/useChart";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import { PrimaryButton } from "@/components/ui";
 
 // ==================== Interfaces ====================
 
@@ -490,21 +491,23 @@ export default function CommitteeReportPage() {
     <CommitteeLayout>
       <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Title */}
-        <div className="mb-8 flex flex-wrap items-center justify-between">
-          <div>
+        <div className="mb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+          <div className="lg:col-span-4">
             <h1 className="text-2xl font-bold text-gray-900">
               รายงานสำหรับคณะกรรมการ
             </h1>
             <p className="mt-1 text-sm text-gray-500">
-              ดูสรุปรายงานใบรับรอง การตรวจประเมิน และประสิทธิภาพผู้ตรวจ
+              ดูสรุปรายงานใบรับรอง การตรวจประเมิน และประสิทธิภาพผู้ตรวจประเมิน
             </p>
           </div>
-          <Button
-            label="ส่งออก PDF"
-            icon="pi pi-file-pdf"
-            className="p-button-success p-2"
-            onClick={() => setShowExportDialog(true)}
-          />
+          <div className="lg:col-start-6 self-end">
+            <PrimaryButton
+              label="ส่งออก PDF"
+              icon="pi pi-file-pdf"
+              fullWidth
+              onClick={() => setShowExportDialog(true)}
+            />
+          </div>
         </div>
 
         {/* Export PDF Dialog */}
@@ -933,60 +936,60 @@ export default function CommitteeReportPage() {
           {/* Expiring Certificates Table */}
           {(reportData?.certificateExpiryAlerts.expiring30Days.length ?? 0) >
             0 && (
-            <div className="mt-4">
-              <h3 className="text-lg font-medium text-red-700 mb-3">
-                ใบรับรองที่จะหมดอายุใน 30 วัน
-              </h3>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-red-50">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        เลขที่ใบรับรอง
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        ชื่อเกษตรกร
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        ที่ตั้ง
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        จังหวัด
-                      </th>
-                      <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                        เหลืออีก
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {reportData?.certificateExpiryAlerts.expiring30Days.map(
-                      (cert) => (
-                        <tr key={cert.certificateId}>
-                          <td className="px-4 py-3 text-sm text-gray-900">
-                            {cert.certificateId}
-                          </td>
-                          <td className="px-4 py-3 text-sm text-gray-900">
-                            {cert.farmerName}
-                          </td>
-                          <td className="px-4 py-3 text-sm text-gray-600">
-                            {cert.farmLocation}
-                          </td>
-                          <td className="px-4 py-3 text-sm text-gray-600">
-                            {cert.province}
-                          </td>
-                          <td className="px-4 py-3 text-sm text-center">
-                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                              {cert.daysUntilExpiry} วัน
-                            </span>
-                          </td>
-                        </tr>
-                      )
-                    )}
-                  </tbody>
-                </table>
+              <div className="mt-4">
+                <h3 className="text-lg font-medium text-red-700 mb-3">
+                  ใบรับรองที่จะหมดอายุใน 30 วัน
+                </h3>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-red-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                          เลขที่ใบรับรอง
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                          ชื่อเกษตรกร
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                          ที่ตั้ง
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                          จังหวัด
+                        </th>
+                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                          เหลืออีก
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {reportData?.certificateExpiryAlerts.expiring30Days.map(
+                        (cert) => (
+                          <tr key={cert.certificateId}>
+                            <td className="px-4 py-3 text-sm text-gray-900">
+                              {cert.certificateId}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-900">
+                              {cert.farmerName}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-600">
+                              {cert.farmLocation}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-600">
+                              {cert.province}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-center">
+                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                {cert.daysUntilExpiry} วัน
+                              </span>
+                            </td>
+                          </tr>
+                        )
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
-          )}
+            )}
         </div>
 
         {/* ==================== CHARTS SECTION ==================== */}
@@ -1169,15 +1172,15 @@ export default function CommitteeReportPage() {
                   ))}
                   {(!chartData?.inspectionsByType ||
                     chartData.inspectionsByType.length === 0) && (
-                    <tr>
-                      <td
-                        colSpan={4}
-                        className="px-4 py-3 text-sm text-center text-gray-500"
-                      >
-                        ไม่มีข้อมูล
-                      </td>
-                    </tr>
-                  )}
+                      <tr>
+                        <td
+                          colSpan={4}
+                          className="px-4 py-3 text-sm text-center text-gray-500"
+                        >
+                          ไม่มีข้อมูล
+                        </td>
+                      </tr>
+                    )}
                 </tbody>
               </table>
             </div>

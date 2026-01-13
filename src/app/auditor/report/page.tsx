@@ -8,6 +8,7 @@ import { Checkbox } from "primereact/checkbox";
 import { useEffect, useState, useRef } from "react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import { PrimaryButton } from "@/components/ui";
 
 // Interfaces
 interface MyInspectionStats {
@@ -258,9 +259,8 @@ export default function AuditorReportPage() {
     };
     return (
       <span
-        className={`px-2 py-1 text-xs font-medium rounded-full ${
-          statusColors[status] || "bg-gray-100 text-gray-800"
-        }`}
+        className={`px-2 py-1 text-xs font-medium rounded-full ${statusColors[status] || "bg-gray-100 text-gray-800"
+          }`}
       >
         {status}
       </span>
@@ -271,8 +271,8 @@ export default function AuditorReportPage() {
     <AuditorLayout>
       <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Title */}
-        <div className="mb-8 flex flex-wrap items-center justify-between">
-          <div>
+        <div className="mb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+          <div className="lg:col-span-4">
             <h1 className="text-2xl font-bold text-gray-900">
               รายงานสถิติการตรวจ
             </h1>
@@ -280,12 +280,14 @@ export default function AuditorReportPage() {
               ดูสรุปผลการตรวจประเมินของคุณ
             </p>
           </div>
-          <Button
-            label="ส่งออก PDF"
-            icon="pi pi-file-pdf"
-            className="p-button-success p-2"
-            onClick={() => setShowExportDialog(true)}
-          />
+          <div className="lg:col-start-6 self-end">
+            <PrimaryButton
+              label="ส่งออก PDF"
+              icon="pi pi-file-pdf"
+              fullWidth
+              onClick={() => setShowExportDialog(true)}
+            />
+          </div>
         </div>
 
         {/* Export PDF Dialog */}
@@ -496,13 +498,12 @@ export default function AuditorReportPage() {
                 <p className="text-3xl font-bold text-gray-300">...</p>
               ) : (
                 <p
-                  className={`text-3xl font-bold ${
-                    (reportData?.stats.passRate ?? 0) >= 80
-                      ? "text-green-600"
-                      : (reportData?.stats.passRate ?? 0) >= 50
+                  className={`text-3xl font-bold ${(reportData?.stats.passRate ?? 0) >= 80
+                    ? "text-green-600"
+                    : (reportData?.stats.passRate ?? 0) >= 50
                       ? "text-yellow-600"
                       : "text-red-600"
-                  }`}
+                    }`}
                 >
                   {reportData?.stats.passRate ?? 0}%
                 </p>
@@ -751,9 +752,8 @@ export default function AuditorReportPage() {
             <div className="flex justify-center gap-2 mt-4">
               {farmsDisplayCount < reportData.inspectedFarms.length && (
                 <Button
-                  label={`ดูเพิ่มเติม (${
-                    reportData.inspectedFarms.length - farmsDisplayCount
-                  } แปลง)`}
+                  label={`ดูเพิ่มเติม (${reportData.inspectedFarms.length - farmsDisplayCount
+                    } แปลง)`}
                   className="p-button-outlined p-button-sm"
                   icon="pi pi-chevron-down"
                   onClick={() =>

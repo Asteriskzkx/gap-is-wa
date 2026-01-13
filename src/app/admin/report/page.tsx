@@ -2,6 +2,7 @@
 
 import AdminLayout from "@/components/layout/AdminLayout";
 import {
+  PrimaryButton,
   PrimaryCard,
   PrimaryDropdown,
   PrimaryMultiSelect,
@@ -430,7 +431,7 @@ export default function AdminReportPage() {
         await addSectionToPDF(certificateReportRef, "รายงานใบรับรอง");
       }
       if (exportSections.auditors && auditorReportRef.current) {
-        await addSectionToPDF(auditorReportRef, "รายงานประสิทธิภาพผู้ตรวจ");
+        await addSectionToPDF(auditorReportRef, "รายงานประสิทธิภาพผู้ตรวจประเมิน");
       }
 
       // Download PDF
@@ -611,19 +612,21 @@ export default function AdminReportPage() {
     <AdminLayout>
       <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Title */}
-        <div className="mb-8 flex flex-wrap items-center justify-between">
-          <div>
+        <div className="mb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+          <div className="lg:col-span-4">
             <h1 className="text-2xl font-bold text-gray-900">ตรวจสอบรายงาน</h1>
             <p className="mt-1 text-sm text-gray-500">
               ตรวจสอบรายงานสรุปข้อมูลต่างๆ สำหรับผู้ดูแลระบบ
             </p>
           </div>
-          <Button
-            label="ส่งออก PDF"
-            icon="pi pi-file-pdf"
-            className="p-button-success p-2"
-            onClick={() => setShowExportDialog(true)}
-          />
+          <div className="lg:col-start-6 self-end">
+            <PrimaryButton
+              label="ส่งออก PDF"
+              icon="pi pi-file-pdf"
+              fullWidth
+              onClick={() => setShowExportDialog(true)}
+            />
+          </div>
         </div>
 
         {/* Export PDF Dialog */}
@@ -757,7 +760,7 @@ export default function AdminReportPage() {
                 className="border border-gray-300 rounded"
               />
               <label htmlFor="export-auditors" className="cursor-pointer">
-                รายงานประสิทธิภาพผู้ตรวจ
+                รายงานประสิทธิภาพผู้ตรวจประเมิน
               </label>
             </div>
           </div>
@@ -952,19 +955,17 @@ export default function AdminReportPage() {
               inspectionData?.byResult.map((result) => (
                 <div
                   key={result.result}
-                  className={`bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center border-2 ${
-                    result.result === "ผ่าน" || result.result === "PASSED"
-                      ? "border-green-500"
-                      : "border-red-500"
-                  }`}
+                  className={`bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center border-2 ${result.result === "ผ่าน" || result.result === "PASSED"
+                    ? "border-green-500"
+                    : "border-red-500"
+                    }`}
                 >
                   <p className="text-sm text-gray-600 mb-1">{result.result}</p>
                   <p
-                    className={`text-3xl font-bold ${
-                      result.result === "ผ่าน" || result.result === "PASSED"
-                        ? "text-green-500"
-                        : "text-red-500"
-                    }`}
+                    className={`text-3xl font-bold ${result.result === "ผ่าน" || result.result === "PASSED"
+                      ? "text-green-500"
+                      : "text-red-500"
+                      }`}
                   >
                     {result.count}
                   </p>
@@ -1308,7 +1309,7 @@ export default function AdminReportPage() {
             </div>
 
             <div className="bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center border-2 border-cyan-600">
-              <p className="text-sm text-gray-600 mb-1">ผู้ตรวจที่มีผลงาน</p>
+              <p className="text-sm text-gray-600 mb-1">ผู้ตรวจประเมินที่มีผลงาน</p>
               {loadingAuditor ? (
                 <p className="text-3xl font-bold text-gray-300">...</p>
               ) : (
@@ -1324,7 +1325,7 @@ export default function AdminReportPage() {
           <div>
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-lg font-medium text-gray-800">
-                ผลงานแต่ละผู้ตรวจ
+                ผลงานแต่ละผู้ตรวจประเมิน
               </h3>
               {auditorData && auditorData.auditors.length > 0 && (
                 <span className="text-sm text-gray-500">
@@ -1339,7 +1340,7 @@ export default function AdminReportPage() {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                      ชื่อผู้ตรวจ
+                      ชื่อผู้ตรวจประเมิน
                     </th>
                     <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
                       ตรวจทั้งหมด
@@ -1396,13 +1397,12 @@ export default function AdminReportPage() {
                           </td>
                           <td className="px-4 py-2 text-sm text-right">
                             <span
-                              className={`font-medium ${
-                                auditor.passRate >= 80
-                                  ? "text-green-600"
-                                  : auditor.passRate >= 50
+                              className={`font-medium ${auditor.passRate >= 80
+                                ? "text-green-600"
+                                : auditor.passRate >= 50
                                   ? "text-yellow-600"
                                   : "text-red-600"
-                              }`}
+                                }`}
                             >
                               {auditor.passRate}%
                             </span>
@@ -1419,9 +1419,8 @@ export default function AdminReportPage() {
               <div className="flex justify-center gap-2 mt-4">
                 {auditorDisplayCount < auditorData.auditors.length && (
                   <Button
-                    label={`ดูเพิ่มเติม (${
-                      auditorData.auditors.length - auditorDisplayCount
-                    } คน)`}
+                    label={`ดูเพิ่มเติม (${auditorData.auditors.length - auditorDisplayCount
+                      } คน)`}
                     className="p-button-outlined p-button-sm"
                     icon="pi pi-chevron-down"
                     onClick={() =>
