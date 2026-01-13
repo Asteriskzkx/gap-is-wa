@@ -336,15 +336,18 @@ export default function FarmerApplicationsPage() {
                       header: "สถานที่",
                       body: (rowData: ApplicationItem) => {
                         const farm = rowData.rubberFarm;
-
-                        // ป้องกันกรณี farm เป็น null/undefined
                         if (!farm) return "";
 
-                        // แสดง villageName (ถ้าไม่มีให้เป็นว่าง)
-                        // และ เช็คว่าถ้ามี farm.moo ให้ต่อสตริง " หมู่ ..." ถ้าไม่มีไม่ต้องต่อ
-                        return `${farm.villageName || ""}${
-                          farm.moo ? ` หมู่ ${farm.moo}` : ""
-                        }`.trim();
+                        // ฟังก์ชันช่วยเช็คว่าค่า "ใช้งานได้จริง" (ไม่ใช่ค่าว่าง และไม่ใช่ "-")
+                        const isValid = (value: string | number | undefined | null) => {
+                          return value !== null && value !== undefined && value !== "" && String(value) !== "-";
+                        };
+
+                        const village = isValid(farm.villageName) ? farm.villageName : "";
+                        const moo = isValid(farm.moo) ? `หมู่ ${farm.moo}` : "";
+
+                        // ต่อ String และจัดการช่องว่าง
+                        return `${village} ${moo}`.trim();
                       },
                       sortable: true,
                       headerAlign: "center" as const,
@@ -387,8 +390,8 @@ export default function FarmerApplicationsPage() {
                       body: (rowData: ApplicationItem) =>
                         rowData.inspection?.inspectionDateAndTime
                           ? formatThaiDate(
-                              rowData.inspection.inspectionDateAndTime
-                            )
+                            rowData.inspection.inspectionDateAndTime
+                          )
                           : "-",
                       sortable: true,
                       headerAlign: "center" as const,
