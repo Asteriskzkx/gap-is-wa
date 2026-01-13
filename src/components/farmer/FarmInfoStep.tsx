@@ -3,7 +3,6 @@ import { formStyles } from "@/styles/formStyles";
 import {
   PrimaryInputText,
   PrimaryInputNumber,
-  PrimaryAutoComplete,
   PrimaryDropdown,
 } from "@/components/ui";
 import DynamicMapSelector from "@/components/maps/DynamicMap";
@@ -186,7 +185,7 @@ export const FarmInfoStep: React.FC<FarmInfoStepProps> = ({
           <label htmlFor="provinceId" className={formStyles.formField.label}>
             จังหวัด <span className={formStyles.formField.requiredMark}>*</span>
           </label>
-          <PrimaryAutoComplete
+          <PrimaryDropdown
             id="provinceId"
             name="provinceId"
             value={rubberFarm.provinceId || ""}
@@ -197,6 +196,10 @@ export const FarmInfoStep: React.FC<FarmInfoStepProps> = ({
             onChange={handleProvinceChange}
             placeholder="เลือกจังหวัด"
             required
+            filter
+            showClear
+            emptyMessage="ไม่มีข้อมูลจังหวัด"
+            emptyFilterMessage="ไม่พบจังหวัดที่ค้นหา"
           />
         </div>
 
@@ -205,7 +208,7 @@ export const FarmInfoStep: React.FC<FarmInfoStepProps> = ({
             อำเภอ/เขต{" "}
             <span className={formStyles.formField.requiredMark}>*</span>
           </label>
-          <PrimaryAutoComplete
+          <PrimaryDropdown
             id="amphureId"
             name="amphureId"
             value={rubberFarm.amphureId || ""}
@@ -217,6 +220,10 @@ export const FarmInfoStep: React.FC<FarmInfoStepProps> = ({
             placeholder="เลือกอำเภอ/เขต"
             disabled={!rubberFarm.provinceId}
             required
+            filter
+            showClear
+            emptyMessage="ไม่มีข้อมูลอำเภอ/เขต"
+            emptyFilterMessage="ไม่พบอำเภอ/เขตที่ค้นหา"
           />
         </div>
 
@@ -225,7 +232,7 @@ export const FarmInfoStep: React.FC<FarmInfoStepProps> = ({
             ตำบล/แขวง{" "}
             <span className={formStyles.formField.requiredMark}>*</span>
           </label>
-          <PrimaryAutoComplete
+          <PrimaryDropdown
             id="tambonId"
             name="tambonId"
             value={rubberFarm.tambonId || ""}
@@ -237,6 +244,10 @@ export const FarmInfoStep: React.FC<FarmInfoStepProps> = ({
             placeholder="เลือกตำบล/แขวง"
             disabled={!rubberFarm.amphureId}
             required
+            filter
+            showClear
+            emptyMessage="ไม่มีข้อมูลตำบล/แขวง"
+            emptyFilterMessage="ไม่พบตำบล/แขวงที่ค้นหา"
           />
         </div>
       </div>
