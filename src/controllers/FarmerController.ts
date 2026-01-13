@@ -321,9 +321,20 @@ export class FarmerController extends BaseController<FarmerModel> {
   protected async createModel(data: any): Promise<FarmerModel> {
     const birthDate = data.birthDate ? new Date(data.birthDate) : new Date();
 
+    const rawPassword =
+      typeof data.password === "string" ? data.password : undefined;
+    const password =
+      rawPassword && rawPassword.trim().length > 0
+        ? rawPassword
+        : process.env.DEFAULT_PASSWORD;
+
+    if (!password) {
+      throw new Error("DEFAULT_PASSWORD is not configured in environment");
+    }
+
     return FarmerModel.createFarmer(
       data.email,
-      data.password,
+      password,
       data.namePrefix || "",
       data.firstName,
       data.lastName,

@@ -52,13 +52,23 @@ function UserActionsCell({
   userId,
   onEdit,
   onDelete,
+  onResetPassword,
 }: Readonly<{
   userId: number;
   onEdit: (userId: number) => void;
   onDelete: (userId: number) => void;
+  onResetPassword: (userId: number) => void;
 }>) {
   return (
     <div className="flex justify-center gap-1">
+      <PrimaryButton
+        icon="pi pi-key"
+        color="secondary"
+        rounded
+        text
+        tooltip="รีเซ็ตรหัสผ่าน (DEFAULT_PASSWORD)"
+        onClick={() => onResetPassword(userId)}
+      />
       <PrimaryButton
         icon="pi pi-pencil"
         color="info"
@@ -125,8 +135,9 @@ type UserTableColumn = {
 const buildUserColumns = (args: {
   onEdit: (userId: number) => void;
   onDelete: (userId: number) => void;
+  onResetPassword: (userId: number) => void;
 }): UserTableColumn[] => {
-  const { onEdit, onDelete } = args;
+  const { onEdit, onDelete, onResetPassword } = args;
 
   return [
     {
@@ -184,6 +195,7 @@ const buildUserColumns = (args: {
           userId={rowData.userId}
           onEdit={onEdit}
           onDelete={onDelete}
+          onResetPassword={onResetPassword}
         />
       ),
     },
@@ -199,6 +211,8 @@ export default function AdminUserManagementPage() {
   const [deleteVisible, setDeleteVisible] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [visibleAddUserDialog, setVisibleAddUserDialog] = useState(false);
+  const [resetVisible, setResetVisible] = useState(false);
+  const [resetUserId, setResetUserId] = useState<number | null>(null);
 
   // Server-side pagination state
   const [totalRecords, setTotalRecords] = useState(0);
@@ -223,6 +237,14 @@ export default function AdminUserManagementPage() {
     toast.success("ลบผู้ใช้สำเร็จ");
   };
 
+  const showSuccessResetPassword = () => {
+    toast.success("รีเซ็ตรหัสผ่านสำเร็จ (ตั้งเป็น DEFAULT_PASSWORD)");
+  };
+
+  const showErrorResetPassword = (message?: string) => {
+    toast.error(message || "รีเซ็ตรหัสผ่านไม่สำเร็จ");
+  };
+
   const showSuccessCreated = () => {
     toast.success("สร้างผู้ใช้สำเร็จ");
   };
@@ -233,6 +255,19 @@ export default function AdminUserManagementPage() {
 
   const showErrorDelete = () => {
     toast.error("ลบผู้ใช้ไม่สำเร็จ");
+  };
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      if (!navigator.clipboard?.writeText) {
+        throw new Error("Clipboard API not available");
+      }
+      await navigator.clipboard.writeText(text);
+      toast.success("คัดลอกแล้ว");
+    } catch (e) {
+      console.error("Copy failed:", e);
+      toast.error("คัดลอกไม่สำเร็จ");
+    }
   };
 
   // Debounce search input
@@ -378,13 +413,19 @@ export default function AdminUserManagementPage() {
     setDeleteVisible(true);
   }, []);
 
+  const handleRequestResetPassword = useCallback((userId: number) => {
+    setResetUserId(userId);
+    setResetVisible(true);
+  }, []);
+
   const columns = useMemo(
     () =>
       buildUserColumns({
         onEdit: handleEditUser,
         onDelete: handleRequestDeleteUser,
+        onResetPassword: handleRequestResetPassword,
       }),
-    [handleEditUser, handleRequestDeleteUser]
+    [handleEditUser, handleRequestDeleteUser, handleRequestResetPassword]
   );
 
   // Check if currently debouncing (search input differs from debounced value)
@@ -560,6 +601,130 @@ export default function AdminUserManagementPage() {
                 }}
               />
             </div>
+          </Dialog>
+
+          <Dialog
+            header="ยืนยันการรีเซ็ตรหัสผ่าน"
+            visible={resetVisible}
+            blockScroll={true}
+            draggable={false}
+            style={{ width: "28rem" }}
+            onHide={() => setResetVisible(false)}
+          >
+            {(() => {
+              const selectedUser = users.find((u) => u.userId === resetUserId);
+              const selectedEmail = selectedUser?.email ?? "";
+              const selectedName = selectedUser?.name ?? "";
+
+              const messageTemplate =
+                `บัญชีของคุณถูกรีเซ็ตรหัสผ่านแล้ว\n` +
+                `อีเมล: ${selectedEmail}\n` +
+                `รหัสผ่านเริ่มต้น: DEFAULT_PASSWORD (ตามที่ผู้ดูแลระบบกำหนด)\n` +
+                `กรุณาเข้าสู่ระบบและเปลี่ยนรหัสผ่านทันที`;
+
+              return (
+                <>
+                  <p className="m-0">
+                    ต้องการรีเซ็ตรหัสผ่านผู้ใช้ชื่อ :{" "}
+                    <span className="font-bold">
+                      {users.find((u) => u.userId === resetUserId)?.name ?? "-"}
+                    </span>{" "}
+                    ใช่ไหม?
+                  </p>
+                  <p className="mt-2 text-sm text-gray-600">
+                    ระบบจะตั้งรหัสผ่านใหม่เป็นค่า DEFAULT_PASSWORD
+                    และบังคับให้ผู้ใช้เปลี่ยนรหัสผ่านหลังเข้าสู่ระบบ
+                  </p>
+
+                  <div className="mt-3 rounded-md border border-gray-200 bg-gray-50 p-3">
+                    <div className="text-sm text-gray-700">
+                      <div>
+                        <span className="font-medium">ชื่อ:</span>{" "}
+                        {selectedName || "-"}
+                      </div>
+                      <div className="mt-1">
+                        <span className="font-medium">อีเมล:</span>{" "}
+                        {selectedEmail || "-"}
+                      </div>
+                    </div>
+
+                    <div className="mt-3 flex gap-2">
+                      <PrimaryButton
+                        label="คัดลอกอีเมล"
+                        icon="pi pi-copy"
+                        color="secondary"
+                        variant="outlined"
+                        disabled={loading || !selectedEmail}
+                        onClick={() => copyToClipboard(selectedEmail)}
+                      />
+                      <PrimaryButton
+                        label="คัดลอกข้อความ"
+                        icon="pi pi-copy"
+                        color="secondary"
+                        variant="outlined"
+                        disabled={loading || !selectedEmail}
+                        onClick={() => copyToClipboard(messageTemplate)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-3 mt-4">
+                    <PrimaryButton
+                      label="ยกเลิก"
+                      icon="pi pi-times"
+                      color="secondary"
+                      variant="outlined"
+                      className="flex-1"
+                      onClick={() => setResetVisible(false)}
+                      disabled={loading}
+                    />
+
+                    <PrimaryButton
+                      label="รีเซ็ต"
+                      icon="pi pi-key"
+                      color="secondary"
+                      className="flex-1"
+                      onClick={async () => {
+                        if (!resetUserId) return;
+                        try {
+                          const response = await fetch(
+                            "/api/v1/users/reset-password",
+                            {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ userId: resetUserId }),
+                            }
+                          );
+
+                          const data = await response
+                            .json()
+                            .catch(() => ({ message: "Reset failed" }));
+
+                          if (!response.ok) {
+                            throw new Error(data?.message || "Reset failed");
+                          }
+
+                          setResetVisible(false);
+                          await fetchUsers(
+                            first,
+                            rows,
+                            currentFilters,
+                            currentSort
+                          );
+                          showSuccessResetPassword();
+                        } catch (error) {
+                          console.error("Reset password failed:", error);
+                          showErrorResetPassword(
+                            error instanceof Error ? error.message : undefined
+                          );
+                        }
+                      }}
+                      disabled={loading}
+                    />
+                  </div>
+                </>
+              );
+            })()}
           </Dialog>
 
           <AddUserDialog

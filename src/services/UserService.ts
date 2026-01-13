@@ -115,6 +115,24 @@ export class UserService extends BaseService<UserModel> {
     }
   }
 
+  async resetPasswordToDefault(userId: number): Promise<UserModel | null> {
+    try {
+      const generatedPassword = process.env.DEFAULT_PASSWORD;
+      if (!generatedPassword) {
+        throw new Error("DEFAULT_PASSWORD is not configured in environment");
+      }
+
+      const hashedPassword = await bcrypt.hash(generatedPassword, 10);
+      return await this.update(userId, {
+        hashedPassword,
+        requirePasswordChange: true,
+      } as Partial<UserModel>);
+    } catch (error) {
+      this.handleServiceError(error);
+      return null;
+    }
+  }
+
   async changeRole(
     userId: number,
     newRole: UserRole

@@ -80,7 +80,12 @@ export class FarmerService extends BaseService<FarmerModel> {
         throw new Error("User with this email already exists");
       }
 
-      if (!farmerData.password) {
+      const rawPassword =
+        typeof farmerData.password === "string" ? farmerData.password : "";
+      const normalizedPassword = rawPassword.trim();
+      if (normalizedPassword.length > 0) {
+        farmerData.password = normalizedPassword;
+      } else {
         const generatedPassword = process.env.DEFAULT_PASSWORD;
         if (!generatedPassword) {
           throw new Error("DEFAULT_PASSWORD is not configured in environment");

@@ -227,9 +227,20 @@ export class AdminController extends BaseController<AdminModel> {
   }
 
   protected async createModel(data: any): Promise<AdminModel> {
+    const rawPassword =
+      typeof data.password === "string" ? data.password : undefined;
+    const password =
+      rawPassword && rawPassword.trim().length > 0
+        ? rawPassword
+        : process.env.DEFAULT_PASSWORD;
+
+    if (!password) {
+      throw new Error("DEFAULT_PASSWORD is not configured in environment");
+    }
+
     return AdminModel.createAdmin(
       data.email,
-      data.password,
+      password,
       data.namePrefix || "",
       data.firstName,
       data.lastName

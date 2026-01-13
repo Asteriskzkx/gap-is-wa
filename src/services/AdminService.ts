@@ -65,7 +65,12 @@ export class AdminService extends BaseService<AdminModel> {
       if (existingUser) {
         throw new Error("User with this email already exists");
       }
-      if (!adminData.password) {
+      const rawPassword =
+        typeof adminData.password === "string" ? adminData.password : "";
+      const normalizedPassword = rawPassword.trim();
+      if (normalizedPassword.length > 0) {
+        adminData.password = normalizedPassword;
+      } else {
         const generatedPassword = process.env.DEFAULT_PASSWORD;
         if (!generatedPassword) {
           throw new Error("DEFAULT_PASSWORD is not configured in environment");

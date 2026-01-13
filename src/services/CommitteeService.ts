@@ -66,7 +66,14 @@ export class CommitteeService extends BaseService<CommitteeModel> {
       if (existingUser) {
         throw new Error("User with this email already exists");
       }
-      if (!committeeData.password) {
+      const rawPassword =
+        typeof committeeData.password === "string"
+          ? committeeData.password
+          : "";
+      const normalizedPassword = rawPassword.trim();
+      if (normalizedPassword.length > 0) {
+        committeeData.password = normalizedPassword;
+      } else {
         const generatedPassword = process.env.DEFAULT_PASSWORD;
         if (!generatedPassword) {
           throw new Error("DEFAULT_PASSWORD is not configured in environment");
