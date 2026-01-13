@@ -83,7 +83,12 @@ export class AuditorService extends BaseService<AuditorModel> {
         throw new Error("User with this email already exists");
       }
 
-      if (!auditorData.password) {
+      const rawPassword =
+        typeof auditorData.password === "string" ? auditorData.password : "";
+      const normalizedPassword = rawPassword.trim();
+      if (normalizedPassword.length > 0) {
+        auditorData.password = normalizedPassword;
+      } else {
         const generatedPassword = process.env.DEFAULT_PASSWORD;
         if (!generatedPassword) {
           throw new Error("DEFAULT_PASSWORD is not configured in environment");

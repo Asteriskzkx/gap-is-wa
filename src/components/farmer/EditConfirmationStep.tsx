@@ -27,6 +27,7 @@ interface RubberFarm {
     type: string;
     coordinates: [number, number];
   };
+  productDistributionType: string;
 }
 
 interface EditConfirmationStepProps {
@@ -67,10 +68,6 @@ export const EditConfirmationStep: React.FC<EditConfirmationStepProps> = ({
       <div className={formStyles.section.summaryCard}>
         <h3 className={formStyles.section.summaryTitle}>ข้อมูลสวนยาง</h3>
         <div className={formStyles.section.summaryGrid}>
-          <SummaryItem
-            label="รหัสสวน"
-            value={`RF${rubberFarm.rubberFarmId.toString().padStart(5, "0")}`}
-          />
           <SummaryItem label="หมู่บ้าน/ชุมชน" value={rubberFarm.villageName} />
           <SummaryItem label="หมู่ที่" value={rubberFarm.moo} />
           <SummaryItem label="ถนน" value={rubberFarm.road} />
@@ -79,6 +76,10 @@ export const EditConfirmationStep: React.FC<EditConfirmationStepProps> = ({
           <SummaryItem label="อำเภอ/เขต" value={rubberFarm.district} />
           <SummaryItem label="จังหวัด" value={rubberFarm.province} />
           <SummaryItem
+            label="รูปแบบการจำหน่ายผลผลิต"
+            value={rubberFarm.productDistributionType}
+          />
+          {/* <SummaryItem
             label="พิกัด (ละติจูด, ลองจิจูด)"
             value={
               rubberFarm.location?.coordinates &&
@@ -91,7 +92,7 @@ export const EditConfirmationStep: React.FC<EditConfirmationStepProps> = ({
                   )}, ${rubberFarm.location.coordinates[0].toFixed(6)}`
                 : "ไม่มีข้อมูลพิกัด"
             }
-          />
+          /> */}
         </div>
       </div>
 
@@ -107,11 +108,6 @@ export const EditConfirmationStep: React.FC<EditConfirmationStepProps> = ({
             <div key={uniqueKey} className={formStyles.section.summaryCard}>
               <h4 className={formStyles.section.cardTitle}>
                 รายการที่ {index + 1}
-                {detail.plantingDetailId > 0 && (
-                  <span className="text-sm text-gray-500 ml-2">
-                    (ID: {detail.plantingDetailId})
-                  </span>
-                )}
               </h4>
               <div className={formStyles.section.summaryDetailGrid}>
                 <SummaryItem label="พันธุ์ยางพารา" value={detail.specie} />
@@ -124,7 +120,7 @@ export const EditConfirmationStep: React.FC<EditConfirmationStepProps> = ({
                   value={detail.numberOfRubber}
                 />
                 <SummaryItem
-                  label="จำนวนต้นกรีดที่กรีดได้ (ต้น)"
+                  label="จำนวนต้นยางที่กรีดได้ (ต้น)"
                   value={detail.numberOfTapping ?? 0}
                 />
                 <SummaryItem
@@ -160,11 +156,11 @@ export const EditConfirmationStep: React.FC<EditConfirmationStepProps> = ({
             className={formStyles.checkbox.input}
           />
           <label htmlFor="confirm" className={formStyles.checkbox.label}>
-            ข้าพเจ้ายืนยันว่าข้อมูลข้างต้นถูกต้องและครบถ้วน
+            ข้าพเจ้ายืนยันว่าข้อมูลที่กรอกมีความถูกต้องและครบถ้วน
           </label>
         </div>
         <div className={formStyles.alert.warning}>
-          ⚠️ ข้อมูลจะถูกบันทึกและส่งไปยังระบบ
+          <strong>หมายเหตุ:</strong> ข้อมูลจะถูกบันทึกและส่งไปยังระบบ
           กรุณาตรวจสอบข้อมูลให้ถูกต้องก่อนยืนยัน
         </div>
       </div>

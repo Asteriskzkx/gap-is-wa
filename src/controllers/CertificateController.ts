@@ -138,6 +138,7 @@ export class CertificateController extends BaseController<CertificateModel> {
     try {
       const { authorized, session, error } = await checkAuthorization(req, [
         "FARMER",
+        "ADMIN",
       ]);
 
       if (!authorized) {

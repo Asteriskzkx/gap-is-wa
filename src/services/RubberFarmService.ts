@@ -146,6 +146,8 @@ export class RubberFarmService extends BaseService<RubberFarmModel> {
     province?: string;
     district?: string;
     subDistrict?: string;
+    inspectionDate?: string;
+    inspectionStatus?: string;
     sortField?: string;
     sortOrder?: "asc" | "desc";
     multiSortMeta?: Array<{ field: string; order: 1 | -1 }>;
@@ -160,6 +162,8 @@ export class RubberFarmService extends BaseService<RubberFarmModel> {
         province,
         district,
         subDistrict,
+        inspectionDate,
+        inspectionStatus,
         sortField,
         sortOrder,
         multiSortMeta,
@@ -205,10 +209,30 @@ export class RubberFarmService extends BaseService<RubberFarmModel> {
       }
 
       // Filter ตามเงื่อนไข
+      const inspectionDateKey = inspectionDate
+        ? this.normalizeDateKey(inspectionDate)
+        : "";
+      const statusFilter = inspectionStatus?.trim() || "";
+
       let filteredFarms = farmsToProcess.filter((farm) => {
         if (province && farm.province !== province) return false;
         if (district && farm.district !== district) return false;
         if (subDistrict && farm.subDistrict !== subDistrict) return false;
+        if (inspectionDateKey) {
+          const farmDateKey = farm.inspection?.inspectionDateAndTime
+            ? this.toDateKey(farm.inspection.inspectionDateAndTime)
+            : "";
+          if (!farmDateKey || farmDateKey !== inspectionDateKey) return false;
+        }
+        if (statusFilter) {
+          const statusText = this.getApplicationStatusText(farm.inspection);
+          if (
+            statusText !== statusFilter &&
+            farm.inspection?.inspectionStatus !== statusFilter
+          ) {
+            return false;
+          }
+        }
         return true;
       });
 
@@ -329,7 +353,9 @@ export class RubberFarmService extends BaseService<RubberFarmModel> {
           farmId: `RF${farm.rubberFarmId.toString().padStart(5, "0")}`,
           villageName: farm.villageName,
           moo: farm.moo,
-          location: `${farm.villageName} หมู่ ${farm.moo}`,
+          road: farm.road,
+          alley: farm.alley,
+          location: `${farm.villageName} หมู่ ${farm.moo} ถนน ${farm.road} ซอย ${farm.alley}`,
           province: farm.province,
           district: farm.district,
           subDistrict: farm.subDistrict,
@@ -382,6 +408,49 @@ export class RubberFarmService extends BaseService<RubberFarmModel> {
    */
   private getNestedValue(obj: any, path: string): any {
     return path.split(".").reduce((acc, part) => acc?.[part], obj);
+  }
+
+  private getApplicationStatusText(inspection?: any): string {
+    if (!inspection) {
+      return "รอกำหนดวันตรวจประเมิน";
+    }
+
+    const status = inspection.inspectionStatus;
+    const result = inspection.inspectionResult;
+
+    if (status === "รอการตรวจประเมิน") {
+      return "รอการตรวจประเมิน";
+    }
+
+    if (status === "ตรวจประเมินแล้ว") {
+      if (result === "รอผลการตรวจประเมิน") {
+        return "ตรวจประเมินแล้ว รอสรุปผล";
+      }
+      if (result === "ผ่าน") {
+        return "ผ่านการรับรอง";
+      }
+      if (result === "ไม่ผ่าน") {
+        return "ไม่ผ่านการรับรอง";
+      }
+    }
+
+    return status || "ไม่ทราบสถานะ";
+  }
+
+  private toDateKey(value: string | Date): string {
+    const date = typeof value === "string" ? new Date(value) : value;
+    if (Number.isNaN(date.getTime())) return "";
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  private normalizeDateKey(value: string): string {
+    if (!value) return "";
+    const datePart = value.split("T")[0];
+    if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) return datePart;
+    return this.toDateKey(value);
   }
 
   async getRubberFarmWithDetails(

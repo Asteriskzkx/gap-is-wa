@@ -181,7 +181,7 @@ export default function RubberFarmEditForm() {
       <div className={formStyles.header.wrapper}>
         <h1 className={formStyles.header.title}>แก้ไขข้อมูลสวนยางพารา</h1>
         <p className={formStyles.header.description}>
-          แก้ไขข้อมูลสวนยางพาราและรายละเอียดการปลูกที่ได้รับการรับรองมาตรฐานจีเอพี
+          แก้ไขข้อมูลสวนยางพาราและรายละเอียดการปลูก
         </p>
       </div>
 
@@ -252,7 +252,7 @@ export default function RubberFarmEditForm() {
         )}
 
         {/* Navigation Buttons */}
-        <div className={formStyles.navigation.wrapper}>
+        <div className="mt-8 grid grid-cols-1 gap-3 md:grid-cols-4 md:items-center">
           {!isFirstStep ? (
             <PrimaryButton
               label="ย้อนกลับ"
@@ -274,16 +274,17 @@ export default function RubberFarmEditForm() {
               iconPos="right"
               onClick={handleNextStep}
               type="button"
+              className="w-full md:w-auto md:col-start-4 md:justify-self-end"
             />
           ) : (
             <PrimaryButton
               label={isLoading ? "กำลังบันทึก..." : "บันทึกและส่งข้อมูล"}
               color="success"
-              icon="pi pi-check"
               iconPos="right"
               type="submit"
               disabled={isLoading || success}
               loading={isLoading}
+              className="w-full md:w-auto md:col-start-4 md:justify-self-end"
             />
           )}
         </div>

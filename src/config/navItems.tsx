@@ -131,7 +131,7 @@ export const farmerNavItems = [
     icon: <StacksIcon className="h-6 w-6" />,
   },
   {
-    title: "ขอแก้ไขข้อมูลใบรับรองแหล่งผลิต",
+    title: "แก้ไขข้อมูลคำขอใบรับรองแหล่งผลิต",
     href: "/farmer/applications/edit",
     icon: <EditIcon className="h-6 w-6" />,
   },

@@ -152,7 +152,7 @@ export default function RubberFarmRegistrationForm() {
         )}
 
         {/* Navigation Buttons */}
-        <div className={formStyles.navigation.wrapper}>
+        <div className="mt-8 grid grid-cols-1 gap-3 md:grid-cols-4 md:items-center">
           {isFirstStep ? (
             <PrimaryButton
               label="กลับไปหน้าหลัก"
@@ -166,6 +166,7 @@ export default function RubberFarmRegistrationForm() {
             <PrimaryButton
               label="ย้อนกลับ"
               variant="outlined"
+              color="secondary"
               icon="pi pi-arrow-left"
               type="button"
               onClick={handlePrevStep}
@@ -178,6 +179,7 @@ export default function RubberFarmRegistrationForm() {
               color="success"
               type="submit"
               disabled={isLoading || success}
+              className="w-full md:w-auto md:col-start-4 md:justify-self-end"
             />
           ) : (
             <PrimaryButton
@@ -187,6 +189,7 @@ export default function RubberFarmRegistrationForm() {
               iconPos="right"
               type="button"
               onClick={handleNextStep}
+              className="w-full md:w-auto md:col-start-4 md:justify-self-end"
             />
           )}
         </div>

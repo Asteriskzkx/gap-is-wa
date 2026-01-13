@@ -1,13 +1,12 @@
-import React from "react";
-import { formStyles } from "@/styles/formStyles";
 import {
-  PrimaryAutoComplete,
-  PrimaryInputNumber,
+  PrimaryButton,
   PrimaryCalendar,
   PrimaryDropdown,
-  PrimaryButton,
+  PrimaryInputNumber,
 } from "@/components/ui";
 import { PlantingDetail } from "@/hooks/useRubberFarmForm";
+import { formStyles } from "@/styles/formStyles";
+import React from "react";
 
 // ตัวเลือกพันธุ์ยางพารา
 const rubberSpeciesOptions = [
@@ -130,7 +129,7 @@ export const PlantingDetailsStep: React.FC<PlantingDetailsStepProps> = ({
                   พันธุ์ยางพารา{" "}
                   <span className={formStyles.formField.requiredMark}>*</span>
                 </label>
-                <PrimaryAutoComplete
+                <PrimaryDropdown
                   id={`specie-${index}`}
                   name={`specie-${index}`}
                   value={detail.specie}
@@ -139,6 +138,9 @@ export const PlantingDetailsStep: React.FC<PlantingDetailsStepProps> = ({
                     updatePlantingDetail(index, "specie", value)
                   }
                   placeholder="เลือกพันธุ์ยางพารา"
+                  filter
+                  emptyMessage="ไม่พบพันธุ์ยางพารา"
+                  emptyFilterMessage="ไม่พบพันธุ์ยางพาราที่ค้นหา"
                 />
               </div>
 

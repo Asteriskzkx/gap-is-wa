@@ -167,6 +167,62 @@ export class UserController extends BaseController<UserModel> {
     }
   }
 
+  async resetPasswordToDefault(req: NextRequest): Promise<NextResponse> {
+    try {
+      const data = await req.json();
+      const userIdRaw = data?.userId;
+      const emailRaw = data?.email;
+
+      if (!userIdRaw && !emailRaw) {
+        return NextResponse.json(
+          { message: "userId or email is required" },
+          { status: 400 }
+        );
+      }
+
+      let userId: number | null = null;
+
+      if (userIdRaw) {
+        try {
+          userId = requireValidId(userIdRaw, "userId");
+        } catch (error: any) {
+          return NextResponse.json({ message: error.message }, { status: 400 });
+        }
+      } else if (typeof emailRaw === "string") {
+        const email = emailRaw.trim();
+        if (!email) {
+          return NextResponse.json(
+            { message: "email is required" },
+            { status: 400 }
+          );
+        }
+
+        const user = await this.userService.findByEmail(email);
+        if (!user) {
+          return NextResponse.json({ message: "ไม่พบผู้ใช้" }, { status: 404 });
+        }
+        userId = user.id;
+      } else {
+        return NextResponse.json(
+          { message: "email must be a string" },
+          { status: 400 }
+        );
+      }
+
+      const updatedUser = await this.userService.resetPasswordToDefault(userId);
+      if (!updatedUser) {
+        return NextResponse.json(
+          { message: "Reset password failed" },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json(updatedUser.toJSON(), { status: 200 });
+    } catch (error) {
+      return this.handleControllerError(error);
+    }
+  }
+
   async getCurrentUser(req: NextRequest): Promise<NextResponse> {
     try {
       // ตรวจสอบ authorization ด้วย NextAuth
@@ -246,7 +302,18 @@ export class UserController extends BaseController<UserModel> {
   }
 
   protected async createModel(data: any): Promise<UserModel> {
-    return UserModel.create(data.email, data.password, data.name, data.role);
+    const rawPassword =
+      typeof data.password === "string" ? data.password : undefined;
+    const password =
+      rawPassword && rawPassword.trim().length > 0
+        ? rawPassword
+        : process.env.DEFAULT_PASSWORD;
+
+    if (!password) {
+      throw new Error("DEFAULT_PASSWORD is not configured in environment");
+    }
+
+    return UserModel.create(data.email, password, data.name, data.role);
   }
 
   async changeRole(

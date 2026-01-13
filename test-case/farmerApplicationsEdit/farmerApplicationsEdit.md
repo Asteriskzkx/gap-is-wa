@@ -1,4 +1,4 @@
-# แผนการทดสอบการแก้ไขข้อมูลใบรับรอง (Playwright E2E Testing)
+# แผนการทดสอบการแก้ไขข้อมูลคำขอใบรับรอง (Playwright E2E Testing)
 
 **รวม 48 Test Cases**
 

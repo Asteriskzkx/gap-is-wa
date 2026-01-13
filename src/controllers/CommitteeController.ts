@@ -206,9 +206,20 @@ export class CommitteeController extends BaseController<CommitteeModel> {
   }
 
   protected async createModel(data: any): Promise<CommitteeModel> {
+    const rawPassword =
+      typeof data.password === "string" ? data.password : undefined;
+    const password =
+      rawPassword && rawPassword.trim().length > 0
+        ? rawPassword
+        : process.env.DEFAULT_PASSWORD;
+
+    if (!password) {
+      throw new Error("DEFAULT_PASSWORD is not configured in environment");
+    }
+
     return CommitteeModel.createCommittee(
       data.email,
-      data.password,
+      password,
       data.namePrefix || "",
       data.firstName,
       data.lastName
