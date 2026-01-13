@@ -637,7 +637,7 @@ export default function AdminUserManagementPage() {
             visible={resetVisible}
             blockScroll={true}
             draggable={false}
-            style={{ width: "28rem" }}
+            style={{ width: "clamp(22rem, 92vw, 56rem)" }}
             onHide={() => setResetVisible(false)}
           >
             {(() => {
