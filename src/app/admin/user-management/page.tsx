@@ -213,6 +213,11 @@ export default function AdminUserManagementPage() {
   const [visibleAddUserDialog, setVisibleAddUserDialog] = useState(false);
   const [resetVisible, setResetVisible] = useState(false);
   const [resetUserId, setResetUserId] = useState<number | null>(null);
+  const [defaultPassword, setDefaultPassword] = useState<string>("");
+  const [defaultPasswordLoading, setDefaultPasswordLoading] =
+    useState<boolean>(false);
+  const [showDefaultPassword, setShowDefaultPassword] =
+    useState<boolean>(false);
 
   // Server-side pagination state
   const [totalRecords, setTotalRecords] = useState(0);
@@ -256,6 +261,28 @@ export default function AdminUserManagementPage() {
   const showErrorDelete = () => {
     toast.error("ลบผู้ใช้ไม่สำเร็จ");
   };
+
+  const fetchDefaultPassword = useCallback(async () => {
+    setDefaultPasswordLoading(true);
+    try {
+      const res = await fetch("/api/v1/users/default-password", {
+        method: "GET",
+        cache: "no-store",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data?.message || "Failed to load DEFAULT_PASSWORD");
+      }
+      setDefaultPassword(
+        typeof data?.defaultPassword === "string" ? data.defaultPassword : ""
+      );
+    } catch (e) {
+      console.error("Failed to fetch DEFAULT_PASSWORD:", e);
+      setDefaultPassword("");
+    } finally {
+      setDefaultPasswordLoading(false);
+    }
+  }, []);
 
   const copyToClipboard = async (text: string) => {
     try {
@@ -416,6 +443,8 @@ export default function AdminUserManagementPage() {
   const handleRequestResetPassword = useCallback((userId: number) => {
     setResetUserId(userId);
     setResetVisible(true);
+    setShowDefaultPassword(false);
+    fetchDefaultPassword();
   }, []);
 
   const columns = useMemo(
@@ -616,10 +645,24 @@ export default function AdminUserManagementPage() {
               const selectedEmail = selectedUser?.email ?? "";
               const selectedName = selectedUser?.name ?? "";
 
+              const resolvedPassword = defaultPasswordLoading
+                ? "(กำลังโหลด...)"
+                : defaultPassword || "(ไม่พบค่า)";
+
+              let defaultPasswordDisplay = "••••••••";
+              if (defaultPasswordLoading || showDefaultPassword) {
+                defaultPasswordDisplay = resolvedPassword;
+              }
+
+              const passwordForMessage =
+                defaultPasswordLoading || !defaultPassword
+                  ? "DEFAULT_PASSWORD"
+                  : defaultPassword;
+
               const messageTemplate =
                 `บัญชีของคุณถูกรีเซ็ตรหัสผ่านแล้ว\n` +
                 `อีเมล: ${selectedEmail}\n` +
-                `รหัสผ่านเริ่มต้น: DEFAULT_PASSWORD (ตามที่ผู้ดูแลระบบกำหนด)\n` +
+                `รหัสผ่านเริ่มต้น: ${passwordForMessage}\n` +
                 `กรุณาเข้าสู่ระบบและเปลี่ยนรหัสผ่านทันที`;
 
               return (
@@ -646,6 +689,12 @@ export default function AdminUserManagementPage() {
                         <span className="font-medium">อีเมล:</span>{" "}
                         {selectedEmail || "-"}
                       </div>
+                      <div className="mt-1">
+                        <span className="font-medium">DEFAULT_PASSWORD:</span>{" "}
+                        <span className="font-mono">
+                          {defaultPasswordDisplay}
+                        </span>
+                      </div>
                     </div>
 
                     <div className="mt-3 flex gap-2">
@@ -664,6 +713,28 @@ export default function AdminUserManagementPage() {
                         variant="outlined"
                         disabled={loading || !selectedEmail}
                         onClick={() => copyToClipboard(messageTemplate)}
+                      />
+                      <PrimaryButton
+                        label={showDefaultPassword ? "ซ่อน" : "แสดง"}
+                        icon={
+                          showDefaultPassword ? "pi pi-eye-slash" : "pi pi-eye"
+                        }
+                        color="secondary"
+                        variant="outlined"
+                        disabled={
+                          loading || defaultPasswordLoading || !defaultPassword
+                        }
+                        onClick={() => setShowDefaultPassword((v) => !v)}
+                      />
+                      <PrimaryButton
+                        label="คัดลอก DEFAULT_PASSWORD"
+                        icon="pi pi-copy"
+                        color="secondary"
+                        variant="outlined"
+                        disabled={
+                          loading || defaultPasswordLoading || !defaultPassword
+                        }
+                        onClick={() => copyToClipboard(defaultPassword)}
                       />
                     </div>
                   </div>
