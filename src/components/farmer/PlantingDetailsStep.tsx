@@ -139,7 +139,6 @@ export const PlantingDetailsStep: React.FC<PlantingDetailsStepProps> = ({
                   }
                   placeholder="เลือกพันธุ์ยางพารา"
                   filter
-                  showClear
                   emptyMessage="ไม่พบพันธุ์ยางพารา"
                   emptyFilterMessage="ไม่พบพันธุ์ยางพาราที่ค้นหา"
                 />
