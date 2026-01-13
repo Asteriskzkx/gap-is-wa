@@ -675,7 +675,7 @@ export default function AdminUserManagementPage() {
                     ใช่ไหม?
                   </p>
                   <p className="mt-2 text-sm text-gray-600">
-                    ระบบจะตั้งรหัสผ่านใหม่เป็นค่า DEFAULT_PASSWORD
+                    ระบบจะตั้งรหัสผ่านใหม่เป็นค่า รหัสผ่านเริ่มต้น
                     และบังคับให้ผู้ใช้เปลี่ยนรหัสผ่านหลังเข้าสู่ระบบ
                   </p>
 
@@ -690,14 +690,14 @@ export default function AdminUserManagementPage() {
                         {selectedEmail || "-"}
                       </div>
                       <div className="mt-1">
-                        <span className="font-medium">DEFAULT_PASSWORD:</span>{" "}
+                        <span className="font-medium">รหัสผ่านเริ่มต้น:</span>{" "}
                         <span className="font-mono">
                           {defaultPasswordDisplay}
                         </span>
                       </div>
                     </div>
 
-                    <div className="mt-3 flex gap-2">
+                    <div className="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-4 md:items-center">
                       <PrimaryButton
                         label="คัดลอกอีเมล"
                         icon="pi pi-copy"
@@ -727,7 +727,7 @@ export default function AdminUserManagementPage() {
                         onClick={() => setShowDefaultPassword((v) => !v)}
                       />
                       <PrimaryButton
-                        label="คัดลอก DEFAULT_PASSWORD"
+                        label="คัดลอก รหัสผ่านเริ่มต้น"
                         icon="pi pi-copy"
                         color="secondary"
                         variant="outlined"
@@ -739,7 +739,7 @@ export default function AdminUserManagementPage() {
                     </div>
                   </div>
 
-                  <div className="flex justify-end gap-3 mt-4">
+                  <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 md:items-center">
                     <PrimaryButton
                       label="ยกเลิก"
                       icon="pi pi-times"
