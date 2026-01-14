@@ -618,19 +618,25 @@ export default function AuditorScheduleInspectionPage() {
             <p className="text-sm text-gray-600 mb-4">
               ท่านสามารถเลือกผู้ตรวจประเมินเพิ่มเติมเพื่อร่วมในการตรวจประเมินได้
             </p>
-            <div className="mb-4 flex gap-2">
-              <PrimaryInputText
-                placeholder="ค้นหาผู้ตรวจประเมิน..."
-                value={auditorSearchTerm}
-                onChange={setAuditorSearchTerm}
-                className="flex-1"
-              />
-              <PrimaryButton
-                label="ค้นหา"
-                icon="pi pi-search"
-                onClick={handleAuditorSearchClick}
-                color="success"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-stretch mb-4">
+              <div className="md:col-span-3">
+                <PrimaryInputText
+                  placeholder="ค้นหาผู้ตรวจประเมิน"
+                  value={auditorSearchTerm}
+                  onChange={setAuditorSearchTerm}
+                  className="flex-1"
+                />
+              </div>
+              <div className="md:col-start-4">
+                <PrimaryButton
+                  label="ค้นหา"
+                  icon="pi pi-search"
+                  onClick={handleAuditorSearchClick}
+                  color="success"
+                  fullWidth
+                  fullHeight
+                />
+              </div>
             </div>
 
             <PrimaryDataTable
