@@ -1386,6 +1386,13 @@ input.p-inputtext:disabled {
     min-width: 35% !important;
   }
 
+  body.pdf-export
+    .primary-datatable-wrapper
+    .p-datatable-tbody > tr > td::before {
+    content: none !important;
+    display: none !important;
+  }
+
   /* Content ของ cell - ขวา */
   .primary-datatable-wrapper .p-datatable-tbody > tr > td > * {
     text-align: right !important;
