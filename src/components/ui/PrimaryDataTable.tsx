@@ -11,7 +11,7 @@ import { PaginatorTemplate } from "primereact/paginator";
 
 type TextAlign = "left" | "center" | "right";
 
-interface PrimaryDataTableColumn {
+export interface PrimaryDataTableColumn {
   readonly field: string;
   readonly header: string;
   readonly body?: (rowData: any) => React.ReactNode;
