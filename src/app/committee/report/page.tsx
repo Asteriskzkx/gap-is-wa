@@ -382,36 +382,35 @@ export default function CommitteeReportPage() {
 
   // Export PDF handler
   // Export PDF handler
-    const handleExportPDF = async () => {
-        setExporting(true);
-        try {
-          resizeChartsForPDF();
-    
-          await exportReportPDF({
-            filename: `รายงานระบบ_${new Date().toISOString().split("T")[0]}.pdf`,
-            header: {
-              title: "รายงานสำหรับคณะกรรมการ",
-              dateRangeText:
-                dates && dates[0] && dates[1]
-                  ? `ช่วงวันที่: ${dates[0].toLocaleDateString(
-                      "th-TH"
-                    )} - ${dates[1].toLocaleDateString("th-TH")}`
-                  : undefined,
-            },
-            sections: [
-              exportSections.myCommitteeStats && { ref: myCommitteeStatsRef },
-              exportSections.certificateStats && { ref: certificateStatsRef },
-              exportSections.expiryAlerts && { ref: expiryAlertsRef },
-              exportSections.inspectionStats && { ref: inspectionStatsRef },
-              exportSections.charts && { ref: chartsRef },
-            ].filter(Boolean) as any,
-          });
-        } finally {
-          resetChartsAfterPDF();
-          setExporting(false);
-        }
-      };
-      
+  const handleExportPDF = async () => {
+    setExporting(true);
+    try {
+      resizeChartsForPDF();
+
+      await exportReportPDF({
+        filename: `รายงานระบบ_${new Date().toISOString().split("T")[0]}.pdf`,
+        header: {
+          title: "รายงานสำหรับคณะกรรมการ",
+          dateRangeText:
+            dates && dates[0] && dates[1]
+              ? `ช่วงวันที่: ${dates[0].toLocaleDateString(
+                  "th-TH"
+                )} - ${dates[1].toLocaleDateString("th-TH")}`
+              : undefined,
+        },
+        sections: [
+          exportSections.myCommitteeStats && { ref: myCommitteeStatsRef },
+          exportSections.certificateStats && { ref: certificateStatsRef },
+          exportSections.expiryAlerts && { ref: expiryAlertsRef },
+          exportSections.inspectionStats && { ref: inspectionStatsRef },
+          exportSections.charts && { ref: chartsRef },
+        ].filter(Boolean) as any,
+      });
+    } finally {
+      resetChartsAfterPDF();
+      setExporting(false);
+    }
+  };
 
   return (
     <CommitteeLayout>
@@ -602,12 +601,12 @@ export default function CommitteeReportPage() {
               />
             </div>
             <p className="text-sm text-gray-500">
-              * ช่วงวันที่จะกรองเฉพาะข้อมูลในส่วน &quot;กราฟสรุปข้อมูล&quot; และ
-              &quot;สรุปการตรวจประเมิน&quot;
+              * ช่วงวันที่จะกรองเฉพาะข้อมูลในส่วน &quot;แผนภูมิสรุปข้อมูล&quot;
+              และ &quot;สรุปการตรวจประเมิน&quot;
             </p>
             {chartLoading && (
               <span className="text-blue-600 text-sm animate-pulse">
-                กำลังโหลดข้อมูลกราฟ...
+                กำลังโหลดข้อมูลแผนภูมิ...
               </span>
             )}
           </div>
@@ -862,60 +861,60 @@ export default function CommitteeReportPage() {
           {/* Expiring Certificates Table */}
           {(reportData?.certificateExpiryAlerts.expiring30Days.length ?? 0) >
             0 && (
-              <div className="mt-4">
-                <h3 className="text-lg font-medium text-red-700 mb-3">
-                  ใบรับรองที่จะหมดอายุใน 30 วัน
-                </h3>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-red-50">
-                      <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                          เลขที่ใบรับรอง
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                          ชื่อเกษตรกร
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                          ที่ตั้ง
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                          จังหวัด
-                        </th>
-                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                          เหลืออีก
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {reportData?.certificateExpiryAlerts.expiring30Days.map(
-                        (cert) => (
-                          <tr key={cert.certificateId}>
-                            <td className="px-4 py-3 text-sm text-gray-900">
-                              {cert.certificateId}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-gray-900">
-                              {cert.farmerName}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-gray-600">
-                              {cert.farmLocation}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-gray-600">
-                              {cert.province}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-center">
-                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                {cert.daysUntilExpiry} วัน
-                              </span>
-                            </td>
-                          </tr>
-                        )
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+            <div className="mt-4">
+              <h3 className="text-lg font-medium text-red-700 mb-3">
+                ใบรับรองที่จะหมดอายุใน 30 วัน
+              </h3>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-red-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        เลขที่ใบรับรอง
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        ชื่อเกษตรกร
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        ที่ตั้ง
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        จังหวัด
+                      </th>
+                      <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                        เหลืออีก
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {reportData?.certificateExpiryAlerts.expiring30Days.map(
+                      (cert) => (
+                        <tr key={cert.certificateId}>
+                          <td className="px-4 py-3 text-sm text-gray-900">
+                            {cert.certificateId}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-900">
+                            {cert.farmerName}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-600">
+                            {cert.farmLocation}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-600">
+                            {cert.province}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-center">
+                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                              {cert.daysUntilExpiry} วัน
+                            </span>
+                          </td>
+                        </tr>
+                      )
+                    )}
+                  </tbody>
+                </table>
               </div>
-            )}
+            </div>
+          )}
         </div>
 
         {/* ==================== CHARTS SECTION ==================== */}
@@ -1098,15 +1097,15 @@ export default function CommitteeReportPage() {
                   ))}
                   {(!chartData?.inspectionsByType ||
                     chartData.inspectionsByType.length === 0) && (
-                      <tr>
-                        <td
-                          colSpan={4}
-                          className="px-4 py-3 text-sm text-center text-gray-500"
-                        >
-                          ไม่มีข้อมูล
-                        </td>
-                      </tr>
-                    )}
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="px-4 py-3 text-sm text-center text-gray-500"
+                      >
+                        ไม่มีข้อมูล
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
