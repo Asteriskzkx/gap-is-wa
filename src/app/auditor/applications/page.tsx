@@ -57,6 +57,7 @@ interface RubberFarm {
 
 interface RubberFarmDetails {
   rubberFarmId: number;
+  farmerId: number;
   villageName: string;
   moo: number;
   road: string;
@@ -67,6 +68,7 @@ interface RubberFarmDetails {
   location: any;
   productDistributionType: string;
   plantingDetails: PlantingDetail[];
+  farmer?: FarmerDetails;
 }
 
 interface PlantingDetail {
@@ -79,6 +81,16 @@ interface PlantingDetail {
   yearOfTapping: string;
   monthOfTapping: string;
   totalProduction: number;
+}
+
+interface FarmerDetails {
+  farmerId: number;
+  namePrefix: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber?: string;
+  mobilePhoneNumber?: string;
 }
 
 interface InspectionType {
@@ -921,6 +933,39 @@ export default function AuditorScheduleInspectionPage() {
                 />
               </div>
               <div className="mt-4 space-y-4 max-h-[70vh] overflow-y-auto">
+                {selectedFarmDetails.farmer && (
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="font-semibold text-gray-800 mb-2">
+                      ข้อมูลเกษตรกร
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <span className="font-medium text-gray-600">
+                          ชื่อ-สกุล:
+                        </span>{" "}
+                        {`${selectedFarmDetails.farmer.namePrefix}${selectedFarmDetails.farmer.firstName} ${selectedFarmDetails.farmer.lastName}`}
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-600">
+                          อีเมล:
+                        </span>{" "}
+                        {selectedFarmDetails.farmer.email || "-"}
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-600">
+                          โทรศัพท์บ้าน:
+                        </span>{" "}
+                        {selectedFarmDetails.farmer.phoneNumber || "-"}
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-600">
+                          โทรศัพท์มือถือ:
+                        </span>{" "}
+                        {selectedFarmDetails.farmer.mobilePhoneNumber || "-"}
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <h4 className="font-semibold text-gray-800 mb-2">
                     ที่ตั้งสวนยาง

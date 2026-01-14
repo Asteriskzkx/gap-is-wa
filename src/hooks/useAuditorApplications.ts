@@ -330,8 +330,22 @@ export function useAuditorApplications(initialRows = 10) {
       if (!response.ok) {
         throw new Error("Failed to fetch farm details");
       }
-      const data = await response.json();
-      return data;
+      const farmData = await response.json();
+
+      const farmerId = Number(farmData?.farmerId);
+      if (farmerId) {
+        try {
+          const farmerResponse = await fetch(`/api/v1/farmers/${farmerId}`);
+          if (farmerResponse.ok) {
+            const farmerData = await farmerResponse.json();
+            farmData.farmer = farmerData?.farmer ?? farmerData;
+          }
+        } catch (error) {
+          console.error("Error fetching farmer details:", error);
+        }
+      }
+
+      return farmData;
     } catch (error) {
       console.error("Error fetching farm details:", error);
       throw error;
