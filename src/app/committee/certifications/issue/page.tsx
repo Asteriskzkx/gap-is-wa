@@ -63,15 +63,26 @@ export default function Page() {
         header: "สถานที่",
         headerAlign: "center" as const,
         bodyAlign: "left" as const,
-        body: (r: any) =>
-          [
-            r.rubberFarm?.villageName,
-            r.rubberFarm?.subDistrict,
-            r.rubberFarm?.district,
-            r.rubberFarm?.province,
-          ]
-            .filter(Boolean)
-            .join(" ") || "-",
+        body: (r: any) => {
+          const f = r.rubberFarm;
+          const v = (val: any) =>
+            val && val !== "-" && val !== "0" ? val : null;
+          return (
+            <span>
+              {[
+                v(f?.villageName),
+                v(f?.moo) ? `หมู่ ${f.moo}` : null,
+                v(f?.road),
+                v(f?.alley),
+                v(f?.subDistrict) ? `ต.${f.subDistrict}` : null,
+                v(f?.district) ? `อ.${f.district}` : null,
+                v(f?.province) ? `จ.${f.province}` : null,
+              ]
+                .filter(Boolean)
+                .join(" ") || "-"}
+            </span>
+          );
+        },
         style: { width: "28%" },
       },
       {
