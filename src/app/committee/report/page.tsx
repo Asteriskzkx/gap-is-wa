@@ -399,10 +399,10 @@ export default function CommitteeReportPage() {
                   : undefined,
             },
             sections: [
+              exportSections.myCommitteeStats && { ref: myCommitteeStatsRef },
               exportSections.certificateStats && { ref: certificateStatsRef },
               exportSections.expiryAlerts && { ref: expiryAlertsRef },
               exportSections.inspectionStats && { ref: inspectionStatsRef },
-              exportSections.myCommitteeStats && { ref: myCommitteeStatsRef },
               exportSections.charts && { ref: chartsRef },
             ].filter(Boolean) as any,
           });

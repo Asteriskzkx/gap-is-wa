@@ -141,8 +141,9 @@ export default function AuditorReportPage() {
           },
           sections: [
             exportSections.stats && { ref: statsRef },
-            exportSections.inspectedFarms && { ref: inspectedFarmsRef  },
             exportSections.recentInspections && { ref: recentInspectionsRef  },
+            exportSections.inspectedFarms && { ref: inspectedFarmsRef  },
+
           ].filter(Boolean) as any,
         });
       } finally {
