@@ -80,12 +80,15 @@ export class AuditorReportService {
       }
 
       // Build where clause for date filtering - include both as chief and as team member
-      const dateFilter = startDate && endDate ? {
-        inspectionDateAndTime: {
-          gte: startDate,
-          lte: endDate,
-        },
-      } : {};
+      const dateFilter =
+        startDate && endDate
+          ? {
+              inspectionDateAndTime: {
+                gte: startDate,
+                lte: endDate,
+              },
+            }
+          : {};
 
       const whereClause = {
         OR: [
@@ -99,7 +102,9 @@ export class AuditorReportService {
       const inspections = await prisma.inspection.findMany({
         where: whereClause,
         include: {
-          inspectionType: { select: { inspectionTypeId: true, typeName: true } },
+          inspectionType: {
+            select: { inspectionTypeId: true, typeName: true },
+          },
           rubberFarm: {
             include: {
               farmer: {
@@ -119,15 +124,21 @@ export class AuditorReportService {
         (i) => i.inspectionResult === "ผ่าน" || i.inspectionResult === "PASSED"
       ).length;
       const failedInspections = inspections.filter(
-        (i) => i.inspectionResult === "ไม่ผ่าน" || i.inspectionResult === "FAILED"
+        (i) =>
+          i.inspectionResult === "ไม่ผ่าน" || i.inspectionResult === "FAILED"
       ).length;
       const pendingInspections = inspections.filter(
-        (i) => !i.inspectionResult || i.inspectionResult === "" || i.inspectionStatus === "รอการตรวจประเมิน"
+        (i) =>
+          !i.inspectionResult ||
+          i.inspectionResult === "รอผลการตรวจประเมิน" ||
+          i.inspectionStatus === "รอการตรวจประเมิน"
       ).length;
       const completedInspections = passedInspections + failedInspections;
-      const passRate = completedInspections > 0
-        ? Math.round((passedInspections / completedInspections) * 100 * 100) / 100
-        : 0;
+      const passRate =
+        completedInspections > 0
+          ? Math.round((passedInspections / completedInspections) * 100 * 100) /
+            100
+          : 0;
 
       const stats: MyInspectionStats = {
         totalInspections,
@@ -153,11 +164,13 @@ export class AuditorReportService {
           }
         }
       }
-      const byType: InspectionByType[] = Array.from(typeMap.entries()).map(([typeId, data]) => ({
-        typeId,
-        typeName: data.typeName,
-        count: data.count,
-      }));
+      const byType: InspectionByType[] = Array.from(typeMap.entries()).map(
+        ([typeId, data]) => ({
+          typeId,
+          typeName: data.typeName,
+          count: data.count,
+        })
+      );
 
       // Group by status
       const statusMap = new Map<string, number>();
@@ -165,32 +178,41 @@ export class AuditorReportService {
         const status = inspection.inspectionStatus || "ไม่ระบุ";
         statusMap.set(status, (statusMap.get(status) || 0) + 1);
       }
-      const byStatus: InspectionByStatus[] = Array.from(statusMap.entries()).map(([status, count]) => ({
+      const byStatus: InspectionByStatus[] = Array.from(
+        statusMap.entries()
+      ).map(([status, count]) => ({
         status,
         count,
       }));
 
       // Recent inspections (top 10)
-      const recentInspections: RecentInspection[] = inspections.slice(0, 10).map((i) => ({
-        id: i.inspectionId,
-        farmerName: i.rubberFarm?.farmer?.user?.name || "ไม่ระบุ",
-        farmLocation: `${i.rubberFarm?.villageName || ""} ม.${i.rubberFarm?.moo || ""}`,
-        province: i.rubberFarm?.province || "ไม่ระบุ",
-        inspectionDate: i.inspectionDateAndTime?.toISOString() || "",
-        result: i.inspectionResult || null,
-        status: i.inspectionStatus || "ไม่ระบุ",
-      }));
+      const recentInspections: RecentInspection[] = inspections
+        .slice(0, 10)
+        .map((i) => ({
+          id: i.inspectionId,
+          farmerName: i.rubberFarm?.farmer?.user?.name || "ไม่ระบุ",
+          farmLocation: `${i.rubberFarm?.villageName || ""} ม.${
+            i.rubberFarm?.moo || ""
+          }`,
+          province: i.rubberFarm?.province || "ไม่ระบุ",
+          inspectionDate: i.inspectionDateAndTime?.toISOString() || "",
+          result: i.inspectionResult || null,
+          status: i.inspectionStatus || "ไม่ระบุ",
+        }));
 
       // Group by farm to get inspected farms list
-      const farmMap = new Map<number, {
-        rubberFarmId: number;
-        farmLocation: string;
-        province: string;
-        farmerName: string;
-        lastInspectionDate: string;
-        lastResult: string | null;
-        totalInspections: number;
-      }>();
+      const farmMap = new Map<
+        number,
+        {
+          rubberFarmId: number;
+          farmLocation: string;
+          province: string;
+          farmerName: string;
+          lastInspectionDate: string;
+          lastResult: string | null;
+          totalInspections: number;
+        }
+      >();
 
       for (const inspection of inspections) {
         const farmId = inspection.rubberFarmId;
@@ -198,25 +220,33 @@ export class AuditorReportService {
         if (existing) {
           existing.totalInspections++;
           // Update if this is more recent
-          if (inspection.inspectionDateAndTime.toISOString() > existing.lastInspectionDate) {
-            existing.lastInspectionDate = inspection.inspectionDateAndTime.toISOString();
+          if (
+            inspection.inspectionDateAndTime.toISOString() >
+            existing.lastInspectionDate
+          ) {
+            existing.lastInspectionDate =
+              inspection.inspectionDateAndTime.toISOString();
             existing.lastResult = inspection.inspectionResult || null;
           }
         } else {
           farmMap.set(farmId, {
             rubberFarmId: farmId,
-            farmLocation: `${inspection.rubberFarm?.villageName || ""} ม.${inspection.rubberFarm?.moo || ""}`,
+            farmLocation: `${inspection.rubberFarm?.villageName || ""} ม.${
+              inspection.rubberFarm?.moo || ""
+            }`,
             province: inspection.rubberFarm?.province || "ไม่ระบุ",
             farmerName: inspection.rubberFarm?.farmer?.user?.name || "ไม่ระบุ",
-            lastInspectionDate: inspection.inspectionDateAndTime?.toISOString() || "",
+            lastInspectionDate:
+              inspection.inspectionDateAndTime?.toISOString() || "",
             lastResult: inspection.inspectionResult || null,
             totalInspections: 1,
           });
         }
       }
 
-      const inspectedFarms: InspectedFarm[] = Array.from(farmMap.values())
-        .sort((a, b) => b.lastInspectionDate.localeCompare(a.lastInspectionDate));
+      const inspectedFarms: InspectedFarm[] = Array.from(farmMap.values()).sort(
+        (a, b) => b.lastInspectionDate.localeCompare(a.lastInspectionDate)
+      );
 
       return {
         stats,

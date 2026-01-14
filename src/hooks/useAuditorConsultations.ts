@@ -172,7 +172,7 @@ export function useAuditorConsultations(initialRows = 10) {
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(
-            errorData.message || "Failed to update advice and defect"
+            errorData.userMessage || "Failed to update advice and defect"
           );
         }
 
