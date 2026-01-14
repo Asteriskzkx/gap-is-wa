@@ -13,6 +13,7 @@ export default function InspectionInfo({ inspection }: Props) {
 
   const rawFarmer = inspection?.rubberFarm?.farmer;
   const farmer = rawFarmer?.farmer ?? rawFarmer;
+  const auditorChief = inspection?.auditorChief;
 
   const normalizeText = (value: unknown): string => {
     if (value === null || value === undefined) return "";
@@ -53,6 +54,75 @@ export default function InspectionInfo({ inspection }: Props) {
 
     return parts.length ? parts.join(" ") : "-";
   };
+
+  const formatAuditorName = (value: any): string => {
+    if (!value) return "-";
+    const namePrefix = normalizeText(value.namePrefix);
+    const firstName = normalizeText(value.firstName);
+    const lastName = normalizeText(value.lastName);
+    const name = [namePrefix, firstName, lastName].filter(Boolean).join(" ");
+    return name || "-";
+  };
+
+  const buildAuditors = (): Array<{
+    auditorId: number | string;
+    name: string;
+    email: string;
+    role: string;
+  }> => {
+    const rows = new Map<string, any>();
+
+    const upsert = (auditor: any, role: string) => {
+      if (!auditor) return;
+      const id = auditor.auditorId ?? auditor.id ?? auditor.auditorID;
+      const key = id !== undefined && id !== null ? String(id) : "";
+      if (!key) return;
+
+      const email =
+        normalizeText(auditor?.user?.email) ||
+        normalizeText(auditor?.email) ||
+        "-";
+      const name = formatAuditorName(auditor);
+
+      const existing = rows.get(key);
+      rows.set(key, {
+        auditorId: id,
+        name,
+        email,
+        role: existing?.role === "หัวหน้าผู้ตรวจประเมิน" ? existing.role : role,
+      });
+    };
+
+    if (auditorChief) {
+      upsert(auditorChief, "หัวหน้าผู้ตรวจประเมิน");
+    }
+
+    if (inspection?.auditorChiefId && !auditorChief) {
+      rows.set(String(inspection.auditorChiefId), {
+        auditorId: inspection.auditorChiefId,
+        name: "-",
+        email: "-",
+        role: "หัวหน้าผู้ตรวจประเมิน",
+      });
+    }
+
+    const auditorInspections = Array.isArray(inspection?.auditorInspections)
+      ? inspection.auditorInspections
+      : [];
+
+    for (const ai of auditorInspections) {
+      const auditor = ai?.auditor ?? ai;
+      upsert(auditor, "ผู้ตรวจประเมินร่วม");
+    }
+
+    return Array.from(rows.values()).sort((a, b) =>
+      String(a.auditorId).localeCompare(String(b.auditorId), "th-TH", {
+        numeric: true,
+      })
+    );
+  };
+
+  const auditors = buildAuditors();
 
   return (
     <>
@@ -115,6 +185,50 @@ export default function InspectionInfo({ inspection }: Props) {
             </p>
           </div>
         </div>
+      </div>
+
+      <div className={INFO_CARD.sectionBorder}>
+        <h2 className={INFO_CARD.sectionTitle}>ผู้ตรวจประเมินที่เกี่ยวข้อง</h2>
+        <PrimaryDataTable
+          value={auditors}
+          columns={[
+            {
+              field: "auditorId",
+              header: "รหัสผู้ตรวจ",
+              body: (rowData: any) => rowData.auditorId,
+              headerAlign: "center" as const,
+              bodyAlign: "center" as const,
+              style: { width: "15%" },
+            },
+            {
+              field: "name",
+              header: "ชื่อ-นามสกุล",
+              body: (rowData: any) => rowData.name,
+              headerAlign: "center" as const,
+              bodyAlign: "left" as const,
+              style: { width: "30%" },
+            },
+            {
+              field: "email",
+              header: "อีเมล",
+              body: (rowData: any) => rowData.email,
+              headerAlign: "center" as const,
+              bodyAlign: "left" as const,
+              style: { width: "35%" },
+            },
+            {
+              field: "role",
+              header: "บทบาท",
+              body: (rowData: any) => rowData.role,
+              headerAlign: "center" as const,
+              bodyAlign: "left" as const,
+              style: { width: "20%" },
+            },
+          ]}
+          paginator={false}
+          emptyMessage="ไม่พบข้อมูลผู้ตรวจประเมิน"
+          className="w-full"
+        />
       </div>
 
       <div className={INFO_CARD.sectionBorder}>

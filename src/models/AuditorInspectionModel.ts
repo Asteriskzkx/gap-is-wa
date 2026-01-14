@@ -4,18 +4,21 @@ export class AuditorInspectionModel extends BaseModel {
   auditorInspectionId: number;
   auditorId: number;
   inspectionId: number;
+  auditor?: any;
 
   constructor(
     auditorInspectionId: number,
     auditorId: number,
     inspectionId: number,
     createdAt: Date = new Date(),
-    updatedAt: Date = new Date()
+    updatedAt: Date = new Date(),
+    auditor?: any
   ) {
     super(auditorInspectionId, createdAt, updatedAt);
     this.auditorInspectionId = auditorInspectionId;
     this.auditorId = auditorId;
     this.inspectionId = inspectionId;
+    this.auditor = auditor;
   }
 
   static create(
@@ -38,6 +41,7 @@ export class AuditorInspectionModel extends BaseModel {
       auditorInspectionId: this.auditorInspectionId,
       auditorId: this.auditorId,
       inspectionId: this.inspectionId,
+      auditor: this.auditor,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
     };
