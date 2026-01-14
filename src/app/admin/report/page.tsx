@@ -531,19 +531,17 @@ export default function AdminReportPage() {
       field: "auditorName",
       bodyAlign: "left",
       header: "ชื่อผู้ตรวจประเมิน",
-      mobileHideLabel: true,
     },
     {
       field: "totalInspections",
       bodyAlign: "left",
       header: "ตรวจทั้งหมด",
-      mobileHideLabel: true,
     },
     {
       field: "passedInspections",
       header: "ผ่าน",
       bodyAlign: "left",
-      mobileHideLabel: true,
+
       body: (row) => (
         <span className="text-green-600 font-medium">
           {row.passedInspections}
@@ -554,7 +552,6 @@ export default function AdminReportPage() {
       field: "failedInspections",
       header: "ไม่ผ่าน",
       bodyAlign: "left",
-      mobileHideLabel: true,
       body: (row) => (
         <span className="text-red-600 font-medium">
           {row.failedInspections}
@@ -565,7 +562,6 @@ export default function AdminReportPage() {
       field: "passRate",
       header: "อัตราผ่าน",
       bodyAlign: "left",
-      mobileHideLabel: true,
       body: (row) => (
         <span
           className={`font-medium ${
@@ -587,19 +583,16 @@ export default function AdminReportPage() {
       field: "province",
       header: "จังหวัด",
       bodyAlign: "left",
-      mobileHideLabel: true,
     },
     {
       field: "count",
       bodyAlign: "left",
       header: "ชื่อผู้ตรวจประเมิน",
-      mobileHideLabel: true,
     },
     {
       field: "totalArea",
       bodyAlign: "left",
       header: "พื้นที่รวม (ไร่)",
-      mobileHideLabel: true,
       body: (row) => row.totalArea.toLocaleString(),
     }]
 
