@@ -113,7 +113,7 @@ export default function AuditorScheduleInspectionPage() {
   // Use custom hook
   const {
     rubberFarms,
-    loading,
+    loading: rubberFarmsLoading,
     totalRecords,
     lazyParams,
     handlePageChange,
@@ -143,6 +143,7 @@ export default function AuditorScheduleInspectionPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // State for form data
   const [showFarmDetails, setShowFarmDetails] = useState(false);
@@ -284,6 +285,7 @@ export default function AuditorScheduleInspectionPage() {
   const handleSubmit = async () => {
     setError("");
     setSuccess("");
+    setIsSubmitting(true);
 
     try {
       await scheduleInspection({
@@ -298,6 +300,7 @@ export default function AuditorScheduleInspectionPage() {
     } catch (error: any) {
       const errorMessage = error?.message || "เกิดข้อผิดพลาดในการบันทึกข้อมูล";
       setError(errorMessage);
+      setIsSubmitting(false);
     }
   };
 
@@ -502,7 +505,7 @@ export default function AuditorScheduleInspectionPage() {
                   mobileHideLabel: true, // ซ่อน label ใน mobile
                 },
               ]}
-              loading={loading}
+              loading={rubberFarmsLoading}
               paginator
               rows={lazyParams.rows}
               rowsPerPageOptions={[10, 25, 50]}
@@ -690,7 +693,7 @@ export default function AuditorScheduleInspectionPage() {
                   bodyAlign: "left" as const,
                 },
               ]}
-              loading={loading}
+              loading={rubberFarmsLoading}
               paginator
               rows={auditorsLazyParams.rows}
               rowsPerPageOptions={[10, 25, 50]}
@@ -894,10 +897,10 @@ export default function AuditorScheduleInspectionPage() {
               />
             ) : (
               <PrimaryButton
-                label={loading ? "กำลังบันทึก..." : "ยืนยันและบันทึก"}
+                label={isSubmitting ? "กำลังบันทึก..." : "ยืนยันและบันทึก"}
                 onClick={handleSubmit}
-                disabled={loading}
-                loading={loading}
+                disabled={isSubmitting}
+                loading={isSubmitting}
                 color="success"
               />
             )}
