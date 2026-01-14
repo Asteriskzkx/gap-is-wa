@@ -941,7 +941,7 @@ export default function AuditorScheduleInspectionPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                       <div>
                         <span className="font-medium text-gray-600">
-                          ชื่อ-สกุล:
+                          ชื่อ-นามสกุล:
                         </span>{" "}
                         {`${selectedFarmDetails.farmer.namePrefix}${selectedFarmDetails.farmer.firstName} ${selectedFarmDetails.farmer.lastName}`}
                       </div>
@@ -953,13 +953,13 @@ export default function AuditorScheduleInspectionPage() {
                       </div>
                       <div>
                         <span className="font-medium text-gray-600">
-                          โทรศัพท์บ้าน:
+                          เบอร์โทรศัพท์:
                         </span>{" "}
                         {selectedFarmDetails.farmer.phoneNumber || "-"}
                       </div>
                       <div>
                         <span className="font-medium text-gray-600">
-                          โทรศัพท์มือถือ:
+                          เบอร์โทรศัพท์มือถือ:
                         </span>{" "}
                         {selectedFarmDetails.farmer.mobilePhoneNumber || "-"}
                       </div>
