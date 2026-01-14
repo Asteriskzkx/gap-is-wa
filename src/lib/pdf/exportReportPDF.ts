@@ -21,8 +21,21 @@ export async function exportReportPDF({
   sections,
 }: ExportPDFOptions) {
   const pdf = new jsPDF("p", "mm", "a4");
-  const margin = 10;
-  let currentY = margin;
+
+  //   Enter PDF MODE
+  document.body.classList.add("pdf-export");
+  const originalWidths = new Map<HTMLElement, string>();
+  sections.forEach((section) => {
+    if (section.ref.current) {
+      const el = section.ref.current;
+      originalWidths.set(el, el.style.width);
+      el.style.width = "1280px"; // desktop breakpoint
+    }
+  });
+  // wait for layout to stabilize
+  await document.fonts.ready;
+  await new Promise((r) => requestAnimationFrame(r));
+  await new Promise((r) => setTimeout(r, 50));
 
   /* ---------- HEADER ---------- */
   const headerDiv = document.createElement("div");
@@ -45,10 +58,12 @@ export async function exportReportPDF({
   const headerCanvas = await html2canvas(headerDiv, { scale: 2 });
   document.body.removeChild(headerDiv);
 
+  const margin = 10;
   const pageWidth = pdf.internal.pageSize.getWidth();
+  let currentY = margin;
+
   const headerHeight =
-    (headerCanvas.height * (pageWidth - margin * 2)) /
-    headerCanvas.width;
+    (headerCanvas.height * (pageWidth - margin * 2)) / headerCanvas.width;
 
   pdf.addImage(
     headerCanvas.toDataURL("image/png"),
@@ -59,7 +74,7 @@ export async function exportReportPDF({
     headerHeight
   );
 
-  currentY += headerHeight + 5;
+//   currentY += headerHeight + 5;
 
   /* ---------- SECTIONS ---------- */
   for (const section of sections) {
@@ -70,13 +85,10 @@ export async function exportReportPDF({
 
     const canvas = await html2canvas(section.ref.current, {
       scale: 2,
-      width: 794,
-      windowWidth: 794,
       backgroundColor: "#ffffff",
     });
 
-    const imgHeight =
-      (canvas.height * (pageWidth - margin * 2)) / canvas.width;
+    const imgHeight = (canvas.height * (pageWidth - margin * 2)) / canvas.width;
 
     pdf.addImage(
       canvas.toDataURL("image/png"),
@@ -89,4 +101,11 @@ export async function exportReportPDF({
   }
 
   pdf.save(filename);
+
+  //   EXIT PDF MODE
+  document.body.classList.remove("pdf-export");
+  originalWidths.forEach((width, el) => {
+    el.style.width = width;
+  });
+
 }

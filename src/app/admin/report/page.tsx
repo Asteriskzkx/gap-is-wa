@@ -719,7 +719,7 @@ export default function AdminReportPage() {
         {/* User Report Section */}
         <div
           ref={userReportRef}
-          className="mt-6 flex flex-col bg-white rounded-lg shadow p-6"
+          className="mt-6 flex flex-col report-section bg-white rounded-lg shadow p-6"
         >
           <h2 className="text-xl font-semibold text-gray-900 mb-6">
             รายงานผู้ใช้งาน
@@ -838,7 +838,7 @@ export default function AdminReportPage() {
         {/* ==================== INSPECTION REPORTS ==================== */}
         <div
           ref={inspectionReportRef}
-          className="mt-8 flex flex-col bg-white rounded-lg shadow p-6"
+          className="mt-8 flex flex-col report-section bg-white rounded-lg shadow p-6"
         >
           <h2 className="text-xl font-semibold text-gray-900 mb-6">
             รายงานการตรวจประเมิน
@@ -947,7 +947,7 @@ export default function AdminReportPage() {
         {/* ==================== RUBBER FARM REPORTS ==================== */}
         <div
           ref={rubberFarmReportRef}
-          className="mt-8 flex flex-col bg-white rounded-lg shadow p-6"
+          className="mt-8 flex flex-col report-section bg-white rounded-lg shadow p-6"
         >
           <h2 className="text-xl font-semibold text-gray-900 mb-6">
             รายงานแปลงสวนยางพารา
@@ -1087,7 +1087,7 @@ export default function AdminReportPage() {
         {/* ==================== CERTIFICATE REPORTS ==================== */}
         <div
           ref={certificateReportRef}
-          className="mt-8 flex flex-col bg-white rounded-lg shadow p-6"
+          className="mt-8 flex flex-col report-section bg-white rounded-lg shadow p-6"
         >
           <h2 className="text-xl font-semibold text-gray-900 mb-6">
             รายงานใบรับรอง
@@ -1192,7 +1192,7 @@ export default function AdminReportPage() {
         {/* ==================== AUDITOR PERFORMANCE REPORTS ==================== */}
         <div
           ref={auditorReportRef}
-          className="mt-8 flex flex-col bg-white rounded-lg shadow p-6 mb-8"
+          className="mt-8 flex flex-col report-section bg-white rounded-lg shadow p-6 mb-8"
         >
           <h2 className="text-xl font-semibold text-gray-900 mb-6">
             รายงานประสิทธิภาพผู้ตรวจประเมิน

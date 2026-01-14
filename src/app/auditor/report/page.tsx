@@ -354,7 +354,7 @@ export default function AuditorReportPage() {
         {/* ==================== MY PERFORMANCE SUMMARY ==================== */}
         <div
           ref={statsRef}
-          className="mt-6 flex flex-col bg-white rounded-lg shadow p-6"
+          className="mt-6 flex flex-col report-section bg-white rounded-lg shadow p-6"
         >
           <h2 className="text-xl font-semibold text-gray-900 mb-6">
             รายงานประสิทธิภาพของฉัน
@@ -492,7 +492,7 @@ export default function AuditorReportPage() {
         {/* ==================== RECENT INSPECTIONS ==================== */}
         <div
           ref={recentInspectionsRef}
-          className="mt-8 flex flex-col bg-white rounded-lg shadow p-6"
+          className="mt-8 flex flex-col report-section bg-white rounded-lg shadow p-6"
         >
           <h2 className="text-xl font-semibold text-gray-900 mb-6">
             รายงานการตรวจล่าสุด
@@ -578,7 +578,7 @@ export default function AuditorReportPage() {
         {/* ==================== INSPECTED FARMS ==================== */}
         <div
           ref={inspectedFarmsRef}
-          className="mt-8 flex flex-col bg-white rounded-lg shadow p-6 mb-8"
+          className="mt-8 flex flex-col report-section bg-white rounded-lg shadow p-6 mb-8"
         >
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-gray-900">

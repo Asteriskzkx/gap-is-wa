@@ -752,7 +752,7 @@ export default function CommitteeReportPage() {
         {/* ==================== CERTIFICATE STATS ==================== */}
         <div
           ref={certificateStatsRef}
-          className="mt-6 flex flex-col bg-white rounded-lg shadow p-6"
+          className="mt-6 flex flex-col report-section bg-white rounded-lg shadow p-6"
         >
           <h2 className="text-xl font-semibold text-gray-900 mb-6">
             รายงานใบรับรอง
@@ -818,7 +818,7 @@ export default function CommitteeReportPage() {
         {/* ==================== EXPIRY ALERTS ==================== */}
         <div
           ref={expiryAlertsRef}
-          className="mt-6 flex flex-col bg-white rounded-lg shadow p-6"
+          className="mt-6 flex flex-col report-section bg-white rounded-lg shadow p-6"
         >
           <h2 className="text-xl font-semibold text-gray-900 mb-6">
             รายงานใบรับรองใกล้หมดอายุ
@@ -921,7 +921,7 @@ export default function CommitteeReportPage() {
         {/* ==================== CHARTS SECTION ==================== */}
         <div
           ref={chartsRef}
-          className="mt-6 flex flex-col bg-white rounded-lg shadow p-6"
+          className="mt-6 flex flex-col report-section bg-white rounded-lg shadow p-6"
         >
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-gray-900">
@@ -971,7 +971,7 @@ export default function CommitteeReportPage() {
         {/* ==================== INSPECTION STATS ==================== */}
         <div
           ref={inspectionStatsRef}
-          className="mt-6 flex flex-col bg-white rounded-lg shadow p-6"
+          className="mt-6 flex flex-col report-section bg-white rounded-lg shadow p-6"
         >
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-gray-900">
