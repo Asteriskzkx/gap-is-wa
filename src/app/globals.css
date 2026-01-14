@@ -1345,6 +1345,7 @@ input.p-inputtext:disabled {
 }
 
 @media screen and (max-width: 768px) {
+  
   /* ซ่อน header */
   .primary-datatable-wrapper .p-datatable-thead {
     display: none !important;
@@ -1375,7 +1376,7 @@ input.p-inputtext:disabled {
   }
 
   /* Label (header) - Bold, ซ้าย */
-  .primary-datatable-wrapper .p-datatable-tbody > tr > td::before {
+  body:not(.pdf-export) .primary-datatable-wrapper .p-datatable-tbody > tr > td::before {
     content: attr(data-label);
     font-weight: 700 !important;
     color: #374151 !important;
