@@ -16,7 +16,10 @@ import { useChart } from "@/hooks/useChart";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { exportReportPDF } from "@/lib/pdf/exportReportPDF";
-import { resizeChartsForPDF , resetChartsAfterPDF } from "@/lib/pdf/chartResize";
+import { resizeChartsForPDF, resetChartsAfterPDF } from "@/lib/pdf/chartResize";
+import PrimaryDataTable, {
+  PrimaryDataTableColumn,
+} from "@/components/ui/PrimaryDataTable";
 
 interface UserCountByRole {
   role: string;
@@ -523,6 +526,76 @@ export default function AdminReportPage() {
     },
   });
 
+  const auditorColumns: PrimaryDataTableColumn[] = [
+    {
+      field: "auditorName",
+      bodyAlign: "left",
+      header: "ชื่อผู้ตรวจประเมิน",
+    },
+    {
+      field: "totalInspections",
+      bodyAlign: "left",
+      header: "ตรวจทั้งหมด",
+    },
+    {
+      field: "passedInspections",
+      header: "ผ่าน",
+      bodyAlign: "left",
+
+      body: (row) => (
+        <span className="text-green-600 font-medium">
+          {row.passedInspections}
+        </span>
+      ),
+    },
+    {
+      field: "failedInspections",
+      header: "ไม่ผ่าน",
+      bodyAlign: "left",
+      body: (row) => (
+        <span className="text-red-600 font-medium">
+          {row.failedInspections}
+        </span>
+      ),
+    },
+    {
+      field: "passRate",
+      header: "อัตราผ่าน",
+      bodyAlign: "left",
+      body: (row) => (
+        <span
+          className={`font-medium ${
+            row.passRate >= 80
+              ? "text-green-600"
+              : row.passRate >= 50
+              ? "text-yellow-600"
+              : "text-red-600"
+          }`}
+        >
+          {row.passRate}%
+        </span>
+      ),
+    },
+  ];
+
+  const topRankColumns: PrimaryDataTableColumn[] = [
+    {
+      field: "province",
+      header: "จังหวัด",
+      bodyAlign: "left",
+    },
+    {
+      field: "count",
+      bodyAlign: "left",
+      header: "ชื่อผู้ตรวจประเมิน",
+    },
+    {
+      field: "totalArea",
+      bodyAlign: "left",
+      header: "พื้นที่รวม (ไร่)",
+      body: (row) => row.totalArea.toLocaleString(),
+    }]
+
   return (
     <AdminLayout>
       <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
@@ -870,17 +943,19 @@ export default function AdminReportPage() {
               inspectionData?.byResult.map((result) => (
                 <div
                   key={result.result}
-                  className={`bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center border-2 ${result.result === "ผ่าน" || result.result === "PASSED"
-                    ? "border-green-500"
-                    : "border-red-500"
-                    }`}
+                  className={`bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center border-2 ${
+                    result.result === "ผ่าน" || result.result === "PASSED"
+                      ? "border-green-500"
+                      : "border-red-500"
+                  }`}
                 >
                   <p className="text-sm text-gray-600 mb-1">{result.result}</p>
                   <p
-                    className={`text-3xl font-bold ${result.result === "ผ่าน" || result.result === "PASSED"
-                      ? "text-green-500"
-                      : "text-red-500"
-                      }`}
+                    className={`text-3xl font-bold ${
+                      result.result === "ผ่าน" || result.result === "PASSED"
+                        ? "text-green-500"
+                        : "text-red-500"
+                    }`}
                   >
                     {result.count}
                   </p>
@@ -1026,61 +1101,12 @@ export default function AdminReportPage() {
             <h3 className="text-lg font-medium text-gray-800 mb-3">
               จังหวัดที่มีแปลงมากที่สุด (Top 5)
             </h3>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                      จังหวัด
-                    </th>
-                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
-                      จำนวนแปลง
-                    </th>
-                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
-                      พื้นที่ (ไร่)
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {loadingRubberFarm ? (
-                    <tr>
-                      <td
-                        colSpan={3}
-                        className="px-4 py-2 text-center text-gray-400"
-                      >
-                        กำลังโหลด...
-                      </td>
-                    </tr>
-                  ) : rubberFarmData?.byProvince.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={3}
-                        className="px-4 py-2 text-center text-gray-400"
-                      >
-                        ไม่มีข้อมูล
-                      </td>
-                    </tr>
-                  ) : (
-                    rubberFarmData?.byProvince.slice(0, 5).map((prov, idx) => (
-                      <tr
-                        key={prov.province}
-                        className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                      >
-                        <td className="px-4 py-2 text-sm text-gray-900">
-                          {prov.province}
-                        </td>
-                        <td className="px-4 py-2 text-sm text-gray-900 text-right">
-                          {prov.count}
-                        </td>
-                        <td className="px-4 py-2 text-sm text-gray-900 text-right">
-                          {prov.totalArea}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+           <PrimaryDataTable
+              value={rubberFarmData?.byProvince.slice(0, 5) ?? []}
+              columns={topRankColumns}
+              loading={loadingRubberFarm}
+              emptyMessage="ไม่มีข้อมูลแปลงสวนยางพารา"
+            />
           </div>
         </div>
 
@@ -1224,7 +1250,9 @@ export default function AdminReportPage() {
             </div>
 
             <div className="bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center border-2 border-cyan-600">
-              <p className="text-sm text-gray-600 mb-1">ผู้ตรวจประเมินที่มีผลงาน</p>
+              <p className="text-sm text-gray-600 mb-1">
+                ผู้ตรวจประเมินที่มีผลงาน
+              </p>
               {loadingAuditor ? (
                 <p className="text-3xl font-bold text-gray-300">...</p>
               ) : (
@@ -1250,92 +1278,22 @@ export default function AdminReportPage() {
                 </span>
               )}
             </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                      ชื่อผู้ตรวจประเมิน
-                    </th>
-                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
-                      ตรวจทั้งหมด
-                    </th>
-                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
-                      ผ่าน
-                    </th>
-                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
-                      ไม่ผ่าน
-                    </th>
-                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
-                      อัตราผ่าน
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {loadingAuditor ? (
-                    <tr>
-                      <td
-                        colSpan={5}
-                        className="px-4 py-2 text-center text-gray-400"
-                      >
-                        กำลังโหลด...
-                      </td>
-                    </tr>
-                  ) : auditorData?.auditors.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={5}
-                        className="px-4 py-2 text-center text-gray-400"
-                      >
-                        ไม่มีข้อมูล
-                      </td>
-                    </tr>
-                  ) : (
-                    auditorData?.auditors
-                      .slice(0, auditorDisplayCount)
-                      .map((auditor, idx) => (
-                        <tr
-                          key={auditor.auditorId}
-                          className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                        >
-                          <td className="px-4 py-2 text-sm text-gray-900">
-                            {auditor.auditorName}
-                          </td>
-                          <td className="px-4 py-2 text-sm text-gray-900 text-right">
-                            {auditor.totalInspections}
-                          </td>
-                          <td className="px-4 py-2 text-sm text-green-600 text-right">
-                            {auditor.passedInspections}
-                          </td>
-                          <td className="px-4 py-2 text-sm text-red-600 text-right">
-                            {auditor.failedInspections}
-                          </td>
-                          <td className="px-4 py-2 text-sm text-right">
-                            <span
-                              className={`font-medium ${auditor.passRate >= 80
-                                ? "text-green-600"
-                                : auditor.passRate >= 50
-                                  ? "text-yellow-600"
-                                  : "text-red-600"
-                                }`}
-                            >
-                              {auditor.passRate}%
-                            </span>
-                          </td>
-                        </tr>
-                      ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+            <PrimaryDataTable
+              data-testid="auditor-performance-table"
+              value={auditorData?.auditors.slice(0, auditorDisplayCount) ?? []}
+              columns={auditorColumns}
+              loading={loadingAuditor}
+              emptyMessage="ไม่มีข้อมูลผู้ตรวจประเมิน"
+            />
 
             {/* Show More / Show Less Buttons */}
             {auditorData && auditorData.auditors.length > 5 && (
               <div className="flex justify-center gap-2 mt-4">
                 {auditorDisplayCount < auditorData.auditors.length && (
                   <Button
-                    label={`ดูเพิ่มเติม (${auditorData.auditors.length - auditorDisplayCount
-                      } คน)`}
+                    label={`ดูเพิ่มเติม (${
+                      auditorData.auditors.length - auditorDisplayCount
+                    } คน)`}
                     className="p-button-outlined p-button-sm"
                     icon="pi pi-chevron-down"
                     onClick={() =>
