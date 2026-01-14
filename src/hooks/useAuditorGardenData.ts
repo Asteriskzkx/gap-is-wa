@@ -166,7 +166,7 @@ export function useAuditorGardenData(initialRows = 10) {
         });
         if (!resp.ok) {
           const err = await resp.json().catch(() => null);
-          throw new Error(err?.message || "Failed to update data record");
+          throw new Error(err?.userMessage || "Failed to update data record");
         }
         const data = await resp.json();
         // refresh list after update
