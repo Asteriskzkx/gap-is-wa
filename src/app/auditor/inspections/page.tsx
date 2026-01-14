@@ -128,6 +128,7 @@ export default function AuditorInspectionsPage() {
     currentItemIndex,
     setCurrentItemIndex,
     saving,
+    fetchFarmDetails,
     updateRequirementEvaluation,
     updateOtherConditions,
     saveCurrentItem,
@@ -358,26 +359,19 @@ export default function AuditorInspectionsPage() {
     }));
   };
 
-  // Fetch farm details
-  const fetchFarmDetails = async (farmId: number) => {
+  // View farm details
+  const viewFarmDetails = async (farmId: number) => {
+    setShowFarmDetails(true);
     setLoadingFarmDetails(true);
     try {
-      const response = await fetch(`/api/v1/rubber-farms/${farmId}`);
-      if (response.ok) {
-        const data = await response.json();
-        setSelectedFarmDetails(data);
-      }
+      const data = await fetchFarmDetails(farmId);
+      setSelectedFarmDetails(data);
     } catch (error) {
       console.error("Error fetching farm details:", error);
+      toast.error("เกิดข้อผิดพลาดในการดึงข้อมูล");
     } finally {
       setLoadingFarmDetails(false);
     }
-  };
-
-  // View farm details
-  const viewFarmDetails = (farmId: number) => {
-    setShowFarmDetails(true);
-    fetchFarmDetails(farmId);
   };
 
   // Fetch inspection items
@@ -759,8 +753,6 @@ export default function AuditorInspectionsPage() {
             color="info"
             rounded
             text
-            // tooltip="ดูรายละเอียดสวน"
-            // tooltipOptions={{ position: "left" }}
           />
           <PrimaryButton
             icon="pi pi-file-edit"
@@ -768,10 +760,6 @@ export default function AuditorInspectionsPage() {
             color="success"
             rounded
             text
-            // tooltip="เริ่มตรวจประเมิน"
-            // tooltipOptions={{
-            //   position: "left",
-            // }}
           />
         </div>
       ),

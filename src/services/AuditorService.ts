@@ -233,12 +233,12 @@ export class AuditorService extends BaseService<AuditorModel> {
       // พิจารณาว่าเป็น inspection ที่ทำให้ฟาร์มไม่พร้อมใช้งานได้เมื่อ
       // - สถานะเป็น "รอการตรวจประเมิน"
       // OR
-      // - สถานะเป็น "ตรวจประเมินแล้ว" และผลการตรวจเป็น "ผ่าน" (ผ่านการรับรองแล้ว)
+      // - สถานะเป็น "ตรวจประเมินแล้ว" และผลการตรวจไม่ใช่ "ไม่ผ่าน" (รอผลตรวจ หรือ ผ่านแล้ว)
       const pendingInspections = allInspections.filter((inspection) => {
         return (
           inspection.inspectionStatus === "รอการตรวจประเมิน" ||
           (inspection.inspectionStatus === "ตรวจประเมินแล้ว" &&
-            inspection.inspectionResult === "ผ่าน")
+            inspection.inspectionResult !== "ไม่ผ่าน")
         );
       });
 

@@ -8,6 +8,11 @@ import { Checkbox } from "primereact/checkbox";
 import { useEffect, useState, useRef } from "react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import { PrimaryButton } from "@/components/ui";
+import { resetChartsAfterPDF, resizeChartsForPDF } from "@/lib/pdf/chartResize";
+import { exportReportPDF } from "@/lib/pdf/exportReportPDF";
+import PrimaryDataTable, { PrimaryDataTableColumn } from "@/components/ui/PrimaryDataTable";
+
 
 // Interfaces
 interface MyInspectionStats {
@@ -121,112 +126,34 @@ export default function AuditorReportPage() {
 
   // Export PDF handler
   const handleExportPDF = async () => {
-    setShowExportDialog(false);
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    setExporting(true);
+      setExporting(true);
+      try {
+        resizeChartsForPDF();
+  
+        await exportReportPDF({
+          filename: `รายงานระบบ_${new Date().toISOString().split("T")[0]}.pdf`,
+          header: {
+            title: "รายงานสำหรับผู้ตรวจประเมิน",
+            dateRangeText:
+              dates && dates[0] && dates[1]
+                ? `ช่วงวันที่: ${dates[0].toLocaleDateString(
+                    "th-TH"
+                  )} - ${dates[1].toLocaleDateString("th-TH")}`
+                : undefined,
+          },
+          sections: [
+            exportSections.stats && { ref: statsRef },
+            exportSections.recentInspections && { ref: recentInspectionsRef  },
+            exportSections.inspectedFarms && { ref: inspectedFarmsRef  },
 
-    try {
-      const pdf = new jsPDF("p", "mm", "a4");
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 10;
-      let currentY = margin;
-      let isFirstPage = true;
-
-      // Helper function to add section to PDF
-      const addSectionToPDF = async (ref: React.RefObject<HTMLDivElement>) => {
-        if (!ref.current) return;
-
-        const canvas = await html2canvas(ref.current, {
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          backgroundColor: "#ffffff",
+          ].filter(Boolean) as any,
         });
-
-        const imgData = canvas.toDataURL("image/png");
-        const imgWidth = pageWidth - margin * 2;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-        if (!isFirstPage && currentY + imgHeight > pageHeight - margin) {
-          pdf.addPage();
-          currentY = margin;
-        }
-
-        if (!isFirstPage) {
-          currentY += 5;
-        }
-
-        pdf.addImage(imgData, "PNG", margin, currentY, imgWidth, imgHeight);
-        currentY += imgHeight;
-        isFirstPage = false;
-      };
-
-      // Create header
-      const headerDiv = document.createElement("div");
-      headerDiv.style.cssText =
-        "position: absolute; left: -9999px; top: 0; background: white; padding: 20px; width: 800px; text-align: center; font-family: 'Sarabun', sans-serif;";
-
-      let headerHTML = `<h1 style="font-size: 24px; font-weight: bold; margin-bottom: 10px; color: #1f2937;">รายงานสถิติการตรวจของฉัน</h1>`;
-
-      if (dates && dates[0] && dates[1]) {
-        headerHTML += `<p style="font-size: 14px; color: #4b5563; margin-bottom: 5px;">ช่วงวันที่: ${dates[0].toLocaleDateString(
-          "th-TH"
-        )} - ${dates[1].toLocaleDateString("th-TH")}</p>`;
+      } finally {
+        resetChartsAfterPDF();
+        setExporting(false);
       }
-
-      headerHTML += `<p style="font-size: 12px; color: #6b7280;">วันที่ส่งออก: ${new Date().toLocaleDateString(
-        "th-TH"
-      )}</p>`;
-
-      headerDiv.innerHTML = headerHTML;
-      document.body.appendChild(headerDiv);
-
-      const headerCanvas = await html2canvas(headerDiv, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: "#ffffff",
-      });
-      document.body.removeChild(headerDiv);
-
-      const headerImgData = headerCanvas.toDataURL("image/png");
-      const headerImgWidth = pageWidth - margin * 2;
-      const headerImgHeight =
-        (headerCanvas.height * headerImgWidth) / headerCanvas.width;
-
-      pdf.addImage(
-        headerImgData,
-        "PNG",
-        margin,
-        currentY,
-        headerImgWidth,
-        headerImgHeight
-      );
-      currentY += headerImgHeight + 5;
-      isFirstPage = false;
-
-      // Add selected sections
-      if (exportSections.stats && statsRef.current) {
-        await addSectionToPDF(statsRef);
-      }
-      if (exportSections.recentInspections && recentInspectionsRef.current) {
-        await addSectionToPDF(recentInspectionsRef);
-      }
-      if (exportSections.inspectedFarms && inspectedFarmsRef.current) {
-        await addSectionToPDF(inspectedFarmsRef);
-      }
-
-      // Download PDF
-      const dateStr = new Date().toISOString().split("T")[0];
-      pdf.save(`รายงานการตรวจ_${dateStr}.pdf`);
-    } catch (error) {
-      console.error("Error exporting PDF:", error);
-      alert("เกิดข้อผิดพลาดในการส่งออก PDF");
-    } finally {
-      setExporting(false);
-    }
-  };
+    };
+    
 
   const getResultBadge = (result: string | null) => {
     if (
@@ -258,21 +185,95 @@ export default function AuditorReportPage() {
     };
     return (
       <span
-        className={`px-2 py-1 text-xs font-medium rounded-full ${
-          statusColors[status] || "bg-gray-100 text-gray-800"
-        }`}
+        className={`px-2 py-1 text-xs font-medium rounded-full ${statusColors[status] || "bg-gray-100 text-gray-800"
+          }`}
       >
         {status}
       </span>
     );
   };
 
+  const recentInspectionsColumns: PrimaryDataTableColumn[] =
+    [
+      {
+        field: "inspectionDate",
+        header: "วันที่ตรวจ",
+        body: (row) =>
+          new Date(row.inspectionDate).toLocaleDateString("th-TH"),
+      },
+      {
+        field: "farmerName",
+        header: "เกษตรกร",
+        sortable: true,
+      },
+      {
+        field: "farmLocation",
+        header: "ที่ตั้งแปลง",
+      },
+      {
+        field: "province",
+        header: "จังหวัด",
+        sortable: true,
+      },
+      {
+        field: "status",
+        header: "สถานะ",
+        body: (row : RecentInspection) => getStatusBadge(row.status),
+        bodyAlign: "center",
+        
+      },
+      {
+        field: "result",
+        header: "ผลการตรวจ",
+        body: (row : RecentInspection) => getResultBadge(row.result),
+        bodyAlign: "center",
+      },
+    ];
+
+  const inspectedFarmsColumns: PrimaryDataTableColumn[] =
+  [
+    {
+      field: "farmerName",
+      header: "เกษตรกร",
+      sortable: true,
+    },
+    {
+      field: "farmLocation",
+      header: "ที่ตั้งแปลง",
+    },
+    {
+      field: "province",
+      header: "จังหวัด",
+      sortable: true,
+    },
+    {
+      field: "totalInspections",
+      header: "จำนวนตรวจ",
+      sortable: true,
+      bodyAlign: "center",
+    },
+    {
+      field: "lastInspectionDate",
+      header: "ตรวจล่าสุด",
+      body: (row : InspectedFarm) =>
+        new Date(row.lastInspectionDate).toLocaleDateString("th-TH"),
+      bodyAlign: "center",
+    },
+    {
+      field: "lastResult",
+      header: "ผลล่าสุด",
+      body: (row : InspectedFarm) => getResultBadge(row.lastResult),
+      bodyAlign: "center",
+    },
+  ];
+
+ 
   return (
     <AuditorLayout>
       <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Title */}
-        <div className="mb-8 flex flex-wrap items-center justify-between">
-          <div>
+        <div className="mb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+          <div className="lg:col-span-4">
             <h1 className="text-2xl font-bold text-gray-900">
               รายงานสถิติการตรวจ
             </h1>
@@ -280,12 +281,14 @@ export default function AuditorReportPage() {
               ดูสรุปผลการตรวจประเมินของคุณ
             </p>
           </div>
-          <Button
-            label="ส่งออก PDF"
-            icon="pi pi-file-pdf"
-            className="p-button-success p-2"
-            onClick={() => setShowExportDialog(true)}
-          />
+          <div className="lg:col-start-6 self-end">
+            <PrimaryButton
+              label="ส่งออก PDF"
+              icon="pi pi-file-pdf"
+              fullWidth
+              onClick={() => setShowExportDialog(true)}
+            />
+          </div>
         </div>
 
         {/* Export PDF Dialog */}
@@ -428,7 +431,7 @@ export default function AuditorReportPage() {
         {/* ==================== MY PERFORMANCE SUMMARY ==================== */}
         <div
           ref={statsRef}
-          className="mt-6 flex flex-col bg-white rounded-lg shadow p-6"
+          className="mt-6 flex flex-col report-section bg-white rounded-lg shadow p-6"
         >
           <h2 className="text-xl font-semibold text-gray-900 mb-6">
             รายงานประสิทธิภาพของฉัน
@@ -496,13 +499,12 @@ export default function AuditorReportPage() {
                 <p className="text-3xl font-bold text-gray-300">...</p>
               ) : (
                 <p
-                  className={`text-3xl font-bold ${
-                    (reportData?.stats.passRate ?? 0) >= 80
-                      ? "text-green-600"
-                      : (reportData?.stats.passRate ?? 0) >= 50
+                  className={`text-3xl font-bold ${(reportData?.stats.passRate ?? 0) >= 80
+                    ? "text-green-600"
+                    : (reportData?.stats.passRate ?? 0) >= 50
                       ? "text-yellow-600"
                       : "text-red-600"
-                  }`}
+                    }`}
                 >
                   {reportData?.stats.passRate ?? 0}%
                 </p>
@@ -567,93 +569,24 @@ export default function AuditorReportPage() {
         {/* ==================== RECENT INSPECTIONS ==================== */}
         <div
           ref={recentInspectionsRef}
-          className="mt-8 flex flex-col bg-white rounded-lg shadow p-6"
+          className="mt-8 flex flex-col report-section bg-white rounded-lg shadow p-6"
         >
           <h2 className="text-xl font-semibold text-gray-900 mb-6">
             รายงานการตรวจล่าสุด
           </h2>
 
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                    วันที่ตรวจ
-                  </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                    เกษตรกร
-                  </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                    ที่ตั้งแปลง
-                  </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                    จังหวัด
-                  </th>
-                  <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">
-                    สถานะ
-                  </th>
-                  <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">
-                    ผลการตรวจ
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {loading ? (
-                  <tr>
-                    <td
-                      colSpan={6}
-                      className="px-4 py-4 text-center text-gray-400"
-                    >
-                      กำลังโหลด...
-                    </td>
-                  </tr>
-                ) : reportData?.recentInspections.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={6}
-                      className="px-4 py-4 text-center text-gray-400"
-                    >
-                      ไม่มีข้อมูลการตรวจ
-                    </td>
-                  </tr>
-                ) : (
-                  reportData?.recentInspections.map((inspection, idx) => (
-                    <tr
-                      key={inspection.id}
-                      className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                    >
-                      <td className="px-4 py-2 text-sm text-gray-900">
-                        {new Date(inspection.inspectionDate).toLocaleDateString(
-                          "th-TH"
-                        )}
-                      </td>
-                      <td className="px-4 py-2 text-sm text-gray-900">
-                        {inspection.farmerName}
-                      </td>
-                      <td className="px-4 py-2 text-sm text-gray-900">
-                        {inspection.farmLocation}
-                      </td>
-                      <td className="px-4 py-2 text-sm text-gray-900">
-                        {inspection.province}
-                      </td>
-                      <td className="px-4 py-2 text-sm text-center">
-                        {getStatusBadge(inspection.status)}
-                      </td>
-                      <td className="px-4 py-2 text-sm text-center">
-                        {getResultBadge(inspection.result)}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+          <PrimaryDataTable
+            value={reportData?.recentInspections ?? []}
+            columns={recentInspectionsColumns}
+            loading={loading}
+            emptyMessage="ไม่มีข้อมูลการตรวจ"
+          />
         </div>
 
         {/* ==================== INSPECTED FARMS ==================== */}
         <div
           ref={inspectedFarmsRef}
-          className="mt-8 flex flex-col bg-white rounded-lg shadow p-6 mb-8"
+          className="mt-8 flex flex-col report-section bg-white rounded-lg shadow p-6 mb-8"
         >
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-gray-900">
@@ -669,81 +602,15 @@ export default function AuditorReportPage() {
           </div>
 
           <div className="overflow-x-auto">
-            <table data-testid="inspected-farms-table" className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                    เกษตรกร
-                  </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                    ที่ตั้งแปลง
-                  </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                    จังหวัด
-                  </th>
-                  <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">
-                    จำนวนตรวจ
-                  </th>
-                  <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">
-                    ตรวจล่าสุด
-                  </th>
-                  <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">
-                    ผลล่าสุด
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {loading ? (
-                  <tr>
-                    <td
-                      colSpan={6}
-                      className="px-4 py-4 text-center text-gray-400"
-                    >
-                      กำลังโหลด...
-                    </td>
-                  </tr>
-                ) : reportData?.inspectedFarms.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={6}
-                      className="px-4 py-4 text-center text-gray-400"
-                    >
-                      ไม่มีข้อมูลแปลง
-                    </td>
-                  </tr>
-                ) : (
-                  reportData?.inspectedFarms
-                    .slice(0, farmsDisplayCount)
-                    .map((farm, idx) => (
-                      <tr
-                        key={farm.rubberFarmId}
-                        className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                      >
-                        <td className="px-4 py-2 text-sm text-gray-900">
-                          {farm.farmerName}
-                        </td>
-                        <td className="px-4 py-2 text-sm text-gray-900">
-                          {farm.farmLocation}
-                        </td>
-                        <td className="px-4 py-2 text-sm text-gray-900">
-                          {farm.province}
-                        </td>
-                        <td className="px-4 py-2 text-sm text-gray-900 text-center">
-                          {farm.totalInspections}
-                        </td>
-                        <td className="px-4 py-2 text-sm text-gray-900 text-center">
-                          {new Date(farm.lastInspectionDate).toLocaleDateString(
-                            "th-TH"
-                          )}
-                        </td>
-                        <td className="px-4 py-2 text-sm text-center">
-                          {getResultBadge(farm.lastResult)}
-                        </td>
-                      </tr>
-                    ))
-                )}
-              </tbody>
-            </table>
+            <PrimaryDataTable 
+              data-testid="inspected-farms-table"
+              value={
+                reportData?.inspectedFarms.slice(0, farmsDisplayCount) ?? []
+              }
+              columns={inspectedFarmsColumns}
+              loading={loading}
+              emptyMessage="ไม่มีข้อมูลแปลง"
+            />
           </div>
 
           {/* Show More / Show Less Buttons */}
@@ -751,9 +618,8 @@ export default function AuditorReportPage() {
             <div className="flex justify-center gap-2 mt-4">
               {farmsDisplayCount < reportData.inspectedFarms.length && (
                 <Button
-                  label={`ดูเพิ่มเติม (${
-                    reportData.inspectedFarms.length - farmsDisplayCount
-                  } แปลง)`}
+                  label={`ดูเพิ่มเติม (${reportData.inspectedFarms.length - farmsDisplayCount
+                    } แปลง)`}
                   className="p-button-outlined p-button-sm"
                   icon="pi pi-chevron-down"
                   onClick={() =>

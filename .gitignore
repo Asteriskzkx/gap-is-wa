@@ -6,6 +6,7 @@
 /next-env.d.ts
 .DS_Store
 /.vscode/
+tsconfig.tsbuildinfo
 
 # SSL Certificates (DO NOT commit to version control)
 ssl/*.crt

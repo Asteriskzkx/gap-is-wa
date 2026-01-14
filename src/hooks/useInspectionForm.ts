@@ -37,6 +37,7 @@ interface UseInspectionFormReturn {
   setCurrentItemIndex: React.Dispatch<React.SetStateAction<number>>;
   saving: boolean;
   setSaving: React.Dispatch<React.SetStateAction<boolean>>;
+  fetchFarmDetails: (farmId: number) => Promise<any>;
   updateRequirementEvaluation: (
     itemIndex: number,
     requirementIndex: number,
@@ -59,6 +60,30 @@ export function useInspectionForm(): UseInspectionFormReturn {
   );
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
   const [saving, setSaving] = useState(false);
+
+  const fetchFarmDetails = useCallback(async (farmId: number) => {
+    const response = await fetch(`/api/v1/rubber-farms/${farmId}`);
+    if (!response.ok) {
+      throw new Error("Failed to fetch farm details");
+    }
+
+    const farmData = await response.json();
+
+    const farmerId = Number(farmData?.farmerId);
+    if (farmerId) {
+      try {
+        const farmerResponse = await fetch(`/api/v1/farmers/${farmerId}`);
+        if (farmerResponse.ok) {
+          const farmerData = await farmerResponse.json();
+          farmData.farmer = farmerData?.farmer ?? farmerData;
+        }
+      } catch (error) {
+        console.error("Error fetching farmer details:", error);
+      }
+    }
+
+    return farmData;
+  }, []);
 
   // Helper function to sort requirements
   const sortRequirements = useCallback(
@@ -434,6 +459,7 @@ export function useInspectionForm(): UseInspectionFormReturn {
     setCurrentItemIndex,
     saving,
     setSaving,
+    fetchFarmDetails,
     updateRequirementEvaluation,
     updateOtherConditions,
     validateCurrentItem,

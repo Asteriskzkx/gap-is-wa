@@ -2,6 +2,7 @@
 
 import AdminLayout from "@/components/layout/AdminLayout";
 import {
+  PrimaryButton,
   PrimaryCard,
   PrimaryDropdown,
   PrimaryMultiSelect,
@@ -14,6 +15,11 @@ import { useEffect, useMemo, useState, useRef } from "react";
 import { useChart } from "@/hooks/useChart";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import { exportReportPDF } from "@/lib/pdf/exportReportPDF";
+import { resizeChartsForPDF, resetChartsAfterPDF } from "@/lib/pdf/chartResize";
+import PrimaryDataTable, {
+  PrimaryDataTableColumn,
+} from "@/components/ui/PrimaryDataTable";
 
 interface UserCountByRole {
   role: string;
@@ -101,6 +107,24 @@ interface AuditorPerformanceReport {
   averagePassRate: number;
 }
 
+// Paginated Response Interfaces
+interface Paginator {
+  limit: number;
+  offset: number;
+  total: number;
+}
+
+interface PaginatedProvinceResponse {
+  results: RubberFarmProvinceCount[];
+  paginator: Paginator;
+}
+
+interface PaginatedAuditorResponse {
+  results: AuditorPerformance[];
+  paginator: Paginator;
+  summary: { totalInspections: number; averagePassRate: number; totalAuditors: number };
+}
+
 const ROLE_LABELS: Record<string, string> = {
   ADMIN: "ผู้ดูแลระบบ",
   COMMITTEE: "คณะกรรมการ",
@@ -151,8 +175,17 @@ export default function AdminReportPage() {
     useState<AuditorPerformanceReport | null>(null);
   const [loadingAuditor, setLoadingAuditor] = useState(true);
 
-  // Pagination state for auditor table
-  const [auditorDisplayCount, setAuditorDisplayCount] = useState(5);
+  // Pagination states for province table
+  const [provinceData, setProvinceData] = useState<RubberFarmProvinceCount[]>([]);
+  const [provinceTotalRecords, setProvinceTotalRecords] = useState(0);
+  const [provinceLazyParams, setProvinceLazyParams] = useState({ first: 0, rows: 5 });
+  const [loadingProvince, setLoadingProvince] = useState(true);
+
+  // Pagination states for auditor table
+  const [auditorPaginatedData, setAuditorPaginatedData] = useState<AuditorPerformance[]>([]);
+  const [auditorTotalRecords, setAuditorTotalRecords] = useState(0);
+  const [auditorSummary, setAuditorSummary] = useState<{ totalInspections: number; averagePassRate: number; totalAuditors: number } | null>(null);
+  const [auditorLazyParams, setAuditorLazyParams] = useState({ first: 0, rows: 5 });
 
   // Export PDF states
   const [showExportDialog, setShowExportDialog] = useState(false);
@@ -267,7 +300,7 @@ export default function AdminReportPage() {
     fetchInspectionData();
   }, [dates]);
 
-  // Fetch rubber farm data
+  // Fetch rubber farm data (summary without pagination)
   useEffect(() => {
     const fetchRubberFarmData = async () => {
       try {
@@ -286,6 +319,32 @@ export default function AdminReportPage() {
     };
     fetchRubberFarmData();
   }, [dates]);
+
+  // Fetch province data with pagination
+  useEffect(() => {
+    const fetchProvinceData = async () => {
+      try {
+        setLoadingProvince(true);
+        let url = `/api/v1/reports/rubber-farms?limit=${provinceLazyParams.rows}&offset=${provinceLazyParams.first}`;
+        if (dates && dates[0] && dates[1]) {
+          const startDate = formatDateLocal(dates[0]);
+          const endDate = formatDateLocal(dates[1]);
+          url += `&startDate=${startDate}&endDate=${endDate}`;
+        }
+        const response = await fetch(url);
+        if (response.ok) {
+          const data: PaginatedProvinceResponse = await response.json();
+          setProvinceData(data.results);
+          setProvinceTotalRecords(data.paginator.total);
+        }
+      } catch (error) {
+        console.error("Error fetching province data:", error);
+      } finally {
+        setLoadingProvince(false);
+      }
+    };
+    fetchProvinceData();
+  }, [dates, provinceLazyParams]);
 
   // Fetch certificate data
   useEffect(() => {
@@ -307,16 +366,23 @@ export default function AdminReportPage() {
     fetchCertificateData();
   }, [dates]);
 
-  // Fetch auditor performance data
+  // Fetch auditor performance data with pagination
   useEffect(() => {
     const fetchAuditorData = async () => {
       try {
         setLoadingAuditor(true);
-        const url = buildUrl("/api/v1/reports/auditor-performance");
+        let url = `/api/v1/reports/auditor-performance?limit=${auditorLazyParams.rows}&offset=${auditorLazyParams.first}`;
+        if (dates && dates[0] && dates[1]) {
+          const startDate = formatDateLocal(dates[0]);
+          const endDate = formatDateLocal(dates[1]);
+          url += `&startDate=${startDate}&endDate=${endDate}`;
+        }
         const response = await fetch(url);
         if (response.ok) {
-          const data = await response.json();
-          setAuditorData(data);
+          const data: PaginatedAuditorResponse = await response.json();
+          setAuditorPaginatedData(data.results);
+          setAuditorTotalRecords(data.paginator.total);
+          setAuditorSummary(data.summary);
         }
       } catch (error) {
         console.error("Error fetching auditor data:", error);
@@ -325,122 +391,41 @@ export default function AdminReportPage() {
       }
     };
     fetchAuditorData();
+  }, [dates, auditorLazyParams]);
+
+  // Reset pagination when dates change
+  useEffect(() => {
+    setProvinceLazyParams((prev) => ({ ...prev, first: 0 }));
+    setAuditorLazyParams((prev) => ({ ...prev, first: 0 }));
   }, [dates]);
 
   // Export PDF function
   const handleExportPDF = async () => {
     setExporting(true);
     try {
-      const pdf = new jsPDF("p", "mm", "a4");
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 10;
-      let currentY = margin;
-      let isFirstPage = true;
+      resizeChartsForPDF();
 
-      // Helper function to add section to PDF
-      const addSectionToPDF = async (
-        ref: React.RefObject<HTMLDivElement>,
-        title: string
-      ) => {
-        if (!ref.current) return;
-
-        const canvas = await html2canvas(ref.current, {
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          backgroundColor: "#ffffff",
-        });
-
-        const imgData = canvas.toDataURL("image/png");
-        const imgWidth = pageWidth - margin * 2;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-        // Check if we need a new page
-        if (!isFirstPage && currentY + imgHeight > pageHeight - margin) {
-          pdf.addPage();
-          currentY = margin;
-        }
-
-        if (!isFirstPage) {
-          currentY += 5; // Add some spacing between sections
-        }
-
-        pdf.addImage(imgData, "PNG", margin, currentY, imgWidth, imgHeight);
-        currentY += imgHeight;
-        isFirstPage = false;
-      };
-
-      // Create temporary header element for Thai text rendering
-      const headerDiv = document.createElement("div");
-      headerDiv.style.cssText =
-        "position: absolute; left: -9999px; top: 0; background: white; padding: 20px; width: 800px; text-align: center; font-family: 'Sarabun', sans-serif;";
-
-      let headerHTML = `<h1 style="font-size: 24px; font-weight: bold; margin-bottom: 10px; color: #1f2937;">รายงานสรุปข้อมูลระบบ</h1>`;
-
-      if (dates && dates[0] && dates[1]) {
-        headerHTML += `<p style="font-size: 14px; color: #4b5563; margin-bottom: 5px;">ช่วงวันที่: ${dates[0].toLocaleDateString(
-          "th-TH"
-        )} - ${dates[1].toLocaleDateString("th-TH")}</p>`;
-      }
-
-      headerHTML += `<p style="font-size: 12px; color: #6b7280;">วันที่ส่งออก: ${new Date().toLocaleDateString(
-        "th-TH"
-      )}</p>`;
-
-      headerDiv.innerHTML = headerHTML;
-      document.body.appendChild(headerDiv);
-
-      // Render header to canvas
-      const headerCanvas = await html2canvas(headerDiv, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: "#ffffff",
+      await exportReportPDF({
+        filename: `รายงานระบบ_${new Date().toISOString().split("T")[0]}.pdf`,
+        header: {
+          title: "รายงานสรุปข้อมูลระบบ",
+          dateRangeText:
+            dates && dates[0] && dates[1]
+              ? `ช่วงวันที่: ${dates[0].toLocaleDateString(
+                "th-TH"
+              )} - ${dates[1].toLocaleDateString("th-TH")}`
+              : undefined,
+        },
+        sections: [
+          exportSections.users && { ref: userReportRef },
+          exportSections.inspections && { ref: inspectionReportRef },
+          exportSections.rubberFarms && { ref: rubberFarmReportRef },
+          exportSections.certificates && { ref: certificateReportRef },
+          exportSections.auditors && { ref: auditorReportRef },
+        ].filter(Boolean) as any,
       });
-      document.body.removeChild(headerDiv);
-
-      const headerImgData = headerCanvas.toDataURL("image/png");
-      const headerImgWidth = pageWidth - margin * 2;
-      const headerImgHeight =
-        (headerCanvas.height * headerImgWidth) / headerCanvas.width;
-
-      pdf.addImage(
-        headerImgData,
-        "PNG",
-        margin,
-        currentY,
-        headerImgWidth,
-        headerImgHeight
-      );
-      currentY += headerImgHeight + 5;
-      isFirstPage = false;
-
-      // Add selected sections
-      if (exportSections.users && userReportRef.current) {
-        await addSectionToPDF(userReportRef, "รายงานผู้ใช้งาน");
-      }
-      if (exportSections.inspections && inspectionReportRef.current) {
-        await addSectionToPDF(inspectionReportRef, "รายงานการตรวจประเมิน");
-      }
-      if (exportSections.rubberFarms && rubberFarmReportRef.current) {
-        await addSectionToPDF(rubberFarmReportRef, "รายงานแปลงสวนยางพารา");
-      }
-      if (exportSections.certificates && certificateReportRef.current) {
-        await addSectionToPDF(certificateReportRef, "รายงานใบรับรอง");
-      }
-      if (exportSections.auditors && auditorReportRef.current) {
-        await addSectionToPDF(auditorReportRef, "รายงานประสิทธิภาพผู้ตรวจ");
-      }
-
-      // Download PDF
-      const dateStr = new Date().toISOString().split("T")[0];
-      pdf.save(`รายงานระบบ_${dateStr}.pdf`);
-      setShowExportDialog(false);
-    } catch (error) {
-      console.error("Error exporting PDF:", error);
-      alert("เกิดข้อผิดพลาดในการส่งออก PDF");
     } finally {
+      resetChartsAfterPDF();
       setExporting(false);
     }
   };
@@ -607,23 +592,101 @@ export default function AdminReportPage() {
     },
   });
 
+  const auditorColumns: PrimaryDataTableColumn[] = [
+    {
+      field: "auditorName",
+      bodyAlign: "left",
+      header: "ชื่อผู้ตรวจประเมิน",
+      headerAlign: "center"
+    },
+    {
+      field: "totalInspections",
+      bodyAlign: "right",
+      header: "ตรวจทั้งหมด",
+      headerAlign: "center"
+    },
+    {
+      field: "passedInspections",
+      header: "ผ่าน",
+      bodyAlign: "right",
+      headerAlign: "center",
+      body: (row) => (
+        <span className="text-green-600 font-medium">
+          {row.passedInspections}
+        </span>
+      ),
+    },
+    {
+      field: "failedInspections",
+      header: "ไม่ผ่าน",
+      bodyAlign: "right",
+      headerAlign: "center",
+      body: (row) => (
+        <span className="text-red-600 font-medium">
+          {row.failedInspections}
+        </span>
+      ),
+    },
+    {
+      field: "passRate",
+      header: "อัตราผ่าน",
+      headerAlign: "center",
+      bodyAlign: "center",
+      body: (row) => (
+        <span
+          className={`font-medium ${row.passRate >= 80
+            ? "text-green-600"
+            : row.passRate >= 50
+              ? "text-yellow-600"
+              : "text-red-600"
+            }`}
+        >
+          {row.passRate}%
+        </span>
+      ),
+    },
+  ];
+
+  const topRankColumns: PrimaryDataTableColumn[] = [
+    {
+      field: "province",
+      header: "จังหวัด",
+      headerAlign: "center",
+      bodyAlign: "left",
+    },
+    {
+      field: "count",
+      header: "จำนวนแปลง",
+      headerAlign: "center",
+      bodyAlign: "right",
+    },
+    {
+      field: "totalArea",
+      header: "พื้นที่รวม (ไร่)",
+      headerAlign: "center",
+      bodyAlign: "right",
+      body: (row) => row.totalArea.toLocaleString(),
+    }]
+
   return (
     <AdminLayout>
       <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Title */}
-        <div className="mb-8 flex flex-wrap items-center justify-between">
-          <div>
+        <div className="mb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+          <div className="lg:col-span-4">
             <h1 className="text-2xl font-bold text-gray-900">ตรวจสอบรายงาน</h1>
             <p className="mt-1 text-sm text-gray-500">
               ตรวจสอบรายงานสรุปข้อมูลต่างๆ สำหรับผู้ดูแลระบบ
             </p>
           </div>
-          <Button
-            label="ส่งออก PDF"
-            icon="pi pi-file-pdf"
-            className="p-button-success p-2"
-            onClick={() => setShowExportDialog(true)}
-          />
+          <div className="lg:col-start-6 self-end">
+            <PrimaryButton
+              label="ส่งออก PDF"
+              icon="pi pi-file-pdf"
+              fullWidth
+              onClick={() => setShowExportDialog(true)}
+            />
+          </div>
         </div>
 
         {/* Export PDF Dialog */}
@@ -757,7 +820,7 @@ export default function AdminReportPage() {
                 className="border border-gray-300 rounded"
               />
               <label htmlFor="export-auditors" className="cursor-pointer">
-                รายงานประสิทธิภาพผู้ตรวจ
+                รายงานประสิทธิภาพผู้ตรวจประเมิน
               </label>
             </div>
           </div>
@@ -801,7 +864,7 @@ export default function AdminReportPage() {
         {/* User Report Section */}
         <div
           ref={userReportRef}
-          className="mt-6 flex flex-col bg-white rounded-lg shadow p-6"
+          className="mt-6 flex flex-col report-section bg-white rounded-lg shadow p-6"
         >
           <h2 className="text-xl font-semibold text-gray-900 mb-6">
             รายงานผู้ใช้งาน
@@ -920,7 +983,7 @@ export default function AdminReportPage() {
         {/* ==================== INSPECTION REPORTS ==================== */}
         <div
           ref={inspectionReportRef}
-          className="mt-8 flex flex-col bg-white rounded-lg shadow p-6"
+          className="mt-8 flex flex-col report-section bg-white rounded-lg shadow p-6"
         >
           <h2 className="text-xl font-semibold text-gray-900 mb-6">
             รายงานการตรวจประเมิน
@@ -952,19 +1015,17 @@ export default function AdminReportPage() {
               inspectionData?.byResult.map((result) => (
                 <div
                   key={result.result}
-                  className={`bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center border-2 ${
-                    result.result === "ผ่าน" || result.result === "PASSED"
-                      ? "border-green-500"
-                      : "border-red-500"
-                  }`}
+                  className={`bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center border-2 ${result.result === "ผ่าน" || result.result === "PASSED"
+                    ? "border-green-500"
+                    : "border-red-500"
+                    }`}
                 >
                   <p className="text-sm text-gray-600 mb-1">{result.result}</p>
                   <p
-                    className={`text-3xl font-bold ${
-                      result.result === "ผ่าน" || result.result === "PASSED"
-                        ? "text-green-500"
-                        : "text-red-500"
-                    }`}
+                    className={`text-3xl font-bold ${result.result === "ผ่าน" || result.result === "PASSED"
+                      ? "text-green-500"
+                      : "text-red-500"
+                      }`}
                   >
                     {result.count}
                   </p>
@@ -1031,7 +1092,7 @@ export default function AdminReportPage() {
         {/* ==================== RUBBER FARM REPORTS ==================== */}
         <div
           ref={rubberFarmReportRef}
-          className="mt-8 flex flex-col bg-white rounded-lg shadow p-6"
+          className="mt-8 flex flex-col report-section bg-white rounded-lg shadow p-6"
         >
           <h2 className="text-xl font-semibold text-gray-900 mb-6">
             รายงานแปลงสวนยางพารา
@@ -1105,73 +1166,32 @@ export default function AdminReportPage() {
             </div>
           </div>
 
-          {/* By Province - Top 5 */}
+          {/* By Province - Paginated Table */}
           <div>
             <h3 className="text-lg font-medium text-gray-800 mb-3">
-              จังหวัดที่มีแปลงมากที่สุด (Top 5)
+              จังหวัดที่มีแปลงสวนยางพารามากที่สุด
             </h3>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                      จังหวัด
-                    </th>
-                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
-                      จำนวนแปลง
-                    </th>
-                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
-                      พื้นที่ (ไร่)
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {loadingRubberFarm ? (
-                    <tr>
-                      <td
-                        colSpan={3}
-                        className="px-4 py-2 text-center text-gray-400"
-                      >
-                        กำลังโหลด...
-                      </td>
-                    </tr>
-                  ) : rubberFarmData?.byProvince.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={3}
-                        className="px-4 py-2 text-center text-gray-400"
-                      >
-                        ไม่มีข้อมูล
-                      </td>
-                    </tr>
-                  ) : (
-                    rubberFarmData?.byProvince.slice(0, 5).map((prov, idx) => (
-                      <tr
-                        key={prov.province}
-                        className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                      >
-                        <td className="px-4 py-2 text-sm text-gray-900">
-                          {prov.province}
-                        </td>
-                        <td className="px-4 py-2 text-sm text-gray-900 text-right">
-                          {prov.count}
-                        </td>
-                        <td className="px-4 py-2 text-sm text-gray-900 text-right">
-                          {prov.totalArea}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+            <PrimaryDataTable
+              value={provinceData}
+              columns={topRankColumns}
+              loading={loadingProvince}
+              emptyMessage="ไม่มีข้อมูลแปลงสวนยางพารา"
+              lazy
+              paginator
+              rows={provinceLazyParams.rows}
+              totalRecords={provinceTotalRecords}
+              first={provinceLazyParams.first}
+              onPage={(e) => setProvinceLazyParams({ first: e.first, rows: e.rows })}
+              rowsPerPageOptions={[5, 10, 25]}
+              dataKey="province"
+            />
           </div>
         </div>
 
         {/* ==================== CERTIFICATE REPORTS ==================== */}
         <div
           ref={certificateReportRef}
-          className="mt-8 flex flex-col bg-white rounded-lg shadow p-6"
+          className="mt-8 flex flex-col report-section bg-white rounded-lg shadow p-6"
         >
           <h2 className="text-xl font-semibold text-gray-900 mb-6">
             รายงานใบรับรอง
@@ -1276,7 +1296,7 @@ export default function AdminReportPage() {
         {/* ==================== AUDITOR PERFORMANCE REPORTS ==================== */}
         <div
           ref={auditorReportRef}
-          className="mt-8 flex flex-col bg-white rounded-lg shadow p-6 mb-8"
+          className="mt-8 flex flex-col report-section bg-white rounded-lg shadow p-6 mb-8"
         >
           <h2 className="text-xl font-semibold text-gray-900 mb-6">
             รายงานประสิทธิภาพผู้ตรวจประเมิน
@@ -1290,7 +1310,7 @@ export default function AdminReportPage() {
                 <p className="text-3xl font-bold text-gray-300">...</p>
               ) : (
                 <p className="text-3xl font-bold text-indigo-600">
-                  {auditorData?.totalInspections ?? 0}
+                  {auditorSummary?.totalInspections ?? 0}
                 </p>
               )}
               <p className="text-xs text-gray-500">ครั้ง</p>
@@ -1302,18 +1322,20 @@ export default function AdminReportPage() {
                 <p className="text-3xl font-bold text-gray-300">...</p>
               ) : (
                 <p className="text-3xl font-bold text-teal-600">
-                  {auditorData?.averagePassRate ?? 0}%
+                  {auditorSummary?.averagePassRate ?? 0}%
                 </p>
               )}
             </div>
 
             <div className="bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center border-2 border-cyan-600">
-              <p className="text-sm text-gray-600 mb-1">ผู้ตรวจที่มีผลงาน</p>
+              <p className="text-sm text-gray-600 mb-1">
+                ผู้ตรวจประเมินที่มีผลงาน
+              </p>
               {loadingAuditor ? (
                 <p className="text-3xl font-bold text-gray-300">...</p>
               ) : (
                 <p className="text-3xl font-bold text-cyan-600">
-                  {auditorData?.auditors.length ?? 0}
+                  {auditorSummary?.totalAuditors ?? 0}
                 </p>
               )}
               <p className="text-xs text-gray-500">คน</p>
@@ -1322,125 +1344,24 @@ export default function AdminReportPage() {
 
           {/* Auditor Performance Table */}
           <div>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-medium text-gray-800">
-                ผลงานแต่ละผู้ตรวจ
-              </h3>
-              {auditorData && auditorData.auditors.length > 0 && (
-                <span className="text-sm text-gray-500">
-                  แสดง{" "}
-                  {Math.min(auditorDisplayCount, auditorData.auditors.length)}{" "}
-                  จาก {auditorData.auditors.length} คน
-                </span>
-              )}
-            </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                      ชื่อผู้ตรวจ
-                    </th>
-                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
-                      ตรวจทั้งหมด
-                    </th>
-                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
-                      ผ่าน
-                    </th>
-                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
-                      ไม่ผ่าน
-                    </th>
-                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
-                      อัตราผ่าน
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {loadingAuditor ? (
-                    <tr>
-                      <td
-                        colSpan={5}
-                        className="px-4 py-2 text-center text-gray-400"
-                      >
-                        กำลังโหลด...
-                      </td>
-                    </tr>
-                  ) : auditorData?.auditors.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={5}
-                        className="px-4 py-2 text-center text-gray-400"
-                      >
-                        ไม่มีข้อมูล
-                      </td>
-                    </tr>
-                  ) : (
-                    auditorData?.auditors
-                      .slice(0, auditorDisplayCount)
-                      .map((auditor, idx) => (
-                        <tr
-                          key={auditor.auditorId}
-                          className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                        >
-                          <td className="px-4 py-2 text-sm text-gray-900">
-                            {auditor.auditorName}
-                          </td>
-                          <td className="px-4 py-2 text-sm text-gray-900 text-right">
-                            {auditor.totalInspections}
-                          </td>
-                          <td className="px-4 py-2 text-sm text-green-600 text-right">
-                            {auditor.passedInspections}
-                          </td>
-                          <td className="px-4 py-2 text-sm text-red-600 text-right">
-                            {auditor.failedInspections}
-                          </td>
-                          <td className="px-4 py-2 text-sm text-right">
-                            <span
-                              className={`font-medium ${
-                                auditor.passRate >= 80
-                                  ? "text-green-600"
-                                  : auditor.passRate >= 50
-                                  ? "text-yellow-600"
-                                  : "text-red-600"
-                              }`}
-                            >
-                              {auditor.passRate}%
-                            </span>
-                          </td>
-                        </tr>
-                      ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Show More / Show Less Buttons */}
-            {auditorData && auditorData.auditors.length > 5 && (
-              <div className="flex justify-center gap-2 mt-4">
-                {auditorDisplayCount < auditorData.auditors.length && (
-                  <Button
-                    label={`ดูเพิ่มเติม (${
-                      auditorData.auditors.length - auditorDisplayCount
-                    } คน)`}
-                    className="p-button-outlined p-button-sm"
-                    icon="pi pi-chevron-down"
-                    onClick={() =>
-                      setAuditorDisplayCount((prev) =>
-                        Math.min(prev + 5, auditorData.auditors.length)
-                      )
-                    }
-                  />
-                )}
-                {auditorDisplayCount > 5 && (
-                  <Button
-                    label="แสดงน้อยลง"
-                    className="p-button-text p-button-sm"
-                    icon="pi pi-chevron-up"
-                    onClick={() => setAuditorDisplayCount(5)}
-                  />
-                )}
-              </div>
-            )}
+            <h3 className="text-lg font-medium text-gray-800 mb-3">
+              ผลงานแต่ละผู้ตรวจประเมิน
+            </h3>
+            <PrimaryDataTable
+              data-testid="auditor-performance-table"
+              value={auditorPaginatedData}
+              columns={auditorColumns}
+              loading={loadingAuditor}
+              emptyMessage="ไม่มีข้อมูลผู้ตรวจประเมิน"
+              lazy
+              paginator
+              rows={auditorLazyParams.rows}
+              totalRecords={auditorTotalRecords}
+              first={auditorLazyParams.first}
+              onPage={(e) => setAuditorLazyParams({ first: e.first, rows: e.rows })}
+              rowsPerPageOptions={[5, 10, 25]}
+              dataKey="auditorId"
+            />
           </div>
         </div>
       </div>

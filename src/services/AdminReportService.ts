@@ -672,29 +672,61 @@ export class AdminReportService {
     endDate?: Date
   ): Promise<AuditorPerformanceReport> {
     try {
-      const whereClause = startDate && endDate
-        ? { createdAt: { gte: startDate, lte: endDate } }
-        : {};
+      const dateFilter = startDate && endDate ? {
+        inspectionDateAndTime: { gte: startDate, lte: endDate },
+      } : {};
 
-      // Get all auditors with their inspections
+      // Get all auditors with their inspections (both as chief and as team member)
       const auditors = await prisma.auditor.findMany({
         include: {
           user: { select: { name: true } },
           inspectionsAsChief: {
-            where: whereClause,
+            where: dateFilter,
             select: {
+              inspectionId: true,
               inspectionResult: true,
+            },
+          },
+          auditorInspections: {
+            where: {
+              inspection: dateFilter,
+            },
+            select: {
+              inspection: {
+                select: {
+                  inspectionId: true,
+                  inspectionResult: true,
+                },
+              },
             },
           },
         },
       });
 
       const auditorPerformances: AuditorPerformance[] = auditors.map((auditor) => {
-        const totalInspections = auditor.inspectionsAsChief.length;
-        const passedInspections = auditor.inspectionsAsChief.filter(
-          (i) => i.inspectionResult === "ผ่าน" || i.inspectionResult === "PASSED"
+        // Combine inspections from both sources, removing duplicates by inspectionId
+        const inspectionMap = new Map<number, string>();
+
+        // Add inspections as chief
+        auditor.inspectionsAsChief.forEach((i) => {
+          inspectionMap.set(i.inspectionId, i.inspectionResult);
+        });
+
+        // Add inspections as team member (won't overwrite if already exists)
+        auditor.auditorInspections.forEach((ai) => {
+          if (!inspectionMap.has(ai.inspection.inspectionId)) {
+            inspectionMap.set(ai.inspection.inspectionId, ai.inspection.inspectionResult);
+          }
+        });
+
+        const allInspections = Array.from(inspectionMap.values());
+        const totalInspections = allInspections.length;
+        const passedInspections = allInspections.filter(
+          (result) => result === "ผ่าน" || result === "PASSED"
         ).length;
-        const failedInspections = totalInspections - passedInspections;
+        const failedInspections = allInspections.filter(
+          (result) => result === "ไม่ผ่าน" || result === "FAILED"
+        ).length;
         const passRate = totalInspections > 0
           ? Math.round((passedInspections / totalInspections) * 100 * 100) / 100
           : 0;
@@ -715,8 +747,8 @@ export class AdminReportService {
       const totalInspections = activeAuditors.reduce((sum, a) => sum + a.totalInspections, 0);
       const averagePassRate = activeAuditors.length > 0
         ? Math.round(
-            (activeAuditors.reduce((sum, a) => sum + a.passRate, 0) / activeAuditors.length) * 100
-          ) / 100
+          (activeAuditors.reduce((sum, a) => sum + a.passRate, 0) / activeAuditors.length) * 100
+        ) / 100
         : 0;
 
       return {
@@ -726,6 +758,185 @@ export class AdminReportService {
       };
     } catch (error) {
       console.error("Error getting auditor performance report:", error);
+      throw error;
+    }
+  }
+
+  // ==================== PAGINATED REPORTS ====================
+
+  /**
+   * Get rubber farm provinces with pagination (for table display)
+   */
+  async getRubberFarmProvincePaginated(options: {
+    limit?: number;
+    offset?: number;
+    startDate?: Date;
+    endDate?: Date;
+  }): Promise<{
+    results: RubberFarmProvinceCount[];
+    paginator: { limit: number; offset: number; total: number };
+  }> {
+    try {
+      const { limit = 10, offset = 0, startDate, endDate } = options;
+
+      const whereClause = startDate && endDate
+        ? { createdAt: { gte: startDate, lte: endDate } }
+        : {};
+
+      // Get all rubber farms with planting details
+      const farms = await prisma.rubberFarm.findMany({
+        where: whereClause,
+        include: { plantingDetails: true },
+      });
+
+      // Group by province
+      const provinceMap = new Map<string, { count: number; area: number }>();
+      farms.forEach((farm) => {
+        const province = farm.province || "ไม่ระบุ";
+        let farmArea = 0;
+        farm.plantingDetails.forEach((detail) => {
+          farmArea += detail.areaOfPlot;
+        });
+
+        if (provinceMap.has(province)) {
+          const data = provinceMap.get(province)!;
+          data.count++;
+          data.area += farmArea;
+        } else {
+          provinceMap.set(province, { count: 1, area: farmArea });
+        }
+      });
+
+      const allProvinces: RubberFarmProvinceCount[] = Array.from(provinceMap.entries())
+        .map(([province, data]) => ({
+          province,
+          count: data.count,
+          totalArea: Math.round(data.area * 100) / 100,
+        }))
+        .sort((a, b) => b.count - a.count);
+
+      const total = allProvinces.length;
+      const paginatedResults = allProvinces.slice(offset, offset + limit);
+
+      return {
+        results: paginatedResults,
+        paginator: { limit, offset, total },
+      };
+    } catch (error) {
+      console.error("Error getting rubber farm province paginated:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get auditor performance with pagination (for table display)
+   */
+  async getAuditorPerformancePaginated(options: {
+    limit?: number;
+    offset?: number;
+    startDate?: Date;
+    endDate?: Date;
+  }): Promise<{
+    results: AuditorPerformance[];
+    paginator: { limit: number; offset: number; total: number };
+    summary: { totalInspections: number; averagePassRate: number; totalAuditors: number };
+  }> {
+    try {
+      const { limit = 10, offset = 0, startDate, endDate } = options;
+
+      const dateFilter = startDate && endDate ? {
+        inspectionDateAndTime: { gte: startDate, lte: endDate },
+      } : {};
+
+      // Get all auditors with their inspections (both as chief and as team member)
+      const auditors = await prisma.auditor.findMany({
+        include: {
+          user: { select: { name: true } },
+          inspectionsAsChief: {
+            where: dateFilter,
+            select: {
+              inspectionId: true,
+              inspectionResult: true,
+            },
+          },
+          auditorInspections: {
+            where: {
+              inspection: dateFilter,
+            },
+            select: {
+              inspection: {
+                select: {
+                  inspectionId: true,
+                  inspectionResult: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      const auditorPerformances: AuditorPerformance[] = auditors.map((auditor) => {
+        // Combine inspections from both sources, removing duplicates by inspectionId
+        const inspectionMap = new Map<number, string>();
+
+        // Add inspections as chief
+        auditor.inspectionsAsChief.forEach((i) => {
+          inspectionMap.set(i.inspectionId, i.inspectionResult);
+        });
+
+        // Add inspections as team member (won't overwrite if already exists)
+        auditor.auditorInspections.forEach((ai) => {
+          if (!inspectionMap.has(ai.inspection.inspectionId)) {
+            inspectionMap.set(ai.inspection.inspectionId, ai.inspection.inspectionResult);
+          }
+        });
+
+        const allInspections = Array.from(inspectionMap.values());
+        const totalInspections = allInspections.length;
+        const passedInspections = allInspections.filter(
+          (result) => result === "ผ่าน" || result === "PASSED"
+        ).length;
+        const failedInspections = allInspections.filter(
+          (result) => result === "ไม่ผ่าน" || result === "FAILED"
+        ).length;
+        const passRate = totalInspections > 0
+          ? Math.round((passedInspections / totalInspections) * 100 * 100) / 100
+          : 0;
+
+        return {
+          auditorId: auditor.auditorId,
+          auditorName: auditor.user.name,
+          totalInspections,
+          passedInspections,
+          failedInspections,
+          passRate,
+        };
+      });
+
+      // Filter to only show auditors with inspections and sort
+      const activeAuditors = auditorPerformances
+        .filter((a) => a.totalInspections > 0)
+        .sort((a, b) => b.totalInspections - a.totalInspections);
+
+      // Calculate summary
+      const totalInspections = activeAuditors.reduce((sum, a) => sum + a.totalInspections, 0);
+      const averagePassRate = activeAuditors.length > 0
+        ? Math.round(
+          (activeAuditors.reduce((sum, a) => sum + a.passRate, 0) / activeAuditors.length) * 100
+        ) / 100
+        : 0;
+
+      // Apply pagination
+      const total = activeAuditors.length;
+      const paginatedResults = activeAuditors.slice(offset, offset + limit);
+
+      return {
+        results: paginatedResults,
+        paginator: { limit, offset, total },
+        summary: { totalInspections, averagePassRate, totalAuditors: total },
+      };
+    } catch (error) {
+      console.error("Error getting auditor performance paginated:", error);
       throw error;
     }
   }

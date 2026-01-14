@@ -11,7 +11,7 @@ import { PaginatorTemplate } from "primereact/paginator";
 
 type TextAlign = "left" | "center" | "right";
 
-interface PrimaryDataTableColumn {
+export interface PrimaryDataTableColumn {
   readonly field: string;
   readonly header: string;
   readonly body?: (rowData: any) => React.ReactNode;
@@ -226,7 +226,7 @@ export default function PrimaryDataTable({
                 },
                 bodyCell: {
                   className: `px-6 py-4 text-sm text-gray-900 ${bodyAlignClass}`,
-                  "data-label": col.header, // เพิ่ม data-label สำหรับ mobile responsive
+                  "data-label": col.mobileHideLabel ? undefined : col.header, // เพิ่ม data-label สำหรับ mobile responsive
                 },
               }}
             />

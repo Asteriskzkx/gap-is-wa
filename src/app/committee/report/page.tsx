@@ -7,8 +7,13 @@ import { Dialog } from "primereact/dialog";
 import { Checkbox } from "primereact/checkbox";
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useChart } from "@/hooks/useChart";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
+import { PrimaryButton } from "@/components/ui";
+import { resetChartsAfterPDF, resizeChartsForPDF } from "@/lib/pdf/chartResize";
+import { exportReportPDF } from "@/lib/pdf/exportReportPDF";
+import { PrimaryDataTableColumn } from "@/components/ui/PrimaryDataTable";
+import { PrimaryDataTable } from "@/components/ui/";
+
+
 
 // ==================== Interfaces ====================
 
@@ -75,6 +80,22 @@ interface MyCommitteeStats {
   }[];
 }
 
+interface RecentCertificate {
+  certificateId: number;
+  farmerName: string;
+  farmLocation: string;
+  province: string;
+  effectiveDate: string;
+  expiryDate: string;
+}
+
+interface inspectionsByType {
+  typeName: string;
+  count: number;
+  passed: number;
+  failed: number;
+  pending?: number;
+}
 interface CommitteeReportSummary {
   certificateStats: CertificateStats;
   certificateExpiryAlerts: CertificateExpiryAlerts;
@@ -378,133 +399,129 @@ export default function CommitteeReportPage() {
   });
 
   // Export PDF handler
-  const handleExportPDF = async () => {
-    setShowExportDialog(false);
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    setExporting(true);
-
-    try {
-      const pdf = new jsPDF("p", "mm", "a4");
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 10;
-      let currentY = margin;
-      let isFirstPage = true;
-
-      // Helper function to add section to PDF
-      const addSectionToPDF = async (ref: React.RefObject<HTMLDivElement>) => {
-        if (!ref.current) return;
-
-        const canvas = await html2canvas(ref.current, {
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          backgroundColor: "#ffffff",
-        });
-
-        const imgData = canvas.toDataURL("image/png");
-        const imgWidth = pageWidth - margin * 2;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-        if (!isFirstPage && currentY + imgHeight > pageHeight - margin) {
-          pdf.addPage();
-          currentY = margin;
+    const handleExportPDF = async () => {
+        setExporting(true);
+        try {
+          resizeChartsForPDF();
+    
+          await exportReportPDF({
+            filename: `รายงานระบบ_${new Date().toISOString().split("T")[0]}.pdf`,
+            header: {
+              title: "รายงานสำหรับคณะกรรมการ",
+              dateRangeText:
+                dates && dates[0] && dates[1]
+                  ? `ช่วงวันที่: ${dates[0].toLocaleDateString(
+                      "th-TH"
+                    )} - ${dates[1].toLocaleDateString("th-TH")}`
+                  : undefined,
+            },
+            sections: [
+              exportSections.myCommitteeStats && { ref: myCommitteeStatsRef },
+              exportSections.certificateStats && { ref: certificateStatsRef },
+              exportSections.expiryAlerts && { ref: expiryAlertsRef },
+              exportSections.inspectionStats && { ref: inspectionStatsRef },
+              exportSections.charts && { ref: chartsRef },
+            ].filter(Boolean) as any,
+          });
+        } finally {
+          resetChartsAfterPDF();
+          setExporting(false);
         }
-
-        if (!isFirstPage) {
-          currentY += 5;
-        }
-
-        pdf.addImage(imgData, "PNG", margin, currentY, imgWidth, imgHeight);
-        currentY += imgHeight;
-        isFirstPage = false;
       };
 
-      // Create header
-      const headerDiv = document.createElement("div");
-      headerDiv.style.cssText =
-        "position: absolute; left: -9999px; top: 0; background: white; padding: 20px; width: 800px; text-align: center; font-family: 'Sarabun', sans-serif;";
+    const recentCertificatesColumns : PrimaryDataTableColumn[] = [
+      {
+        field: "certificateId",
+        header: "เลขที่",
+        sortable: true,
+      },
+      {
+        field: "farmerName",
+        header: "ชื่อเกษตรกร",
+        sortable: true,
+      },
+      {
+        field: "farmLocation",
+        header: "ที่ตั้ง",
+      },
+      {
+        field: "province",
+        header: "จังหวัด",
+      },
+      {
+        field: "effectiveDate",
+        header: "วันที่ออก",
+        body: (row: RecentCertificate) =>
+          new Date(row.effectiveDate).toLocaleDateString("th-TH"),
+        bodyAlign: "center" as const,
+      },
+      {
+        field: "expiryDate",
+        header: "วันหมดอายุ",
+        body: (row: RecentCertificate) =>
+          new Date(row.expiryDate).toLocaleDateString("th-TH"),
+        bodyAlign: "center" as const,
+      },
+    ];
 
-      let headerHTML = `<h1 style="font-size: 24px; font-weight: bold; margin-bottom: 10px; color: #1f2937;">รายงานสำหรับคณะกรรมการ</h1>`;
-
-      headerHTML += `<p style="font-size: 12px; color: #6b7280;">วันที่ส่งออก: ${new Date().toLocaleDateString(
-        "th-TH"
-      )}</p>`;
-
-      headerDiv.innerHTML = headerHTML;
-      document.body.appendChild(headerDiv);
-
-      const headerCanvas = await html2canvas(headerDiv, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: "#ffffff",
-      });
-      document.body.removeChild(headerDiv);
-
-      const headerImgData = headerCanvas.toDataURL("image/png");
-      const headerImgWidth = pageWidth - margin * 2;
-      const headerImgHeight =
-        (headerCanvas.height * headerImgWidth) / headerCanvas.width;
-
-      pdf.addImage(
-        headerImgData,
-        "PNG",
-        margin,
-        currentY,
-        headerImgWidth,
-        headerImgHeight
-      );
-      currentY += headerImgHeight + 5;
-      isFirstPage = false;
-
-      // Add selected sections
-      if (exportSections.myCommitteeStats && myCommitteeStatsRef.current) {
-        await addSectionToPDF(myCommitteeStatsRef);
-      }
-      if (exportSections.certificateStats && certificateStatsRef.current) {
-        await addSectionToPDF(certificateStatsRef);
-      }
-      if (exportSections.expiryAlerts && expiryAlertsRef.current) {
-        await addSectionToPDF(expiryAlertsRef);
-      }
-      if (exportSections.charts && chartsRef.current) {
-        await addSectionToPDF(chartsRef);
-      }
-      if (exportSections.inspectionStats && inspectionStatsRef.current) {
-        await addSectionToPDF(inspectionStatsRef);
-      }
-
-      // Download PDF
-      const dateStr = new Date().toISOString().split("T")[0];
-      pdf.save(`รายงานคณะกรรมการ_${dateStr}.pdf`);
-    } catch (error) {
-      console.error("Error exporting PDF:", error);
-      alert("เกิดข้อผิดพลาดในการส่งออก PDF");
-    } finally {
-      setExporting(false);
-    }
-  };
+    const inspectionsByTypeColumns : PrimaryDataTableColumn[] = [
+      {
+        field: "typeName",
+        header: "ประเภท",
+      },
+      {
+        field: "count",
+        header: "ทั้งหมด",
+        bodyAlign: "center",
+      },
+      {
+        field: "passed",
+        header: "ผ่าน",
+        bodyAlign: "center",
+        body: (row: inspectionsByType) => (
+          <span className="text-green-600 font-medium">{row.passed}</span>
+        ),
+      },
+      {
+        field: "failed",
+        header: "ไม่ผ่าน",
+        bodyAlign: "center",
+        body: (row: inspectionsByType) => (
+          <span className="text-red-600 font-medium">{row.failed}</span>
+        ),
+      },
+      {
+        field: "pending",
+        header: "รอดำเนินการ",
+        bodyAlign: "center",
+        body: (row: inspectionsByType) => (
+          <span className="text-yellow-600 font-medium">{row.pending ?? 0}</span>
+        ),
+      },
+    ];
+          
 
   return (
     <CommitteeLayout>
       <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Title */}
-        <div className="mb-8 flex flex-wrap items-center justify-between">
-          <div>
+        <div className="mb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+          <div className="lg:col-span-4">
             <h1 className="text-2xl font-bold text-gray-900">
               รายงานสำหรับคณะกรรมการ
             </h1>
             <p className="mt-1 text-sm text-gray-500">
-              ดูสรุปรายงานใบรับรอง การตรวจประเมิน และประสิทธิภาพผู้ตรวจ
+              ดูสรุปรายงานใบรับรอง การตรวจประเมิน และประสิทธิภาพผู้ตรวจประเมิน
             </p>
           </div>
-          <Button
-            label="ส่งออก PDF"
-            icon="pi pi-file-pdf"
-            className="p-button-success p-2"
-            onClick={() => setShowExportDialog(true)}
-          />
+          <div className="lg:col-start-6 self-end">
+            <PrimaryButton
+              label="ส่งออก PDF"
+              icon="pi pi-file-pdf"
+              fullWidth
+              onClick={() => setShowExportDialog(true)}
+            />
+          </div>
         </div>
 
         {/* Export PDF Dialog */}
@@ -673,12 +690,12 @@ export default function CommitteeReportPage() {
               />
             </div>
             <p className="text-sm text-gray-500">
-              * ช่วงวันที่จะกรองเฉพาะข้อมูลในส่วน &quot;กราฟสรุปข้อมูล&quot; และ
-              &quot;สรุปการตรวจประเมิน&quot;
+              * ช่วงวันที่จะกรองเฉพาะข้อมูลในส่วน &quot;แผนภูมิสรุปข้อมูล&quot;
+              และ &quot;สรุปการตรวจประเมิน&quot;
             </p>
             {chartLoading && (
               <span className="text-blue-600 text-sm animate-pulse">
-                กำลังโหลดข้อมูลกราฟ...
+                กำลังโหลดข้อมูลแผนภูมิ...
               </span>
             )}
           </div>
@@ -759,62 +776,15 @@ export default function CommitteeReportPage() {
                 <h3 className="text-lg font-medium text-gray-800 mb-3">
                   ใบรับรองที่ออกล่าสุด
                 </h3>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-blue-50">
-                      <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                          เลขที่
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                          ชื่อเกษตรกร
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                          ที่ตั้ง
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                          จังหวัด
-                        </th>
-                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                          วันที่ออก
-                        </th>
-                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                          วันหมดอายุ
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {reportData.myCommitteeStats.recentCertificates.map(
-                        (cert) => (
-                          <tr key={cert.certificateId}>
-                            <td className="px-4 py-3 text-sm text-gray-900">
-                              {cert.certificateId}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-gray-900">
-                              {cert.farmerName}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-gray-600">
-                              {cert.farmLocation}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-gray-600">
-                              {cert.province}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-center text-gray-600">
-                              {new Date(cert.effectiveDate).toLocaleDateString(
-                                "th-TH"
-                              )}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-center text-gray-600">
-                              {new Date(cert.expiryDate).toLocaleDateString(
-                                "th-TH"
-                              )}
-                            </td>
-                          </tr>
-                        )
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                <PrimaryDataTable
+                  value={reportData.myCommitteeStats.recentCertificates}
+                  columns={recentCertificatesColumns}
+                  paginator
+                  rows={5}
+                  loading={loading}
+                  emptyMessage="ไม่มีข้อมูลใบรับรอง"
+                  dataKey="certificateId"
+                />
               </div>
             )}
           </div>
@@ -823,7 +793,7 @@ export default function CommitteeReportPage() {
         {/* ==================== CERTIFICATE STATS ==================== */}
         <div
           ref={certificateStatsRef}
-          className="mt-6 flex flex-col bg-white rounded-lg shadow p-6"
+          className="mt-6 flex flex-col report-section bg-white rounded-lg shadow p-6"
         >
           <h2 className="text-xl font-semibold text-gray-900 mb-6">
             รายงานใบรับรอง
@@ -889,7 +859,7 @@ export default function CommitteeReportPage() {
         {/* ==================== EXPIRY ALERTS ==================== */}
         <div
           ref={expiryAlertsRef}
-          className="mt-6 flex flex-col bg-white rounded-lg shadow p-6"
+          className="mt-6 flex flex-col report-section bg-white rounded-lg shadow p-6"
         >
           <h2 className="text-xl font-semibold text-gray-900 mb-6">
             รายงานใบรับรองใกล้หมดอายุ
@@ -992,7 +962,7 @@ export default function CommitteeReportPage() {
         {/* ==================== CHARTS SECTION ==================== */}
         <div
           ref={chartsRef}
-          className="mt-6 flex flex-col bg-white rounded-lg shadow p-6"
+          className="mt-6 flex flex-col report-section bg-white rounded-lg shadow p-6"
         >
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-gray-900">
@@ -1042,7 +1012,7 @@ export default function CommitteeReportPage() {
         {/* ==================== INSPECTION STATS ==================== */}
         <div
           ref={inspectionStatsRef}
-          className="mt-6 flex flex-col bg-white rounded-lg shadow p-6"
+          className="mt-6 flex flex-col report-section bg-white rounded-lg shadow p-6"
         >
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-gray-900">
@@ -1127,59 +1097,14 @@ export default function CommitteeReportPage() {
               การตรวจประเมินตามประเภท
             </h3>
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      ประเภท
-                    </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                      ทั้งหมด
-                    </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                      ผ่าน
-                    </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                      ไม่ผ่าน
-                    </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                      รอดำเนินการ
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {chartData?.inspectionsByType.map((type) => (
-                    <tr key={type.typeId}>
-                      <td className="px-4 py-3 text-sm text-gray-900">
-                        {type.typeName}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-center text-gray-900">
-                        {type.count}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-center text-green-600 font-medium">
-                        {type.passed}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-center text-red-600 font-medium">
-                        {type.failed}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-center text-yellow-600 font-medium">
-                        {type.pending}
-                      </td>
-                    </tr>
-                  ))}
-                  {(!chartData?.inspectionsByType ||
-                    chartData.inspectionsByType.length === 0) && (
-                    <tr>
-                      <td
-                        colSpan={4}
-                        className="px-4 py-3 text-sm text-center text-gray-500"
-                      >
-                        ไม่มีข้อมูล
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+              <PrimaryDataTable
+                value={chartData?.inspectionsByType ?? []}
+                columns={inspectionsByTypeColumns}
+                paginator
+                rows={10}
+                loading={chartLoading}
+                emptyMessage="ไม่มีข้อมูลการตรวจประเมิน"
+              />
             </div>
           </div>
         </div>

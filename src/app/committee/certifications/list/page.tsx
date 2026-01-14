@@ -6,7 +6,7 @@ import PrimaryCalendar from "@/components/ui/PrimaryCalendar";
 import PrimaryDataTable from "@/components/ui/PrimaryDataTable";
 import { useAlreadyIssuedCertificates } from "@/hooks/useAlreadyIssuedCertificates";
 import { CONTAINER, HEADER, SPACING } from "@/styles/auditorClasses";
-import { useMemo, useCallback } from "react";
+import { useCallback, useMemo } from "react";
 
 export default function Page() {
   const {
@@ -25,6 +25,10 @@ export default function Page() {
     openFiles,
     currentTab,
     onTabChange,
+    pdfUrl,
+    pdfFileName,
+    isShowPdf,
+    closePdf,
   } = useAlreadyIssuedCertificates(10);
 
   const renderActions = useCallback(
@@ -104,10 +108,10 @@ export default function Page() {
         body: (r: any) =>
           r.effectiveDate
             ? new Date(r.effectiveDate).toLocaleDateString("th-TH", {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              })
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })
             : "-",
         style: { width: "12%" },
       },
@@ -120,10 +124,10 @@ export default function Page() {
         body: (r: any) =>
           r.expiryDate
             ? new Date(r.expiryDate).toLocaleDateString("th-TH", {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              })
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })
             : "-",
         style: { width: "12%" },
       },
@@ -149,111 +153,138 @@ export default function Page() {
   return (
     <CommitteeLayout>
       <div className={CONTAINER.page}>
-        <div className={SPACING.mb8}>
-          <h1 className={HEADER.title}>ใบรับรองแหล่งผลิตจีเอพีในระบบ</h1>
-          <p className={HEADER.subtitle}>
-            ใบรับรองแหล่งผลิตยางพาราที่อยู่ในระบบทั้งหมด
-          </p>
-        </div>
+        {!isShowPdf ? (
+          <>
+            <div className={SPACING.mb8}>
+              <h1 className={HEADER.title}>ใบรับรองแหล่งผลิตจีเอพีในระบบ</h1>
+              <p className={HEADER.subtitle}>
+                ใบรับรองแหล่งผลิตยางพาราที่อยู่ในระบบทั้งหมด
+              </p>
+            </div>
 
-        <div className={CONTAINER.card}>
-          <div className={CONTAINER.cardPadding}>
-            <div className={SPACING.mb6}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
-                <div className="w-full sm:w-full">
-                  <div>
-                    <label
-                      htmlFor="fromDate"
-                      className="block text-sm text-gray-600 mb-1"
-                    >
-                      ตั้งแต่
-                    </label>
-                    <PrimaryCalendar
-                      id="fromDate"
-                      value={fromDate}
-                      onChange={(d) => setFromDate(d)}
-                      placeholder="เลือกวันที่มีผล"
+            <div className={CONTAINER.card}>
+              <div className={CONTAINER.cardPadding}>
+                <div className={SPACING.mb6}>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
+                    <div className="w-full sm:w-full">
+                      <div>
+                        <label
+                          htmlFor="fromDate"
+                          className="block text-sm text-gray-600 mb-1"
+                        >
+                          ตั้งแต่
+                        </label>
+                        <PrimaryCalendar
+                          id="fromDate"
+                          value={fromDate}
+                          onChange={(d) => setFromDate(d)}
+                          placeholder="เลือกวันที่มีผล"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="w-full sm:w-full">
+                      <div>
+                        <label
+                          htmlFor="toDate"
+                          className="block text-sm text-gray-600 mb-1"
+                        >
+                          ถึง
+                        </label>
+                        <PrimaryCalendar
+                          id="toDate"
+                          value={toDate}
+                          onChange={(d) => setToDate(d)}
+                          placeholder="เลือกวันที่หมดอายุ"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 grid grid-cols-2 gap-3">
+                    <div className="justify-self-end">
+                      <PrimaryButton
+                        label="ค้นหา"
+                        icon="pi pi-search"
+                        onClick={() => {
+                          applyFilters();
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <PrimaryButton
+                        label="ล้างค่า"
+                        color="secondary"
+                        icon="pi pi-refresh"
+                        onClick={() => {
+                          clearFilters();
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-3 flex justify-between gap-3">
+                    <PrimaryButton
+                      label="ใบรับรองที่ใช้งานอยู่"
+                      fullWidth
+                      color={currentTab === "in-use" ? "success" : "secondary"}
+                      onClick={() => onTabChange("activeFlag", "true")}
+                    />
+                    <PrimaryButton
+                      label="ใบรับรองที่ยกเลิกแล้ว"
+                      fullWidth
+                      color={currentTab === "not-in-use" ? "success" : "secondary"}
+                      onClick={() => onTabChange("activeFlag", "false")}
                     />
                   </div>
                 </div>
 
-                <div className="w-full sm:w-full">
-                  <div>
-                    <label
-                      htmlFor="toDate"
-                      className="block text-sm text-gray-600 mb-1"
-                    >
-                      ถึง
-                    </label>
-                    <PrimaryCalendar
-                      id="toDate"
-                      value={toDate}
-                      onChange={(d) => setToDate(d)}
-                      placeholder="เลือกวันที่หมดอายุ"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-3 grid grid-cols-2 gap-3">
-                <div className="justify-self-end">
-                  <PrimaryButton
-                    label="ค้นหา"
-                    icon="pi pi-search"
-                    onClick={() => {
-                      applyFilters();
-                    }}
-                  />
-                </div>
                 <div>
-                  <PrimaryButton
-                    label="ล้างค่า"
-                    color="secondary"
-                    icon="pi pi-refresh"
-                    onClick={() => {
-                      clearFilters();
-                    }}
+                  <PrimaryDataTable
+                    value={items}
+                    columns={columns}
+                    loading={loading}
+                    paginator
+                    rows={lazyParams.rows}
+                    rowsPerPageOptions={[10, 25, 50]}
+                    totalRecords={totalRecords}
+                    lazy
+                    onPage={handlePageChange}
+                    first={lazyParams.first}
+                    sortMode="multiple"
+                    multiSortMeta={lazyParams.multiSortMeta}
+                    onSort={handleSort}
+                    dataKey="certificateId"
                   />
                 </div>
               </div>
-
-              <div className="mt-3 flex justify-between gap-3">
+            </div>
+          </>
+        ) : (
+          <div className="w-full h-full flex flex-col gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-4 items-center">
+              <div>
                 <PrimaryButton
-                  label="ใบรับรองที่ใช้งานอยู่"
-                  fullWidth
-                  color={currentTab === "in-use" ? "success" : "secondary"}
-                  onClick={() => onTabChange("activeFlag", "true")}
-                />
-                <PrimaryButton
-                  label="ใบรับรองที่ยกเลิกแล้ว"
-                  fullWidth
-                  color={currentTab === "not-in-use" ? "success" : "secondary"}
-                  onClick={() => onTabChange("activeFlag", "false")}
+                  label="ย้อนกลับ"
+                  icon="pi pi-arrow-left"
+                  color="secondary"
+                  onClick={closePdf}
                 />
               </div>
+              <div className="text-xl font-bold text-gray-700 break-words">
+                {pdfFileName}
+              </div>
             </div>
-
-            <div>
-              <PrimaryDataTable
-                value={items}
-                columns={columns}
-                loading={loading}
-                paginator
-                rows={lazyParams.rows}
-                rowsPerPageOptions={[10, 25, 50]}
-                totalRecords={totalRecords}
-                lazy
-                onPage={handlePageChange}
-                first={lazyParams.first}
-                sortMode="multiple"
-                multiSortMeta={lazyParams.multiSortMeta}
-                onSort={handleSort}
-                dataKey="certificateId"
+            {pdfUrl && (
+              <iframe
+                src={pdfUrl}
+                className="w-full h-[80vh] border-0 rounded-lg shadow-sm bg-white"
+                title="PDF Viewer"
               />
-            </div>
+            )}
           </div>
-        </div>
+        )}
       </div>
-    </CommitteeLayout>
+    </CommitteeLayout >
   );
 }

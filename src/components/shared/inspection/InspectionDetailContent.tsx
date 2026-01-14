@@ -24,6 +24,37 @@ interface Props {
   itemId: string | number;
 }
 
+function normalizeText(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  const str = String(value).trim();
+  return str === "-" ? "" : str;
+}
+
+function formatFarmLocation(farm: any): string {
+  if (!farm) return "-";
+
+  const villageName = normalizeText(farm.villageName);
+  const mooNum = Number(farm.moo);
+  const moo = Number.isFinite(mooNum) && mooNum >= 0 ? `หมู่ ${mooNum}` : "";
+  const road = normalizeText(farm.road);
+  const alley = normalizeText(farm.alley);
+  const subDistrict = normalizeText(farm.subDistrict);
+  const district = normalizeText(farm.district);
+  const province = normalizeText(farm.province);
+
+  const parts = [
+    villageName,
+    moo,
+    road,
+    alley,
+    subDistrict,
+    district,
+    province,
+  ].filter(Boolean);
+
+  return parts.length ? parts.join(" ") : "-";
+}
+
 function renderAdditionalFields(inspectionItem: any) {
   if (!inspectionItem) return null;
   const itemName = inspectionItem?.inspectionItemMaster?.itemName || "";
@@ -144,13 +175,13 @@ export default function InspectionDetailContent(props: Readonly<Props>) {
           <div className={`${SPACING.mt4} ${CONTAINER.card}`}>
             <div className={`${GRID.cols3} ${GRID.gap4} ${SPACING.p4}`}>
               <div>
-                <h2 className={INFO_CARD.label}>รหัสการตรวจประเมิน</h2>
+                <h2 className={INFO_CARD.label}>รหัสการตรวจ</h2>
                 <p className={`${SPACING.mt1} ${TEXT.lgMedium}`}>
                   {inspection.inspectionNo}
                 </p>
               </div>
               <div>
-                <h2 className={TEXT.smMedium}>วันที่นัดหมาย</h2>
+                <h2 className={TEXT.smMedium}>วันที่ตรวจประเมิน</h2>
                 <p className={`${SPACING.mt1} ${TEXT.lgMedium}`}>
                   {new Date(
                     inspection.inspectionDateAndTime
@@ -164,17 +195,15 @@ export default function InspectionDetailContent(props: Readonly<Props>) {
                 </p>
               </div>
               <div>
-                <h2 className={TEXT.smMedium}>ประเภทการตรวจ</h2>
+                <h2 className={TEXT.smMedium}>ประเภทการตรวจประเมิน</h2>
                 <p className={`${SPACING.mt1} ${TEXT.lgMedium}`}>
                   {inspection.inspectionType?.typeName || "-"}
                 </p>
               </div>
               <div className="sm:col-span-2 lg:col-span-3">
-                <h2 className={TEXT.smMedium}>พื้นที่สวนยาง</h2>
+                <h2 className={TEXT.smMedium}>สถานที่</h2>
                 <p className={`${SPACING.mt1} ${TEXT.lgMedium}`}>
-                  {inspection.rubberFarm?.villageName || "-"},{" "}
-                  {inspection.rubberFarm?.district || "-"},{" "}
-                  {inspection.rubberFarm?.province || "-"}
+                  {formatFarmLocation(inspection.rubberFarm)}
                 </p>
               </div>
             </div>

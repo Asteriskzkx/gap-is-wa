@@ -62,6 +62,10 @@ export default function Page() {
     editCancelRequestDetail,
     currentTab,
     onTabChange,
+    pdfUrl,
+    pdfFileName,
+    isShowPdf,
+    closePdf,
   } = useFarmerCancelCertificates(10);
 
   const [selectedCertificate, setSelectedCertificate] = useState<Record<
@@ -114,13 +118,13 @@ export default function Page() {
         body: (r: any) =>
           r.inspection?.inspectionDateAndTime
             ? new Date(r.inspection.inspectionDateAndTime).toLocaleString(
-                "th-TH",
-                {
-                  year: "numeric",
-                  month: "short",
-                  day: "numeric",
-                }
-              )
+              "th-TH",
+              {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              }
+            )
             : "-",
         style: { width: "12%" },
       },
@@ -150,10 +154,10 @@ export default function Page() {
         body: (r: any) =>
           r.effectiveDate
             ? new Date(r.effectiveDate).toLocaleDateString("th-TH", {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              })
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })
             : "-",
         style: { width: "12%" },
       },
@@ -166,34 +170,34 @@ export default function Page() {
         body: (r: any) =>
           r.expiryDate
             ? new Date(r.expiryDate).toLocaleDateString("th-TH", {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              })
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })
             : "-",
         style: { width: "12%" },
       },
       currentTab === "cancel-request"
         ? {
-            field: "status",
-            header: "สถานะ",
-            sortable: false,
-            headerAlign: "center" as const,
-            bodyAlign: "center" as const,
-            body: statusBody,
-            style: { width: "15%" },
-          }
+          field: "status",
+          header: "สถานะ",
+          sortable: false,
+          headerAlign: "center" as const,
+          bodyAlign: "center" as const,
+          body: statusBody,
+          style: { width: "15%" },
+        }
         : {
-            field: "actions",
-            header: "",
-            sortable: false,
-            headerAlign: "center" as const,
-            bodyAlign: "center" as const,
-            mobileAlign: "right" as const,
-            mobileHideLabel: true,
-            body: actionBody,
-            style: { width: "15%" },
-          },
+          field: "actions",
+          header: "",
+          sortable: false,
+          headerAlign: "center" as const,
+          bodyAlign: "center" as const,
+          mobileAlign: "right" as const,
+          mobileHideLabel: true,
+          body: actionBody,
+          style: { width: "15%" },
+        },
     ],
     [currentTab]
   );
@@ -201,192 +205,219 @@ export default function Page() {
   return (
     <FarmerLayout>
       <div className={CONTAINER.page}>
-        <div className={SPACING.mb8}>
-          <h1 className={HEADER.title}>ขอยกเลิกใบรับรองแหล่งผลิต</h1>
-          <p className={HEADER.subtitle}>
-            ขอยกเลิกใบรับรองแหล่งผลิตที่ไม่ประสงค์จะรับรองต่อ
-          </p>
-        </div>
+        {!isShowPdf ? (
+          <>
+            <div className={SPACING.mb8}>
+              <h1 className={HEADER.title}>ขอยกเลิกใบรับรองแหล่งผลิต</h1>
+              <p className={HEADER.subtitle}>
+                ขอยกเลิกใบรับรองแหล่งผลิตที่ไม่ประสงค์จะรับรองต่อ
+              </p>
+            </div>
 
-        <div className={SPACING.mb6}>
-          <StepIndicator
-            currentStep={step}
-            maxSteps={2}
-            stepLabels={["เลือกใบรับรอง", "ขอยกเลิกใบรับรอง"]}
-          />
-        </div>
+            <div className={SPACING.mb6}>
+              <StepIndicator
+                currentStep={step}
+                maxSteps={2}
+                stepLabels={["เลือกใบรับรอง", "ขอยกเลิกใบรับรอง"]}
+              />
+            </div>
 
-        <div className={CONTAINER.card}>
-          <div className={CONTAINER.cardPadding}>
-            {step === 1 && (
-              <div className={SPACING.mb6}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
-                  <div className="w-full sm:w-full">
-                    <div>
-                      <label
-                        htmlFor="fromDate"
-                        className="block text-sm text-gray-600 mb-1"
-                      >
-                        วันที่มีผล (จาก)
-                      </label>
-                      <PrimaryCalendar
-                        id="fromDate"
-                        value={fromDate}
-                        onChange={(d) => setFromDate(d)}
-                        placeholder="เลือกวันที่มีผล"
-                      />
+            <div className={CONTAINER.card}>
+              <div className={CONTAINER.cardPadding}>
+                {step === 1 && (
+                  <div className={SPACING.mb6}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
+                      <div className="w-full sm:w-full">
+                        <div>
+                          <label
+                            htmlFor="fromDate"
+                            className="block text-sm text-gray-600 mb-1"
+                          >
+                            วันที่มีผล (จาก)
+                          </label>
+                          <PrimaryCalendar
+                            id="fromDate"
+                            value={fromDate}
+                            onChange={(d) => setFromDate(d)}
+                            placeholder="เลือกวันที่มีผล"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="w-full sm:w-full">
+                        <div>
+                          <label
+                            htmlFor="toDate"
+                            className="block text-sm text-gray-600 mb-1"
+                          >
+                            วันที่หมดอายุ (ถึง)
+                          </label>
+                          <PrimaryCalendar
+                            id="toDate"
+                            value={toDate}
+                            onChange={(d) => setToDate(d)}
+                            placeholder="เลือกวันที่หมดอายุ"
+                          />
+                        </div>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="w-full sm:w-full">
-                    <div>
-                      <label
-                        htmlFor="toDate"
-                        className="block text-sm text-gray-600 mb-1"
-                      >
-                        วันที่หมดอายุ (ถึง)
-                      </label>
-                      <PrimaryCalendar
-                        id="toDate"
-                        value={toDate}
-                        onChange={(d) => setToDate(d)}
-                        placeholder="เลือกวันที่หมดอายุ"
-                      />
+                    <div className="mt-3 grid grid-cols-2 gap-3">
+                      <div className="justify-self-end">
+                        <PrimaryButton
+                          label="ค้นหา"
+                          icon="pi pi-search"
+                          onClick={() => applyFilters()}
+                        />
+                      </div>
+                      <div>
+                        <PrimaryButton
+                          label="ล้างค่า"
+                          color="secondary"
+                          icon="pi pi-refresh"
+                          onClick={() => clearFilters()}
+                        />
+                      </div>
                     </div>
-                  </div>
-                </div>
 
-                <div className="mt-3 grid grid-cols-2 gap-3">
-                  <div className="justify-self-end">
-                    <PrimaryButton
-                      label="ค้นหา"
-                      icon="pi pi-search"
-                      onClick={() => applyFilters()}
-                    />
-                  </div>
-                  <div>
-                    <PrimaryButton
-                      label="ล้างค่า"
-                      color="secondary"
-                      icon="pi pi-refresh"
-                      onClick={() => clearFilters()}
-                    />
-                  </div>
-                </div>
-
-                <div className="mt-3 flex justify-between gap-3">
-                  <PrimaryButton
-                    label="ใบรับรองทั้งหมด"
-                    fullWidth
-                    color={currentTab === "in-use" ? "success" : "secondary"}
-                    onClick={() => handleTabChange("false")}
-                  />
-                  <PrimaryButton
-                    label="ใบรับรองที่ขอยกเลิก"
-                    fullWidth
-                    color={
-                      currentTab === "cancel-request" ? "success" : "secondary"
-                    }
-                    onClick={() => handleTabChange("true")}
-                  />
-                </div>
-              </div>
-            )}
-
-            {step === 1 && (
-              <div>
-                <PrimaryDataTable
-                  value={items}
-                  columns={columns}
-                  loading={loading}
-                  paginator
-                  rows={lazyParams.rows}
-                  rowsPerPageOptions={[10, 25, 50]}
-                  totalRecords={totalRecords}
-                  lazy
-                  onPage={handlePageChange}
-                  first={lazyParams.first}
-                  sortMode="multiple"
-                  multiSortMeta={lazyParams.multiSortMeta}
-                  onSort={handleSort}
-                  dataKey="certificateId"
-                  rowClassName={(data: any) =>
-                    selectedCertificate?.certificateId === data.certificateId
-                      ? "bg-green-50 cursor-pointer"
-                      : "cursor-pointer"
-                  }
-                  onRowClick={(e) => {
-                    setSelectedCertificate(e.data);
-                  }}
-                />
-
-                {currentTab !== "cancel-request" && (
-                  <div className="mt-4 flex justify-end gap-2">
-                    <PrimaryButton
-                      label="ถัดไป"
-                      onClick={() => {
-                        if (selectedCertificate) {
-                          setCancelRequestDetail(
-                            selectedCertificate?.cancelRequestDetail ?? ""
-                          );
-                          nextStep();
+                    <div className="mt-3 flex justify-between gap-3">
+                      <PrimaryButton
+                        label="ใบรับรองทั้งหมด"
+                        fullWidth
+                        color={currentTab === "in-use" ? "success" : "secondary"}
+                        onClick={() => handleTabChange("false")}
+                      />
+                      <PrimaryButton
+                        label="ใบรับรองที่ขอยกเลิก"
+                        fullWidth
+                        color={
+                          currentTab === "cancel-request" ? "success" : "secondary"
                         }
+                        onClick={() => handleTabChange("true")}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {step === 1 && (
+                  <div>
+                    <PrimaryDataTable
+                      value={items}
+                      columns={columns}
+                      loading={loading}
+                      paginator
+                      rows={lazyParams.rows}
+                      rowsPerPageOptions={[10, 25, 50]}
+                      totalRecords={totalRecords}
+                      lazy
+                      onPage={handlePageChange}
+                      first={lazyParams.first}
+                      sortMode="multiple"
+                      multiSortMeta={lazyParams.multiSortMeta}
+                      onSort={handleSort}
+                      dataKey="certificateId"
+                      rowClassName={(data: any) =>
+                        selectedCertificate?.certificateId === data.certificateId
+                          ? "bg-green-50 cursor-pointer"
+                          : "cursor-pointer"
+                      }
+                      onRowClick={(e) => {
+                        setSelectedCertificate(e.data);
                       }}
-                      disabled={!selectedCertificate}
                     />
+
+                    {currentTab !== "cancel-request" && (
+                      <div className="mt-4 flex justify-end gap-2">
+                        <PrimaryButton
+                          label="ถัดไป"
+                          onClick={() => {
+                            if (selectedCertificate) {
+                              setCancelRequestDetail(
+                                selectedCertificate?.cancelRequestDetail ?? ""
+                              );
+                              nextStep();
+                            }
+                          }}
+                          disabled={!selectedCertificate}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {step === 2 && (
+                  <div>
+                    <div className="mb-4">
+                      <label
+                        htmlFor="cancelRequestDetail"
+                        className="block text-sm text-gray-600 mb-1"
+                      >
+                        รายละเอียดคำขอยกเลิกใบรับรอง
+                      </label>
+                      <PrimaryInputTextarea
+                        id="cancelRequestDetail"
+                        value={cancelRequestDetail}
+                        onChange={(v: string) => setCancelRequestDetail(v)}
+                        rows={5}
+                        maxLength={255}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                      />
+                    </div>
+
+                    <div className="flex justify-between gap-2">
+                      <PrimaryButton
+                        label="ย้อนกลับ"
+                        color="secondary"
+                        onClick={() => prevStep()}
+                      />
+                      <PrimaryButton
+                        label="บันทึกคำขอยกเลิก"
+                        color="success"
+                        onClick={async () => {
+                          if (!selectedCertificate) return;
+                          const ok = await editCancelRequestDetail(
+                            selectedCertificate.certificateId,
+                            cancelRequestDetail,
+                            selectedCertificate.version
+                          );
+                          if (ok) {
+                            setSelectedCertificate(null);
+                            setCancelRequestDetail("");
+                            prevStep();
+                          }
+                        }}
+                        disabled={cancelRequestDetail.trim() === ""}
+                      />
+                    </div>
                   </div>
                 )}
               </div>
-            )}
-
-            {step === 2 && (
+            </div>
+          </>
+        ) : (
+          <div className="w-full h-full flex flex-col gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-4 items-center">
               <div>
-                <div className="mb-4">
-                  <label
-                    htmlFor="cancelRequestDetail"
-                    className="block text-sm text-gray-600 mb-1"
-                  >
-                    รายละเอียดคำขอยกเลิกใบรับรอง
-                  </label>
-                  <PrimaryInputTextarea
-                    id="cancelRequestDetail"
-                    value={cancelRequestDetail}
-                    onChange={(v: string) => setCancelRequestDetail(v)}
-                    rows={5}
-                    maxLength={255}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
-                  />
-                </div>
-
-                <div className="flex justify-between gap-2">
-                  <PrimaryButton
-                    label="ย้อนกลับ"
-                    color="secondary"
-                    onClick={() => prevStep()}
-                  />
-                  <PrimaryButton
-                    label="บันทึกคำขอยกเลิก"
-                    color="success"
-                    onClick={async () => {
-                      if (!selectedCertificate) return;
-                      const ok = await editCancelRequestDetail(
-                        selectedCertificate.certificateId,
-                        cancelRequestDetail,
-                        selectedCertificate.version
-                      );
-                      if (ok) {
-                        setSelectedCertificate(null);
-                        setCancelRequestDetail("");
-                        prevStep();
-                      }
-                    }}
-                    disabled={cancelRequestDetail.trim() === ""}
-                  />
-                </div>
+                <PrimaryButton
+                  label="ย้อนกลับ"
+                  icon="pi pi-arrow-left"
+                  color="secondary"
+                  onClick={closePdf}
+                />
               </div>
+              <div className="text-xl font-bold text-gray-700 break-words">
+                {pdfFileName}
+              </div>
+            </div>
+            {pdfUrl && (
+              <iframe
+                src={pdfUrl}
+                className="w-full h-[80vh] border-0 rounded-lg shadow-sm bg-white"
+                title="PDF Viewer"
+              />
             )}
           </div>
-        </div>
+        )}
       </div>
     </FarmerLayout>
   );

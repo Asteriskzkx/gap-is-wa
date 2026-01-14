@@ -42,7 +42,33 @@ export class InspectionRepository extends BaseRepository<InspectionModel> {
       const inspection = await this.prisma.inspection.findUnique({
         where: { inspectionId: id },
         include: {
-          auditorInspections: true,
+          auditorChief: {
+            select: {
+              auditorId: true,
+              namePrefix: true,
+              firstName: true,
+              lastName: true,
+              user: { select: { email: true } },
+            },
+          },
+          auditorInspections: {
+            select: {
+              auditorInspectionId: true,
+              auditorId: true,
+              inspectionId: true,
+              createdAt: true,
+              updatedAt: true,
+              auditor: {
+                select: {
+                  auditorId: true,
+                  namePrefix: true,
+                  firstName: true,
+                  lastName: true,
+                  user: { select: { email: true } },
+                },
+              },
+            },
+          },
           inspectionItems: {
             include: {
               requirements: true,

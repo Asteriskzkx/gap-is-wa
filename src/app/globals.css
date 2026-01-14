@@ -1345,6 +1345,7 @@ input.p-inputtext:disabled {
 }
 
 @media screen and (max-width: 768px) {
+  
   /* ซ่อน header */
   .primary-datatable-wrapper .p-datatable-thead {
     display: none !important;
@@ -1375,7 +1376,7 @@ input.p-inputtext:disabled {
   }
 
   /* Label (header) - Bold, ซ้าย */
-  .primary-datatable-wrapper .p-datatable-tbody > tr > td::before {
+  body:not(.pdf-export) .primary-datatable-wrapper .p-datatable-tbody > tr > td::before {
     content: attr(data-label);
     font-weight: 700 !important;
     color: #374151 !important;
@@ -1383,6 +1384,13 @@ input.p-inputtext:disabled {
     padding-right: 1rem !important;
     flex-shrink: 0 !important;
     min-width: 35% !important;
+  }
+
+  body.pdf-export
+    .primary-datatable-wrapper
+    .p-datatable-tbody > tr > td::before {
+    content: none !important;
+    display: none !important;
   }
 
   /* Content ของ cell - ขวา */
@@ -1797,4 +1805,36 @@ input.p-inputtext:disabled {
 .p-multiselect .p-multiselect-token .p-multiselect-token-icon {
   margin-left: 0.25rem;
   cursor: pointer;
+}
+
+/* ===== PDF EXPORT MODE ===== */
+.pdf-export {
+  /* this is the fake "desktop viewport" */
+  width: 1280px;
+}
+
+/* force report sections to full width */
+.pdf-export .report-section {
+  width: 1280px !important;
+  max-width: none !important;
+  margin: 0 !important;
+}
+
+/* kill mobile constraints */
+.pdf-export [style*="max-width"],
+.pdf-export .container,
+.pdf-export .card {
+  max-width: none !important;
+  width: 100% !important;
+}
+
+/* tables must be full width */
+.pdf-export table {
+  width: 100% !important;
+}
+
+/* optional: reduce surprises */
+.pdf-export * {
+  animation: none !important;
+  transition: none !important;
 }

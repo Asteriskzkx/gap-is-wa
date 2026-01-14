@@ -18,6 +18,7 @@ export interface PlantingDetail {
 
 export interface RubberFarmDetails {
   rubberFarmId: number;
+  farmerId: number;
   villageName: string;
   moo: number;
   road: string;
@@ -28,6 +29,17 @@ export interface RubberFarmDetails {
   productDistributionType: string;
   location: any;
   plantingDetails: PlantingDetail[];
+  farmer?: FarmerDetails;
+}
+
+export interface FarmerDetails {
+  farmerId: number;
+  namePrefix: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber?: string;
+  mobilePhoneNumber?: string;
 }
 
 interface RubberFarmDetailsModalProps {
@@ -79,8 +91,47 @@ export const RubberFarmDetailsModal: React.FC<RubberFarmDetailsModalProps> = ({
 
           {!loading && farmDetails && (
             <div className="space-y-6">
+              {farmDetails.farmer && (
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="font-semibold text-gray-800 mb-2">
+                    ข้อมูลเกษตรกร
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-600">ชื่อ-นามสกุล:</p>
+                      <p className="font-medium">
+                        {`${farmDetails.farmer.namePrefix}${farmDetails.farmer.firstName} ${farmDetails.farmer.lastName}`}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">อีเมล:</p>
+                      <p className="font-medium">
+                        {farmDetails.farmer.email || "ไม่ระบุ"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">เบอร์โทรศัพท์:</p>
+                      <p className="font-medium">
+                        {farmDetails.farmer.phoneNumber || "ไม่ระบุ"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">
+                        เบอร์โทรศัพท์มือถือ:
+                      </p>
+                      <p className="font-medium">
+                        {farmDetails.farmer.mobilePhoneNumber || "ไม่ระบุ"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* ข้อมูลทั่วไป */}
               <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-gray-800 mb-2">
+                  ที่ตั้งสวนยาง
+                </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-gray-600">หมู่บ้าน/ชุมชน:</p>

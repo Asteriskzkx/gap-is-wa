@@ -32,6 +32,10 @@ export function useAlreadyIssuedCertificates(initialRows = 10) {
     "true"
   );
 
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [pdfFileName, setPdfFileName] = useState<string | null>(null);
+  const [isShowPdf, setIsShowPdf] = useState<boolean>(false);
+
   const [lazyParams, setLazyParams] = useState<LazyParams>({
     first: 0,
     rows: initialRows,
@@ -155,10 +159,13 @@ export function useAlreadyIssuedCertificates(initialRows = 10) {
       }
 
       const url = files[0].url;
-      if (url && globalThis.window !== undefined) {
-        const w = globalThis.window.open(url, "_blank", "noopener,noreferrer");
-        if (w) w.focus();
-      } else if (globalThis.window !== undefined) {
+      const fileName = files[0].fileName || files[0].originalFileName || "document.pdf";
+
+      if (url) {
+        setPdfUrl(url);
+        setPdfFileName(fileName);
+        setIsShowPdf(true);
+      } else {
         toast.error("ไม่พบ URL ของไฟล์");
       }
     } catch (err) {
@@ -166,6 +173,12 @@ export function useAlreadyIssuedCertificates(initialRows = 10) {
       if (globalThis.window !== undefined)
         toast.error("เกิดข้อผิดพลาดขณะดึงไฟล์");
     }
+  }, []);
+
+  const closePdf = useCallback(() => {
+    setIsShowPdf(false);
+    setPdfUrl(null);
+    setPdfFileName(null);
   }, []);
 
   return {
@@ -185,5 +198,9 @@ export function useAlreadyIssuedCertificates(initialRows = 10) {
     openFiles,
     currentTab: activeFlag === "true" ? "in-use" : "not-in-use",
     onTabChange,
+    pdfUrl,
+    pdfFileName,
+    isShowPdf,
+    closePdf,
   };
 }

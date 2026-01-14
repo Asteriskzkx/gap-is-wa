@@ -17,6 +17,7 @@ import { useAuditorApplications } from "@/hooks/useAuditorApplications";
 import { formatThaiDate } from "@/utils/dateFormatter";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { Dialog } from "primereact/dialog";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 
@@ -57,6 +58,7 @@ interface RubberFarm {
 
 interface RubberFarmDetails {
   rubberFarmId: number;
+  farmerId: number;
   villageName: string;
   moo: number;
   road: string;
@@ -67,6 +69,7 @@ interface RubberFarmDetails {
   location: any;
   productDistributionType: string;
   plantingDetails: PlantingDetail[];
+  farmer?: FarmerDetails;
 }
 
 interface PlantingDetail {
@@ -79,6 +82,16 @@ interface PlantingDetail {
   yearOfTapping: string;
   monthOfTapping: string;
   totalProduction: number;
+}
+
+interface FarmerDetails {
+  farmerId: number;
+  namePrefix: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber?: string;
+  mobilePhoneNumber?: string;
 }
 
 interface InspectionType {
@@ -100,7 +113,7 @@ export default function AuditorScheduleInspectionPage() {
   // Use custom hook
   const {
     rubberFarms,
-    loading,
+    loading: rubberFarmsLoading,
     totalRecords,
     lazyParams,
     handlePageChange,
@@ -111,6 +124,7 @@ export default function AuditorScheduleInspectionPage() {
     auditorsLazyParams,
     auditorSearchTerm,
     setAuditorSearchTerm,
+    isAuditorSearchDebouncing,
     handleAuditorPageChange,
     handleAuditorSort,
     applyAuditorSearch,
@@ -129,6 +143,7 @@ export default function AuditorScheduleInspectionPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // State for form data
   const [showFarmDetails, setShowFarmDetails] = useState(false);
@@ -173,22 +188,6 @@ export default function AuditorScheduleInspectionPage() {
   useEffect(() => {
     setProvinces(thaiProvinceData as Province[]);
   }, []);
-
-  // ปรับไม่ให้ background scroll เมื่อเปิด modal รายละเอียดสวน
-  useEffect(() => {
-    if (showFarmDetails) {
-      // ซ่อนการเลื่อนของ body
-      document.body.style.overflow = "hidden";
-    } else {
-      // คืนค่าเดิม
-      document.body.style.overflow = "";
-    }
-
-    // cleanup on unmount
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [showFarmDetails]);
 
   // อัพเดทอำเภอเมื่อเลือกจังหวัด
   useEffect(() => {
@@ -286,6 +285,7 @@ export default function AuditorScheduleInspectionPage() {
   const handleSubmit = async () => {
     setError("");
     setSuccess("");
+    setIsSubmitting(true);
 
     try {
       await scheduleInspection({
@@ -300,6 +300,7 @@ export default function AuditorScheduleInspectionPage() {
     } catch (error: any) {
       const errorMessage = error?.message || "เกิดข้อผิดพลาดในการบันทึกข้อมูล";
       setError(errorMessage);
+      setIsSubmitting(false);
     }
   };
 
@@ -494,8 +495,6 @@ export default function AuditorScheduleInspectionPage() {
                         disabled={loadingFarmDetails}
                         rounded
                         text
-                        // tooltip="ดูข้อมูลสวนยางพารา"
-                        // tooltipOptions={{ position: "left" }}
                       ></PrimaryButton>
                     </div>
                   ),
@@ -506,7 +505,7 @@ export default function AuditorScheduleInspectionPage() {
                   mobileHideLabel: true, // ซ่อน label ใน mobile
                 },
               ]}
-              loading={loading}
+              loading={rubberFarmsLoading}
               paginator
               rows={lazyParams.rows}
               rowsPerPageOptions={[10, 25, 50]}
@@ -556,14 +555,13 @@ export default function AuditorScheduleInspectionPage() {
                 return (
                   <div
                     key={type.inspectionTypeId}
-                    className={`p-6 border-2 rounded-lg transition-all ${
-                      !isAvailable
+                    className={`p-6 border-2 rounded-lg transition-all ${!isAvailable
                         ? "opacity-50 cursor-not-allowed bg-gray-50"
                         : selectedInspectionType?.inspectionTypeId ===
                           type.inspectionTypeId
-                        ? "border-green-500 bg-green-50 cursor-pointer"
-                        : "border-gray-200 hover:border-gray-300 cursor-pointer"
-                    }`}
+                          ? "border-green-500 bg-green-50 cursor-pointer"
+                          : "border-gray-200 hover:border-gray-300 cursor-pointer"
+                      }`}
                     onClick={() =>
                       isAvailable && setSelectedInspectionType(type)
                     }
@@ -584,9 +582,8 @@ export default function AuditorScheduleInspectionPage() {
                       />
                       <div className="ml-3">
                         <h3
-                          className={`text-lg font-medium ${
-                            isAvailable ? "text-gray-900" : "text-gray-400"
-                          }`}
+                          className={`text-lg font-medium ${isAvailable ? "text-gray-900" : "text-gray-400"
+                            }`}
                         >
                           {type.typeName}
                           {!isAvailable && (
@@ -597,9 +594,8 @@ export default function AuditorScheduleInspectionPage() {
                         </h3>
                         {type.description && (
                           <p
-                            className={`mt-1 text-sm ${
-                              isAvailable ? "text-gray-500" : "text-gray-400"
-                            }`}
+                            className={`mt-1 text-sm ${isAvailable ? "text-gray-500" : "text-gray-400"
+                              }`}
                           >
                             {type.description}
                           </p>
@@ -621,19 +617,25 @@ export default function AuditorScheduleInspectionPage() {
             <p className="text-sm text-gray-600 mb-4">
               ท่านสามารถเลือกผู้ตรวจประเมินเพิ่มเติมเพื่อร่วมในการตรวจประเมินได้
             </p>
-            <div className="mb-4 flex gap-2">
-              <PrimaryInputText
-                placeholder="ค้นหาผู้ตรวจประเมิน..."
-                value={auditorSearchTerm}
-                onChange={setAuditorSearchTerm}
-                className="flex-1"
-              />
-              <PrimaryButton
-                label="ค้นหา"
-                icon="pi pi-search"
-                onClick={handleAuditorSearchClick}
-                color="success"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-stretch mb-4">
+              <div className="md:col-span-3">
+                <PrimaryInputText
+                  placeholder="ค้นหาผู้ตรวจประเมิน"
+                  value={auditorSearchTerm}
+                  onChange={setAuditorSearchTerm}
+                  className="flex-1"
+                />
+              </div>
+              <div className="md:col-start-4">
+                <PrimaryButton
+                  label="ค้นหา"
+                  icon="pi pi-search"
+                  onClick={handleAuditorSearchClick}
+                  color="success"
+                  fullWidth
+                  fullHeight
+                />
+              </div>
             </div>
 
             <PrimaryDataTable
@@ -691,7 +693,7 @@ export default function AuditorScheduleInspectionPage() {
                   bodyAlign: "left" as const,
                 },
               ]}
-              loading={loading}
+              loading={rubberFarmsLoading}
               paginator
               rows={auditorsLazyParams.rows}
               rowsPerPageOptions={[10, 25, 50]}
@@ -829,12 +831,12 @@ export default function AuditorScheduleInspectionPage() {
                   <p className="text-sm font-medium text-gray-900">
                     {inspectionDate
                       ? inspectionDate.toLocaleString("th-TH", {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
                       : "-"}
                   </p>
                 </div>
@@ -895,196 +897,221 @@ export default function AuditorScheduleInspectionPage() {
               />
             ) : (
               <PrimaryButton
-                label={loading ? "กำลังบันทึก..." : "ยืนยันและบันทึก"}
+                label={isSubmitting ? "กำลังบันทึก..." : "ยืนยันและบันทึก"}
                 onClick={handleSubmit}
-                disabled={loading}
-                loading={loading}
+                disabled={isSubmitting}
+                loading={isSubmitting}
                 color="success"
               />
             )}
           </div>
         </div>
 
-        {showFarmDetails && selectedFarmDetails && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div className="relative top-10 mx-auto p-5 border w-full max-w-8xl shadow-lg rounded-md bg-white">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-bold text-gray-900">
-                  ข้อมูลสวนยางพารา
-                </h3>
-                <PrimaryButton
-                  icon="pi pi-times"
-                  onClick={() => setShowFarmDetails(false)}
-                  rounded
-                  text
-                  color="secondary"
-                />
-              </div>
-              <div className="mt-4 space-y-4 max-h-[70vh] overflow-y-auto">
+        <Dialog
+          visible={showFarmDetails && selectedFarmDetails !== null}
+          onHide={() => setShowFarmDetails(false)}
+          header="รายละเอียดสวนยางพารา"
+          footer={
+            <div className="flex justify-end">
+              <PrimaryButton
+                label="ปิด"
+                icon="pi pi-times"
+                onClick={() => setShowFarmDetails(false)}
+                color="secondary"
+              />
+            </div>
+          }
+          modal
+          blockScroll={true}
+          draggable={false}
+          style={{ width: "90vw", maxWidth: "90vw" }}
+          contentStyle={{ maxHeight: "80vh", overflowY: "auto" }}
+        >
+          {selectedFarmDetails && (
+            <div className="space-y-4">
+              {selectedFarmDetails.farmer && (
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <h4 className="font-semibold text-gray-800 mb-2">
-                    ที่ตั้งสวนยาง
+                    ข้อมูลเกษตรกร
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                     <div>
                       <span className="font-medium text-gray-600">
-                        หมู่บ้าน/ชุมชน:
+                        ชื่อ-นามสกุล:
                       </span>{" "}
-                      {selectedFarmDetails.villageName}
+                      {`${selectedFarmDetails.farmer.namePrefix}${selectedFarmDetails.farmer.firstName} ${selectedFarmDetails.farmer.lastName}`}
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-600">อีเมล:</span>{" "}
+                      {selectedFarmDetails.farmer.email || "-"}
                     </div>
                     <div>
                       <span className="font-medium text-gray-600">
-                        หมู่ที่:
+                        เบอร์โทรศัพท์:
                       </span>{" "}
-                      {selectedFarmDetails.moo}
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-600">ถนน:</span>{" "}
-                      {selectedFarmDetails.road || "-"}
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-600">ซอย:</span>{" "}
-                      {selectedFarmDetails.alley || "-"}
+                      {selectedFarmDetails.farmer.phoneNumber || "-"}
                     </div>
                     <div>
                       <span className="font-medium text-gray-600">
-                        ตำบล/แขวง:
+                        เบอร์โทรศัพท์มือถือ:
                       </span>{" "}
-                      {selectedFarmDetails.subDistrict}
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-600">
-                        อำเภอ/เขต:
-                      </span>{" "}
-                      {selectedFarmDetails.district}
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-600">
-                        จังหวัด:
-                      </span>{" "}
-                      {selectedFarmDetails.province}
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-600">
-                        รูปแบบการจำหน่ายผลผลิต:
-                      </span>{" "}
-                      {selectedFarmDetails.productDistributionType}
+                      {selectedFarmDetails.farmer.mobilePhoneNumber || "-"}
                     </div>
                   </div>
                 </div>
-                <div className="bg-white p-4 rounded-lg">
-                  <h4 className="font-semibold text-gray-800 mb-2">
-                    แผนที่ตั้งสวน
-                  </h4>
-                  <div className="w-full">
-                    <DynamicMapViewer
-                      location={selectedFarmDetails.location}
-                      height="320px"
-                      width="100%"
+              )}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-gray-800 mb-2">
+                  ที่ตั้งสวนยาง
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <span className="font-medium text-gray-600">
+                      หมู่บ้าน/ชุมชน:
+                    </span>{" "}
+                    {selectedFarmDetails.villageName}
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-600">หมู่ที่:</span>{" "}
+                    {selectedFarmDetails.moo}
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-600">ถนน:</span>{" "}
+                    {selectedFarmDetails.road || "-"}
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-600">ซอย:</span>{" "}
+                    {selectedFarmDetails.alley || "-"}
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-600">
+                      ตำบล/แขวง:
+                    </span>{" "}
+                    {selectedFarmDetails.subDistrict}
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-600">
+                      อำเภอ/เขต:
+                    </span>{" "}
+                    {selectedFarmDetails.district}
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-600">จังหวัด:</span>{" "}
+                    {selectedFarmDetails.province}
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-600">
+                      รูปแบบการจำหน่ายผลผลิต:
+                    </span>{" "}
+                    {selectedFarmDetails.productDistributionType}
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white p-4 rounded-lg">
+                <h4 className="font-semibold text-gray-800 mb-2">
+                  แผนที่ตั้งสวน
+                </h4>
+                <div className="w-full">
+                  <DynamicMapViewer
+                    location={selectedFarmDetails.location}
+                    height="320px"
+                    width="100%"
+                  />
+                </div>
+              </div>
+
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-gray-800 mb-2">
+                  รายละเอียดการปลูก
+                </h4>
+                {selectedFarmDetails.plantingDetails &&
+                  selectedFarmDetails.plantingDetails.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <PrimaryDataTable
+                      value={selectedFarmDetails.plantingDetails}
+                      columns={[
+                        {
+                          field: "specie",
+                          header: "พันธุ์ยางพารา",
+                          body: (rowData: any) => rowData.specie,
+                          style: { width: "11%" },
+                          headerAlign: "center" as const,
+                          bodyAlign: "left" as const,
+                        },
+                        {
+                          field: "areaOfPlot",
+                          header: "พื้นที่แปลง (ไร่)",
+                          body: (rowData: any) => rowData.areaOfPlot,
+                          style: { width: "11%" },
+                          headerAlign: "center" as const,
+                          bodyAlign: "right" as const,
+                        },
+                        {
+                          field: "numberOfRubber",
+                          header: "จำนวนต้นยางทั้งหมด (ต้น)",
+                          body: (rowData: any) => rowData.numberOfRubber,
+                          style: { width: "16%" },
+                          headerAlign: "center" as const,
+                          bodyAlign: "right" as const,
+                        },
+                        {
+                          field: "numberOfTapping",
+                          header: "จำนวนต้นยางที่กรีดได้ (ต้น)",
+                          body: (rowData: any) => rowData.numberOfTapping,
+                          style: { width: "17%" },
+                          headerAlign: "center" as const,
+                          bodyAlign: "right" as const,
+                        },
+                        {
+                          field: "ageOfRubber",
+                          header: "อายุต้นยาง (ปี)",
+                          body: (rowData: any) => rowData.ageOfRubber,
+                          style: { width: "11%" },
+                          headerAlign: "center" as const,
+                          bodyAlign: "right" as const,
+                        },
+                        {
+                          field: "yearOfTapping",
+                          header: "ปีที่เริ่มกรีด",
+                          body: (rowData: any) =>
+                            formatThaiDate(rowData.yearOfTapping, "year"),
+                          style: { width: "10%" },
+                          headerAlign: "center" as const,
+                          bodyAlign: "center" as const,
+                        },
+                        {
+                          field: "monthOfTapping",
+                          header: "เดือนที่เริ่มกรีด",
+                          body: (rowData: any) =>
+                            formatThaiDate(rowData.monthOfTapping, "month"),
+                          style: { width: "11" },
+                          headerAlign: "center" as const,
+                          bodyAlign: "center" as const,
+                        },
+                        {
+                          field: "totalProduction",
+                          header: "ผลผลิตรวม (กก./ปี)",
+                          body: (rowData: any) => rowData.totalProduction,
+                          style: { width: "13%" },
+                          headerAlign: "center" as const,
+                          bodyAlign: "right" as const,
+                        },
+                      ]}
+                      loading={loadingFarmDetails}
+                      paginator={false}
+                      emptyMessage="ไม่มีข้อมูลรายละเอียดการปลูก"
+                      className="w-full"
                     />
                   </div>
-                </div>
-
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-gray-800 mb-2">
-                    รายละเอียดการปลูก
-                  </h4>
-                  {selectedFarmDetails.plantingDetails &&
-                  selectedFarmDetails.plantingDetails.length > 0 ? (
-                    <div className="overflow-x-auto">
-                      <PrimaryDataTable
-                        value={selectedFarmDetails.plantingDetails}
-                        columns={[
-                          {
-                            field: "specie",
-                            header: "พันธุ์ยางพารา",
-                            body: (rowData: any) => rowData.specie,
-                            style: { width: "11%" },
-                            headerAlign: "center" as const,
-                            bodyAlign: "left" as const,
-                          },
-                          {
-                            field: "areaOfPlot",
-                            header: "พื้นที่แปลง (ไร่)",
-                            body: (rowData: any) => rowData.areaOfPlot,
-                            style: { width: "11%" },
-                            headerAlign: "center" as const,
-                            bodyAlign: "right" as const,
-                          },
-                          {
-                            field: "numberOfRubber",
-                            header: "จำนวนต้นยางทั้งหมด (ต้น)",
-                            body: (rowData: any) => rowData.numberOfRubber,
-                            style: { width: "16%" },
-                            headerAlign: "center" as const,
-                            bodyAlign: "right" as const,
-                          },
-                          {
-                            field: "numberOfTapping",
-                            header: "จำนวนต้นยางที่กรีดได้ (ต้น)",
-                            body: (rowData: any) => rowData.numberOfTapping,
-                            style: { width: "17%" },
-                            headerAlign: "center" as const,
-                            bodyAlign: "right" as const,
-                          },
-                          {
-                            field: "ageOfRubber",
-                            header: "อายุต้นยาง (ปี)",
-                            body: (rowData: any) => rowData.ageOfRubber,
-                            style: { width: "11%" },
-                            headerAlign: "center" as const,
-                            bodyAlign: "right" as const,
-                          },
-                          {
-                            field: "yearOfTapping",
-                            header: "ปีที่เริ่มกรีด",
-                            body: (rowData: any) =>
-                              formatThaiDate(rowData.yearOfTapping, "year"),
-                            style: { width: "10%" },
-                            headerAlign: "center" as const,
-                            bodyAlign: "center" as const,
-                          },
-                          {
-                            field: "monthOfTapping",
-                            header: "เดือนที่เริ่มกรีด",
-                            body: (rowData: any) =>
-                              formatThaiDate(rowData.monthOfTapping, "month"),
-                            style: { width: "11" },
-                            headerAlign: "center" as const,
-                            bodyAlign: "center" as const,
-                          },
-                          {
-                            field: "totalProduction",
-                            header: "ผลผลิตรวม (กก./ปี)",
-                            body: (rowData: any) => rowData.totalProduction,
-                            style: { width: "13%" },
-                            headerAlign: "center" as const,
-                            bodyAlign: "right" as const,
-                          },
-                        ]}
-                        loading={loadingFarmDetails}
-                        paginator={false}
-                        emptyMessage="ไม่มีข้อมูลรายละเอียดการปลูก"
-                        className="w-full"
-                      />
-                    </div>
-                  ) : (
-                    <p className="text-sm text-gray-500">
-                      ไม่มีข้อมูลรายละเอียดการปลูก
-                    </p>
-                  )}
-                </div>
-              </div>
-              <div className="mt-6 flex justify-end">
-                <PrimaryButton
-                  label="ปิด"
-                  onClick={() => setShowFarmDetails(false)}
-                  color="secondary"
-                />
+                ) : (
+                  <p className="text-sm text-gray-500">
+                    ไม่มีข้อมูลรายละเอียดการปลูก
+                  </p>
+                )}
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </Dialog>
       </div>
     </AuditorLayout>
   );
