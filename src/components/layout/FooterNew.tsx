@@ -13,32 +13,32 @@ export default function FooterNew() {
   const [privacyDialogVisible, setPrivacyDialogVisible] = useState(false);
   const [termOfServiceDialogVisible, setTermOfServiceDialogVisible] = useState(false);
   const [contactDialogVisible, setContactDialogVisible] = useState(false);
-  
-    const headerPrivacyElement = (
-        <div className="inline-flex align-items-center justify-content-center gap-2">
-            <span className="font-bold white-space-nowrap">นโยบายความเป็นส่วนตัว ( Privacy Policy )</span>
-        </div>
-    );
 
-    const headerTermOfServiceElement = (
-      <div className="inline-flex align-items-center justify-content-center gap-2">
-          <span className="font-bold white-space-nowrap">ข้อกำหนดและเงื่อนไขการใช้งาน ( Term of Service )</span>
-      </div>
-    );
+  const headerPrivacyElement = (
+    <div className="inline-flex align-items-center justify-content-center gap-2">
+      <span className="font-bold white-space-nowrap">นโยบายความเป็นส่วนตัว ( Privacy Policy )</span>
+    </div>
+  );
 
-    const headerContactElement = (
-      <div className="inline-flex align-items-center justify-content-center gap-2">
-          <span className="font-bold white-space-nowrap">ติดต่อ ( Contact )</span>
-      </div>
-    );
+  const headerTermOfServiceElement = (
+    <div className="inline-flex align-items-center justify-content-center gap-2">
+      <span className="font-bold white-space-nowrap">ข้อกำหนดและเงื่อนไขการใช้งาน ( Term of Service )</span>
+    </div>
+  );
+
+  const headerContactElement = (
+    <div className="inline-flex align-items-center justify-content-center gap-2">
+      <span className="font-bold white-space-nowrap">ติดต่อ ( Contact )</span>
+    </div>
+  );
 
 
-    const footerContent = (
-        // <div>
-        //     <Button label="Ok" icon="pi pi-cross" onClick={() => setPrivacyDialogVisible(false)} autoFocus />
-        // </div>
-        <></>
-    );
+  const footerContent = (
+    // <div>
+    //     <Button label="Ok" icon="pi pi-cross" onClick={() => setPrivacyDialogVisible(false)} autoFocus />
+    // </div>
+    <></>
+  );
 
   return (
     <footer className={styles.footer}>
@@ -58,19 +58,19 @@ export default function FooterNew() {
           </div>
           <div className={styles.rightSection}>
             <div className={styles.linkList}>
-              <PrimaryButton variant="text" color="secondary" label="นโยบายความเป็นส่วนตัว" onClick={()=> setPrivacyDialogVisible(true)}/>
-              <Dialog draggable={false} visible={privacyDialogVisible} modal header={headerPrivacyElement} footer={footerContent} onHide={()=>{if(privacyDialogVisible) return setPrivacyDialogVisible(false)}} >
-                <PolicyContent/>
+              <PrimaryButton variant="text" color="secondary" label="นโยบายความเป็นส่วนตัว" onClick={() => setPrivacyDialogVisible(true)} />
+              <Dialog blockScroll={true} draggable={false} visible={privacyDialogVisible} modal header={headerPrivacyElement} footer={footerContent} onHide={() => { if (privacyDialogVisible) return setPrivacyDialogVisible(false) }} >
+                <PolicyContent />
               </Dialog>
-              
-              <PrimaryButton variant="text" color="secondary" label="ข้อกำหนดและเงื่อนไขการใช้งาน" onClick={()=> setTermOfServiceDialogVisible(true)}/>
-              <Dialog draggable={false} visible={termOfServiceDialogVisible} modal header={headerTermOfServiceElement} footer={footerContent} onHide={()=>{if(termOfServiceDialogVisible) return setTermOfServiceDialogVisible(false)}} >
-                <TermOfServiceContent/>
+
+              <PrimaryButton variant="text" color="secondary" label="ข้อกำหนดและเงื่อนไขการใช้งาน" onClick={() => setTermOfServiceDialogVisible(true)} />
+              <Dialog blockScroll={true} draggable={false} visible={termOfServiceDialogVisible} modal header={headerTermOfServiceElement} footer={footerContent} onHide={() => { if (termOfServiceDialogVisible) return setTermOfServiceDialogVisible(false) }} >
+                <TermOfServiceContent />
               </Dialog>
-              
-              <PrimaryButton variant="text" color="secondary" label="ติดต่อ" onClick={()=> setContactDialogVisible(true)}/>
-              <Dialog draggable={false} visible={contactDialogVisible} modal header={headerContactElement} footer={footerContent} onHide={()=>{if(contactDialogVisible) return setContactDialogVisible(false)}} >
-                <ContactContent/>
+
+              <PrimaryButton variant="text" color="secondary" label="ติดต่อ" onClick={() => setContactDialogVisible(true)} />
+              <Dialog blockScroll={true} draggable={false} visible={contactDialogVisible} modal header={headerContactElement} footer={footerContent} onHide={() => { if (contactDialogVisible) return setContactDialogVisible(false) }} >
+                <ContactContent />
               </Dialog>
             </div>
           </div>
