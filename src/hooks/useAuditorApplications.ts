@@ -2,9 +2,11 @@ import thaiProvinceData from "@/data/thai-provinces.json";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { DataTablePageEvent, DataTableSortEvent } from "primereact/datatable";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type SortOrder = 1 | -1 | 0 | null;
+
+const AUDITOR_SEARCH_DEBOUNCE_MS = 500;
 
 interface LazyParams {
   first: number;
@@ -31,6 +33,9 @@ export function useAuditorApplications(initialRows = 10) {
   const [auditors, setAuditors] = useState<any[]>([]);
   const [auditorsTotalRecords, setAuditorsTotalRecords] = useState(0);
   const [auditorSearchTerm, setAuditorSearchTerm] = useState("");
+  const [debouncedAuditorSearchTerm, setDebouncedAuditorSearchTerm] =
+    useState("");
+  const auditorSearchDebounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Province/district/subdistrict selection (ids)
   const [selectedProvinceId, setSelectedProvinceId] = useState<number | null>(
@@ -68,6 +73,26 @@ export function useAuditorApplications(initialRows = 10) {
     sortOrder: null,
     multiSortMeta: [],
   });
+
+  // Debounce auditor search term
+  useEffect(() => {
+    if (auditorSearchDebounceTimerRef.current) {
+      clearTimeout(auditorSearchDebounceTimerRef.current);
+    }
+
+    auditorSearchDebounceTimerRef.current = setTimeout(() => {
+      setDebouncedAuditorSearchTerm(auditorSearchTerm);
+      setAuditorsLazyParams((p) =>
+        p.first === 0 && p.page === 0 ? p : { ...p, first: 0, page: 0 }
+      );
+    }, AUDITOR_SEARCH_DEBOUNCE_MS);
+
+    return () => {
+      if (auditorSearchDebounceTimerRef.current) {
+        clearTimeout(auditorSearchDebounceTimerRef.current);
+      }
+    };
+  }, [auditorSearchTerm]);
 
   const fetchRubberFarms = useCallback(async () => {
     if (status === "loading") return;
@@ -156,7 +181,8 @@ export function useAuditorApplications(initialRows = 10) {
       params.set("offset", String(first));
 
       // Search filter
-      if (auditorSearchTerm) params.set("search", auditorSearchTerm);
+      if (debouncedAuditorSearchTerm)
+        params.set("search", debouncedAuditorSearchTerm);
 
       // Sorting
       if (sortField) params.set("sortField", String(sortField));
@@ -193,7 +219,7 @@ export function useAuditorApplications(initialRows = 10) {
     } finally {
       setLoading(false);
     }
-  }, [status, auditorsLazyParams, auditorSearchTerm]);
+  }, [status, auditorsLazyParams, debouncedAuditorSearchTerm]);
 
   useEffect(() => {
     if (status === "authenticated") {
@@ -315,8 +341,12 @@ export function useAuditorApplications(initialRows = 10) {
   }, []);
 
   const applyAuditorSearch = useCallback(() => {
-    setAuditorsLazyParams((p) => ({ ...p, first: 0 }));
-  }, []);
+    if (auditorSearchDebounceTimerRef.current) {
+      clearTimeout(auditorSearchDebounceTimerRef.current);
+    }
+    setDebouncedAuditorSearchTerm(auditorSearchTerm);
+    setAuditorsLazyParams((p) => ({ ...p, first: 0, page: 0 }));
+  }, [auditorSearchTerm]);
 
   const refresh = useCallback(() => {
     fetchRubberFarms();
@@ -404,6 +434,7 @@ export function useAuditorApplications(initialRows = 10) {
     auditorsLazyParams,
     auditorSearchTerm,
     setAuditorSearchTerm,
+    isAuditorSearchDebouncing: auditorSearchTerm !== debouncedAuditorSearchTerm,
     handleAuditorPageChange,
     handleAuditorSort,
     applyAuditorSearch,

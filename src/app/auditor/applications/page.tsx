@@ -124,6 +124,7 @@ export default function AuditorScheduleInspectionPage() {
     auditorsLazyParams,
     auditorSearchTerm,
     setAuditorSearchTerm,
+    isAuditorSearchDebouncing,
     handleAuditorPageChange,
     handleAuditorSort,
     applyAuditorSearch,
