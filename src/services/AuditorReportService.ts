@@ -79,17 +79,21 @@ export class AuditorReportService {
         };
       }
 
-      // Build where clause for date filtering
-      const whereClause: Record<string, unknown> = {
-        auditorChiefId: auditor.auditorId,
-      };
-
-      if (startDate && endDate) {
-        whereClause.inspectionDateAndTime = {
+      // Build where clause for date filtering - include both as chief and as team member
+      const dateFilter = startDate && endDate ? {
+        inspectionDateAndTime: {
           gte: startDate,
           lte: endDate,
-        };
-      }
+        },
+      } : {};
+
+      const whereClause = {
+        OR: [
+          { auditorChiefId: auditor.auditorId },
+          { auditorInspections: { some: { auditorId: auditor.auditorId } } },
+        ],
+        ...dateFilter,
+      };
 
       // Get all inspections for this auditor
       const inspections = await prisma.inspection.findMany({
