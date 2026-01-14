@@ -66,7 +66,7 @@ function UserActionsCell({
         color="secondary"
         rounded
         text
-        tooltip="รีเซ็ตรหัสผ่าน"
+        // tooltip="รีเซ็ตรหัสผ่าน"
         onClick={() => onResetPassword(userId)}
       />
       <PrimaryButton
@@ -74,7 +74,7 @@ function UserActionsCell({
         color="info"
         rounded
         text
-        tooltip="แก้ไข"
+        // tooltip="แก้ไข"
         onClick={() => onEdit(userId)}
       />
       <PrimaryButton
@@ -82,7 +82,7 @@ function UserActionsCell({
         color="danger"
         rounded
         text
-        tooltip="ลบ"
+        // tooltip="ลบ"
         onClick={() => onDelete(userId)}
       />
     </div>
