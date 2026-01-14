@@ -434,23 +434,28 @@ export default function CommitteeReportPage() {
         field: "certificateId",
         header: "เลขที่",
         sortable: true,
+        mobileHideLabel: true,
       },
       {
         field: "farmerName",
         header: "ชื่อเกษตรกร",
         sortable: true,
+        mobileHideLabel: true,
       },
       {
         field: "farmLocation",
         header: "ที่ตั้ง",
+        mobileHideLabel: true,
       },
       {
         field: "province",
         header: "จังหวัด",
+        mobileHideLabel: true,
       },
       {
         field: "effectiveDate",
         header: "วันที่ออก",
+        mobileHideLabel: true,
         body: (row: RecentCertificate) =>
           new Date(row.effectiveDate).toLocaleDateString("th-TH"),
         bodyAlign: "center" as const,
@@ -458,6 +463,7 @@ export default function CommitteeReportPage() {
       {
         field: "expiryDate",
         header: "วันหมดอายุ",
+        mobileHideLabel: true,
         body: (row: RecentCertificate) =>
           new Date(row.expiryDate).toLocaleDateString("th-TH"),
         bodyAlign: "center" as const,
@@ -468,16 +474,19 @@ export default function CommitteeReportPage() {
       {
         field: "typeName",
         header: "ประเภท",
+        mobileHideLabel: true,
       },
       {
         field: "count",
         header: "ทั้งหมด",
         bodyAlign: "center",
+        mobileHideLabel: true,
       },
       {
         field: "passed",
         header: "ผ่าน",
         bodyAlign: "center",
+        mobileHideLabel: true,
         body: (row: inspectionsByType) => (
           <span className="text-green-600 font-medium">{row.passed}</span>
         ),
@@ -486,6 +495,7 @@ export default function CommitteeReportPage() {
         field: "failed",
         header: "ไม่ผ่าน",
         bodyAlign: "center",
+        mobileHideLabel: true,
         body: (row: inspectionsByType) => (
           <span className="text-red-600 font-medium">{row.failed}</span>
         ),
@@ -494,6 +504,7 @@ export default function CommitteeReportPage() {
         field: "pending",
         header: "รอดำเนินการ",
         bodyAlign: "center",
+        mobileHideLabel: true,
         body: (row: inspectionsByType) => (
           <span className="text-yellow-600 font-medium">{row.pending ?? 0}</span>
         ),

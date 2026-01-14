@@ -198,6 +198,7 @@ export default function AuditorReportPage() {
       {
         field: "inspectionDate",
         header: "วันที่ตรวจ",
+        mobileHideLabel: true,
         body: (row) =>
           new Date(row.inspectionDate).toLocaleDateString("th-TH"),
       },
@@ -205,27 +206,32 @@ export default function AuditorReportPage() {
         field: "farmerName",
         header: "เกษตรกร",
         sortable: true,
+        mobileHideLabel: true,
       },
       {
         field: "farmLocation",
         header: "ที่ตั้งแปลง",
+        mobileHideLabel: true,
       },
       {
         field: "province",
         header: "จังหวัด",
         sortable: true,
+        mobileHideLabel: true,
       },
       {
         field: "status",
         header: "สถานะ",
         body: (row : RecentInspection) => getStatusBadge(row.status),
         bodyAlign: "center",
+        mobileHideLabel: true,
       },
       {
         field: "result",
         header: "ผลการตรวจ",
         body: (row : RecentInspection) => getResultBadge(row.result),
         bodyAlign: "center",
+        mobileHideLabel: true,
       },
     ];
 
@@ -235,21 +241,25 @@ export default function AuditorReportPage() {
       field: "farmerName",
       header: "เกษตรกร",
       sortable: true,
+      mobileHideLabel: true,
     },
     {
       field: "farmLocation",
       header: "ที่ตั้งแปลง",
+      mobileHideLabel: true,
     },
     {
       field: "province",
       header: "จังหวัด",
       sortable: true,
+      mobileHideLabel: true,
     },
     {
       field: "totalInspections",
       header: "จำนวนตรวจ",
       sortable: true,
       bodyAlign: "center",
+      mobileHideLabel: true,
     },
     {
       field: "lastInspectionDate",
@@ -257,12 +267,15 @@ export default function AuditorReportPage() {
       body: (row : InspectedFarm) =>
         new Date(row.lastInspectionDate).toLocaleDateString("th-TH"),
       bodyAlign: "center",
+      mobileHideLabel: true,
     },
     {
       field: "lastResult",
       header: "ผลล่าสุด",
       body: (row : InspectedFarm) => getResultBadge(row.lastResult),
       bodyAlign: "center",
+      mobileHideLabel: true,
+
     },
   ];
 
