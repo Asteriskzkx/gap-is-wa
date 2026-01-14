@@ -346,8 +346,8 @@ export default function AdminReportPage() {
           dateRangeText:
             dates && dates[0] && dates[1]
               ? `ช่วงวันที่: ${dates[0].toLocaleDateString(
-                  "th-TH"
-                )} - ${dates[1].toLocaleDateString("th-TH")}`
+                "th-TH"
+              )} - ${dates[1].toLocaleDateString("th-TH")}`
               : undefined,
         },
         sections: [
@@ -531,17 +531,19 @@ export default function AdminReportPage() {
       field: "auditorName",
       bodyAlign: "left",
       header: "ชื่อผู้ตรวจประเมิน",
+      headerAlign: "center"
     },
     {
       field: "totalInspections",
-      bodyAlign: "left",
+      bodyAlign: "right",
       header: "ตรวจทั้งหมด",
+      headerAlign: "center"
     },
     {
       field: "passedInspections",
       header: "ผ่าน",
-      bodyAlign: "left",
-
+      bodyAlign: "right",
+      headerAlign: "center",
       body: (row) => (
         <span className="text-green-600 font-medium">
           {row.passedInspections}
@@ -551,7 +553,8 @@ export default function AdminReportPage() {
     {
       field: "failedInspections",
       header: "ไม่ผ่าน",
-      bodyAlign: "left",
+      bodyAlign: "right",
+      headerAlign: "center",
       body: (row) => (
         <span className="text-red-600 font-medium">
           {row.failedInspections}
@@ -561,16 +564,16 @@ export default function AdminReportPage() {
     {
       field: "passRate",
       header: "อัตราผ่าน",
-      bodyAlign: "left",
+      headerAlign: "center",
+      bodyAlign: "center",
       body: (row) => (
         <span
-          className={`font-medium ${
-            row.passRate >= 80
-              ? "text-green-600"
-              : row.passRate >= 50
+          className={`font-medium ${row.passRate >= 80
+            ? "text-green-600"
+            : row.passRate >= 50
               ? "text-yellow-600"
               : "text-red-600"
-          }`}
+            }`}
         >
           {row.passRate}%
         </span>
@@ -582,17 +585,20 @@ export default function AdminReportPage() {
     {
       field: "province",
       header: "จังหวัด",
+      headerAlign: "center",
       bodyAlign: "left",
     },
     {
       field: "count",
-      bodyAlign: "left",
-      header: "ชื่อผู้ตรวจประเมิน",
+      header: "จำนวนแปลง",
+      headerAlign: "center",
+      bodyAlign: "right",
     },
     {
       field: "totalArea",
-      bodyAlign: "left",
       header: "พื้นที่รวม (ไร่)",
+      headerAlign: "center",
+      bodyAlign: "right",
       body: (row) => row.totalArea.toLocaleString(),
     }]
 
@@ -943,19 +949,17 @@ export default function AdminReportPage() {
               inspectionData?.byResult.map((result) => (
                 <div
                   key={result.result}
-                  className={`bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center border-2 ${
-                    result.result === "ผ่าน" || result.result === "PASSED"
-                      ? "border-green-500"
-                      : "border-red-500"
-                  }`}
+                  className={`bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center border-2 ${result.result === "ผ่าน" || result.result === "PASSED"
+                    ? "border-green-500"
+                    : "border-red-500"
+                    }`}
                 >
                   <p className="text-sm text-gray-600 mb-1">{result.result}</p>
                   <p
-                    className={`text-3xl font-bold ${
-                      result.result === "ผ่าน" || result.result === "PASSED"
-                        ? "text-green-500"
-                        : "text-red-500"
-                    }`}
+                    className={`text-3xl font-bold ${result.result === "ผ่าน" || result.result === "PASSED"
+                      ? "text-green-500"
+                      : "text-red-500"
+                      }`}
                   >
                     {result.count}
                   </p>
@@ -1099,9 +1103,9 @@ export default function AdminReportPage() {
           {/* By Province - Top 5 */}
           <div>
             <h3 className="text-lg font-medium text-gray-800 mb-3">
-              จังหวัดที่มีแปลงมากที่สุด (Top 5)
+              จังหวัดที่มีแปลงสวนยางพารามากที่สุด 5 อันดับแรก
             </h3>
-           <PrimaryDataTable
+            <PrimaryDataTable
               value={rubberFarmData?.byProvince.slice(0, 5) ?? []}
               columns={topRankColumns}
               loading={loadingRubberFarm}
@@ -1291,9 +1295,8 @@ export default function AdminReportPage() {
               <div className="flex justify-center gap-2 mt-4">
                 {auditorDisplayCount < auditorData.auditors.length && (
                   <Button
-                    label={`ดูเพิ่มเติม (${
-                      auditorData.auditors.length - auditorDisplayCount
-                    } คน)`}
+                    label={`ดูเพิ่มเติม (${auditorData.auditors.length - auditorDisplayCount
+                      } คน)`}
                     className="p-button-outlined p-button-sm"
                     icon="pi pi-chevron-down"
                     onClick={() =>

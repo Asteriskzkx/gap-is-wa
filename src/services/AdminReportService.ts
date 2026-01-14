@@ -672,29 +672,61 @@ export class AdminReportService {
     endDate?: Date
   ): Promise<AuditorPerformanceReport> {
     try {
-      const whereClause = startDate && endDate
-        ? { createdAt: { gte: startDate, lte: endDate } }
-        : {};
+      const dateFilter = startDate && endDate ? {
+        inspectionDateAndTime: { gte: startDate, lte: endDate },
+      } : {};
 
-      // Get all auditors with their inspections
+      // Get all auditors with their inspections (both as chief and as team member)
       const auditors = await prisma.auditor.findMany({
         include: {
           user: { select: { name: true } },
           inspectionsAsChief: {
-            where: whereClause,
+            where: dateFilter,
             select: {
+              inspectionId: true,
               inspectionResult: true,
+            },
+          },
+          auditorInspections: {
+            where: {
+              inspection: dateFilter,
+            },
+            select: {
+              inspection: {
+                select: {
+                  inspectionId: true,
+                  inspectionResult: true,
+                },
+              },
             },
           },
         },
       });
 
       const auditorPerformances: AuditorPerformance[] = auditors.map((auditor) => {
-        const totalInspections = auditor.inspectionsAsChief.length;
-        const passedInspections = auditor.inspectionsAsChief.filter(
-          (i) => i.inspectionResult === "ผ่าน" || i.inspectionResult === "PASSED"
+        // Combine inspections from both sources, removing duplicates by inspectionId
+        const inspectionMap = new Map<number, string>();
+
+        // Add inspections as chief
+        auditor.inspectionsAsChief.forEach((i) => {
+          inspectionMap.set(i.inspectionId, i.inspectionResult);
+        });
+
+        // Add inspections as team member (won't overwrite if already exists)
+        auditor.auditorInspections.forEach((ai) => {
+          if (!inspectionMap.has(ai.inspection.inspectionId)) {
+            inspectionMap.set(ai.inspection.inspectionId, ai.inspection.inspectionResult);
+          }
+        });
+
+        const allInspections = Array.from(inspectionMap.values());
+        const totalInspections = allInspections.length;
+        const passedInspections = allInspections.filter(
+          (result) => result === "ผ่าน" || result === "PASSED"
         ).length;
-        const failedInspections = totalInspections - passedInspections;
+        const failedInspections = allInspections.filter(
+          (result) => result === "ไม่ผ่าน" || result === "FAILED"
+        ).length;
         const passRate = totalInspections > 0
           ? Math.round((passedInspections / totalInspections) * 100 * 100) / 100
           : 0;
@@ -715,8 +747,8 @@ export class AdminReportService {
       const totalInspections = activeAuditors.reduce((sum, a) => sum + a.totalInspections, 0);
       const averagePassRate = activeAuditors.length > 0
         ? Math.round(
-            (activeAuditors.reduce((sum, a) => sum + a.passRate, 0) / activeAuditors.length) * 100
-          ) / 100
+          (activeAuditors.reduce((sum, a) => sum + a.passRate, 0) / activeAuditors.length) * 100
+        ) / 100
         : 0;
 
       return {
