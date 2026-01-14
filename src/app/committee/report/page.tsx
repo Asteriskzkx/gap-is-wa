@@ -13,8 +13,6 @@ import { exportReportPDF } from "@/lib/pdf/exportReportPDF";
 import { PrimaryDataTableColumn } from "@/components/ui/PrimaryDataTable";
 import { PrimaryDataTable } from "@/components/ui/";
 
-
-
 // ==================== Interfaces ====================
 
 interface CertificateStats {
@@ -110,6 +108,9 @@ export default function CommitteeReportPage() {
   const [reportData, setReportData] = useState<CommitteeReportSummary | null>(
     null
   );
+  
+  const [isMobile, setIsMobile] = useState(false);
+
   const [chartData, setChartData] = useState<{
     inspectionStats: CommitteeReportSummary["inspectionStats"] | null;
     inspectionsByType: CommitteeReportSummary["inspectionsByType"];
@@ -124,8 +125,8 @@ export default function CommitteeReportPage() {
     myCommitteeStats: true,
     certificateStats: true,
     expiryAlerts: true,
-    inspectionStats: true,
     charts: true,
+    inspectionStats: true,
   });
   const [exporting, setExporting] = useState(false);
 
@@ -154,6 +155,15 @@ export default function CommitteeReportPage() {
     return baseUrl;
   };
 
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 530);
+    };
+
+    handleResize(); // initial
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   // Fetch base report data (without date filter)
   useEffect(() => {
     const fetchData = async () => {
@@ -287,8 +297,11 @@ export default function CommitteeReportPage() {
       };
     }
     return {
-      labels: chartData.inspectionsByType.map((t) => t.typeName),
+      labels: chartData.inspectionsByType.map((t) =>
+        t.typeName.split(" ")
+      ),
       datasets: [
+        
         {
           label: "ผ่าน",
           data: chartData.inspectionsByType.map((t) => t.passed),
@@ -364,6 +377,7 @@ export default function CommitteeReportPage() {
     type: "bar",
     data: inspectionByTypeChartData,
     options: {
+      indexAxis: isMobile ? "y" : "x",
       responsive: true,
       animation: false,
       maintainAspectRatio: false,
@@ -371,9 +385,31 @@ export default function CommitteeReportPage() {
         legend: { position: "top" },
         title: { display: true, text: "การตรวจประเมินตามประเภท" },
       },
+      // scales: {
+      //   x: {
+      //     stacked: true,
+      //     ticks: {
+      //       autoSkip: true,
+      //       maxTicksLimit: isMobile ? 6 : 10,
+      //       maxRotation: 0,
+      //       minRotation: 0,
+      //       font: {
+      //         size: 10,
+      //       },
+            
+      //     },
+      //   },
+      //   y: { stacked: true, beginAtZero: true },
+      // },
       scales: {
         x: { stacked: true },
-        y: { stacked: true, beginAtZero: true },
+        y: {
+          stacked: true,
+          ticks: {
+            autoSkip: false,
+            font: { size: 10 },
+          },
+        },
       },
     },
   });
@@ -399,107 +435,107 @@ export default function CommitteeReportPage() {
   });
 
   // Export PDF handler
-    const handleExportPDF = async () => {
-        setExporting(true);
-        try {
-          resizeChartsForPDF();
-    
-          await exportReportPDF({
-            filename: `รายงานระบบ_${new Date().toISOString().split("T")[0]}.pdf`,
-            header: {
-              title: "รายงานสำหรับคณะกรรมการ",
-              dateRangeText:
-                dates && dates[0] && dates[1]
-                  ? `ช่วงวันที่: ${dates[0].toLocaleDateString(
-                      "th-TH"
-                    )} - ${dates[1].toLocaleDateString("th-TH")}`
-                  : undefined,
-            },
-            sections: [
-              exportSections.myCommitteeStats && { ref: myCommitteeStatsRef },
-              exportSections.certificateStats && { ref: certificateStatsRef },
-              exportSections.expiryAlerts && { ref: expiryAlertsRef },
-              exportSections.inspectionStats && { ref: inspectionStatsRef },
-              exportSections.charts && { ref: chartsRef },
-            ].filter(Boolean) as any,
-          });
-        } finally {
-          resetChartsAfterPDF();
-          setExporting(false);
-        }
-      };
+  const handleExportPDF = async () => {
+    setExporting(true);
+    try {
+      resizeChartsForPDF();
 
-    const recentCertificatesColumns : PrimaryDataTableColumn[] = [
-      {
-        field: "certificateId",
-        header: "เลขที่",
-        sortable: true,
-      },
-      {
-        field: "farmerName",
-        header: "ชื่อเกษตรกร",
-        sortable: true,
-      },
-      {
-        field: "farmLocation",
-        header: "ที่ตั้ง",
-      },
-      {
-        field: "province",
-        header: "จังหวัด",
-      },
-      {
-        field: "effectiveDate",
-        header: "วันที่ออก",
-        body: (row: RecentCertificate) =>
-          new Date(row.effectiveDate).toLocaleDateString("th-TH"),
-        bodyAlign: "center" as const,
-      },
-      {
-        field: "expiryDate",
-        header: "วันหมดอายุ",
-        body: (row: RecentCertificate) =>
-          new Date(row.expiryDate).toLocaleDateString("th-TH"),
-        bodyAlign: "center" as const,
-      },
-    ];
-
-    const inspectionsByTypeColumns : PrimaryDataTableColumn[] = [
-      {
-        field: "typeName",
-        header: "ประเภท",
-      },
-      {
-        field: "count",
-        header: "ทั้งหมด",
-        bodyAlign: "center",
-      },
-      {
-        field: "passed",
-        header: "ผ่าน",
-        bodyAlign: "center",
-        body: (row: inspectionsByType) => (
-          <span className="text-green-600 font-medium">{row.passed}</span>
-        ),
-      },
-      {
-        field: "failed",
-        header: "ไม่ผ่าน",
-        bodyAlign: "center",
-        body: (row: inspectionsByType) => (
-          <span className="text-red-600 font-medium">{row.failed}</span>
-        ),
-      },
-      {
-        field: "pending",
-        header: "รอดำเนินการ",
-        bodyAlign: "center",
-        body: (row: inspectionsByType) => (
-          <span className="text-yellow-600 font-medium">{row.pending ?? 0}</span>
-        ),
-      },
-    ];
+      await exportReportPDF({
+        filename: `รายงานระบบ_${new Date().toISOString().split("T")[0]}.pdf`,
+        header: {
+          title: "รายงานสำหรับคณะกรรมการ",
+          dateRangeText:
+            dates && dates[0] && dates[1]
+              ? `ช่วงวันที่: ${dates[0].toLocaleDateString(
+                  "th-TH"
+                )} - ${dates[1].toLocaleDateString("th-TH")}`
+              : undefined,
+        },
+        sections: [
+          exportSections.myCommitteeStats && { ref: myCommitteeStatsRef },
+          exportSections.certificateStats && { ref: certificateStatsRef },
+          exportSections.expiryAlerts && { ref: expiryAlertsRef },
+          exportSections.charts && { ref: chartsRef },
+          exportSections.inspectionStats && { ref: inspectionStatsRef },
           
+        ].filter(Boolean) as any,
+      });
+    } finally {
+      resetChartsAfterPDF();
+      setExporting(false);
+    }
+  };
+
+  const recentCertificatesColumns: PrimaryDataTableColumn[] = [
+    {
+      field: "certificateId",
+      header: "เลขที่",
+      sortable: true,
+    },
+    {
+      field: "farmerName",
+      header: "ชื่อเกษตรกร",
+      sortable: true,
+    },
+    {
+      field: "farmLocation",
+      header: "ที่ตั้ง",
+    },
+    {
+      field: "province",
+      header: "จังหวัด",
+    },
+    {
+      field: "effectiveDate",
+      header: "วันที่ออก",
+      body: (row: RecentCertificate) =>
+        new Date(row.effectiveDate).toLocaleDateString("th-TH"),
+      bodyAlign: "center" as const,
+    },
+    {
+      field: "expiryDate",
+      header: "วันหมดอายุ",
+      body: (row: RecentCertificate) =>
+        new Date(row.expiryDate).toLocaleDateString("th-TH"),
+      bodyAlign: "center" as const,
+    },
+  ];
+
+  const inspectionsByTypeColumns: PrimaryDataTableColumn[] = [
+    {
+      field: "typeName",
+      header: "ประเภท",
+    },
+    {
+      field: "count",
+      header: "ทั้งหมด",
+      bodyAlign: "center",
+    },
+    {
+      field: "passed",
+      header: "ผ่าน",
+      bodyAlign: "center",
+      body: (row: inspectionsByType) => (
+        <span className="text-green-600 font-medium">{row.passed}</span>
+      ),
+    },
+    {
+      field: "failed",
+      header: "ไม่ผ่าน",
+      bodyAlign: "center",
+      body: (row: inspectionsByType) => (
+        <span className="text-red-600 font-medium">{row.failed}</span>
+      ),
+    },
+    {
+      field: "pending",
+      header: "รอดำเนินการ",
+      bodyAlign: "center",
+      body: (row: inspectionsByType) => (
+        <span className="text-yellow-600 font-medium">{row.pending ?? 0}</span>
+      ),
+    },
+  ];
 
   return (
     <CommitteeLayout>
@@ -628,22 +664,6 @@ export default function CommitteeReportPage() {
             </div>
             <div className="flex items-center gap-2">
               <Checkbox
-                inputId="export-inspection"
-                checked={exportSections.inspectionStats}
-                onChange={(e) =>
-                  setExportSections({
-                    ...exportSections,
-                    inspectionStats: e.checked ?? false,
-                  })
-                }
-                className="border border-gray-300 rounded"
-              />
-              <label htmlFor="export-inspection" className="cursor-pointer">
-                รายงานการตรวจประเมิน
-              </label>
-            </div>
-            <div className="flex items-center gap-2">
-              <Checkbox
                 inputId="export-charts"
                 checked={exportSections.charts}
                 onChange={(e) =>
@@ -658,6 +678,23 @@ export default function CommitteeReportPage() {
                 แผนภูมิสรุปข้อมูล
               </label>
             </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                inputId="export-inspection"
+                checked={exportSections.inspectionStats}
+                onChange={(e) =>
+                  setExportSections({
+                    ...exportSections,
+                    inspectionStats: e.checked ?? false,
+                  })
+                }
+                className="border border-gray-300 rounded"
+              />
+              <label htmlFor="export-inspection" className="cursor-pointer">
+                รายงานการตรวจประเมิน
+              </label>
+            </div>
+            
           </div>
         </Dialog>
 
@@ -1004,7 +1041,7 @@ export default function CommitteeReportPage() {
           {/* Inspection by Type Bar Chart */}
           <div className="bg-gray-50 rounded-lg p-4 mb-6">
             <div className="h-64">
-              <canvas ref={inspectionTypeBarRef} />
+              <canvas  key={isMobile ? "mobile-bar" : "desktop-bar"} ref={inspectionTypeBarRef} />
             </div>
           </div>
         </div>
