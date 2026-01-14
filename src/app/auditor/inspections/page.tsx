@@ -753,8 +753,6 @@ export default function AuditorInspectionsPage() {
             color="info"
             rounded
             text
-            // tooltip="ดูรายละเอียดสวน"
-            // tooltipOptions={{ position: "left" }}
           />
           <PrimaryButton
             icon="pi pi-file-edit"
@@ -762,10 +760,6 @@ export default function AuditorInspectionsPage() {
             color="success"
             rounded
             text
-            // tooltip="เริ่มตรวจประเมิน"
-            // tooltipOptions={{
-            //   position: "left",
-            // }}
           />
         </div>
       ),

@@ -142,7 +142,6 @@ export const InspectionFormModal: React.FC<InspectionFormModalProps> = ({
               disabled={saving}
               loading={saving}
               color="info"
-              tooltip="บันทึกเฉพาะรายการตรวจหน้านี้"
               className="w-full md:w-auto"
             />
 
@@ -154,7 +153,6 @@ export const InspectionFormModal: React.FC<InspectionFormModalProps> = ({
               loading={saving}
               color="success"
               variant="outlined"
-              tooltip="บันทึกทุกรายการตรวจที่กรอกข้อมูลแล้ว"
               className="w-full md:w-auto"
             />
 
@@ -166,11 +164,6 @@ export const InspectionFormModal: React.FC<InspectionFormModalProps> = ({
                 disabled={saving || !allRequiredFieldsFilled}
                 color="success"
                 className="w-full md:w-auto"
-                tooltip={
-                  allRequiredFieldsFilled
-                    ? undefined
-                    : "กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน"
-                }
               />
             )}
 

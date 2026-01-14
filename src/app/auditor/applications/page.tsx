@@ -492,8 +492,6 @@ export default function AuditorScheduleInspectionPage() {
                         disabled={loadingFarmDetails}
                         rounded
                         text
-                        // tooltip="ดูข้อมูลสวนยางพารา"
-                        // tooltipOptions={{ position: "left" }}
                       ></PrimaryButton>
                     </div>
                   ),
@@ -554,14 +552,13 @@ export default function AuditorScheduleInspectionPage() {
                 return (
                   <div
                     key={type.inspectionTypeId}
-                    className={`p-6 border-2 rounded-lg transition-all ${
-                      !isAvailable
+                    className={`p-6 border-2 rounded-lg transition-all ${!isAvailable
                         ? "opacity-50 cursor-not-allowed bg-gray-50"
                         : selectedInspectionType?.inspectionTypeId ===
                           type.inspectionTypeId
-                        ? "border-green-500 bg-green-50 cursor-pointer"
-                        : "border-gray-200 hover:border-gray-300 cursor-pointer"
-                    }`}
+                          ? "border-green-500 bg-green-50 cursor-pointer"
+                          : "border-gray-200 hover:border-gray-300 cursor-pointer"
+                      }`}
                     onClick={() =>
                       isAvailable && setSelectedInspectionType(type)
                     }
@@ -582,9 +579,8 @@ export default function AuditorScheduleInspectionPage() {
                       />
                       <div className="ml-3">
                         <h3
-                          className={`text-lg font-medium ${
-                            isAvailable ? "text-gray-900" : "text-gray-400"
-                          }`}
+                          className={`text-lg font-medium ${isAvailable ? "text-gray-900" : "text-gray-400"
+                            }`}
                         >
                           {type.typeName}
                           {!isAvailable && (
@@ -595,9 +591,8 @@ export default function AuditorScheduleInspectionPage() {
                         </h3>
                         {type.description && (
                           <p
-                            className={`mt-1 text-sm ${
-                              isAvailable ? "text-gray-500" : "text-gray-400"
-                            }`}
+                            className={`mt-1 text-sm ${isAvailable ? "text-gray-500" : "text-gray-400"
+                              }`}
                           >
                             {type.description}
                           </p>
@@ -833,12 +828,12 @@ export default function AuditorScheduleInspectionPage() {
                   <p className="text-sm font-medium text-gray-900">
                     {inspectionDate
                       ? inspectionDate.toLocaleString("th-TH", {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
                       : "-"}
                   </p>
                 </div>
@@ -1027,7 +1022,7 @@ export default function AuditorScheduleInspectionPage() {
                   รายละเอียดการปลูก
                 </h4>
                 {selectedFarmDetails.plantingDetails &&
-                selectedFarmDetails.plantingDetails.length > 0 ? (
+                  selectedFarmDetails.plantingDetails.length > 0 ? (
                   <div className="overflow-x-auto">
                     <PrimaryDataTable
                       value={selectedFarmDetails.plantingDetails}
