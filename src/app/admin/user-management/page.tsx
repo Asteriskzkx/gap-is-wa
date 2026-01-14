@@ -66,7 +66,7 @@ function UserActionsCell({
         color="secondary"
         rounded
         text
-        tooltip="รีเซ็ตรหัสผ่าน (DEFAULT_PASSWORD)"
+        tooltip="รีเซ็ตรหัสผ่าน"
         onClick={() => onResetPassword(userId)}
       />
       <PrimaryButton
@@ -243,7 +243,7 @@ export default function AdminUserManagementPage() {
   };
 
   const showSuccessResetPassword = () => {
-    toast.success("รีเซ็ตรหัสผ่านสำเร็จ (ตั้งเป็น DEFAULT_PASSWORD)");
+    toast.success("รีเซ็ตรหัสผ่านเป็นรหัสเริ่มต้นสำเร็จ");
   };
 
   const showErrorResetPassword = (message?: string) => {
@@ -271,13 +271,13 @@ export default function AdminUserManagementPage() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error(data?.message || "Failed to load DEFAULT_PASSWORD");
+        throw new Error(data?.message || "ดึงรหัสผ่านเริ่มต้นไม่สำเร็จ");
       }
       setDefaultPassword(
         typeof data?.defaultPassword === "string" ? data.defaultPassword : ""
       );
     } catch (e) {
-      console.error("Failed to fetch DEFAULT_PASSWORD:", e);
+      console.error("ดึงรหัสผ่านเริ่มต้นไม่สำเร็จ:", e);
       setDefaultPassword("");
     } finally {
       setDefaultPasswordLoading(false);
