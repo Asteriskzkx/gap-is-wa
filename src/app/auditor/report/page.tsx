@@ -11,6 +11,8 @@ import html2canvas from "html2canvas";
 import { PrimaryButton } from "@/components/ui";
 import { resetChartsAfterPDF, resizeChartsForPDF } from "@/lib/pdf/chartResize";
 import { exportReportPDF } from "@/lib/pdf/exportReportPDF";
+import PrimaryDataTable, { PrimaryDataTableColumn } from "@/components/ui/PrimaryDataTable";
+
 
 // Interfaces
 interface MyInspectionStats {
@@ -191,6 +193,80 @@ export default function AuditorReportPage() {
     );
   };
 
+  const recentInspectionsColumns: PrimaryDataTableColumn[] =
+    [
+      {
+        field: "inspectionDate",
+        header: "วันที่ตรวจ",
+        body: (row) =>
+          new Date(row.inspectionDate).toLocaleDateString("th-TH"),
+      },
+      {
+        field: "farmerName",
+        header: "เกษตรกร",
+        sortable: true,
+      },
+      {
+        field: "farmLocation",
+        header: "ที่ตั้งแปลง",
+      },
+      {
+        field: "province",
+        header: "จังหวัด",
+        sortable: true,
+      },
+      {
+        field: "status",
+        header: "สถานะ",
+        body: (row : RecentInspection) => getStatusBadge(row.status),
+        bodyAlign: "center",
+      },
+      {
+        field: "result",
+        header: "ผลการตรวจ",
+        body: (row : RecentInspection) => getResultBadge(row.result),
+        bodyAlign: "center",
+      },
+    ];
+
+  const inspectedFarmsColumns: PrimaryDataTableColumn[] =
+  [
+    {
+      field: "farmerName",
+      header: "เกษตรกร",
+      sortable: true,
+    },
+    {
+      field: "farmLocation",
+      header: "ที่ตั้งแปลง",
+    },
+    {
+      field: "province",
+      header: "จังหวัด",
+      sortable: true,
+    },
+    {
+      field: "totalInspections",
+      header: "จำนวนตรวจ",
+      sortable: true,
+      bodyAlign: "center",
+    },
+    {
+      field: "lastInspectionDate",
+      header: "ตรวจล่าสุด",
+      body: (row : InspectedFarm) =>
+        new Date(row.lastInspectionDate).toLocaleDateString("th-TH"),
+      bodyAlign: "center",
+    },
+    {
+      field: "lastResult",
+      header: "ผลล่าสุด",
+      body: (row : InspectedFarm) => getResultBadge(row.lastResult),
+      bodyAlign: "center",
+    },
+  ];
+
+ 
   return (
     <AuditorLayout>
       <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
@@ -498,81 +574,12 @@ export default function AuditorReportPage() {
             รายงานการตรวจล่าสุด
           </h2>
 
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                    วันที่ตรวจ
-                  </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                    เกษตรกร
-                  </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                    ที่ตั้งแปลง
-                  </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                    จังหวัด
-                  </th>
-                  <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">
-                    สถานะ
-                  </th>
-                  <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">
-                    ผลการตรวจ
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {loading ? (
-                  <tr>
-                    <td
-                      colSpan={6}
-                      className="px-4 py-4 text-center text-gray-400"
-                    >
-                      กำลังโหลด...
-                    </td>
-                  </tr>
-                ) : reportData?.recentInspections.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={6}
-                      className="px-4 py-4 text-center text-gray-400"
-                    >
-                      ไม่มีข้อมูลการตรวจ
-                    </td>
-                  </tr>
-                ) : (
-                  reportData?.recentInspections.map((inspection, idx) => (
-                    <tr
-                      key={inspection.id}
-                      className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                    >
-                      <td className="px-4 py-2 text-sm text-gray-900">
-                        {new Date(inspection.inspectionDate).toLocaleDateString(
-                          "th-TH"
-                        )}
-                      </td>
-                      <td className="px-4 py-2 text-sm text-gray-900">
-                        {inspection.farmerName}
-                      </td>
-                      <td className="px-4 py-2 text-sm text-gray-900">
-                        {inspection.farmLocation}
-                      </td>
-                      <td className="px-4 py-2 text-sm text-gray-900">
-                        {inspection.province}
-                      </td>
-                      <td className="px-4 py-2 text-sm text-center">
-                        {getStatusBadge(inspection.status)}
-                      </td>
-                      <td className="px-4 py-2 text-sm text-center">
-                        {getResultBadge(inspection.result)}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+          <PrimaryDataTable
+            value={reportData?.recentInspections ?? []}
+            columns={recentInspectionsColumns}
+            loading={loading}
+            emptyMessage="ไม่มีข้อมูลการตรวจ"
+          />
         </div>
 
         {/* ==================== INSPECTED FARMS ==================== */}
@@ -594,81 +601,15 @@ export default function AuditorReportPage() {
           </div>
 
           <div className="overflow-x-auto">
-            <table data-testid="inspected-farms-table" className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                    เกษตรกร
-                  </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                    ที่ตั้งแปลง
-                  </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                    จังหวัด
-                  </th>
-                  <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">
-                    จำนวนตรวจ
-                  </th>
-                  <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">
-                    ตรวจล่าสุด
-                  </th>
-                  <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">
-                    ผลล่าสุด
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {loading ? (
-                  <tr>
-                    <td
-                      colSpan={6}
-                      className="px-4 py-4 text-center text-gray-400"
-                    >
-                      กำลังโหลด...
-                    </td>
-                  </tr>
-                ) : reportData?.inspectedFarms.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={6}
-                      className="px-4 py-4 text-center text-gray-400"
-                    >
-                      ไม่มีข้อมูลแปลง
-                    </td>
-                  </tr>
-                ) : (
-                  reportData?.inspectedFarms
-                    .slice(0, farmsDisplayCount)
-                    .map((farm, idx) => (
-                      <tr
-                        key={farm.rubberFarmId}
-                        className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                      >
-                        <td className="px-4 py-2 text-sm text-gray-900">
-                          {farm.farmerName}
-                        </td>
-                        <td className="px-4 py-2 text-sm text-gray-900">
-                          {farm.farmLocation}
-                        </td>
-                        <td className="px-4 py-2 text-sm text-gray-900">
-                          {farm.province}
-                        </td>
-                        <td className="px-4 py-2 text-sm text-gray-900 text-center">
-                          {farm.totalInspections}
-                        </td>
-                        <td className="px-4 py-2 text-sm text-gray-900 text-center">
-                          {new Date(farm.lastInspectionDate).toLocaleDateString(
-                            "th-TH"
-                          )}
-                        </td>
-                        <td className="px-4 py-2 text-sm text-center">
-                          {getResultBadge(farm.lastResult)}
-                        </td>
-                      </tr>
-                    ))
-                )}
-              </tbody>
-            </table>
+            <PrimaryDataTable 
+              data-testid="inspected-farms-table"
+              value={
+                reportData?.inspectedFarms.slice(0, farmsDisplayCount) ?? []
+              }
+              columns={inspectedFarmsColumns}
+              loading={loading}
+              emptyMessage="ไม่มีข้อมูลแปลง"
+            />
           </div>
 
           {/* Show More / Show Less Buttons */}
