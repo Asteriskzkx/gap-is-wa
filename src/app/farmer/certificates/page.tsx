@@ -58,6 +58,9 @@ export default function Page() {
     openFiles,
     currentTab,
     onTabChange,
+    pdfUrl,
+    isShowPdf,
+    closePdf,
   } = useFarmerCertificates(10);
 
   useEffect(() => {
@@ -95,13 +98,13 @@ export default function Page() {
         body: (r: any) =>
           r.inspection?.inspectionDateAndTime
             ? new Date(r.inspection.inspectionDateAndTime).toLocaleString(
-                "th-TH",
-                {
-                  year: "numeric",
-                  month: "short",
-                  day: "numeric",
-                }
-              )
+              "th-TH",
+              {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              }
+            )
             : "-",
         style: { width: "12%" },
       },
@@ -131,10 +134,10 @@ export default function Page() {
         body: (r: any) =>
           r.effectiveDate
             ? new Date(r.effectiveDate).toLocaleDateString("th-TH", {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              })
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })
             : "-",
         style: { width: "12%" },
       },
@@ -147,34 +150,34 @@ export default function Page() {
         body: (r: any) =>
           r.expiryDate
             ? new Date(r.expiryDate).toLocaleDateString("th-TH", {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              })
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })
             : "-",
         style: { width: "12%" },
       },
       currentTab === "cancel-request"
         ? {
-            field: "status",
-            header: "สถานะ",
-            sortable: false,
-            headerAlign: "center" as const,
-            bodyAlign: "center" as const,
-            body: statusBody,
-            style: { width: "15%" },
-          }
+          field: "status",
+          header: "สถานะ",
+          sortable: false,
+          headerAlign: "center" as const,
+          bodyAlign: "center" as const,
+          body: statusBody,
+          style: { width: "15%" },
+        }
         : {
-            field: "actions",
-            header: "",
-            sortable: false,
-            headerAlign: "center" as const,
-            bodyAlign: "center" as const,
-            mobileAlign: "right" as const,
-            mobileHideLabel: true,
-            body: actionBody,
-            style: { width: "15%" },
-          },
+          field: "actions",
+          header: "",
+          sortable: false,
+          headerAlign: "center" as const,
+          bodyAlign: "center" as const,
+          mobileAlign: "right" as const,
+          mobileHideLabel: true,
+          body: actionBody,
+          style: { width: "15%" },
+        },
     ],
     [currentTab]
   );
@@ -182,106 +185,128 @@ export default function Page() {
   return (
     <FarmerLayout>
       <div className={CONTAINER.page}>
-        <div className={SPACING.mb8}>
-          <h1 className={HEADER.title}>ใบรับรองแหล่งผลิตที่ได้รับ</h1>
-          <p className={HEADER.subtitle}>
-            รายละเอียดใบรับรองแหล่งผลิตที่ได้รับทั้งหมด
-          </p>
-        </div>
+        {!isShowPdf ? (
+          <>
+            <div className={SPACING.mb8}>
+              <h1 className={HEADER.title}>ใบรับรองแหล่งผลิตที่ได้รับ</h1>
+              <p className={HEADER.subtitle}>
+                รายละเอียดใบรับรองแหล่งผลิตที่ได้รับทั้งหมด
+              </p>
+            </div>
 
-        <div className={CONTAINER.card}>
-          <div className={CONTAINER.cardPadding}>
-            <div className={SPACING.mb6}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
-                <div className="w-full sm:w-full">
-                  <div>
-                    <label
-                      htmlFor="fromDate"
-                      className="block text-sm text-gray-600 mb-1"
-                    >
-                      วันที่มีผล (จาก)
-                    </label>
-                    <PrimaryCalendar
-                      id="fromDate"
-                      value={fromDate}
-                      onChange={(d) => setFromDate(d)}
-                      placeholder="เลือกวันที่มีผล"
+            <div className={CONTAINER.card}>
+              <div className={CONTAINER.cardPadding}>
+                <div className={SPACING.mb6}>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
+                    <div className="w-full sm:w-full">
+                      <div>
+                        <label
+                          htmlFor="fromDate"
+                          className="block text-sm text-gray-600 mb-1"
+                        >
+                          วันที่มีผล (จาก)
+                        </label>
+                        <PrimaryCalendar
+                          id="fromDate"
+                          value={fromDate}
+                          onChange={(d) => setFromDate(d)}
+                          placeholder="เลือกวันที่มีผล"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="w-full sm:w-full">
+                      <div>
+                        <label
+                          htmlFor="toDate"
+                          className="block text-sm text-gray-600 mb-1"
+                        >
+                          วันที่หมดอายุ (ถึง)
+                        </label>
+                        <PrimaryCalendar
+                          id="toDate"
+                          value={toDate}
+                          onChange={(d) => setToDate(d)}
+                          placeholder="เลือกวันที่หมดอายุ"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 grid grid-cols-2 gap-3">
+                    <div className="justify-self-end">
+                      <PrimaryButton
+                        label="ค้นหา"
+                        icon="pi pi-search"
+                        onClick={() => applyFilters()}
+                      />
+                    </div>
+                    <div>
+                      <PrimaryButton
+                        label="ล้างค่า"
+                        color="secondary"
+                        icon="pi pi-refresh"
+                        onClick={() => clearFilters()}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-3 flex justify-between gap-3">
+                    <PrimaryButton
+                      label="ใบรับรองทั้งหมด"
+                      fullWidth
+                      color={currentTab === "in-use" ? "success" : "secondary"}
+                      onClick={() => onTabChange("cancelRequestFlag", "false")}
+                    />
+                    <PrimaryButton
+                      label="ใบรับรองที่ยกเลิกแล้ว"
+                      fullWidth
+                      color={
+                        currentTab === "cancel-request" ? "success" : "secondary"
+                      }
+                      onClick={() => onTabChange("cancelRequestFlag", "true")}
                     />
                   </div>
                 </div>
 
-                <div className="w-full sm:w-full">
-                  <div>
-                    <label
-                      htmlFor="toDate"
-                      className="block text-sm text-gray-600 mb-1"
-                    >
-                      วันที่หมดอายุ (ถึง)
-                    </label>
-                    <PrimaryCalendar
-                      id="toDate"
-                      value={toDate}
-                      onChange={(d) => setToDate(d)}
-                      placeholder="เลือกวันที่หมดอายุ"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-3 grid grid-cols-2 gap-3">
-                <div className="justify-self-end">
-                  <PrimaryButton
-                    label="ค้นหา"
-                    icon="pi pi-search"
-                    onClick={() => applyFilters()}
-                  />
-                </div>
-                <div>
-                  <PrimaryButton
-                    label="ล้างค่า"
-                    color="secondary"
-                    icon="pi pi-refresh"
-                    onClick={() => clearFilters()}
-                  />
-                </div>
-              </div>
-
-              <div className="mt-3 flex justify-between gap-3">
-                <PrimaryButton
-                  label="ใบรับรองทั้งหมด"
-                  fullWidth
-                  color={currentTab === "in-use" ? "success" : "secondary"}
-                  onClick={() => onTabChange("cancelRequestFlag", "false")}
-                />
-                <PrimaryButton
-                  label="ใบรับรองที่ยกเลิกแล้ว"
-                  fullWidth
-                  color={
-                    currentTab === "cancel-request" ? "success" : "secondary"
-                  }
-                  onClick={() => onTabChange("cancelRequestFlag", "true")}
+                <PrimaryDataTable
+                  value={items}
+                  columns={columns}
+                  loading={loading}
+                  paginator
+                  rows={lazyParams.rows}
+                  rowsPerPageOptions={[10, 25, 50]}
+                  totalRecords={totalRecords}
+                  lazy
+                  onPage={handlePageChange}
+                  first={lazyParams.first}
+                  sortMode="multiple"
+                  multiSortMeta={lazyParams.multiSortMeta}
+                  onSort={handleSort}
+                  dataKey="certificateId"
                 />
               </div>
             </div>
-
-            <PrimaryDataTable
-              value={items}
-              columns={columns}
-              loading={loading}
-              paginator
-              rows={lazyParams.rows}
-              rowsPerPageOptions={[10, 25, 50]}
-              totalRecords={totalRecords}
-              lazy
-              onPage={handlePageChange}
-              first={lazyParams.first}
-              sortMode="multiple"
-              multiSortMeta={lazyParams.multiSortMeta}
-              onSort={handleSort}
-              dataKey="certificateId"
-            />
+          </>
+        ) : (
+          <div className="w-full h-full flex flex-col gap-4">
+            <div>
+              <PrimaryButton
+                label="ย้อนกลับ"
+                icon="pi pi-arrow-left"
+                color="secondary"
+                onClick={closePdf}
+              />
+            </div>
+            {pdfUrl && (
+              <iframe
+                src={pdfUrl}
+                className="w-full h-[80vh] border-0 rounded-lg shadow-sm bg-white"
+                title="PDF Viewer"
+              />
+            )}
           </div>
-        </div>
+        )}
       </div>
     </FarmerLayout>
   );

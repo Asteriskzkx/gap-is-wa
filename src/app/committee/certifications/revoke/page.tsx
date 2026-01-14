@@ -29,6 +29,9 @@ export default function Page() {
     revokeCertificate,
     currentTab,
     onTabChange,
+    pdfUrl,
+    isShowPdf,
+    closePdf,
   } = useRevokeCertificate(10);
 
   const [selectedCertificate, setSelectedCertificate] = useState<Record<
@@ -75,13 +78,13 @@ export default function Page() {
         body: (r: any) =>
           r.inspection?.inspectionDateAndTime
             ? new Date(r.inspection.inspectionDateAndTime).toLocaleString(
-                "th-TH",
-                {
-                  year: "numeric",
-                  month: "short",
-                  day: "numeric",
-                }
-              )
+              "th-TH",
+              {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              }
+            )
             : "-",
         style: { width: "12%" },
       },
@@ -111,10 +114,10 @@ export default function Page() {
         body: (r: any) =>
           r.effectiveDate
             ? new Date(r.effectiveDate).toLocaleDateString("th-TH", {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              })
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })
             : "-",
         style: { width: "12%" },
       },
@@ -127,10 +130,10 @@ export default function Page() {
         body: (r: any) =>
           r.expiryDate
             ? new Date(r.expiryDate).toLocaleDateString("th-TH", {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              })
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })
             : "-",
         style: { width: "12%" },
       },
@@ -162,185 +165,207 @@ export default function Page() {
   return (
     <CommitteeLayout>
       <div className={CONTAINER.page}>
-        <div className={SPACING.mb8}>
-          <h1 className={HEADER.title}>ยกเลิกใบรับรองแหล่งผลิตจีเอพี</h1>
-          <p className={HEADER.subtitle}>
-            ยกเลิกใบรับรองแหล่งผลิตยางพาราที่มีคำขอยกเลิก
-          </p>
-        </div>
+        {!isShowPdf ? (
+          <>
+            <div className={SPACING.mb8}>
+              <h1 className={HEADER.title}>ยกเลิกใบรับรองแหล่งผลิตจีเอพี</h1>
+              <p className={HEADER.subtitle}>
+                ยกเลิกใบรับรองแหล่งผลิตยางพาราที่มีคำขอยกเลิก
+              </p>
+            </div>
 
-        <div className={SPACING.mb6}>
-          <CertificationStepIndicator
-            currentStep={step}
-            labels={["เลือกใบรับรอง", "ยกเลิกใบรับรอง"]}
-          />
-        </div>
+            <div className={SPACING.mb6}>
+              <CertificationStepIndicator
+                currentStep={step}
+                labels={["เลือกใบรับรอง", "ยกเลิกใบรับรอง"]}
+              />
+            </div>
 
-        <div className={CONTAINER.card}>
-          <div className={CONTAINER.cardPadding}>
-            {step === 1 && (
-              <div className={SPACING.mb6}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
-                  <div className="w-full sm:w-full">
-                    <div>
-                      <label
-                        htmlFor="fromDate"
-                        className="block text-sm text-gray-600 mb-1"
-                      >
-                        ตั้งแต่
-                      </label>
-                      <PrimaryCalendar
-                        id="fromDate"
-                        value={fromDate}
-                        onChange={(d) => setFromDate(d)}
-                        placeholder="เลือกวันที่มีผล"
+            <div className={CONTAINER.card}>
+              <div className={CONTAINER.cardPadding}>
+                {step === 1 && (
+                  <div className={SPACING.mb6}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
+                      <div className="w-full sm:w-full">
+                        <div>
+                          <label
+                            htmlFor="fromDate"
+                            className="block text-sm text-gray-600 mb-1"
+                          >
+                            ตั้งแต่
+                          </label>
+                          <PrimaryCalendar
+                            id="fromDate"
+                            value={fromDate}
+                            onChange={(d) => setFromDate(d)}
+                            placeholder="เลือกวันที่มีผล"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="w-full sm:w-full">
+                        <div>
+                          <label
+                            htmlFor="toDate"
+                            className="block text-sm text-gray-600 mb-1"
+                          >
+                            ถึง
+                          </label>
+                          <PrimaryCalendar
+                            id="toDate"
+                            value={toDate}
+                            onChange={(d) => setToDate(d)}
+                            placeholder="เลือกวันที่หมดอายุ"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 grid grid-cols-2 gap-3">
+                      <div className="justify-self-end">
+                        <PrimaryButton
+                          label="ค้นหา"
+                          icon="pi pi-search"
+                          onClick={() => applyFilters()}
+                        />
+                      </div>
+                      <div>
+                        <PrimaryButton
+                          label="ล้างค่า"
+                          color="secondary"
+                          icon="pi pi-refresh"
+                          onClick={() => clearFilters()}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="mt-3 flex justify-between gap-3">
+                      <PrimaryButton
+                        label="ใบรับรองที่มีคำขอยกเลิก"
+                        fullWidth
+                        color={
+                          currentTab === "revocation-requests"
+                            ? "success"
+                            : "secondary"
+                        }
+                        onClick={() => handleTabChange("true")}
+                      />
+                      <PrimaryButton
+                        label="ใบรับรองที่ไม่มีคำขอยกเลิก"
+                        fullWidth
+                        color={currentTab === "other" ? "success" : "secondary"}
+                        onClick={() => handleTabChange("false")}
                       />
                     </div>
                   </div>
+                )}
 
-                  <div className="w-full sm:w-full">
-                    <div>
-                      <label
-                        htmlFor="toDate"
-                        className="block text-sm text-gray-600 mb-1"
-                      >
-                        ถึง
-                      </label>
-                      <PrimaryCalendar
-                        id="toDate"
-                        value={toDate}
-                        onChange={(d) => setToDate(d)}
-                        placeholder="เลือกวันที่หมดอายุ"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-3 grid grid-cols-2 gap-3">
-                  <div className="justify-self-end">
-                    <PrimaryButton
-                      label="ค้นหา"
-                      icon="pi pi-search"
-                      onClick={() => applyFilters()}
-                    />
-                  </div>
+                {step === 1 && (
                   <div>
-                    <PrimaryButton
-                      label="ล้างค่า"
-                      color="secondary"
-                      icon="pi pi-refresh"
-                      onClick={() => clearFilters()}
-                    />
-                  </div>
-                </div>
-
-                <div className="mt-3 flex justify-between gap-3">
-                  <PrimaryButton
-                    label="ใบรับรองที่มีคำขอยกเลิก"
-                    fullWidth
-                    color={
-                      currentTab === "revocation-requests"
-                        ? "success"
-                        : "secondary"
-                    }
-                    onClick={() => handleTabChange("true")}
-                  />
-                  <PrimaryButton
-                    label="ใบรับรองที่ไม่มีคำขอยกเลิก"
-                    fullWidth
-                    color={currentTab === "other" ? "success" : "secondary"}
-                    onClick={() => handleTabChange("false")}
-                  />
-                </div>
-              </div>
-            )}
-
-            {step === 1 && (
-              <div>
-                <PrimaryDataTable
-                  value={items}
-                  columns={columns}
-                  loading={loading}
-                  paginator
-                  rows={lazyParams.rows}
-                  rowsPerPageOptions={[10, 25, 50]}
-                  totalRecords={totalRecords}
-                  lazy
-                  onPage={handlePageChange}
-                  first={lazyParams.first}
-                  sortMode="multiple"
-                  multiSortMeta={lazyParams.multiSortMeta}
-                  onSort={handleSort}
-                  dataKey="certificateId"
-                  rowClassName={(data: any) =>
-                    selectedCertificate?.certificateId === data.certificateId
-                      ? "bg-green-50 cursor-pointer"
-                      : "cursor-pointer"
-                  }
-                  onRowClick={(e) => setSelectedCertificate(e.data)}
-                />
-
-                <div className="mt-4 flex justify-end gap-2">
-                  <PrimaryButton
-                    label="ถัดไป"
-                    onClick={() => {
-                      if (selectedCertificate) nextStep();
-                    }}
-                    disabled={!selectedCertificate}
-                  />
-                </div>
-              </div>
-            )}
-
-            {step === 2 && (
-              <div>
-                <div className="mb-4">
-                  <label
-                    htmlFor="cancelRequestDetail"
-                    className="block text-sm text-gray-600 mb-1"
-                  >
-                    รายละเอียดคำขอยกเลิกใบรับรอง
-                  </label>
-                  <PrimaryInputTextarea
-                    id="cancelRequestDetail"
-                    value={selectedCertificate?.cancelRequestDetail ?? ""}
-                    onChange={(v: string) => {}}
-                    disabled={true}
-                    rows={5}
-                    maxLength={255}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
-                  />
-                </div>
-                <div className="flex justify-between gap-2">
-                  <PrimaryButton
-                    label="ย้อนกลับ"
-                    color="secondary"
-                    onClick={() => prevStep()}
-                  />
-                  <PrimaryButton
-                    label="ยืนยันยกเลิกใบรับรอง"
-                    color="success"
-                    onClick={async () => {
-                      if (!selectedCertificate) return;
-                      const ok = await revokeCertificate(
-                        selectedCertificate.certificateId,
-                        selectedCertificate?.cancelRequestDetail ??
-                          cancelRequestDetail,
-                        selectedCertificate.version
-                      );
-                      if (ok) {
-                        setSelectedCertificate(null);
-                        setCancelRequestDetail("");
-                        prevStep();
+                    <PrimaryDataTable
+                      value={items}
+                      columns={columns}
+                      loading={loading}
+                      paginator
+                      rows={lazyParams.rows}
+                      rowsPerPageOptions={[10, 25, 50]}
+                      totalRecords={totalRecords}
+                      lazy
+                      onPage={handlePageChange}
+                      first={lazyParams.first}
+                      sortMode="multiple"
+                      multiSortMeta={lazyParams.multiSortMeta}
+                      onSort={handleSort}
+                      dataKey="certificateId"
+                      rowClassName={(data: any) =>
+                        selectedCertificate?.certificateId === data.certificateId
+                          ? "bg-green-50 cursor-pointer"
+                          : "cursor-pointer"
                       }
-                    }}
-                  />
-                </div>
+                      onRowClick={(e) => setSelectedCertificate(e.data)}
+                    />
+
+                    <div className="mt-4 flex justify-end gap-2">
+                      <PrimaryButton
+                        label="ถัดไป"
+                        onClick={() => {
+                          if (selectedCertificate) nextStep();
+                        }}
+                        disabled={!selectedCertificate}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {step === 2 && (
+                  <div>
+                    <div className="mb-4">
+                      <label
+                        htmlFor="cancelRequestDetail"
+                        className="block text-sm text-gray-600 mb-1"
+                      >
+                        รายละเอียดคำขอยกเลิกใบรับรอง
+                      </label>
+                      <PrimaryInputTextarea
+                        id="cancelRequestDetail"
+                        value={selectedCertificate?.cancelRequestDetail ?? ""}
+                        onChange={(v: string) => { }}
+                        disabled={true}
+                        rows={5}
+                        maxLength={255}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                      />
+                    </div>
+                    <div className="flex justify-between gap-2">
+                      <PrimaryButton
+                        label="ย้อนกลับ"
+                        color="secondary"
+                        onClick={() => prevStep()}
+                      />
+                      <PrimaryButton
+                        label="ยืนยันยกเลิกใบรับรอง"
+                        color="success"
+                        onClick={async () => {
+                          if (!selectedCertificate) return;
+                          const ok = await revokeCertificate(
+                            selectedCertificate.certificateId,
+                            selectedCertificate?.cancelRequestDetail ??
+                            cancelRequestDetail,
+                            selectedCertificate.version
+                          );
+                          if (ok) {
+                            setSelectedCertificate(null);
+                            setCancelRequestDetail("");
+                            prevStep();
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
+            </div>
+          </>
+        ) : (
+          <div className="w-full h-full flex flex-col gap-4">
+            <div>
+              <PrimaryButton
+                label="ย้อนกลับ"
+                icon="pi pi-arrow-left"
+                color="secondary"
+                onClick={closePdf}
+              />
+            </div>
+            {pdfUrl && (
+              <iframe
+                src={pdfUrl}
+                className="w-full h-[80vh] border-0 rounded-lg shadow-sm bg-white"
+                title="PDF Viewer"
+              />
             )}
           </div>
-        </div>
+        )}
       </div>
-    </CommitteeLayout>
+    </CommitteeLayout >
   );
 }
