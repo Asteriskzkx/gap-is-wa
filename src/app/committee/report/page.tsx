@@ -10,6 +10,8 @@ import { useChart } from "@/hooks/useChart";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { PrimaryButton } from "@/components/ui";
+import { resetChartsAfterPDF, resizeChartsForPDF } from "@/lib/pdf/chartResize";
+import { exportReportPDF } from "@/lib/pdf/exportReportPDF";
 
 // ==================== Interfaces ====================
 
@@ -379,113 +381,37 @@ export default function CommitteeReportPage() {
   });
 
   // Export PDF handler
-  const handleExportPDF = async () => {
-    setShowExportDialog(false);
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    setExporting(true);
-
-    try {
-      const pdf = new jsPDF("p", "mm", "a4");
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 10;
-      let currentY = margin;
-      let isFirstPage = true;
-
-      // Helper function to add section to PDF
-      const addSectionToPDF = async (ref: React.RefObject<HTMLDivElement>) => {
-        if (!ref.current) return;
-
-        const canvas = await html2canvas(ref.current, {
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          backgroundColor: "#ffffff",
-        });
-
-        const imgData = canvas.toDataURL("image/png");
-        const imgWidth = pageWidth - margin * 2;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-        if (!isFirstPage && currentY + imgHeight > pageHeight - margin) {
-          pdf.addPage();
-          currentY = margin;
+  // Export PDF handler
+    const handleExportPDF = async () => {
+        setExporting(true);
+        try {
+          resizeChartsForPDF();
+    
+          await exportReportPDF({
+            filename: `รายงานระบบ_${new Date().toISOString().split("T")[0]}.pdf`,
+            header: {
+              title: "รายงานสำหรับคณะกรรมการ",
+              dateRangeText:
+                dates && dates[0] && dates[1]
+                  ? `ช่วงวันที่: ${dates[0].toLocaleDateString(
+                      "th-TH"
+                    )} - ${dates[1].toLocaleDateString("th-TH")}`
+                  : undefined,
+            },
+            sections: [
+              exportSections.certificateStats && { ref: certificateStatsRef },
+              exportSections.expiryAlerts && { ref: expiryAlertsRef },
+              exportSections.inspectionStats && { ref: inspectionStatsRef },
+              exportSections.myCommitteeStats && { ref: myCommitteeStatsRef },
+              exportSections.charts && { ref: chartsRef },
+            ].filter(Boolean) as any,
+          });
+        } finally {
+          resetChartsAfterPDF();
+          setExporting(false);
         }
-
-        if (!isFirstPage) {
-          currentY += 5;
-        }
-
-        pdf.addImage(imgData, "PNG", margin, currentY, imgWidth, imgHeight);
-        currentY += imgHeight;
-        isFirstPage = false;
       };
-
-      // Create header
-      const headerDiv = document.createElement("div");
-      headerDiv.style.cssText =
-        "position: absolute; left: -9999px; top: 0; background: white; padding: 20px; width: 800px; text-align: center; font-family: 'Sarabun', sans-serif;";
-
-      let headerHTML = `<h1 style="font-size: 24px; font-weight: bold; margin-bottom: 10px; color: #1f2937;">รายงานสำหรับคณะกรรมการ</h1>`;
-
-      headerHTML += `<p style="font-size: 12px; color: #6b7280;">วันที่ส่งออก: ${new Date().toLocaleDateString(
-        "th-TH"
-      )}</p>`;
-
-      headerDiv.innerHTML = headerHTML;
-      document.body.appendChild(headerDiv);
-
-      const headerCanvas = await html2canvas(headerDiv, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: "#ffffff",
-      });
-      document.body.removeChild(headerDiv);
-
-      const headerImgData = headerCanvas.toDataURL("image/png");
-      const headerImgWidth = pageWidth - margin * 2;
-      const headerImgHeight =
-        (headerCanvas.height * headerImgWidth) / headerCanvas.width;
-
-      pdf.addImage(
-        headerImgData,
-        "PNG",
-        margin,
-        currentY,
-        headerImgWidth,
-        headerImgHeight
-      );
-      currentY += headerImgHeight + 5;
-      isFirstPage = false;
-
-      // Add selected sections
-      if (exportSections.myCommitteeStats && myCommitteeStatsRef.current) {
-        await addSectionToPDF(myCommitteeStatsRef);
-      }
-      if (exportSections.certificateStats && certificateStatsRef.current) {
-        await addSectionToPDF(certificateStatsRef);
-      }
-      if (exportSections.expiryAlerts && expiryAlertsRef.current) {
-        await addSectionToPDF(expiryAlertsRef);
-      }
-      if (exportSections.charts && chartsRef.current) {
-        await addSectionToPDF(chartsRef);
-      }
-      if (exportSections.inspectionStats && inspectionStatsRef.current) {
-        await addSectionToPDF(inspectionStatsRef);
-      }
-
-      // Download PDF
-      const dateStr = new Date().toISOString().split("T")[0];
-      pdf.save(`รายงานคณะกรรมการ_${dateStr}.pdf`);
-    } catch (error) {
-      console.error("Error exporting PDF:", error);
-      alert("เกิดข้อผิดพลาดในการส่งออก PDF");
-    } finally {
-      setExporting(false);
-    }
-  };
+      
 
   return (
     <CommitteeLayout>

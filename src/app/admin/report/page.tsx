@@ -15,6 +15,8 @@ import { useEffect, useMemo, useState, useRef } from "react";
 import { useChart } from "@/hooks/useChart";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import { exportReportPDF } from "@/lib/pdf/exportReportPDF";
+import { resizeChartsForPDF , resetChartsAfterPDF } from "@/lib/pdf/chartResize";
 
 interface UserCountByRole {
   role: string;
@@ -332,116 +334,29 @@ export default function AdminReportPage() {
   const handleExportPDF = async () => {
     setExporting(true);
     try {
-      const pdf = new jsPDF("p", "mm", "a4");
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 10;
-      let currentY = margin;
-      let isFirstPage = true;
+      resizeChartsForPDF();
 
-      // Helper function to add section to PDF
-      const addSectionToPDF = async (
-        ref: React.RefObject<HTMLDivElement>,
-        title: string
-      ) => {
-        if (!ref.current) return;
-
-        const canvas = await html2canvas(ref.current, {
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          backgroundColor: "#ffffff",
-        });
-
-        const imgData = canvas.toDataURL("image/png");
-        const imgWidth = pageWidth - margin * 2;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-        // Check if we need a new page
-        if (!isFirstPage && currentY + imgHeight > pageHeight - margin) {
-          pdf.addPage();
-          currentY = margin;
-        }
-
-        if (!isFirstPage) {
-          currentY += 5; // Add some spacing between sections
-        }
-
-        pdf.addImage(imgData, "PNG", margin, currentY, imgWidth, imgHeight);
-        currentY += imgHeight;
-        isFirstPage = false;
-      };
-
-      // Create temporary header element for Thai text rendering
-      const headerDiv = document.createElement("div");
-      headerDiv.style.cssText =
-        "position: absolute; left: -9999px; top: 0; background: white; padding: 20px; width: 800px; text-align: center; font-family: 'Sarabun', sans-serif;";
-
-      let headerHTML = `<h1 style="font-size: 24px; font-weight: bold; margin-bottom: 10px; color: #1f2937;">รายงานสรุปข้อมูลระบบ</h1>`;
-
-      if (dates && dates[0] && dates[1]) {
-        headerHTML += `<p style="font-size: 14px; color: #4b5563; margin-bottom: 5px;">ช่วงวันที่: ${dates[0].toLocaleDateString(
-          "th-TH"
-        )} - ${dates[1].toLocaleDateString("th-TH")}</p>`;
-      }
-
-      headerHTML += `<p style="font-size: 12px; color: #6b7280;">วันที่ส่งออก: ${new Date().toLocaleDateString(
-        "th-TH"
-      )}</p>`;
-
-      headerDiv.innerHTML = headerHTML;
-      document.body.appendChild(headerDiv);
-
-      // Render header to canvas
-      const headerCanvas = await html2canvas(headerDiv, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: "#ffffff",
+      await exportReportPDF({
+        filename: `รายงานระบบ_${new Date().toISOString().split("T")[0]}.pdf`,
+        header: {
+          title: "รายงานสรุปข้อมูลระบบ",
+          dateRangeText:
+            dates && dates[0] && dates[1]
+              ? `ช่วงวันที่: ${dates[0].toLocaleDateString(
+                  "th-TH"
+                )} - ${dates[1].toLocaleDateString("th-TH")}`
+              : undefined,
+        },
+        sections: [
+          exportSections.users && { ref: userReportRef },
+          exportSections.inspections && { ref: inspectionReportRef },
+          exportSections.rubberFarms && { ref: rubberFarmReportRef },
+          exportSections.certificates && { ref: certificateReportRef },
+          exportSections.auditors && { ref: auditorReportRef },
+        ].filter(Boolean) as any,
       });
-      document.body.removeChild(headerDiv);
-
-      const headerImgData = headerCanvas.toDataURL("image/png");
-      const headerImgWidth = pageWidth - margin * 2;
-      const headerImgHeight =
-        (headerCanvas.height * headerImgWidth) / headerCanvas.width;
-
-      pdf.addImage(
-        headerImgData,
-        "PNG",
-        margin,
-        currentY,
-        headerImgWidth,
-        headerImgHeight
-      );
-      currentY += headerImgHeight + 5;
-      isFirstPage = false;
-
-      // Add selected sections
-      if (exportSections.users && userReportRef.current) {
-        await addSectionToPDF(userReportRef, "รายงานผู้ใช้งาน");
-      }
-      if (exportSections.inspections && inspectionReportRef.current) {
-        await addSectionToPDF(inspectionReportRef, "รายงานการตรวจประเมิน");
-      }
-      if (exportSections.rubberFarms && rubberFarmReportRef.current) {
-        await addSectionToPDF(rubberFarmReportRef, "รายงานแปลงสวนยางพารา");
-      }
-      if (exportSections.certificates && certificateReportRef.current) {
-        await addSectionToPDF(certificateReportRef, "รายงานใบรับรอง");
-      }
-      if (exportSections.auditors && auditorReportRef.current) {
-        await addSectionToPDF(auditorReportRef, "รายงานประสิทธิภาพผู้ตรวจประเมิน");
-      }
-
-      // Download PDF
-      const dateStr = new Date().toISOString().split("T")[0];
-      pdf.save(`รายงานระบบ_${dateStr}.pdf`);
-      setShowExportDialog(false);
-    } catch (error) {
-      console.error("Error exporting PDF:", error);
-      alert("เกิดข้อผิดพลาดในการส่งออก PDF");
     } finally {
+      resetChartsAfterPDF();
       setExporting(false);
     }
   };
