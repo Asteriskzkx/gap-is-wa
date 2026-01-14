@@ -32,6 +32,7 @@ export function useFarmerCertificates(initialRows = 10) {
   >("false");
 
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [pdfFileName, setPdfFileName] = useState<string | null>(null);
   const [isShowPdf, setIsShowPdf] = useState<boolean>(false);
 
   const [lazyParams, setLazyParams] = useState<LazyParams>({
@@ -158,8 +159,11 @@ export function useFarmerCertificates(initialRows = 10) {
       }
 
       const url = files[0].url;
+      const fileName = files[0].fileName || files[0].originalFileName || "document.pdf";
+
       if (url) {
         setPdfUrl(url);
+        setPdfFileName(fileName);
         setIsShowPdf(true);
       } else {
         toast.error("ไม่พบ URL ของไฟล์");
@@ -173,6 +177,7 @@ export function useFarmerCertificates(initialRows = 10) {
   const closePdf = useCallback(() => {
     setIsShowPdf(false);
     setPdfUrl(null);
+    setPdfFileName(null);
   }, []);
 
   return {
@@ -194,6 +199,7 @@ export function useFarmerCertificates(initialRows = 10) {
       appliedCancelRequestFlag === "true" ? "cancel-request" : "in-use",
     onTabChange,
     pdfUrl,
+    pdfFileName,
     isShowPdf,
     closePdf,
   };

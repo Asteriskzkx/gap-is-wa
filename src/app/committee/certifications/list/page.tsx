@@ -26,6 +26,7 @@ export default function Page() {
     currentTab,
     onTabChange,
     pdfUrl,
+    pdfFileName,
     isShowPdf,
     closePdf,
   } = useAlreadyIssuedCertificates(10);
@@ -261,13 +262,18 @@ export default function Page() {
           </>
         ) : (
           <div className="w-full h-full flex flex-col gap-4">
-            <div>
-              <PrimaryButton
-                label="ย้อนกลับ"
-                icon="pi pi-arrow-left"
-                color="secondary"
-                onClick={closePdf}
-              />
+            <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-4 items-center">
+              <div>
+                <PrimaryButton
+                  label="ย้อนกลับ"
+                  icon="pi pi-arrow-left"
+                  color="secondary"
+                  onClick={closePdf}
+                />
+              </div>
+              <div className="text-xl font-bold text-gray-700 break-words">
+                {pdfFileName}
+              </div>
             </div>
             {pdfUrl && (
               <iframe
