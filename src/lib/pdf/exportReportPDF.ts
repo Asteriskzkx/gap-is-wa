@@ -60,6 +60,8 @@ export async function exportReportPDF({
 
   const margin = 10;
   const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  const usableHeight = pageHeight - margin * 2;
   let currentY = margin;
 
   const headerHeight =
@@ -74,30 +76,35 @@ export async function exportReportPDF({
     headerHeight
   );
 
-//   currentY += headerHeight + 5;
+    currentY += headerHeight + 5;
 
   /* ---------- SECTIONS ---------- */
   for (const section of sections) {
     if (!section.ref.current) continue;
-
-    pdf.addPage();
-    currentY = margin;
-
     const canvas = await html2canvas(section.ref.current, {
       scale: 2,
       backgroundColor: "#ffffff",
     });
 
-    const imgHeight = (canvas.height * (pageWidth - margin * 2)) / canvas.width;
+    const imgWidth = pageWidth - margin * 2;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    // ⬅️ ADD PAGE ONLY IF NEEDED
+    if (currentY + imgHeight > usableHeight) {
+      pdf.addPage();
+      currentY = margin;
+    }
 
     pdf.addImage(
       canvas.toDataURL("image/png"),
       "PNG",
       margin,
       currentY,
-      pageWidth - margin * 2,
+      imgWidth,
       imgHeight
     );
+
+    currentY += imgHeight + 8; // spacing between sections
   }
 
   pdf.save(filename);
@@ -107,5 +114,4 @@ export async function exportReportPDF({
   originalWidths.forEach((width, el) => {
     el.style.width = width;
   });
-
 }
