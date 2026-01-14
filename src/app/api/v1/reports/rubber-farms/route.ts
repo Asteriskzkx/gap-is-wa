@@ -18,6 +18,8 @@ export async function GET(req: NextRequest) {
     const url = new URL(req.url);
     const startDateParam = url.searchParams.get("startDate");
     const endDateParam = url.searchParams.get("endDate");
+    const limitParam = url.searchParams.get("limit");
+    const offsetParam = url.searchParams.get("offset");
 
     let startDate: Date | undefined;
     let endDate: Date | undefined;
@@ -26,7 +28,7 @@ export async function GET(req: NextRequest) {
       // Parse date as local time (YYYY-MM-DD -> local midnight)
       const [startYear, startMonth, startDay] = startDateParam.split("-").map(Number);
       const [endYear, endMonth, endDay] = endDateParam.split("-").map(Number);
-      
+
       startDate = new Date(startYear, startMonth - 1, startDay, 0, 0, 0, 0);
       endDate = new Date(endYear, endMonth - 1, endDay, 23, 59, 59, 999);
 
@@ -38,6 +40,21 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    // If pagination params provided, use paginated endpoint
+    if (limitParam !== null || offsetParam !== null) {
+      const limit = limitParam ? parseInt(limitParam, 10) : 10;
+      const offset = offsetParam ? parseInt(offsetParam, 10) : 0;
+
+      const result = await adminReportService.getRubberFarmProvincePaginated({
+        limit,
+        offset,
+        startDate,
+        endDate,
+      });
+      return NextResponse.json(result);
+    }
+
+    // Otherwise return full summary (backward compatible)
     const summary = await adminReportService.getRubberFarmReportSummary(startDate, endDate);
     return NextResponse.json(summary);
   } catch (error) {

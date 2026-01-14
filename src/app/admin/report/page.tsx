@@ -107,6 +107,24 @@ interface AuditorPerformanceReport {
   averagePassRate: number;
 }
 
+// Paginated Response Interfaces
+interface Paginator {
+  limit: number;
+  offset: number;
+  total: number;
+}
+
+interface PaginatedProvinceResponse {
+  results: RubberFarmProvinceCount[];
+  paginator: Paginator;
+}
+
+interface PaginatedAuditorResponse {
+  results: AuditorPerformance[];
+  paginator: Paginator;
+  summary: { totalInspections: number; averagePassRate: number; totalAuditors: number };
+}
+
 const ROLE_LABELS: Record<string, string> = {
   ADMIN: "ผู้ดูแลระบบ",
   COMMITTEE: "คณะกรรมการ",
@@ -157,8 +175,17 @@ export default function AdminReportPage() {
     useState<AuditorPerformanceReport | null>(null);
   const [loadingAuditor, setLoadingAuditor] = useState(true);
 
-  // Pagination state for auditor table
-  const [auditorDisplayCount, setAuditorDisplayCount] = useState(5);
+  // Pagination states for province table
+  const [provinceData, setProvinceData] = useState<RubberFarmProvinceCount[]>([]);
+  const [provinceTotalRecords, setProvinceTotalRecords] = useState(0);
+  const [provinceLazyParams, setProvinceLazyParams] = useState({ first: 0, rows: 5 });
+  const [loadingProvince, setLoadingProvince] = useState(true);
+
+  // Pagination states for auditor table
+  const [auditorPaginatedData, setAuditorPaginatedData] = useState<AuditorPerformance[]>([]);
+  const [auditorTotalRecords, setAuditorTotalRecords] = useState(0);
+  const [auditorSummary, setAuditorSummary] = useState<{ totalInspections: number; averagePassRate: number; totalAuditors: number } | null>(null);
+  const [auditorLazyParams, setAuditorLazyParams] = useState({ first: 0, rows: 5 });
 
   // Export PDF states
   const [showExportDialog, setShowExportDialog] = useState(false);
@@ -273,7 +300,7 @@ export default function AdminReportPage() {
     fetchInspectionData();
   }, [dates]);
 
-  // Fetch rubber farm data
+  // Fetch rubber farm data (summary without pagination)
   useEffect(() => {
     const fetchRubberFarmData = async () => {
       try {
@@ -292,6 +319,32 @@ export default function AdminReportPage() {
     };
     fetchRubberFarmData();
   }, [dates]);
+
+  // Fetch province data with pagination
+  useEffect(() => {
+    const fetchProvinceData = async () => {
+      try {
+        setLoadingProvince(true);
+        let url = `/api/v1/reports/rubber-farms?limit=${provinceLazyParams.rows}&offset=${provinceLazyParams.first}`;
+        if (dates && dates[0] && dates[1]) {
+          const startDate = formatDateLocal(dates[0]);
+          const endDate = formatDateLocal(dates[1]);
+          url += `&startDate=${startDate}&endDate=${endDate}`;
+        }
+        const response = await fetch(url);
+        if (response.ok) {
+          const data: PaginatedProvinceResponse = await response.json();
+          setProvinceData(data.results);
+          setProvinceTotalRecords(data.paginator.total);
+        }
+      } catch (error) {
+        console.error("Error fetching province data:", error);
+      } finally {
+        setLoadingProvince(false);
+      }
+    };
+    fetchProvinceData();
+  }, [dates, provinceLazyParams]);
 
   // Fetch certificate data
   useEffect(() => {
@@ -313,16 +366,23 @@ export default function AdminReportPage() {
     fetchCertificateData();
   }, [dates]);
 
-  // Fetch auditor performance data
+  // Fetch auditor performance data with pagination
   useEffect(() => {
     const fetchAuditorData = async () => {
       try {
         setLoadingAuditor(true);
-        const url = buildUrl("/api/v1/reports/auditor-performance");
+        let url = `/api/v1/reports/auditor-performance?limit=${auditorLazyParams.rows}&offset=${auditorLazyParams.first}`;
+        if (dates && dates[0] && dates[1]) {
+          const startDate = formatDateLocal(dates[0]);
+          const endDate = formatDateLocal(dates[1]);
+          url += `&startDate=${startDate}&endDate=${endDate}`;
+        }
         const response = await fetch(url);
         if (response.ok) {
-          const data = await response.json();
-          setAuditorData(data);
+          const data: PaginatedAuditorResponse = await response.json();
+          setAuditorPaginatedData(data.results);
+          setAuditorTotalRecords(data.paginator.total);
+          setAuditorSummary(data.summary);
         }
       } catch (error) {
         console.error("Error fetching auditor data:", error);
@@ -331,6 +391,12 @@ export default function AdminReportPage() {
       }
     };
     fetchAuditorData();
+  }, [dates, auditorLazyParams]);
+
+  // Reset pagination when dates change
+  useEffect(() => {
+    setProvinceLazyParams((prev) => ({ ...prev, first: 0 }));
+    setAuditorLazyParams((prev) => ({ ...prev, first: 0 }));
   }, [dates]);
 
   // Export PDF function
@@ -1100,16 +1166,24 @@ export default function AdminReportPage() {
             </div>
           </div>
 
-          {/* By Province - Top 5 */}
+          {/* By Province - Paginated Table */}
           <div>
             <h3 className="text-lg font-medium text-gray-800 mb-3">
-              จังหวัดที่มีแปลงสวนยางพารามากที่สุด 5 อันดับแรก
+              จังหวัดที่มีแปลงสวนยางพารามากที่สุด
             </h3>
             <PrimaryDataTable
-              value={rubberFarmData?.byProvince.slice(0, 5) ?? []}
+              value={provinceData}
               columns={topRankColumns}
-              loading={loadingRubberFarm}
+              loading={loadingProvince}
               emptyMessage="ไม่มีข้อมูลแปลงสวนยางพารา"
+              lazy
+              paginator
+              rows={provinceLazyParams.rows}
+              totalRecords={provinceTotalRecords}
+              first={provinceLazyParams.first}
+              onPage={(e) => setProvinceLazyParams({ first: e.first, rows: e.rows })}
+              rowsPerPageOptions={[5, 10, 25]}
+              dataKey="province"
             />
           </div>
         </div>
@@ -1236,7 +1310,7 @@ export default function AdminReportPage() {
                 <p className="text-3xl font-bold text-gray-300">...</p>
               ) : (
                 <p className="text-3xl font-bold text-indigo-600">
-                  {auditorData?.totalInspections ?? 0}
+                  {auditorSummary?.totalInspections ?? 0}
                 </p>
               )}
               <p className="text-xs text-gray-500">ครั้ง</p>
@@ -1248,7 +1322,7 @@ export default function AdminReportPage() {
                 <p className="text-3xl font-bold text-gray-300">...</p>
               ) : (
                 <p className="text-3xl font-bold text-teal-600">
-                  {auditorData?.averagePassRate ?? 0}%
+                  {auditorSummary?.averagePassRate ?? 0}%
                 </p>
               )}
             </div>
@@ -1261,7 +1335,7 @@ export default function AdminReportPage() {
                 <p className="text-3xl font-bold text-gray-300">...</p>
               ) : (
                 <p className="text-3xl font-bold text-cyan-600">
-                  {auditorData?.auditors.length ?? 0}
+                  {auditorSummary?.totalAuditors ?? 0}
                 </p>
               )}
               <p className="text-xs text-gray-500">คน</p>
@@ -1270,52 +1344,24 @@ export default function AdminReportPage() {
 
           {/* Auditor Performance Table */}
           <div>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-medium text-gray-800">
-                ผลงานแต่ละผู้ตรวจประเมิน
-              </h3>
-              {auditorData && auditorData.auditors.length > 0 && (
-                <span className="text-sm text-gray-500">
-                  แสดง{" "}
-                  {Math.min(auditorDisplayCount, auditorData.auditors.length)}{" "}
-                  จาก {auditorData.auditors.length} คน
-                </span>
-              )}
-            </div>
+            <h3 className="text-lg font-medium text-gray-800 mb-3">
+              ผลงานแต่ละผู้ตรวจประเมิน
+            </h3>
             <PrimaryDataTable
               data-testid="auditor-performance-table"
-              value={auditorData?.auditors.slice(0, auditorDisplayCount) ?? []}
+              value={auditorPaginatedData}
               columns={auditorColumns}
               loading={loadingAuditor}
               emptyMessage="ไม่มีข้อมูลผู้ตรวจประเมิน"
+              lazy
+              paginator
+              rows={auditorLazyParams.rows}
+              totalRecords={auditorTotalRecords}
+              first={auditorLazyParams.first}
+              onPage={(e) => setAuditorLazyParams({ first: e.first, rows: e.rows })}
+              rowsPerPageOptions={[5, 10, 25]}
+              dataKey="auditorId"
             />
-
-            {/* Show More / Show Less Buttons */}
-            {auditorData && auditorData.auditors.length > 5 && (
-              <div className="flex justify-center gap-2 mt-4">
-                {auditorDisplayCount < auditorData.auditors.length && (
-                  <Button
-                    label={`ดูเพิ่มเติม (${auditorData.auditors.length - auditorDisplayCount
-                      } คน)`}
-                    className="p-button-outlined p-button-sm"
-                    icon="pi pi-chevron-down"
-                    onClick={() =>
-                      setAuditorDisplayCount((prev) =>
-                        Math.min(prev + 5, auditorData.auditors.length)
-                      )
-                    }
-                  />
-                )}
-                {auditorDisplayCount > 5 && (
-                  <Button
-                    label="แสดงน้อยลง"
-                    className="p-button-text p-button-sm"
-                    icon="pi pi-chevron-up"
-                    onClick={() => setAuditorDisplayCount(5)}
-                  />
-                )}
-              </div>
-            )}
           </div>
         </div>
       </div>
