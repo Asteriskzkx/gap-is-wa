@@ -195,7 +195,7 @@ export default function AuditLogsPage() {
         headerAlign: "center" as const,
         bodyAlign: "center" as const,
         body: (r: AuditLogItem) => r.recordId,
-        style: { width: "15%" },
+        style: { width: "13%" },
       },
       {
         field: "operatorName",
@@ -204,7 +204,7 @@ export default function AuditLogsPage() {
         headerAlign: "center" as const,
         bodyAlign: "left" as const,
         body: (r: AuditLogItem) => r.operatorName ?? "-",
-        style: { width: "12%" },
+        style: { width: "14%" },
       },
       {
         field: "createdAt",
