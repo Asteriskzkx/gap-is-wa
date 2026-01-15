@@ -69,12 +69,12 @@ export default function AuditLogsPage() {
     handleSort,
     deleteOldLogs,
     countOldLogs,
+    deletingOldLogs,
   } = useAdminAuditLogs(10);
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedDays, setSelectedDays] = useState<number | null>(90);
   const [estimatedCount, setEstimatedCount] = useState<number>(0);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleOpenDeleteDialog = async () => {
     setShowDeleteDialog(true);
@@ -98,7 +98,6 @@ export default function AuditLogsPage() {
       return;
     }
 
-    setIsDeleting(true);
     try {
       const result = await deleteOldLogs(selectedDays);
       if (result.success) {
@@ -112,8 +111,6 @@ export default function AuditLogsPage() {
     } catch (error) {
       console.error("Error deleting old logs:", error);
       toast.error("เกิดข้อผิดพลาดในการลบข้อมูล");
-    } finally {
-      setIsDeleting(false);
     }
   };
 
@@ -369,6 +366,7 @@ export default function AuditLogsPage() {
                   onClick={handleOpenDeleteDialog}
                   color="danger"
                   className="w-full md:w-auto md:justify-self-start"
+                  disabled={deletingOldLogs}
                 />
 
                 <PrimaryButton
@@ -420,7 +418,10 @@ export default function AuditLogsPage() {
         blockScroll={true}
         draggable={false}
         style={{ width: "500px" }}
-        onHide={() => setShowDeleteDialog(false)}
+        onHide={() => {
+          if (deletingOldLogs) return;
+          setShowDeleteDialog(false);
+        }}
         footer={
           <div className="flex justify-end gap-2">
             <PrimaryButton
@@ -429,15 +430,15 @@ export default function AuditLogsPage() {
               onClick={() => setShowDeleteDialog(false)}
               color="secondary"
               outlined
-              disabled={isDeleting}
+              disabled={deletingOldLogs}
             />
             <PrimaryButton
               label="ยืนยันการลบ"
               icon="pi pi-check"
               onClick={handleConfirmDelete}
               color="danger"
-              loading={isDeleting}
-              disabled={!selectedDays || estimatedCount === 0}
+              loading={deletingOldLogs}
+              disabled={deletingOldLogs || !selectedDays || estimatedCount === 0}
             />
           </div>
         }
