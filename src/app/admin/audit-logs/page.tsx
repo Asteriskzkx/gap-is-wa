@@ -177,7 +177,7 @@ export default function AuditLogsPage() {
         headerAlign: "center" as const,
         bodyAlign: "left" as const,
         body: (r: AuditLogItem) => <TableNameCell tableName={r.tableName} />,
-        style: { width: "30%" },
+        style: { width: "28%" },
       },
       {
         field: "action",
@@ -198,46 +198,14 @@ export default function AuditLogsPage() {
         style: { width: "15%" },
       },
       {
-        field: "userId",
-        header: "รหัสผู้ใช้",
-        sortable: true,
+        field: "operatorName",
+        header: "ชื่อผู้ดำเนินการ",
+        sortable: false,
         headerAlign: "center" as const,
-        bodyAlign: "center" as const,
-        body: (r: AuditLogItem) => r.userId ?? "-",
-        style: { width: "10%" },
+        bodyAlign: "left" as const,
+        body: (r: AuditLogItem) => r.operatorName ?? "-",
+        style: { width: "12%" },
       },
-      //   {
-      //     field: "oldData",
-      //     header: "ข้อมูลเก่า",
-      //     sortable: false,
-      //     headerAlign: "center" as const,
-      //     bodyAlign: "left" as const,
-      //     body: (r: any) =>
-      //       r.oldData ? (
-      //         <pre className="text-xs overflow-auto max-w-xs">
-      //           {JSON.stringify(r.oldData, null, 2)}
-      //         </pre>
-      //       ) : (
-      //         "-"
-      //       ),
-      //     style: { width: "20%" },
-      //   },
-      //   {
-      //     field: "newData",
-      //     header: "ข้อมูลใหม่",
-      //     sortable: false,
-      //     headerAlign: "center" as const,
-      //     bodyAlign: "left" as const,
-      //     body: (r: any) =>
-      //       r.newData ? (
-      //         <pre className="text-xs overflow-auto max-w-xs">
-      //           {JSON.stringify(r.newData, null, 2)}
-      //         </pre>
-      //       ) : (
-      //         "-"
-      //       ),
-      //     style: { width: "20%" },
-      //   },
       {
         field: "createdAt",
         header: "วันที่ดำเนินการ",
@@ -606,6 +574,14 @@ export default function AuditLogsPage() {
                   </span>
                   <p className="text-base text-gray-900 mt-1">
                     {selectedAuditLog.userId ?? "-"}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-sm font-medium text-gray-600 block">
+                    ชื่อผู้ดำเนินการ
+                  </span>
+                  <p className="text-base text-gray-900 mt-1">
+                    {selectedAuditLog.operatorName ?? "-"}
                   </p>
                 </div>
                 <div>

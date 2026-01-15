@@ -1,13 +1,19 @@
 import { AuditLogModel } from "@/models/AuditLogModel";
 import { AuditLogRepository } from "@/repositories/AuditLogRepository";
 import { BaseService } from "./BaseService";
+import { UserRepository } from "@/repositories/UserRepository";
 
 export class AuditLogService extends BaseService<AuditLogModel> {
   private readonly auditLogRepository: AuditLogRepository;
+  private readonly userRepository: UserRepository;
 
-  constructor(auditLogRepository: AuditLogRepository) {
+  constructor(
+    auditLogRepository: AuditLogRepository,
+    userRepository: UserRepository
+  ) {
     super(auditLogRepository);
     this.auditLogRepository = auditLogRepository;
+    this.userRepository = userRepository;
   }
 
   /**
@@ -129,7 +135,26 @@ export class AuditLogService extends BaseService<AuditLogModel> {
     offset?: number;
   }): Promise<{ data: AuditLogModel[]; total: number }> {
     try {
-      return await this.auditLogRepository.findAllWithPagination(options);
+      const result = await this.auditLogRepository.findAllWithPagination(
+        options
+      );
+
+      const userIds = Array.from(
+        new Set(
+          result.data
+            .map((log) => log.userId)
+            .filter((id): id is number => typeof id === "number")
+        )
+      );
+
+      const nameMap = await this.userRepository.findNameMapByIds(userIds);
+
+      for (const log of result.data) {
+        log.operatorName =
+          typeof log.userId === "number" ? (nameMap[log.userId] ?? null) : null;
+      }
+
+      return result;
     } catch (error) {
       this.handleServiceError(error);
       return { data: [], total: 0 };

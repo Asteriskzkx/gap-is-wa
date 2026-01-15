@@ -103,6 +103,22 @@ export class UserRepository extends BaseRepository<UserModel> {
     return this.mapper.toDomain(user);
   }
 
+  async findNameMapByIds(userIds: number[]): Promise<Record<number, string>> {
+    if (!userIds.length) return {};
+
+    try {
+      const users = await this.prisma.user.findMany({
+        where: { userId: { in: userIds } },
+        select: { userId: true, name: true },
+      });
+
+      return Object.fromEntries(users.map((u) => [u.userId, u.name]));
+    } catch (error) {
+      console.error("Error finding user names by IDs:", error);
+      return {};
+    }
+  }
+
   /**
    * ค้นหา users พร้อม filter และ pagination (Server-side)
    */

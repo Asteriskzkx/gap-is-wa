@@ -6,6 +6,7 @@ export class AuditLogModel extends BaseModel {
   action: string;
   recordId: number;
   userId?: number;
+  operatorName?: string | null;
   oldData?: Record<string, any>;
   newData?: Record<string, any>;
 
@@ -56,6 +57,7 @@ export class AuditLogModel extends BaseModel {
       action: this.action,
       recordId: this.recordId,
       userId: this.userId,
+      operatorName: this.operatorName ?? null,
       oldData: this.oldData,
       newData: this.newData,
       createdAt: this.createdAt,

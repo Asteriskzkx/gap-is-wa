@@ -8,6 +8,7 @@ export interface AuditLogItem {
   tableName: string;
   recordId: number;
   userId: number | null;
+  operatorName?: string | null;
   action: string;
   oldData: Record<string, any> | null;
   newData: Record<string, any> | null;
@@ -29,7 +30,7 @@ export function useAdminAuditLogs(initialRows = 10) {
   const router = useRouter();
   const { status } = useSession();
 
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState<AuditLogItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalRecords, setTotalRecords] = useState(0);
 
