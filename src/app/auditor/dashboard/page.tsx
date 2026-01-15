@@ -7,13 +7,9 @@ import { useEffect, useState } from "react";
 // Icons
 import {
   CalendarIcon,
-  ChatBubbleIcon,
   CheckCircleIcon,
   ChevronRightIcon,
   FileIcon,
-  FindInPageIcon,
-  HomeIcon,
-  NaturePeopleIcon,
   TextClipboardIcon,
 } from "@/components/icons";
 
@@ -29,8 +25,8 @@ import {
 import PrimaryDataTable from "@/components/ui/PrimaryDataTable";
 
 // Routes
-import { getInspectionSummaryRoute } from "@/lib/routeHelpers";
 import { auditorNavItems } from "@/config/navItems";
+import { getInspectionSummaryRoute } from "@/lib/routeHelpers";
 
 interface Inspection {
   inspectionId: number;
@@ -45,6 +41,9 @@ interface Inspection {
     subDistrict: string;
     district: string;
     province: string;
+    moo?: string | number;
+    road?: string;
+    alley?: string;
     farmer?: {
       namePrefix: string;
       firstName: string;
@@ -70,11 +69,17 @@ const renderFarmerName = (rowData: Inspection) => {
 };
 
 const renderRubberFarmLocation = (rowData: Inspection) => {
+  const f = rowData.rubberFarm;
+  const v = (val: any) =>
+    (val || val === 0) && val !== "-" && val !== "" ? val : null;
   const location = [
-    rowData.rubberFarm?.villageName,
-    rowData.rubberFarm?.subDistrict,
-    rowData.rubberFarm?.district,
-    rowData.rubberFarm?.province,
+    v(f?.villageName),
+    v(f?.moo) ? `หมู่ ${f?.moo}` : null,
+    v(f?.road),
+    v(f?.alley),
+    v(f?.subDistrict) ? `ต.${f?.subDistrict}` : null,
+    v(f?.district) ? `อ.${f?.district}` : null,
+    v(f?.province) ? `จ.${f?.province}` : null,
   ]
     .filter(Boolean)
     .join(" ");
