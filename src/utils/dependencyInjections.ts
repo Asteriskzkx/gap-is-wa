@@ -127,6 +127,7 @@ const auditorService = new AuditorService(
   rubberFarmRepository,
   inspectionTypeMasterRepository,
   inspectionRepository,
+  certificateRepository,
   auditLogService
 );
 const committeeService = new CommitteeService(
