@@ -108,7 +108,7 @@ export default function CommitteeReportPage() {
   const [reportData, setReportData] = useState<CommitteeReportSummary | null>(
     null
   );
-  
+
   const [isMobile, setIsMobile] = useState(false);
 
   const [chartData, setChartData] = useState<{
@@ -297,11 +297,8 @@ export default function CommitteeReportPage() {
       };
     }
     return {
-      labels: chartData.inspectionsByType.map((t) =>
-        t.typeName.split(" ")
-      ),
+      labels: chartData.inspectionsByType.map((t) => t.typeName.split(" ")),
       datasets: [
-        
         {
           label: "ผ่าน",
           data: chartData.inspectionsByType.map((t) => t.passed),
@@ -396,7 +393,7 @@ export default function CommitteeReportPage() {
       //       font: {
       //         size: 10,
       //       },
-            
+
       //     },
       //   },
       //   y: { stacked: true, beginAtZero: true },
@@ -457,7 +454,6 @@ export default function CommitteeReportPage() {
           exportSections.expiryAlerts && { ref: expiryAlertsRef },
           exportSections.charts && { ref: chartsRef },
           exportSections.inspectionStats && { ref: inspectionStatsRef },
-          
         ].filter(Boolean) as any,
       });
     } finally {
@@ -471,33 +467,42 @@ export default function CommitteeReportPage() {
       field: "certificateId",
       header: "เลขที่",
       sortable: true,
+      headerAlign: "center",
+      bodyAlign: "center",
+      style: { width: "10%" },
     },
     {
       field: "farmerName",
       header: "ชื่อเกษตรกร",
       sortable: true,
+      headerAlign: "center",
+      bodyAlign: "left",
+      style: { width: "18%" },
     },
     {
       field: "farmLocation",
       header: "ที่ตั้ง",
-    },
-    {
-      field: "province",
-      header: "จังหวัด",
+      headerAlign: "center",
+      bodyAlign: "left",
+      style: { width: "52%" },
     },
     {
       field: "effectiveDate",
       header: "วันที่ออก",
+      headerAlign: "center",
       body: (row: RecentCertificate) =>
         new Date(row.effectiveDate).toLocaleDateString("th-TH"),
       bodyAlign: "center" as const,
+      style: { width: "10%" },
     },
     {
       field: "expiryDate",
       header: "วันหมดอายุ",
+      headerAlign: "center",
       body: (row: RecentCertificate) =>
         new Date(row.expiryDate).toLocaleDateString("th-TH"),
       bodyAlign: "center" as const,
+      style: { width: "10%" },
     },
   ];
 
@@ -505,35 +510,46 @@ export default function CommitteeReportPage() {
     {
       field: "typeName",
       header: "ประเภท",
+      headerAlign: "center",
+      bodyAlign: "left",
+      style: { width: "52%" },
     },
     {
       field: "count",
       header: "ทั้งหมด",
-      bodyAlign: "center",
+      headerAlign: "center",
+      bodyAlign: "right",
+      style: { width: "12%" },
     },
     {
       field: "passed",
       header: "ผ่าน",
-      bodyAlign: "center",
+      headerAlign: "center",
+      bodyAlign: "right",
       body: (row: inspectionsByType) => (
         <span className="text-green-600 font-medium">{row.passed}</span>
       ),
+      style: { width: "12%" },
     },
     {
       field: "failed",
       header: "ไม่ผ่าน",
-      bodyAlign: "center",
+      headerAlign: "center",
+      bodyAlign: "right",
       body: (row: inspectionsByType) => (
         <span className="text-red-600 font-medium">{row.failed}</span>
       ),
+      style: { width: "12%" },
     },
     {
       field: "pending",
       header: "รอดำเนินการ",
-      bodyAlign: "center",
+      headerAlign: "center",
+      bodyAlign: "right",
       body: (row: inspectionsByType) => (
         <span className="text-yellow-600 font-medium">{row.pending ?? 0}</span>
       ),
+      style: { width: "12%" },
     },
   ];
 
@@ -694,7 +710,6 @@ export default function CommitteeReportPage() {
                 รายงานการตรวจประเมิน
               </label>
             </div>
-            
           </div>
         </Dialog>
 
@@ -1041,7 +1056,10 @@ export default function CommitteeReportPage() {
           {/* Inspection by Type Bar Chart */}
           <div className="bg-gray-50 rounded-lg p-4 mb-6">
             <div className="h-64">
-              <canvas  key={isMobile ? "mobile-bar" : "desktop-bar"} ref={inspectionTypeBarRef} />
+              <canvas
+                key={isMobile ? "mobile-bar" : "desktop-bar"}
+                ref={inspectionTypeBarRef}
+              />
             </div>
           </div>
         </div>
