@@ -338,13 +338,19 @@ export default function FarmerApplicationsPage() {
                         const farm = rowData.rubberFarm;
                         if (!farm) return "";
 
-                        const isValid = (val: any) => val !== null && val !== undefined && val !== "" && String(val) !== "-";
+                        const v = (val: any) =>
+                          (val || val === 0) && val !== "-" && val !== ""
+                            ? val
+                            : null;
 
                         const parts = [
-                          isValid(farm.villageName) ? farm.villageName : null,
-                          isValid(farm.moo) ? `หมู่ ${farm.moo}` : null,
-                          isValid(farm.alley) ? `ซอย${farm.alley}` : null,
-                          isValid(farm.road) ? `ถนน${farm.road}` : null
+                          v(farm.villageName),
+                          v(farm.moo) ? `หมู่ ${farm.moo}` : null,
+                          v(farm.road),
+                          v(farm.alley),
+                          // v(farm.subDistrict) ? `ต.${farm.subDistrict}` : null,
+                          // v(farm.district) ? `อ.${farm.district}` : null,
+                          // v(farm.province) ? `จ.${farm.province}` : null,
                         ];
 
                         return parts.filter(Boolean).join(" ");
@@ -390,8 +396,8 @@ export default function FarmerApplicationsPage() {
                       body: (rowData: ApplicationItem) =>
                         rowData.inspection?.inspectionDateAndTime
                           ? formatThaiDate(
-                            rowData.inspection.inspectionDateAndTime
-                          )
+                              rowData.inspection.inspectionDateAndTime
+                            )
                           : "-",
                       sortable: true,
                       headerAlign: "center" as const,

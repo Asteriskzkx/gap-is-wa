@@ -86,8 +86,23 @@ export const FarmSelectionStep: React.FC<FarmSelectionStepProps> = ({
           {
             field: "location",
             header: "สถานที่",
-            body: (rowData: any) =>
-              rowData.location || `${rowData.villageName} หมู่ ${rowData.moo}`,
+            body: (rowData: any) => {
+              const v = (val: any) =>
+                (val || val === 0) && val !== "-" && val !== "" ? val : null;
+              return (
+                [
+                  v(rowData.villageName),
+                  v(rowData.moo) ? `หมู่ ${rowData.moo}` : null,
+                  v(rowData.road),
+                  v(rowData.alley),
+                  // v(rowData.subDistrict) ? `ต.${rowData.subDistrict}` : null,
+                  // v(rowData.district) ? `อ.${rowData.district}` : null,
+                  // v(rowData.province) ? `จ.${rowData.province}` : null,
+                ]
+                  .filter(Boolean)
+                  .join(" ") || "-"
+              );
+            },
             sortable: true,
             headerAlign: "center" as const,
             bodyAlign: "left" as const,
