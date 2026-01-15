@@ -48,6 +48,22 @@ export interface AuditorReportSummary {
   inspectedFarms: InspectedFarm[];
 }
 
+const formatFarmLocation = (farm: any) => {
+  const v = (val: any) =>
+    (val || val === 0) && val !== "-" && val !== "" ? val : null;
+  return [
+    v(farm.villageName),
+    v(farm.moo) ? `หมู่ ${farm.moo}` : null,
+    v(farm.road),
+    v(farm.alley),
+    v(farm.subDistrict) ? `ต.${farm.subDistrict}` : null,
+    v(farm.district) ? `อ.${farm.district}` : null,
+    v(farm.province) ? `จ.${farm.province}` : null,
+  ]
+    .filter(Boolean)
+    .join(" ") || "-";
+};
+
 export class AuditorReportService {
   /**
    * Get my inspection stats for the current auditor
@@ -83,11 +99,11 @@ export class AuditorReportService {
       const dateFilter =
         startDate && endDate
           ? {
-              inspectionDateAndTime: {
-                gte: startDate,
-                lte: endDate,
-              },
-            }
+            inspectionDateAndTime: {
+              gte: startDate,
+              lte: endDate,
+            },
+          }
           : {};
 
       const whereClause = {
@@ -137,7 +153,7 @@ export class AuditorReportService {
       const passRate =
         completedInspections > 0
           ? Math.round((passedInspections / completedInspections) * 100 * 100) /
-            100
+          100
           : 0;
 
       const stats: MyInspectionStats = {
@@ -191,9 +207,7 @@ export class AuditorReportService {
         .map((i) => ({
           id: i.inspectionId,
           farmerName: i.rubberFarm?.farmer?.user?.name || "ไม่ระบุ",
-          farmLocation: `${i.rubberFarm?.villageName || ""} ม.${
-            i.rubberFarm?.moo || ""
-          }`,
+          farmLocation: formatFarmLocation(i.rubberFarm),
           province: i.rubberFarm?.province || "ไม่ระบุ",
           inspectionDate: i.inspectionDateAndTime?.toISOString() || "",
           result: i.inspectionResult || null,
@@ -231,9 +245,7 @@ export class AuditorReportService {
         } else {
           farmMap.set(farmId, {
             rubberFarmId: farmId,
-            farmLocation: `${inspection.rubberFarm?.villageName || ""} ม.${
-              inspection.rubberFarm?.moo || ""
-            }`,
+            farmLocation: formatFarmLocation(inspection.rubberFarm),
             province: inspection.rubberFarm?.province || "ไม่ระบุ",
             farmerName: inspection.rubberFarm?.farmer?.user?.name || "ไม่ระบุ",
             lastInspectionDate:

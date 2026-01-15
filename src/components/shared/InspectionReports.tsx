@@ -78,7 +78,7 @@ export default function InspectionReports({
         body: (row: any) => {
           const f = row.rubberFarm;
           const v = (val: any) =>
-            val && val !== "-" && val !== "0" ? val : null;
+            (val || val === 0) && val !== "-" && val !== "" ? val : null;
           return (
             <span>
               {[

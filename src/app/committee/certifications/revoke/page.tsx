@@ -98,7 +98,7 @@ export default function Page() {
         body: (r: any) => {
           const f = r.inspection?.rubberFarm;
           const v = (val: any) =>
-            val && val !== "-" && val !== "0" ? val : null;
+            (val || val === 0) && val !== "-" && val !== "" ? val : null;
           return (
             <span>
               {[
