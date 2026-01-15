@@ -122,6 +122,22 @@ type AuditorWithInspections = Auditor & {
 
 // ==================== Service ====================
 
+const formatFarmLocation = (farm: any) => {
+  const v = (val: any) =>
+    (val || val === 0) && val !== "-" && val !== "" ? val : null;
+  return [
+    v(farm.villageName),
+    v(farm.moo) ? `หมู่ ${farm.moo}` : null,
+    v(farm.road),
+    v(farm.alley),
+    v(farm.subDistrict) ? `ต.${farm.subDistrict}` : null,
+    v(farm.district) ? `อ.${farm.district}` : null,
+    v(farm.province) ? `จ.${farm.province}` : null,
+  ]
+    .filter(Boolean)
+    .join(" ") || "-";
+};
+
 export class CommitteeReportService {
   /**
    * Get comprehensive report data for committee
@@ -234,7 +250,7 @@ export class CommitteeReportService {
       return {
         certificateId: cert.certificateId,
         farmerName: `${farmer.firstName} ${farmer.lastName}`,
-        farmLocation: `หมู่ ${farm.moo} ${farm.villageName}`,
+        farmLocation: formatFarmLocation(farm),
         province: farm.province,
         expiryDate: cert.expiryDate.toISOString(),
         daysUntilExpiry,
@@ -449,7 +465,7 @@ export class CommitteeReportService {
           return {
             certificateId: cert.certificateId,
             farmerName: `${farmer.firstName} ${farmer.lastName}`,
-            farmLocation: `หมู่ ${farm.moo} ${farm.villageName}`,
+            farmLocation: formatFarmLocation(farm),
             province: farm.province,
             effectiveDate: cert.effectiveDate.toISOString(),
             expiryDate: cert.expiryDate.toISOString(),

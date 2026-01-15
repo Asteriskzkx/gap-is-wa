@@ -5,9 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 // Icons
-import {
-  ChevronRightIcon
-} from "@/components/icons";
+import { ChevronRightIcon } from "@/components/icons";
 
 // Layout
 import FarmerLayout from "@/components/layout/FarmerLayout";
@@ -114,18 +112,17 @@ const renderFarmId = (rowData: ApplicationItem) =>
 
 const renderLocation = (rowData: ApplicationItem) => {
   const farm = rowData.rubberFarm;
-
-  const isValid = (val: any) =>
-    val !== null && val !== undefined && val !== "" && String(val) !== "-";
+  const v = (val: any) =>
+    (val || val === 0) && val !== "-" && val !== "" ? val : null;
 
   const addressParts = [
-    isValid(farm.villageName) ? farm.villageName : null,
-    isValid(farm.moo) ? `หมู่ ${farm.moo}` : null,
-    isValid(farm.road) ? `ถนน ${farm.road}` : null,
-    isValid(farm.alley) ? `ซอย ${farm.alley}` : null,
-    isValid(farm.subDistrict) ? `ต.${farm.subDistrict}` : null,
-    isValid(farm.district) ? `อ.${farm.district}` : null,
-    isValid(farm.province) ? farm.province : null,
+    v(farm.villageName),
+    v(farm.moo) ? `หมู่ ${farm.moo}` : null,
+    v(farm.road),
+    v(farm.alley),
+    v(farm.subDistrict) ? `ต.${farm.subDistrict}` : null,
+    v(farm.district) ? `อ.${farm.district}` : null,
+    v(farm.province) ? `จ.${farm.province}` : null,
   ];
 
   const formattedLocation = addressParts.filter(Boolean).join(" ");

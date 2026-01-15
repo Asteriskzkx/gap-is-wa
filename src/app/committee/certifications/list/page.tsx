@@ -88,15 +88,26 @@ export default function Page() {
         sortable: true,
         headerAlign: "center" as const,
         bodyAlign: "left" as const,
-        body: (r: any) =>
-          [
-            r.inspection?.rubberFarm?.villageName,
-            r.inspection?.rubberFarm?.subDistrict,
-            r.inspection?.rubberFarm?.district,
-            r.inspection?.rubberFarm?.province,
-          ]
-            .filter(Boolean)
-            .join(" ") || "-",
+        body: (r: any) => {
+          const f = r.inspection?.rubberFarm;
+          const v = (val: any) =>
+            (val || val === 0) && val !== "-" && val !== "" ? val : null;
+          return (
+            <span>
+              {[
+                v(f?.villageName),
+                v(f?.moo) ? `หมู่ ${f.moo}` : null,
+                v(f?.road),
+                v(f?.alley),
+                v(f?.subDistrict) ? `ต.${f.subDistrict}` : null,
+                v(f?.district) ? `อ.${f.district}` : null,
+                v(f?.province) ? `จ.${f.province}` : null,
+              ]
+                .filter(Boolean)
+                .join(" ") || "-"}
+            </span>
+          );
+        },
         style: { width: "30%" },
       },
       {

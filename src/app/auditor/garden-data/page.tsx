@@ -357,13 +357,13 @@ export default function Page() {
           Array.isArray(pd) && pd.length
             ? pd.map((d: any) => ({ id: genId(), ...d }))
             : [
-                {
-                  id: genId(),
-                  name: "",
-                  outbreakPeriod: "",
-                  preventionAndControl: "",
-                },
-              ]
+              {
+                id: genId(),
+                name: "",
+                outbreakPeriod: "",
+                preventionAndControl: "",
+              },
+            ]
         );
 
         // related plants
@@ -550,10 +550,10 @@ export default function Page() {
         body: (r: any) =>
           r.inspectionDateAndTime
             ? new Date(r.inspectionDateAndTime).toLocaleString("th-TH", {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              })
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })
             : "-",
         style: { width: "12%" },
       },
@@ -572,15 +572,26 @@ export default function Page() {
         sortable: false,
         headerAlign: "center" as const,
         bodyAlign: "left" as const,
-        body: (r: any) =>
-          [
-            r.rubberFarm?.villageName,
-            r.rubberFarm?.subDistrict,
-            r.rubberFarm?.district,
-            r.rubberFarm?.province,
-          ]
-            .filter(Boolean)
-            .join(" ") || "-",
+        body: (r: any) => {
+          const f = r.rubberFarm;
+          const v = (val: any) =>
+            (val || val === 0) && val !== "-" && val !== "" ? val : null;
+          return (
+            <span>
+              {[
+                v(f?.villageName),
+                v(f?.moo) ? `หมู่ ${f.moo}` : null,
+                v(f?.road),
+                v(f?.alley),
+                v(f?.subDistrict) ? `ต.${f.subDistrict}` : null,
+                v(f?.district) ? `อ.${f.district}` : null,
+                v(f?.province) ? `จ.${f.province}` : null,
+              ]
+                .filter(Boolean)
+                .join(" ") || "-"}
+            </span>
+          );
+        },
         style: { width: "31%" },
       },
       {

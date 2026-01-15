@@ -75,18 +75,26 @@ export default function InspectionReports({
         sortable: false,
         headerAlign: "center" as const,
         bodyAlign: "left" as const,
-        body: (row: any) => (
-          <span>
-            {[
-              row.rubberFarm?.villageName,
-              row.rubberFarm?.subDistrict,
-              row.rubberFarm?.district,
-              row.rubberFarm?.province,
-            ]
-              .filter(Boolean)
-              .join(" ") || "-"}
-          </span>
-        ),
+        body: (row: any) => {
+          const f = row.rubberFarm;
+          const v = (val: any) =>
+            (val || val === 0) && val !== "-" && val !== "" ? val : null;
+          return (
+            <span>
+              {[
+                v(f?.villageName),
+                v(f?.moo) ? `หมู่ ${f.moo}` : null,
+                v(f?.road),
+                v(f?.alley),
+                v(f?.subDistrict) ? `ต.${f.subDistrict}` : null,
+                v(f?.district) ? `อ.${f.district}` : null,
+                v(f?.province) ? `จ.${f.province}` : null,
+              ]
+                .filter(Boolean)
+                .join(" ") || "-"}
+            </span>
+          );
+        },
         style: { width: "30%" },
       },
       {
