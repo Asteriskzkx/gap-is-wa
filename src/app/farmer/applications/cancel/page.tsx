@@ -118,13 +118,13 @@ export default function Page() {
         body: (r: any) =>
           r.inspection?.inspectionDateAndTime
             ? new Date(r.inspection.inspectionDateAndTime).toLocaleString(
-              "th-TH",
-              {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              }
-            )
+                "th-TH",
+                {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                }
+              )
             : "-",
         style: { width: "12%" },
       },
@@ -134,15 +134,24 @@ export default function Page() {
         sortable: true,
         headerAlign: "center" as const,
         bodyAlign: "left" as const,
-        body: (r: any) =>
-          [
-            r.inspection?.rubberFarm?.villageName,
-            r.inspection?.rubberFarm?.subDistrict,
-            r.inspection?.rubberFarm?.district,
-            r.inspection?.rubberFarm?.province,
-          ]
-            .filter(Boolean)
-            .join(" ") || "-",
+        body: (r: any) => {
+          const f = r.inspection?.rubberFarm;
+          const v = (val: any) =>
+            (val || val === 0) && val !== "-" && val !== "" ? val : null;
+          return (
+            [
+              v(f?.villageName),
+              v(f?.moo) ? `หมู่ ${f.moo}` : null,
+              v(f?.road),
+              v(f?.alley),
+              v(f?.subDistrict) ? `ต.${f.subDistrict}` : null,
+              v(f?.district) ? `อ.${f.district}` : null,
+              v(f?.province) ? `จ.${f.province}` : null,
+            ]
+              .filter(Boolean)
+              .join(" ") || "-"
+          );
+        },
         style: { width: "25%" },
       },
       {
@@ -154,10 +163,10 @@ export default function Page() {
         body: (r: any) =>
           r.effectiveDate
             ? new Date(r.effectiveDate).toLocaleDateString("th-TH", {
-              year: "numeric",
-              month: "short",
-              day: "numeric",
-            })
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              })
             : "-",
         style: { width: "12%" },
       },
@@ -170,34 +179,34 @@ export default function Page() {
         body: (r: any) =>
           r.expiryDate
             ? new Date(r.expiryDate).toLocaleDateString("th-TH", {
-              year: "numeric",
-              month: "short",
-              day: "numeric",
-            })
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              })
             : "-",
         style: { width: "12%" },
       },
       currentTab === "cancel-request"
         ? {
-          field: "status",
-          header: "สถานะ",
-          sortable: false,
-          headerAlign: "center" as const,
-          bodyAlign: "center" as const,
-          body: statusBody,
-          style: { width: "15%" },
-        }
+            field: "status",
+            header: "สถานะ",
+            sortable: false,
+            headerAlign: "center" as const,
+            bodyAlign: "center" as const,
+            body: statusBody,
+            style: { width: "15%" },
+          }
         : {
-          field: "actions",
-          header: "",
-          sortable: false,
-          headerAlign: "center" as const,
-          bodyAlign: "center" as const,
-          mobileAlign: "right" as const,
-          mobileHideLabel: true,
-          body: actionBody,
-          style: { width: "15%" },
-        },
+            field: "actions",
+            header: "",
+            sortable: false,
+            headerAlign: "center" as const,
+            bodyAlign: "center" as const,
+            mobileAlign: "right" as const,
+            mobileHideLabel: true,
+            body: actionBody,
+            style: { width: "15%" },
+          },
     ],
     [currentTab]
   );
@@ -284,14 +293,18 @@ export default function Page() {
                       <PrimaryButton
                         label="ใบรับรองทั้งหมด"
                         fullWidth
-                        color={currentTab === "in-use" ? "success" : "secondary"}
+                        color={
+                          currentTab === "in-use" ? "success" : "secondary"
+                        }
                         onClick={() => handleTabChange("false")}
                       />
                       <PrimaryButton
                         label="ใบรับรองที่ขอยกเลิก"
                         fullWidth
                         color={
-                          currentTab === "cancel-request" ? "success" : "secondary"
+                          currentTab === "cancel-request"
+                            ? "success"
+                            : "secondary"
                         }
                         onClick={() => handleTabChange("true")}
                       />
@@ -317,7 +330,8 @@ export default function Page() {
                       onSort={handleSort}
                       dataKey="certificateId"
                       rowClassName={(data: any) =>
-                        selectedCertificate?.certificateId === data.certificateId
+                        selectedCertificate?.certificateId ===
+                        data.certificateId
                           ? "bg-green-50 cursor-pointer"
                           : "cursor-pointer"
                       }
