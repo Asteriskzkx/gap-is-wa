@@ -22,6 +22,7 @@ export function useFarmerCancelCertificates(initialRows = 10) {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalRecords, setTotalRecords] = useState(0);
+  const [savingCancelRequest, setSavingCancelRequest] = useState(false);
   const [fromDate, setFromDate] = useState<Date | null>(null);
   const [toDate, setToDate] = useState<Date | null>(null);
 
@@ -192,6 +193,8 @@ export function useFarmerCancelCertificates(initialRows = 10) {
       cancelRequestDetail?: string,
       version?: number
     ) => {
+      if (savingCancelRequest) return false;
+      setSavingCancelRequest(true);
       try {
         const body: any = { certificateId };
         if (cancelRequestDetail !== undefined)
@@ -223,9 +226,11 @@ export function useFarmerCancelCertificates(initialRows = 10) {
         if (globalThis.window !== undefined)
           toast.error("เกิดข้อผิดพลาดขณะบันทึกคำขอยกเลิก");
         return false;
+      } finally {
+        setSavingCancelRequest(false);
       }
     },
-    [fetchItems]
+    [fetchItems, savingCancelRequest]
   );
 
   return {
@@ -233,6 +238,7 @@ export function useFarmerCancelCertificates(initialRows = 10) {
     loading,
     totalRecords,
     lazyParams,
+    savingCancelRequest,
     fromDate,
     toDate,
     setFromDate,

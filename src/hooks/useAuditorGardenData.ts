@@ -2,7 +2,7 @@ import thaiProvinceData from "@/data/thai-provinces.json";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { DataTablePageEvent, DataTableSortEvent } from "primereact/datatable";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 type SortOrder = 1 | -1 | 0 | null;
 
 interface LazyParams {
@@ -21,6 +21,8 @@ export function useAuditorGardenData(initialRows = 10) {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalRecords, setTotalRecords] = useState(0);
+  const [savingDataRecord, setSavingDataRecord] = useState(false);
+  const savingDataRecordRef = useRef(false);
   const [fromDate, setFromDate] = useState<Date | null>(null);
   const [toDate, setToDate] = useState<Date | null>(null);
   // province/district/subdistrict selection (ids)
@@ -134,6 +136,12 @@ export function useAuditorGardenData(initialRows = 10) {
 
   const createDataRecord = useCallback(
     async (payload: any) => {
+      if (savingDataRecordRef.current) {
+        throw new Error("__BUSY__");
+      }
+
+      savingDataRecordRef.current = true;
+      setSavingDataRecord(true);
       try {
         const resp = await fetch(`/api/v1/data-records`, {
           method: "POST",
@@ -146,11 +154,14 @@ export function useAuditorGardenData(initialRows = 10) {
         }
         const data = await resp.json();
         // refresh list after create
-        fetchItems();
+        await fetchItems();
         return data;
       } catch (error: any) {
         console.error("createDataRecord error:", error);
         throw error;
+      } finally {
+        savingDataRecordRef.current = false;
+        setSavingDataRecord(false);
       }
     },
     [fetchItems]
@@ -158,6 +169,12 @@ export function useAuditorGardenData(initialRows = 10) {
 
   const updateDataRecord = useCallback(
     async (id: number | string, payload: any) => {
+      if (savingDataRecordRef.current) {
+        throw new Error("__BUSY__");
+      }
+
+      savingDataRecordRef.current = true;
+      setSavingDataRecord(true);
       try {
         const resp = await fetch(`/api/v1/data-records/${id}`, {
           method: "PUT",
@@ -170,11 +187,14 @@ export function useAuditorGardenData(initialRows = 10) {
         }
         const data = await resp.json();
         // refresh list after update
-        fetchItems();
+        await fetchItems();
         return data;
       } catch (error: any) {
         console.error("updateDataRecord error:", error);
         throw error;
+      } finally {
+        savingDataRecordRef.current = false;
+        setSavingDataRecord(false);
       }
     },
     [fetchItems]
@@ -284,6 +304,7 @@ export function useAuditorGardenData(initialRows = 10) {
     loading,
     totalRecords,
     lazyParams,
+    savingDataRecord,
     fromDate,
     toDate,
     selectedProvinceId,

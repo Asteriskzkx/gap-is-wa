@@ -2,7 +2,7 @@ import thaiProvinceData from "@/data/thai-provinces.json";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { DataTablePageEvent, DataTableSortEvent } from "primereact/datatable";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 type SortOrder = 1 | -1 | 0 | null;
 
 interface LazyParams {
@@ -21,6 +21,8 @@ export function useAuditorConsultations(initialRows = 10) {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalRecords, setTotalRecords] = useState(0);
+  const [savingAdviceAndDefect, setSavingAdviceAndDefect] = useState(false);
+  const savingAdviceAndDefectRef = useRef(false);
 
   // date range filter
   const [fromDate, setFromDate] = useState<Date | null>(null);
@@ -135,6 +137,12 @@ export function useAuditorConsultations(initialRows = 10) {
 
   const createAdviceAndDefect = useCallback(
     async (payload: any) => {
+      if (savingAdviceAndDefectRef.current) {
+        throw new Error("__BUSY__");
+      }
+
+      savingAdviceAndDefectRef.current = true;
+      setSavingAdviceAndDefect(true);
       try {
         const response = await fetch("/api/v1/advice-and-defects", {
           method: "POST",
@@ -155,6 +163,9 @@ export function useAuditorConsultations(initialRows = 10) {
       } catch (error: any) {
         console.error("Error creating advice and defect:", error);
         throw error;
+      } finally {
+        savingAdviceAndDefectRef.current = false;
+        setSavingAdviceAndDefect(false);
       }
     },
     [fetchItems]
@@ -162,6 +173,12 @@ export function useAuditorConsultations(initialRows = 10) {
 
   const updateAdviceAndDefect = useCallback(
     async (id: number | string, payload: any) => {
+      if (savingAdviceAndDefectRef.current) {
+        throw new Error("__BUSY__");
+      }
+
+      savingAdviceAndDefectRef.current = true;
+      setSavingAdviceAndDefect(true);
       try {
         const response = await fetch(`/api/v1/advice-and-defects/${id}`, {
           method: "PUT",
@@ -182,6 +199,9 @@ export function useAuditorConsultations(initialRows = 10) {
       } catch (error: any) {
         console.error("Error updating advice and defect:", error);
         throw error;
+      } finally {
+        savingAdviceAndDefectRef.current = false;
+        setSavingAdviceAndDefect(false);
       }
     },
     [fetchItems]
@@ -291,6 +311,7 @@ export function useAuditorConsultations(initialRows = 10) {
     loading,
     totalRecords,
     lazyParams,
+    savingAdviceAndDefect,
     fromDate,
     toDate,
     selectedProvinceId,
