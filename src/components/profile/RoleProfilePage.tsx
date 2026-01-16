@@ -1299,7 +1299,7 @@ function FarmerProfile({ role, user, onSaved }: Readonly<Props>) {
     if (!subDistrict.trim()) next.subDistrict = "กรุณาเลือกตำบล";
 
     const mobileDigits = extra.mobilePhoneNumber.replaceAll("-", "").trim();
-    if (!mobileDigits) next.mobilePhoneNumber = "กรุณากรอกเบอร์มือถือ";
+    if (!mobileDigits) next.mobilePhoneNumber = "กรุณากรอกเบอร์โทรศัพท์มือถือ";
 
     return next;
   }, [

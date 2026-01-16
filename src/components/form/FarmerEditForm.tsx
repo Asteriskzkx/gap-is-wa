@@ -459,7 +459,7 @@ export default function FarmerEditForm({ user, onSuccess }: Props) {
 
     const mobileDigits = (extra.mobilePhoneNumber || "").replace(/\D/g, "");
     if (mobileDigits.length !== 10)
-      errs.mobilePhoneNumber = "กรุณากรอกเบอร์มือถือ 10 หลัก";
+      errs.mobilePhoneNumber = "กรุณากรอกเบอร์โทรศัพท์มือถือ 10 หลัก";
 
     return errs;
   }, [extra, province, district, subDistrict]);
@@ -631,7 +631,7 @@ export default function FarmerEditForm({ user, onSuccess }: Props) {
                   className="block text-sm mb-1"
                   htmlFor="mobilePhoneNumber"
                 >
-                  เบอร์มือถือ <span className="text-red-500">*</span>
+                  เบอร์โทรศัพท์มือถือ <span className="text-red-500">*</span>
                 </label>
                 <PrimaryInputMask
                   key={`mp-${resetKey}`}
