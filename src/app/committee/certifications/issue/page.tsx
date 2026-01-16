@@ -23,6 +23,8 @@ export default function Page() {
     setToDate,
     handlePageChange,
     handleSort,
+    issuingCertificate,
+    issueCertificate,
   } = useReadyToIssueInspections(10);
 
   const [selectedInspection, setSelectedInspection] = useState<Record<
@@ -179,7 +181,7 @@ export default function Page() {
                     onClick={() => {
                       if (selectedInspection) nextStep();
                     }}
-                    disabled={!selectedInspection}
+                    disabled={issuingCertificate || !selectedInspection}
                   />
                 </div>
               </div>
@@ -189,6 +191,8 @@ export default function Page() {
               <div>
                 <IssuancePanel
                   inspection={selectedInspection}
+                  issuing={issuingCertificate}
+                  issueCertificate={issueCertificate}
                   showStepIndicator={false}
                   onBack={() => prevStep()}
                   onIssued={() => {

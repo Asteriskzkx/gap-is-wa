@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { DataTablePageEvent, DataTableSortEvent } from "primereact/datatable";
@@ -21,6 +21,8 @@ export function useReadyToIssueInspections(initialRows = 10) {
   const [inspections, setInspections] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalRecords, setTotalRecords] = useState(0);
+  const [issuingCertificate, setIssuingCertificate] = useState(false);
+  const issuingCertificateRef = useRef(false);
   const [fromDate, setFromDate] = useState<Date | null>(null);
   const [toDate, setToDate] = useState<Date | null>(null);
 
@@ -98,6 +100,49 @@ export function useReadyToIssueInspections(initialRows = 10) {
     }));
   }, []);
 
+  const issueCertificate = useCallback(
+    async (payload: {
+      inspectionId: number;
+      effectiveDate: Date;
+      expiryDate: Date;
+    }): Promise<number> => {
+      if (issuingCertificateRef.current) {
+        throw new Error("__BUSY__");
+      }
+
+      issuingCertificateRef.current = true;
+      setIssuingCertificate(true);
+
+      try {
+        const resp = await fetch("/api/v1/certificates/issue", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            inspectionId: payload.inspectionId,
+            effectiveDate: payload.effectiveDate.toISOString(),
+            expiryDate: payload.expiryDate.toISOString(),
+          }),
+        });
+
+        if (!resp.ok) {
+          const body = await resp.json().catch(() => ({}));
+          throw new Error(body?.message || "Failed to create certificate");
+        }
+
+        const created = await resp.json();
+        const id = (created as any).certificateId || (created as any).id;
+        if (!id) throw new Error("Server did not return certificate id");
+
+        await fetchInspections();
+        return Number(id);
+      } finally {
+        issuingCertificateRef.current = false;
+        setIssuingCertificate(false);
+      }
+    },
+    [fetchInspections]
+  );
+
   return {
     inspections,
     loading,
@@ -105,10 +150,12 @@ export function useReadyToIssueInspections(initialRows = 10) {
     lazyParams,
     fromDate,
     toDate,
+    issuingCertificate,
     setFromDate,
     setToDate,
     handlePageChange,
     handleSort,
     setRows: (rows: number) => setLazyParams((p) => ({ ...p, rows })),
+    issueCertificate,
   };
 }
