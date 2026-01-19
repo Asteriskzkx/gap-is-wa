@@ -44,6 +44,7 @@ export default function PrimaryAutoComplete({
 }: PrimaryAutoCompleteProps) {
   const [filteredOptions, setFilteredOptions] = React.useState<Option[]>([]);
   const [inputText, setInputText] = React.useState<string>("");
+  const [isUserEditing, setIsUserEditing] = React.useState<boolean>(false);
   const prevValueRef = React.useRef(value);
 
   const inputId =
@@ -62,16 +63,17 @@ export default function PrimaryAutoComplete({
       } else if (value === "" || value === null || value === undefined) {
         setInputText("");
       }
+      setIsUserEditing(false);
       return;
     }
 
     // If value did not change but selectedOption became available (for example
     // options were loaded asynchronously), ensure inputText shows the option's
     // label. We compare with current inputText to avoid unnecessary state updates.
-    if (selectedOption && inputText !== selectedOption.label) {
+    if (!isUserEditing && selectedOption && inputText !== selectedOption.label) {
       setInputText(selectedOption.label);
     }
-  }, [value, selectedOption, inputText]);
+  }, [value, selectedOption, inputText, isUserEditing]);
 
   const searchOptions = (event: AutoCompleteCompleteEvent) => {
     const query = event.query?.toLowerCase().trim() || "";
@@ -87,6 +89,7 @@ export default function PrimaryAutoComplete({
     if (newValue && typeof newValue === "object" && "value" in newValue) {
       setInputText(newValue.label);
       onChange(newValue.value);
+      setIsUserEditing(false);
       return;
     }
 
@@ -94,18 +97,29 @@ export default function PrimaryAutoComplete({
     if (newValue === null || newValue === undefined) {
       setInputText("");
       onChange("");
+      setIsUserEditing(false);
       return;
     }
 
     // ถ้ากำลังพิมพ์ → newValue เป็น string
     if (typeof newValue === "string") {
+      setIsUserEditing(true);
       setInputText(newValue);
+      if (!newValue) {
+        onChange("");
+        return;
+      }
       // ถ้ามี option ที่ตรงแบบ exact match ให้ set value ไปเลย
       const matchedOption = options.find(
         (opt) => opt.label.toLowerCase() === newValue.toLowerCase()
       );
       if (matchedOption) {
         onChange(matchedOption.value);
+        setIsUserEditing(false);
+        return;
+      }
+      if (selectedOption && newValue !== selectedOption.label) {
+        onChange("");
       }
     }
   };
@@ -136,6 +150,7 @@ export default function PrimaryAutoComplete({
       onChange("");
     }
 
+    setIsUserEditing(false);
     if (onBlur) onBlur();
   };
 
