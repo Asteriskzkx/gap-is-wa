@@ -60,6 +60,7 @@ export default function Page() {
     handleSort,
     openFiles,
     editCancelRequestDetail,
+    savingCancelRequest,
     currentTab,
     onTabChange,
     pdfUrl,
@@ -383,6 +384,7 @@ export default function Page() {
                         label="ย้อนกลับ"
                         color="secondary"
                         onClick={() => prevStep()}
+                        disabled={savingCancelRequest}
                       />
                       <PrimaryButton
                         label="บันทึกคำขอยกเลิก"
@@ -400,7 +402,10 @@ export default function Page() {
                             prevStep();
                           }
                         }}
-                        disabled={cancelRequestDetail.trim() === ""}
+                        loading={savingCancelRequest}
+                        disabled={
+                          savingCancelRequest || cancelRequestDetail.trim() === ""
+                        }
                       />
                     </div>
                   </div>

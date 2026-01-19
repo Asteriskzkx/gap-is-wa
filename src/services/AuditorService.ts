@@ -1,6 +1,7 @@
 import { InspectionRepository } from "@/repositories/InspectionRepository";
 import { AuditorModel } from "../models/AuditorModel";
 import { AuditorRepository } from "../repositories/AuditorRepository";
+import { CertificateRepository } from "../repositories/CertificateRepository";
 import { InspectionTypeMasterRepository } from "../repositories/InspectionTypeMasterRepository"; // เพิ่มการนำเข้า
 import { RubberFarmRepository } from "../repositories/RubberFarmRepository"; // เพิ่มการนำเข้า
 import { AuditLogService } from "./AuditLogService";
@@ -15,6 +16,7 @@ export class AuditorService extends BaseService<AuditorModel> {
   private readonly rubberFarmRepository: RubberFarmRepository;
   private readonly inspectionTypeMasterRepository: InspectionTypeMasterRepository;
   private readonly inspectionRepository: InspectionRepository;
+  private readonly certificateRepository: CertificateRepository;
   private readonly auditLogService: AuditLogService;
 
   constructor(
@@ -24,6 +26,7 @@ export class AuditorService extends BaseService<AuditorModel> {
     rubberFarmRepository: RubberFarmRepository,
     inspectionTypeMasterRepository: InspectionTypeMasterRepository,
     inspectionRepository: InspectionRepository,
+    certificateRepository: CertificateRepository,
     auditLogService: AuditLogService
   ) {
     super(auditorRepository);
@@ -33,6 +36,7 @@ export class AuditorService extends BaseService<AuditorModel> {
     this.rubberFarmRepository = rubberFarmRepository;
     this.inspectionTypeMasterRepository = inspectionTypeMasterRepository;
     this.inspectionRepository = inspectionRepository;
+    this.certificateRepository = certificateRepository;
     this.auditLogService = auditLogService;
   }
 
@@ -234,7 +238,24 @@ export class AuditorService extends BaseService<AuditorModel> {
       // - สถานะเป็น "รอการตรวจประเมิน"
       // OR
       // - สถานะเป็น "ตรวจประเมินแล้ว" และผลการตรวจไม่ใช่ "ไม่ผ่าน" (รอผลตรวจ หรือ ผ่านแล้ว)
+      // ดึงข้อมูล certificate ที่ activeFlag = false และ cancelRequestFlag = true
+      const cancellingCertificatesResult =
+        await this.certificateRepository.findAllWithPagination({
+          activeFlag: false,
+          cancelRequestFlag: true,
+          limit: 10000,
+        });
+
+      const allowedInspectionIds = new Set(
+        cancellingCertificatesResult.data.map((cert) => cert.inspectionId)
+      );
+
       const pendingInspections = allInspections.filter((inspection) => {
+        // ถ้า inspection นี้เกี่ยวข้องกับ certificate ที่ถูกยกเลิก (และขอคืนสถานะ) ให้ถือว่าไม่ pending
+        if (allowedInspectionIds.has(inspection.inspectionId)) {
+          return false;
+        }
+
         return (
           inspection.inspectionStatus === "รอการตรวจประเมิน" ||
           (inspection.inspectionStatus === "ตรวจประเมินแล้ว" &&

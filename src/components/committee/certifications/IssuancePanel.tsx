@@ -11,6 +11,12 @@ interface Props {
   readonly onIssued: () => void;
   readonly onBack?: () => void;
   readonly showStepIndicator?: boolean;
+  readonly issuing?: boolean;
+  readonly issueCertificate: (payload: {
+    inspectionId: number;
+    effectiveDate: Date;
+    expiryDate: Date;
+  }) => Promise<number>;
 }
 
 export default function IssuancePanel({
@@ -18,10 +24,12 @@ export default function IssuancePanel({
   onIssued,
   onBack,
   showStepIndicator = true,
+  issuing = false,
+  issueCertificate,
 }: Props) {
   const [effectiveDate, setEffectiveDate] = useState<Date | null>(null);
   const [expiryDate, setExpiryDate] = useState<Date | null>(null);
-  const [submitting, setSubmitting] = useState(false);
+  const [postIssueProcessing, setPostIssueProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [issuedId, setIssuedId] = useState<number | null>(null);
 
@@ -30,6 +38,7 @@ export default function IssuancePanel({
     setExpiryDate(null);
     setError(null);
     setIssuedId(null);
+    setPostIssueProcessing(false);
   }, [inspection]);
 
   const validate = () => {
@@ -51,39 +60,29 @@ export default function IssuancePanel({
     }
 
     try {
-      setSubmitting(true);
       setError(null);
+      const eff = effectiveDate;
+      const exp = expiryDate;
+      if (!eff || !exp) return;
 
-      const resp = await fetch("/api/v1/certificates/issue", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          inspectionId: inspection.inspectionId,
-          effectiveDate: effectiveDate?.toISOString(),
-          expiryDate: expiryDate?.toISOString(),
-        }),
+      const id = await issueCertificate({
+        inspectionId: inspection.inspectionId,
+        effectiveDate: eff,
+        expiryDate: exp,
       });
-
-      if (!resp.ok) {
-        const body = await resp.json().catch(() => ({}));
-        throw new Error(body?.message || "Failed to create certificate");
-      }
-
-      const created = await resp.json();
-      const id = (created as any).certificateId || (created as any).id;
-      if (!id) throw new Error("Server did not return certificate id");
-      setIssuedId(Number(id));
+      setIssuedId(id);
+      setPostIssueProcessing(true);
 
       // PrimaryUpload watches idReference and will flush cached files
       // Give a short delay then notify parent
       setTimeout(() => {
-        setSubmitting(false);
         onIssued();
       }, 800);
     } catch (err: any) {
       console.error("issue error", err);
+      if (err?.message === "__BUSY__") return;
       setError(err?.message || "เกิดข้อผิดพลาดในการออกใบรับรอง");
-      setSubmitting(false);
+      setPostIssueProcessing(false);
     }
   };
 
@@ -100,6 +99,8 @@ export default function IssuancePanel({
   const effectiveMin: Date | null = inspection?.inspectionDateAndTime
     ? new Date(inspection.inspectionDateAndTime)
     : null;
+
+  const busy = issuing || postIssueProcessing;
 
   return (
     <div className="p-4 bg-white rounded-md shadow-sm">
@@ -134,6 +135,7 @@ export default function IssuancePanel({
             minDate={effectiveMin}
             maxDate={expiryDate}
             id="effectiveDate"
+            disabled={busy}
           />
         </div>
         <div>
@@ -149,6 +151,7 @@ export default function IssuancePanel({
             minDate={effectiveDate}
             maxDate={expiryMax}
             id="expiryDate"
+            disabled={busy}
           />
         </div>
       </div>
@@ -178,12 +181,17 @@ export default function IssuancePanel({
 
       <div className="mt-4 flex justify-end gap-2">
         {onBack && (
-          <PrimaryButton label="ย้อนกลับ" onClick={onBack} color="secondary" />
+          <PrimaryButton
+            label="ย้อนกลับ"
+            onClick={onBack}
+            color="secondary"
+            disabled={busy}
+          />
         )}
         <PrimaryButton
           label="ออกใบรับรอง"
           onClick={handleIssue}
-          loading={submitting}
+          loading={busy}
           color="success"
         />
       </div>

@@ -37,6 +37,7 @@ export default function Page() {
     setSelectedSubDistrictId,
     createAdviceAndDefect,
     updateAdviceAndDefect,
+    savingAdviceAndDefect,
   } = useAuditorConsultations(10);
 
   const [selectedInspection, setSelectedInspection] = useState<Record<
@@ -254,6 +255,8 @@ export default function Page() {
       return toast.error("ไม่มีการตรวจที่เลือก");
     }
 
+    if (savingAdviceAndDefect) return;
+
     const payload = buildPayload();
     try {
       if (adviceAndDefectId) {
@@ -284,6 +287,7 @@ export default function Page() {
       }
     } catch (e) {
       console.error("save advice and defect error", e);
+      if ((e as any)?.message === "__BUSY__") return;
       const msg = (e as any)?.message || "บันทึกข้อมูลไม่สำเร็จ";
       toast.error(msg);
     }
@@ -769,11 +773,13 @@ export default function Page() {
                     label="ย้อนกลับ"
                     color="secondary"
                     onClick={() => prevStep()}
+                    disabled={savingAdviceAndDefect}
                   />
                   <PrimaryButton
                     label="บันทึกข้อมูล"
                     onClick={handleSave}
-                    disabled={!selectedInspection}
+                    loading={savingAdviceAndDefect}
+                    disabled={savingAdviceAndDefect || !selectedInspection}
                   />
                 </div>
               </div>

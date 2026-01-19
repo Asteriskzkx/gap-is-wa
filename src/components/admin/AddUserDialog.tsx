@@ -640,7 +640,7 @@ export const AddUserDialog: React.FC<Props> = ({
 
                 <span className="flex flex-col">
                   <label className="text-sm mb-1">
-                    หมู่ที่ (Moo) <span className="text-red-500">*</span>
+                    หมู่ที่<span className="text-red-500">*</span>
                   </label>
                   <PrimaryInputText
                     type="number"
@@ -830,7 +830,7 @@ export const AddUserDialog: React.FC<Props> = ({
                           ? !isValidMobile(mobilePhoneNumber)
                             ? "ต้องเป็น 10 หลัก"
                             : ""
-                          : "กรุณากรอกเบอร์มือถือ"
+                          : "กรุณากรอกเบอร์โทรศัพท์มือถือ"
                         : ""
                     }
                   />

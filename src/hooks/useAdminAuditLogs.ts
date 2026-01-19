@@ -8,6 +8,7 @@ export interface AuditLogItem {
   tableName: string;
   recordId: number;
   userId: number | null;
+  operatorName?: string | null;
   action: string;
   oldData: Record<string, any> | null;
   newData: Record<string, any> | null;
@@ -29,9 +30,10 @@ export function useAdminAuditLogs(initialRows = 10) {
   const router = useRouter();
   const { status } = useSession();
 
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState<AuditLogItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalRecords, setTotalRecords] = useState(0);
+  const [deletingOldLogs, setDeletingOldLogs] = useState(false);
 
   // Filter states
   const [tableName, setTableName] = useState<string>("");
@@ -182,6 +184,11 @@ export function useAdminAuditLogs(initialRows = 10) {
     async (
       days: number
     ): Promise<{ success: boolean; deletedCount: number }> => {
+      if (deletingOldLogs) {
+        return { success: false, deletedCount: 0 };
+      }
+
+      setDeletingOldLogs(true);
       try {
         const resp = await fetch(`/api/v1/audit-logs/old?days=${days}`, {
           method: "DELETE",
@@ -194,9 +201,11 @@ export function useAdminAuditLogs(initialRows = 10) {
       } catch (err) {
         console.error("useAdminAuditLogs deleteOldLogs error:", err);
         return { success: false, deletedCount: 0 };
+      } finally {
+        setDeletingOldLogs(false);
       }
     },
-    [fetchItems]
+    [fetchItems, deletingOldLogs]
   );
 
   return {
@@ -204,6 +213,7 @@ export function useAdminAuditLogs(initialRows = 10) {
     loading,
     totalRecords,
     lazyParams,
+    deletingOldLogs,
     // Filter states
     tableName,
     setTableName,

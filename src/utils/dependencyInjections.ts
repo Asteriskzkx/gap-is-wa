@@ -102,7 +102,7 @@ const auditLogRepository = new AuditLogRepository(auditLogMapper);
 
 // Services
 
-const auditLogService = new AuditLogService(auditLogRepository);
+const auditLogService = new AuditLogService(auditLogRepository, userRepository);
 
 const userService = new UserService(userRepository, auditLogService);
 const farmerService = new FarmerService(
@@ -127,6 +127,7 @@ const auditorService = new AuditorService(
   rubberFarmRepository,
   inspectionTypeMasterRepository,
   inspectionRepository,
+  certificateRepository,
   auditLogService
 );
 const committeeService = new CommitteeService(

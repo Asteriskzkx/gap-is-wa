@@ -1,7 +1,7 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { DataTablePageEvent, DataTableSortEvent } from "primereact/datatable";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 
 type SortOrder = 1 | -1 | 0 | null;
@@ -22,6 +22,8 @@ export function useRevokeCertificate(initialRows = 10) {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalRecords, setTotalRecords] = useState(0);
+  const [revokingCertificate, setRevokingCertificate] = useState(false);
+  const revokingCertificateRef = useRef(false);
   const [fromDate, setFromDate] = useState<Date | null>(null);
   const [toDate, setToDate] = useState<Date | null>(null);
 
@@ -188,6 +190,10 @@ export function useRevokeCertificate(initialRows = 10) {
       cancelRequestDetail?: string,
       version?: number
     ) => {
+      if (revokingCertificateRef.current) return false;
+
+      revokingCertificateRef.current = true;
+      setRevokingCertificate(true);
       try {
         const body: any = { certificateId };
         if (cancelRequestDetail !== undefined)
@@ -248,6 +254,9 @@ export function useRevokeCertificate(initialRows = 10) {
         if (globalThis.window !== undefined)
           toast.error("เกิดข้อผิดพลาดขณะยกเลิกใบรับรอง");
         return false;
+      } finally {
+        revokingCertificateRef.current = false;
+        setRevokingCertificate(false);
       }
     },
     [fetchItems]
@@ -260,6 +269,7 @@ export function useRevokeCertificate(initialRows = 10) {
     lazyParams,
     fromDate,
     toDate,
+    revokingCertificate,
     setFromDate,
     setToDate,
     applyFilters,

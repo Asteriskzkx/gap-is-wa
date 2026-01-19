@@ -27,6 +27,7 @@ export default function Page() {
     handleSort,
     openFiles,
     revokeCertificate,
+    revokingCertificate,
     currentTab,
     onTabChange,
     pdfUrl,
@@ -165,13 +166,14 @@ export default function Page() {
               onClick={() => openFiles?.(r.certificateId)}
               rounded
               text
+              disabled={revokingCertificate}
             />
           </div>
         ),
         style: { width: "10%" },
       },
     ],
-    [openFiles]
+    [openFiles, revokingCertificate]
   );
 
   return (
@@ -211,6 +213,7 @@ export default function Page() {
                             value={fromDate}
                             onChange={(d) => setFromDate(d)}
                             placeholder="เลือกวันที่มีผล"
+                            disabled={revokingCertificate}
                           />
                         </div>
                       </div>
@@ -228,6 +231,7 @@ export default function Page() {
                             value={toDate}
                             onChange={(d) => setToDate(d)}
                             placeholder="เลือกวันที่หมดอายุ"
+                            disabled={revokingCertificate}
                           />
                         </div>
                       </div>
@@ -239,6 +243,7 @@ export default function Page() {
                           label="ค้นหา"
                           icon="pi pi-search"
                           onClick={() => applyFilters()}
+                          disabled={revokingCertificate}
                         />
                       </div>
                       <div>
@@ -247,6 +252,7 @@ export default function Page() {
                           color="secondary"
                           icon="pi pi-refresh"
                           onClick={() => clearFilters()}
+                          disabled={revokingCertificate}
                         />
                       </div>
                     </div>
@@ -261,12 +267,14 @@ export default function Page() {
                             : "secondary"
                         }
                         onClick={() => handleTabChange("true")}
+                        disabled={revokingCertificate}
                       />
                       <PrimaryButton
                         label="ใบรับรองที่ไม่มีคำขอยกเลิก"
                         fullWidth
                         color={currentTab === "other" ? "success" : "secondary"}
                         onClick={() => handleTabChange("false")}
+                        disabled={revokingCertificate}
                       />
                     </div>
                   </div>
@@ -303,7 +311,7 @@ export default function Page() {
                         onClick={() => {
                           if (selectedCertificate) nextStep();
                         }}
-                        disabled={!selectedCertificate}
+                        disabled={revokingCertificate || !selectedCertificate}
                       />
                     </div>
                   </div>
@@ -333,11 +341,13 @@ export default function Page() {
                         label="ย้อนกลับ"
                         color="secondary"
                         onClick={() => prevStep()}
+                        disabled={revokingCertificate}
                       />
                       <PrimaryButton
                         label="ยืนยันยกเลิกใบรับรอง"
                         color="success"
                         onClick={async () => {
+                          if (revokingCertificate) return;
                           if (!selectedCertificate) return;
                           const ok = await revokeCertificate(
                             selectedCertificate.certificateId,
@@ -351,6 +361,8 @@ export default function Page() {
                             prevStep();
                           }
                         }}
+                        loading={revokingCertificate}
+                        disabled={revokingCertificate}
                       />
                     </div>
                   </div>
@@ -367,6 +379,7 @@ export default function Page() {
                   icon="pi pi-arrow-left"
                   color="secondary"
                   onClick={closePdf}
+                  disabled={revokingCertificate}
                 />
               </div>
               <div className="text-xl font-bold text-gray-700 break-words">

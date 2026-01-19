@@ -2,7 +2,9 @@ import thaiProvinceData from "@/data/thai-provinces.json";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { DataTablePageEvent, DataTableSortEvent } from "primereact/datatable";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "react-hot-toast";
+
 type SortOrder = 1 | -1 | 0 | null;
 
 interface LazyParams {
@@ -14,18 +16,14 @@ interface LazyParams {
   multiSortMeta: Array<{ field: string; order: SortOrder }>;
 }
 
-export function useAuditorGardenData(initialRows = 10) {
+export function useFarmerRubberFarms(initialRows = 10) {
   const router = useRouter();
   const { data: session, status } = useSession();
 
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalRecords, setTotalRecords] = useState(0);
-  const [savingDataRecord, setSavingDataRecord] = useState(false);
-  const savingDataRecordRef = useRef(false);
-  const [fromDate, setFromDate] = useState<Date | null>(null);
-  const [toDate, setToDate] = useState<Date | null>(null);
-  // province/district/subdistrict selection (ids)
+
   const [selectedProvinceId, setSelectedProvinceId] = useState<number | null>(
     null
   );
@@ -36,9 +34,6 @@ export function useAuditorGardenData(initialRows = 10) {
     number | null
   >(null);
 
-  const [appliedFromDate, setAppliedFromDate] = useState<Date | null>(null);
-  const [appliedToDate, setAppliedToDate] = useState<Date | null>(null);
-  // applied names for API params
   const [appliedProvinceName, setAppliedProvinceName] = useState<string | null>(
     null
   );
@@ -48,7 +43,10 @@ export function useAuditorGardenData(initialRows = 10) {
   const [appliedSubDistrictName, setAppliedSubDistrictName] = useState<
     string | null
   >(null);
-  const [appliedTab, setAppliedTab] = useState<string>("in-progress");
+
+  const [farmDetails, setFarmDetails] = useState<any | null>(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [isShowDetails, setIsShowDetails] = useState(false);
 
   const [lazyParams, setLazyParams] = useState<LazyParams>({
     first: 0,
@@ -66,48 +64,53 @@ export function useAuditorGardenData(initialRows = 10) {
       return;
     }
 
+    const farmerId = session?.user?.roleData?.farmerId;
+    if (!farmerId) {
+      setItems([]);
+      setTotalRecords(0);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       const { first, rows, multiSortMeta, sortField, sortOrder } = lazyParams;
       const params = new URLSearchParams();
+      params.set("farmerId", String(farmerId));
       params.set("limit", String(rows));
       params.set("offset", String(first));
 
-      // get auditor id from session roleData if available
-      const auditorId = (session as any)?.user?.roleData?.auditorId;
-      if (auditorId) params.set("auditorId", String(auditorId));
-
-      // tab filters
-      if (appliedTab === "in-progress") {
-        // รอการตรวจประเมิน และ รอผลการตรวจประเมิน
-        params.set("inspectionStatus", "รอการตรวจประเมิน");
-        params.set("inspectionResult", "รอผลการตรวจประเมิน");
-      } else if (appliedTab === "completed") {
-        params.set("inspectionStatus", "ตรวจประเมินแล้ว");
-      }
-
-      if (appliedFromDate)
-        params.set("fromDate", appliedFromDate.toISOString());
-      if (appliedToDate) params.set("toDate", appliedToDate.toISOString());
-
-      // location filters (names)
       if (appliedProvinceName) params.set("province", appliedProvinceName);
       if (appliedDistrictName) params.set("district", appliedDistrictName);
       if (appliedSubDistrictName)
         params.set("subDistrict", appliedSubDistrictName);
+
       if (sortField) params.set("sortField", String(sortField));
       if (sortOrder !== undefined && sortOrder !== null)
         params.set("sortOrder", String(sortOrder === 1 ? "asc" : "desc"));
-      if (multiSortMeta?.length)
-        params.set("multiSortMeta", JSON.stringify(multiSortMeta));
+      if (multiSortMeta?.length) {
+        const validSortMeta = multiSortMeta.filter(
+          (item) => item.order === 1 || item.order === -1
+        );
+        if (validSortMeta.length > 0) {
+          params.set("multiSortMeta", JSON.stringify(validSortMeta));
+        }
+      }
 
-      const resp = await fetch(`/api/v1/inspections?${params.toString()}`);
-      if (!resp.ok) throw new Error("Failed to fetch inspections for auditor");
+      const resp = await fetch(`/api/v1/rubber-farms?${params.toString()}`);
+      if (!resp.ok) throw new Error("Failed to fetch rubber farms for farmer");
       const data = await resp.json();
-      setItems(data.results || []);
-      setTotalRecords(data.paginator?.total ?? (data.results || []).length);
+
+      if (data.results && data.paginator) {
+        setItems(data.results || []);
+        setTotalRecords(data.paginator?.total ?? (data.results || []).length);
+      } else {
+        const rows = Array.isArray(data) ? data : [];
+        setItems(rows);
+        setTotalRecords(rows.length);
+      }
     } catch (err) {
-      console.error("useAuditorGardenData fetch error:", err);
+      console.error("useFarmerRubberFarms fetch error:", err);
       setItems([]);
       setTotalRecords(0);
     } finally {
@@ -118,9 +121,6 @@ export function useAuditorGardenData(initialRows = 10) {
     router,
     session,
     lazyParams,
-    appliedFromDate,
-    appliedToDate,
-    appliedTab,
     appliedProvinceName,
     appliedDistrictName,
     appliedSubDistrictName,
@@ -129,76 +129,6 @@ export function useAuditorGardenData(initialRows = 10) {
   useEffect(() => {
     fetchItems();
   }, [fetchItems]);
-
-  const refresh = useCallback(() => {
-    fetchItems();
-  }, [fetchItems]);
-
-  const createDataRecord = useCallback(
-    async (payload: any) => {
-      if (savingDataRecordRef.current) {
-        throw new Error("__BUSY__");
-      }
-
-      savingDataRecordRef.current = true;
-      setSavingDataRecord(true);
-      try {
-        const resp = await fetch(`/api/v1/data-records`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        if (!resp.ok) {
-          const err = await resp.json().catch(() => null);
-          throw new Error(err?.message || "Failed to create data record");
-        }
-        const data = await resp.json();
-        // refresh list after create
-        await fetchItems();
-        return data;
-      } catch (error: any) {
-        console.error("createDataRecord error:", error);
-        throw error;
-      } finally {
-        savingDataRecordRef.current = false;
-        setSavingDataRecord(false);
-      }
-    },
-    [fetchItems]
-  );
-
-  const updateDataRecord = useCallback(
-    async (id: number | string, payload: any) => {
-      if (savingDataRecordRef.current) {
-        throw new Error("__BUSY__");
-      }
-
-      savingDataRecordRef.current = true;
-      setSavingDataRecord(true);
-      try {
-        const resp = await fetch(`/api/v1/data-records/${id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        if (!resp.ok) {
-          const err = await resp.json().catch(() => null);
-          throw new Error(err?.userMessage || "Failed to update data record");
-        }
-        const data = await resp.json();
-        // refresh list after update
-        await fetchItems();
-        return data;
-      } catch (error: any) {
-        console.error("updateDataRecord error:", error);
-        throw error;
-      } finally {
-        savingDataRecordRef.current = false;
-        setSavingDataRecord(false);
-      }
-    },
-    [fetchItems]
-  );
 
   const handlePageChange = useCallback((event: DataTablePageEvent) => {
     setLazyParams((prev) => ({
@@ -223,9 +153,7 @@ export function useAuditorGardenData(initialRows = 10) {
 
   const applyFilters = useCallback(() => {
     setLazyParams((p) => ({ ...p, first: 0 }));
-    setAppliedFromDate(fromDate);
-    setAppliedToDate(toDate);
-    // map selected ids to names using thaiProvinceData
+
     if (selectedProvinceId) {
       const prov: any = (thaiProvinceData as any).find(
         (p: any) => p.id === selectedProvinceId
@@ -236,7 +164,6 @@ export function useAuditorGardenData(initialRows = 10) {
     }
 
     if (selectedDistrictId) {
-      // find district across provinces
       let districtName: string | null = null;
       for (const p of thaiProvinceData as any) {
         const found = (p.amphure || []).find(
@@ -270,33 +197,39 @@ export function useAuditorGardenData(initialRows = 10) {
     } else {
       setAppliedSubDistrictName(null);
     }
-  }, [
-    fromDate,
-    toDate,
-    selectedProvinceId,
-    selectedDistrictId,
-    selectedSubDistrictId,
-  ]);
+  }, [selectedProvinceId, selectedDistrictId, selectedSubDistrictId]);
 
   const clearFilters = useCallback(() => {
-    setFromDate(null);
-    setToDate(null);
     setSelectedProvinceId(null);
     setSelectedDistrictId(null);
     setSelectedSubDistrictId(null);
-    setAppliedFromDate(null);
-    setAppliedToDate(null);
     setAppliedProvinceName(null);
     setAppliedDistrictName(null);
     setAppliedSubDistrictName(null);
     setLazyParams((p) => ({ ...p, first: 0 }));
   }, []);
 
-  const onTabChange = useCallback((field: string, value: string) => {
-    if (field === "inspectionTab") {
-      setAppliedTab(value);
-      setLazyParams((p) => ({ ...p, first: 0 }));
+  const openDetails = useCallback(async (farmId: number) => {
+    try {
+      setIsShowDetails(true);
+      setDetailsLoading(true);
+      setFarmDetails(null);
+
+      const resp = await fetch(`/api/v1/rubber-farms/${farmId}`);
+      if (!resp.ok) throw new Error("Failed to fetch rubber farm details");
+      const data = await resp.json();
+      setFarmDetails(data || null);
+    } catch (err) {
+      console.error("openDetails error:", err);
+      toast.error("ไม่สามารถดึงข้อมูลสวนยางได้");
+    } finally {
+      setDetailsLoading(false);
     }
+  }, []);
+
+  const closeDetails = useCallback(() => {
+    setIsShowDetails(false);
+    setFarmDetails(null);
   }, []);
 
   return {
@@ -304,14 +237,9 @@ export function useAuditorGardenData(initialRows = 10) {
     loading,
     totalRecords,
     lazyParams,
-    savingDataRecord,
-    fromDate,
-    toDate,
     selectedProvinceId,
     selectedDistrictId,
     selectedSubDistrictId,
-    setFromDate,
-    setToDate,
     setSelectedProvinceId,
     setSelectedDistrictId,
     setSelectedSubDistrictId,
@@ -320,10 +248,10 @@ export function useAuditorGardenData(initialRows = 10) {
     handlePageChange,
     handleSort,
     setRows: (rows: number) => setLazyParams((p) => ({ ...p, rows })),
-    currentTab: appliedTab === "completed" ? "completed" : "in-progress",
-    onTabChange,
-    refresh,
-    createDataRecord,
-    updateDataRecord,
+    openDetails,
+    closeDetails,
+    farmDetails,
+    detailsLoading,
+    isShowDetails,
   };
 }

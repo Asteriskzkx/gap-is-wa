@@ -160,7 +160,8 @@ export default function FarmerDashboardPage() {
     if (index === 0) return "bg-green-100 text-green-600";
     if (index === 1) return "bg-orange-100 text-orange-600";
     if (index === 2) return "bg-amber-100 text-amber-600";
-    if (index === 3) return "bg-blue-100 text-blue-600";
+    if (index === 3) return "bg-teal-100 text-teal-600";
+    if (index === 4) return "bg-blue-100 text-blue-600";
     return "bg-red-100 text-red-600";
   };
 
@@ -169,7 +170,8 @@ export default function FarmerDashboardPage() {
     if (index === 0) return "ยื่นคำขอใบรับรองแหล่งผลิตยางพาราตามมาตรฐานจีเอพี";
     if (index === 1) return "ตรวจสอบสถานะคำขอและผลการรับรองแหล่งผลิต";
     if (index === 2) return "รายละเอียดใบรับรองแหล่งผลิตที่ได้รับทั้งหมด";
-    if (index === 3)
+    if (index === 3) return "รายการสวนยางพาราที่ลงทะเบียนไว้ทั้งหมด";
+    if (index === 4)
       return "แก้ไขข้อมูลคำขอใบรับรองแหล่งผลิตที่ต้องการแก้ไขข้อมูล";
     return "ขอยกเลิกใบรับรองแหล่งผลิตที่ไม่ประสงค์จะรับรองต่อ";
   };

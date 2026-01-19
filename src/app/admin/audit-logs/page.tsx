@@ -69,12 +69,12 @@ export default function AuditLogsPage() {
     handleSort,
     deleteOldLogs,
     countOldLogs,
+    deletingOldLogs,
   } = useAdminAuditLogs(10);
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedDays, setSelectedDays] = useState<number | null>(90);
   const [estimatedCount, setEstimatedCount] = useState<number>(0);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleOpenDeleteDialog = async () => {
     setShowDeleteDialog(true);
@@ -98,7 +98,6 @@ export default function AuditLogsPage() {
       return;
     }
 
-    setIsDeleting(true);
     try {
       const result = await deleteOldLogs(selectedDays);
       if (result.success) {
@@ -112,8 +111,6 @@ export default function AuditLogsPage() {
     } catch (error) {
       console.error("Error deleting old logs:", error);
       toast.error("เกิดข้อผิดพลาดในการลบข้อมูล");
-    } finally {
-      setIsDeleting(false);
     }
   };
 
@@ -177,7 +174,7 @@ export default function AuditLogsPage() {
         headerAlign: "center" as const,
         bodyAlign: "left" as const,
         body: (r: AuditLogItem) => <TableNameCell tableName={r.tableName} />,
-        style: { width: "30%" },
+        style: { width: "28%" },
       },
       {
         field: "action",
@@ -195,49 +192,17 @@ export default function AuditLogsPage() {
         headerAlign: "center" as const,
         bodyAlign: "center" as const,
         body: (r: AuditLogItem) => r.recordId,
-        style: { width: "15%" },
+        style: { width: "13%" },
       },
       {
-        field: "userId",
-        header: "รหัสผู้ใช้",
-        sortable: true,
+        field: "operatorName",
+        header: "ชื่อผู้ดำเนินการ",
+        sortable: false,
         headerAlign: "center" as const,
-        bodyAlign: "center" as const,
-        body: (r: AuditLogItem) => r.userId ?? "-",
-        style: { width: "10%" },
+        bodyAlign: "left" as const,
+        body: (r: AuditLogItem) => r.operatorName ?? "-",
+        style: { width: "14%" },
       },
-      //   {
-      //     field: "oldData",
-      //     header: "ข้อมูลเก่า",
-      //     sortable: false,
-      //     headerAlign: "center" as const,
-      //     bodyAlign: "left" as const,
-      //     body: (r: any) =>
-      //       r.oldData ? (
-      //         <pre className="text-xs overflow-auto max-w-xs">
-      //           {JSON.stringify(r.oldData, null, 2)}
-      //         </pre>
-      //       ) : (
-      //         "-"
-      //       ),
-      //     style: { width: "20%" },
-      //   },
-      //   {
-      //     field: "newData",
-      //     header: "ข้อมูลใหม่",
-      //     sortable: false,
-      //     headerAlign: "center" as const,
-      //     bodyAlign: "left" as const,
-      //     body: (r: any) =>
-      //       r.newData ? (
-      //         <pre className="text-xs overflow-auto max-w-xs">
-      //           {JSON.stringify(r.newData, null, 2)}
-      //         </pre>
-      //       ) : (
-      //         "-"
-      //       ),
-      //     style: { width: "20%" },
-      //   },
       {
         field: "createdAt",
         header: "วันที่ดำเนินการ",
@@ -401,6 +366,7 @@ export default function AuditLogsPage() {
                   onClick={handleOpenDeleteDialog}
                   color="danger"
                   className="w-full md:w-auto md:justify-self-start"
+                  disabled={deletingOldLogs}
                 />
 
                 <PrimaryButton
@@ -452,7 +418,10 @@ export default function AuditLogsPage() {
         blockScroll={true}
         draggable={false}
         style={{ width: "500px" }}
-        onHide={() => setShowDeleteDialog(false)}
+        onHide={() => {
+          if (deletingOldLogs) return;
+          setShowDeleteDialog(false);
+        }}
         footer={
           <div className="flex justify-end gap-2">
             <PrimaryButton
@@ -461,15 +430,15 @@ export default function AuditLogsPage() {
               onClick={() => setShowDeleteDialog(false)}
               color="secondary"
               outlined
-              disabled={isDeleting}
+              disabled={deletingOldLogs}
             />
             <PrimaryButton
               label="ยืนยันการลบ"
               icon="pi pi-check"
               onClick={handleConfirmDelete}
               color="danger"
-              loading={isDeleting}
-              disabled={!selectedDays || estimatedCount === 0}
+              loading={deletingOldLogs}
+              disabled={deletingOldLogs || !selectedDays || estimatedCount === 0}
             />
           </div>
         }
@@ -606,6 +575,14 @@ export default function AuditLogsPage() {
                   </span>
                   <p className="text-base text-gray-900 mt-1">
                     {selectedAuditLog.userId ?? "-"}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-sm font-medium text-gray-600 block">
+                    ชื่อผู้ดำเนินการ
+                  </span>
+                  <p className="text-base text-gray-900 mt-1">
+                    {selectedAuditLog.operatorName ?? "-"}
                   </p>
                 </div>
                 <div>
