@@ -50,8 +50,8 @@ class AuditorController {
   +login(req: NextRequest): NextResponse
   +registerAuditor(req: NextRequest): NextResponse
   +getCurrentAuditor(req: NextRequest): NextResponse
-  +getAuditorProfile(req: NextRequest, params: {userId: string}): NextResponse
-  +updateAuditorProfile(req: NextRequest, params: {id: string}): NextResponse
+  +getAuditorProfile(req: NextRequest, params: string): NextResponse
+  +updateAuditorProfile(req: NextRequest, params: string): NextResponse
   +getOtherAuditors(req: NextRequest): NextResponse
   +getAvailableFarms(req: NextRequest): NextResponse
   #createModel(data: any): AuditorModel
@@ -72,4 +72,3 @@ AuditorService --> InspectionRepository : uses
 AuditorService --> CertificateRepository : uses
 AuditorService --> AuditLogService : uses
 ```
-

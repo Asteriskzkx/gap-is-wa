@@ -63,7 +63,7 @@ class AuditLogController {
   +getUserActivity(req: NextRequest): NextResponse
   +getLogsByAction(req: NextRequest): NextResponse
   +getLogsByDateRange(req: NextRequest): NextResponse
-  +deleteLog(req: NextRequest, params: {id: string}): NextResponse
+  +deleteLog(req: NextRequest, params: string): NextResponse
   +deleteOldLogs(req: NextRequest): NextResponse
   +deleteRecordLogs(req: NextRequest): NextResponse
   +deleteAllLogs(req: NextRequest): NextResponse
@@ -79,4 +79,3 @@ AuditLogController --> AuditLogService : uses
 AuditLogService --> AuditLogRepository : uses
 AuditLogService --> UserRepository : uses
 ```
-

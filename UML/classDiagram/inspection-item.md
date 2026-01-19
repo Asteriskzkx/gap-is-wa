@@ -45,7 +45,7 @@ class InspectionItemService {
 class InspectionItemController {
   +createInspectionItem(req: NextRequest): NextResponse
   +getInspectionItemsByInspectionId(req: NextRequest): NextResponse
-  +updateInspectionItemResult(req: NextRequest, params: {id: string}, session?: any): NextResponse
+  +updateInspectionItemResult(req: NextRequest, params: string, session?: any): NextResponse
   +updateInspectionItemResultsBulk(req: NextRequest, session?: any): NextResponse
   #createModel(data: any): InspectionItemModel
 }
@@ -63,4 +63,3 @@ InspectionItemService --> AuditLogService : uses
 class RequirementModel
 InspectionItemModel "1" --> "0..*" RequirementModel : requirements
 ```
-

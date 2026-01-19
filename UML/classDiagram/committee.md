@@ -42,8 +42,8 @@ class CommitteeController {
   +login(req: NextRequest): NextResponse
   +registerCommittee(req: NextRequest): NextResponse
   +getCurrentCommittee(req: NextRequest): NextResponse
-  +getCommitteeProfile(req: NextRequest, params: {userId: string}): NextResponse
-  +updateCommitteeProfile(req: NextRequest, params: {id: string}): NextResponse
+  +getCommitteeProfile(req: NextRequest, params: string): NextResponse
+  +updateCommitteeProfile(req: NextRequest, params: string): NextResponse
   #createModel(data: any): CommitteeModel
 }
 
@@ -57,4 +57,3 @@ CommitteeService --> CommitteeRepository : uses
 CommitteeService --> UserService : uses
 CommitteeService --> AuditLogService : uses
 ```
-

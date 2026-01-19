@@ -74,10 +74,10 @@ class UserController {
   +resetPasswordToDefault(req: NextRequest): NextResponse
   +getCurrentUser(req: NextRequest): NextResponse
   +checkDuplicateEmail(req: NextRequest): NextResponse
-  +changeRole(req: NextRequest, params: {userId: string}): NextResponse
+  +changeRole(req: NextRequest, params: string): NextResponse
   +getUsersNormalized(req: NextRequest, userId?: number): NextResponse
   +getAllUsersWithPagination(req: NextRequest): NextResponse
-  +delete(req: NextRequest, params: {id: string}): NextResponse
+  +delete(req: NextRequest, params: string): NextResponse
   #createModel(data: any): UserModel
 }
 
@@ -101,4 +101,3 @@ UserRegistrationFactoryService --> AuditorService
 UserRegistrationFactoryService --> CommitteeService
 UserRegistrationFactoryService --> AdminService
 ```
-

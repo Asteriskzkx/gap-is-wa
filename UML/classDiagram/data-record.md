@@ -46,7 +46,7 @@ class DataRecordService {
 class DataRecordController {
   +createDataRecord(req: NextRequest): NextResponse
   +getDataRecordByInspectionId(req: NextRequest): NextResponse
-  +updateDataRecord(req: NextRequest, params: {id: string}, session?: any): NextResponse
+  +updateDataRecord(req: NextRequest, params: string, session?: any): NextResponse
   #createModel(data: any): DataRecordModel
 }
 
@@ -59,4 +59,3 @@ DataRecordController --> DataRecordService : uses
 DataRecordService --> DataRecordRepository : uses
 DataRecordService --> AuditLogService : uses
 ```
-

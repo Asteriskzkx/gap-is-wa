@@ -55,10 +55,10 @@ class RubberFarmService {
 class RubberFarmController {
   +createRubberFarmWithDetails(req: NextRequest): NextResponse
   +getRubberFarmsByFarmerId(req: NextRequest): NextResponse
-  +getRubberFarmWithDetails(req: NextRequest, params: {id: string}): NextResponse
-  +updateRubberFarm(req: NextRequest, params: {id: string}): NextResponse
-  +updateRubberFarmWithDetails(req: NextRequest, params: {id: string}): NextResponse
-  +deleteRubberFarm(req: NextRequest, params: {id: string}): NextResponse
+  +getRubberFarmWithDetails(req: NextRequest, params: string): NextResponse
+  +updateRubberFarm(req: NextRequest, params: string): NextResponse
+  +updateRubberFarmWithDetails(req: NextRequest, params: string): NextResponse
+  +deleteRubberFarm(req: NextRequest, params: string): NextResponse
   #createModel(data: any): RubberFarmModel
 }
 
@@ -79,4 +79,3 @@ class InspectionModel
 RubberFarmModel "1" --> "0..*" PlantingDetailModel : plantingDetails
 RubberFarmModel "1" --> "0..*" InspectionModel : inspections
 ```
-

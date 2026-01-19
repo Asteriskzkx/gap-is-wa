@@ -40,10 +40,10 @@ class BaseController~T~ {
   <<abstract>>
   #service: BaseService~T~
   +getAll(req: NextRequest): NextResponse
-  +getById(req: NextRequest, params: {id: string}): NextResponse
+  +getById(req: NextRequest, params: string): NextResponse
   +create(req: NextRequest): NextResponse
-  +update(req: NextRequest, params: {id: string}): NextResponse
-  +delete(req: NextRequest, params: {id: string}): NextResponse
+  +update(req: NextRequest, params: string): NextResponse
+  +delete(req: NextRequest, params: string): NextResponse
   #handleControllerError(error: any): NextResponse
   #createModel(data: any): T
 }
@@ -54,4 +54,3 @@ BaseRepository~T~ ..> BaseModel : "T extends"
 BaseService~T~ ..> BaseModel : "T extends"
 BaseController~T~ ..> BaseModel : "T extends"
 ```
-

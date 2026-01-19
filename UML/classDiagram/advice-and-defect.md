@@ -41,7 +41,7 @@ class AdviceAndDefectService {
 class AdviceAndDefectController {
   +createAdviceAndDefect(req: NextRequest, session?: any): NextResponse
   +getAdviceAndDefectByInspectionId(req: NextRequest): NextResponse
-  +updateAdviceAndDefect(req: NextRequest, params: {id: string}, session?: any): NextResponse
+  +updateAdviceAndDefect(req: NextRequest, params: string, session?: any): NextResponse
   #createModel(data: any): AdviceAndDefectModel
 }
 
@@ -54,4 +54,3 @@ AdviceAndDefectController --> AdviceAndDefectService : uses
 AdviceAndDefectService --> AdviceAndDefectRepository : uses
 AdviceAndDefectService --> AuditLogService : uses
 ```
-

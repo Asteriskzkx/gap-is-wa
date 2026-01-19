@@ -67,8 +67,8 @@ class InspectionController {
   +getInspectionsByAuditor(req: NextRequest): NextResponse
   +getAll(req: NextRequest): NextResponse
   +getReadyToIssue(req: NextRequest): NextResponse
-  +updateInspectionStatus(req: NextRequest, params: {id: string}, session?: any): NextResponse
-  +updateInspectionResult(req: NextRequest, params: {id: string}, session?: any): NextResponse
+  +updateInspectionStatus(req: NextRequest, params: string, session?: any): NextResponse
+  +updateInspectionResult(req: NextRequest, params: string, session?: any): NextResponse
   +addAuditorToInspection(req: NextRequest): NextResponse
   +removeAuditorFromInspection(req: NextRequest): NextResponse
   #createModel(data: any): InspectionModel
@@ -108,4 +108,3 @@ InspectionModel "1" --> "1" RubberFarmModel : rubberFarm
 InspectionModel "1" --> "1" AuditorModel : auditorChief
 InspectionModel "1" --> "1" InspectionTypeMasterModel : inspectionType
 ```
-

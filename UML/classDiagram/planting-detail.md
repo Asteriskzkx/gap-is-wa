@@ -47,8 +47,8 @@ class PlantingDetailService {
 class PlantingDetailController {
   +createPlantingDetail(req: NextRequest): NextResponse
   +getPlantingDetailsByRubberFarmId(req: NextRequest): NextResponse
-  +updatePlantingDetail(req: NextRequest, params: {id: string}): NextResponse
-  +delete(req: NextRequest, params: {id: string}): NextResponse
+  +updatePlantingDetail(req: NextRequest, params: string): NextResponse
+  +delete(req: NextRequest, params: string): NextResponse
   #createModel(data: any): PlantingDetailModel
 }
 
@@ -61,4 +61,3 @@ PlantingDetailController --> PlantingDetailService : uses
 PlantingDetailService --> PlantingDetailRepository : uses
 PlantingDetailService --> AuditLogService : uses
 ```
-

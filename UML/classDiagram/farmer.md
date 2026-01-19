@@ -59,8 +59,8 @@ class FarmerController {
   +login(req: NextRequest): NextResponse
   +registerFarmer(req: NextRequest): NextResponse
   +getCurrentFarmer(req: NextRequest): NextResponse
-  +getFarmerProfile(req: NextRequest, params: {userId: string}): NextResponse
-  +updateFarmerProfile(req: NextRequest, params: {id: string}): NextResponse
+  +getFarmerProfile(req: NextRequest, params: string): NextResponse
+  +updateFarmerProfile(req: NextRequest, params: string): NextResponse
   +getFarmersByDistrict(req: NextRequest): NextResponse
   +getFarmersByProvince(req: NextRequest): NextResponse
   #createModel(data: any): FarmerModel
@@ -76,4 +76,3 @@ FarmerService --> FarmerRepository : uses
 FarmerService --> UserService : uses
 FarmerService --> AuditLogService : uses
 ```
-

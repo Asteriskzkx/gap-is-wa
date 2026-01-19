@@ -44,8 +44,8 @@ class AdminService {
 class AdminController {
   +login(req: NextRequest): NextResponse
   +registerAdmin(req: NextRequest): NextResponse
-  +getAdminProfile(req: NextRequest, params: {userId: string}): NextResponse
-  +updateAdminProfile(req: NextRequest, params: {id: string}): NextResponse
+  +getAdminProfile(req: NextRequest, params: string): NextResponse
+  +updateAdminProfile(req: NextRequest, params: string): NextResponse
   +getUserStatistics(req: NextRequest): NextResponse
   +changeUserRole(req: NextRequest): NextResponse
   #createModel(data: any): AdminModel
@@ -61,4 +61,3 @@ AdminService --> AdminRepository : uses
 AdminService --> UserService : uses
 AdminService --> AuditLogService : uses
 ```
-

@@ -41,7 +41,7 @@ class FileController {
   +uploadFiles(req: NextRequest): NextResponse
   +getFiles(req: NextRequest): NextResponse
   +deleteFilesByReference(req: NextRequest): NextResponse
-  +deleteFileById(req: NextRequest, params: {id: string}): NextResponse
+  +deleteFileById(req: NextRequest, params: string): NextResponse
   -getAllowedRolesForTable(tableReference: string): string[]
   -parseRequestForFiles(req: NextRequest): object
   -parseFormData(req: NextRequest): object
@@ -55,4 +55,3 @@ FileService --|> BaseService~FileModel~
 FileController --> FileService : uses
 FileService --> FileRepository : uses
 ```
-
