@@ -1,3 +1,4 @@
+import thaiProvinceData from "@/data/thai-provinces.json";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { DataTablePageEvent, DataTableSortEvent } from "primereact/datatable";
@@ -22,6 +23,26 @@ export function useFarmerRubberFarms(initialRows = 10) {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalRecords, setTotalRecords] = useState(0);
+
+  const [selectedProvinceId, setSelectedProvinceId] = useState<number | null>(
+    null
+  );
+  const [selectedDistrictId, setSelectedDistrictId] = useState<number | null>(
+    null
+  );
+  const [selectedSubDistrictId, setSelectedSubDistrictId] = useState<
+    number | null
+  >(null);
+
+  const [appliedProvinceName, setAppliedProvinceName] = useState<string | null>(
+    null
+  );
+  const [appliedDistrictName, setAppliedDistrictName] = useState<string | null>(
+    null
+  );
+  const [appliedSubDistrictName, setAppliedSubDistrictName] = useState<
+    string | null
+  >(null);
 
   const [farmDetails, setFarmDetails] = useState<any | null>(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
@@ -59,6 +80,11 @@ export function useFarmerRubberFarms(initialRows = 10) {
       params.set("limit", String(rows));
       params.set("offset", String(first));
 
+      if (appliedProvinceName) params.set("province", appliedProvinceName);
+      if (appliedDistrictName) params.set("district", appliedDistrictName);
+      if (appliedSubDistrictName)
+        params.set("subDistrict", appliedSubDistrictName);
+
       if (sortField) params.set("sortField", String(sortField));
       if (sortOrder !== undefined && sortOrder !== null)
         params.set("sortOrder", String(sortOrder === 1 ? "asc" : "desc"));
@@ -90,7 +116,15 @@ export function useFarmerRubberFarms(initialRows = 10) {
     } finally {
       setLoading(false);
     }
-  }, [status, router, session, lazyParams]);
+  }, [
+    status,
+    router,
+    session,
+    lazyParams,
+    appliedProvinceName,
+    appliedDistrictName,
+    appliedSubDistrictName,
+  ]);
 
   useEffect(() => {
     fetchItems();
@@ -115,6 +149,64 @@ export function useFarmerRubberFarms(initialRows = 10) {
         order: SortOrder;
       }>,
     }));
+  }, []);
+
+  const applyFilters = useCallback(() => {
+    setLazyParams((p) => ({ ...p, first: 0 }));
+
+    if (selectedProvinceId) {
+      const prov: any = (thaiProvinceData as any).find(
+        (p: any) => p.id === selectedProvinceId
+      );
+      setAppliedProvinceName(prov?.name_th || null);
+    } else {
+      setAppliedProvinceName(null);
+    }
+
+    if (selectedDistrictId) {
+      let districtName: string | null = null;
+      for (const p of thaiProvinceData as any) {
+        const found = (p.amphure || []).find(
+          (a: any) => a.id === selectedDistrictId
+        );
+        if (found) {
+          districtName = found.name_th;
+          break;
+        }
+      }
+      setAppliedDistrictName(districtName);
+    } else {
+      setAppliedDistrictName(null);
+    }
+
+    if (selectedSubDistrictId) {
+      let subName: string | null = null;
+      for (const p of thaiProvinceData as any) {
+        for (const a of p.amphure || []) {
+          const found = (a.tambon || []).find(
+            (t: any) => t.id === selectedSubDistrictId
+          );
+          if (found) {
+            subName = found.name_th;
+            break;
+          }
+        }
+        if (subName) break;
+      }
+      setAppliedSubDistrictName(subName);
+    } else {
+      setAppliedSubDistrictName(null);
+    }
+  }, [selectedProvinceId, selectedDistrictId, selectedSubDistrictId]);
+
+  const clearFilters = useCallback(() => {
+    setSelectedProvinceId(null);
+    setSelectedDistrictId(null);
+    setSelectedSubDistrictId(null);
+    setAppliedProvinceName(null);
+    setAppliedDistrictName(null);
+    setAppliedSubDistrictName(null);
+    setLazyParams((p) => ({ ...p, first: 0 }));
   }, []);
 
   const openDetails = useCallback(async (farmId: number) => {
@@ -145,6 +237,14 @@ export function useFarmerRubberFarms(initialRows = 10) {
     loading,
     totalRecords,
     lazyParams,
+    selectedProvinceId,
+    selectedDistrictId,
+    selectedSubDistrictId,
+    setSelectedProvinceId,
+    setSelectedDistrictId,
+    setSelectedSubDistrictId,
+    applyFilters,
+    clearFilters,
     handlePageChange,
     handleSort,
     setRows: (rows: number) => setLazyParams((p) => ({ ...p, rows })),

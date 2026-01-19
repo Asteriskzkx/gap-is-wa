@@ -2,12 +2,14 @@
 
 import FarmerLayout from "@/components/layout/FarmerLayout";
 import DynamicMapViewer from "@/components/maps/DynamicMapViewer";
+import PrimaryAutoComplete from "@/components/ui/PrimaryAutoComplete";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import PrimaryDataTable from "@/components/ui/PrimaryDataTable";
+import thaiProvinceData from "@/data/thai-provinces.json";
 import { useFarmerRubberFarms } from "@/hooks/useFarmerRubberFarms";
 import { CONTAINER, HEADER, SPACING, SPINNER } from "@/styles/auditorClasses";
 import { formatThaiDate } from "@/utils/dateFormatter";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 const ActionButtons = ({ onOpen }: { onOpen: () => void }) => {
   return (
@@ -53,6 +55,14 @@ export default function Page() {
     loading,
     totalRecords,
     lazyParams,
+    selectedProvinceId,
+    selectedDistrictId,
+    selectedSubDistrictId,
+    setSelectedProvinceId,
+    setSelectedDistrictId,
+    setSelectedSubDistrictId,
+    applyFilters,
+    clearFilters,
     handlePageChange,
     handleSort,
     openDetails,
@@ -61,6 +71,15 @@ export default function Page() {
     detailsLoading,
     isShowDetails,
   } = useFarmerRubberFarms(10);
+
+  const [provinces] = useState<any[]>(
+    (thaiProvinceData as any).map((p: any) => ({
+      id: p.id,
+      name_th: p.name_th,
+    }))
+  );
+  const [districts, setDistricts] = useState<any[]>([]);
+  const [subDistricts, setSubDistricts] = useState<any[]>([]);
 
   const columns = useMemo(
     () => [
@@ -207,6 +226,134 @@ export default function Page() {
 
             <div className={CONTAINER.card}>
               <div className={CONTAINER.cardPadding}>
+                <div className={SPACING.mb6}>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-center">
+                    <div className="w-full sm:w-full">
+                      <div>
+                        <label
+                          className="block text-sm text-gray-600 mb-1"
+                          htmlFor="province-search"
+                        >
+                          จังหวัด
+                        </label>
+                        <PrimaryAutoComplete
+                          id="province-search"
+                          value={selectedProvinceId || ""}
+                          options={(provinces || []).map((province: any) => ({
+                            label: province.name_th,
+                            value: province.id,
+                          }))}
+                          onChange={(value) => {
+                            const v = value as number | "";
+                            const id = v === "" ? null : Number(v);
+                            setSelectedProvinceId(id);
+                            setSelectedDistrictId(null);
+                            setSelectedSubDistrictId(null);
+                            if (id) {
+                              const provinceData: any = (
+                                thaiProvinceData as any
+                              ).find((p: any) => p.id === id);
+                              if (provinceData?.amphure)
+                                setDistricts(provinceData.amphure);
+                              else setDistricts([]);
+                              setSubDistricts([]);
+                            } else {
+                              setDistricts([]);
+                              setSubDistricts([]);
+                            }
+                          }}
+                          placeholder="เลือกจังหวัด"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="w-full sm:w-full">
+                      <div>
+                        <label
+                          className="block text-sm text-gray-600 mb-1"
+                          htmlFor="district-search"
+                        >
+                          อำเภอ/เขต
+                        </label>
+                        <PrimaryAutoComplete
+                          id="district-search"
+                          value={selectedDistrictId || ""}
+                          options={(districts || []).map((d: any) => ({
+                            label: d.name_th,
+                            value: d.id,
+                          }))}
+                          onChange={(value) => {
+                            const v = value as number | "";
+                            const id = v === "" ? null : Number(v);
+                            setSelectedDistrictId(id);
+                            setSelectedSubDistrictId(null);
+                            if (id) {
+                              const district = (districts || []).find(
+                                (di: any) => di.id === id
+                              );
+                              if (district?.tambon)
+                                setSubDistricts(district.tambon);
+                              else setSubDistricts([]);
+                            } else {
+                              setSubDistricts([]);
+                            }
+                          }}
+                          placeholder="เลือกอำเภอ/เขต"
+                          disabled={!selectedProvinceId}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="w-full sm:w-full">
+                      <div>
+                        <label
+                          className="block text-sm text-gray-600 mb-1"
+                          htmlFor="subdistrict-search"
+                        >
+                          ตำบล/แขวง
+                        </label>
+                        <PrimaryAutoComplete
+                          id="subdistrict-search"
+                          value={selectedSubDistrictId || ""}
+                          options={(subDistricts || []).map((s: any) => ({
+                            label: s.name_th,
+                            value: s.id,
+                          }))}
+                          onChange={(value) => {
+                            const v = value as number | "";
+                            const id = v === "" ? null : Number(v);
+                            setSelectedSubDistrictId(id);
+                          }}
+                          placeholder="เลือกตำบล/แขวง"
+                          disabled={!selectedDistrictId}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 grid grid-cols-2 gap-3">
+                    <div className="justify-self-end">
+                      <PrimaryButton
+                        label="ค้นหา"
+                        icon="pi pi-search"
+                        onClick={() => applyFilters()}
+                      />
+                    </div>
+                    <div>
+                      <PrimaryButton
+                        label="ล้างค่า"
+                        color="secondary"
+                        icon="pi pi-refresh"
+                        onClick={() => {
+                          clearFilters();
+                          setDistricts([]);
+                          setSubDistricts([]);
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 <PrimaryDataTable
                   value={items}
                   columns={columns}
