@@ -3,15 +3,15 @@
 ```mermaid
 sequenceDiagram
     actor Admin as aAdmin:Admin
-    participant Page as UserManagementPage<br/>(src/app/admin/user-management/page.tsx)
-    participant AddDialog as AddUserDialog<br/>(src/components/admin/AddUserDialog.tsx)
-    participant UsersAPI as Users API<br/>(/api/v1/users)
+    participant Page as UserManagementPage
+    participant AddDialog as AddUserDialog
+    participant UsersAPI as Users API
     participant UserCtrl as UserController
     participant UserSvc as UserService
     participant UserRepo as UserRepository
     participant AuditSvc as AuditLogService
     participant AuditRepo as AuditLogRepository
-    participant DB as Database<br/>(Prisma)
+    participant DB as Database
 
     Note over Admin,DB: Step 1: Load Users List (initial + pagination)
     Admin->>Page: Open "User Management"

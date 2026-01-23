@@ -3,14 +3,14 @@
 ```mermaid
 sequenceDiagram
     actor Admin as aAdmin:Admin
-    participant Page as AuditLogsPage<br/>(src/app/admin/audit-logs/page.tsx)
-    participant Hook as useAdminAuditLogs<br/>(src/hooks/useAdminAuditLogs.ts)
-    participant LogsAPI as AuditLogs API<br/>(/api/v1/audit-logs/*)
+    participant Page as AuditLogsPage
+    participant Hook as useAdminAuditLogs
+    participant LogsAPI as AuditLogs API
     participant Ctrl as AuditLogController
     participant Svc as AuditLogService
     participant Repo as AuditLogRepository
     participant UserRepo as UserRepository
-    participant DB as Database<br/>(Prisma)
+    participant DB as Database
 
     Note over Admin,DB: Step 1: Load Audit Logs List (initial + pagination)
     Admin->>Page: Open "Audit Logs"
