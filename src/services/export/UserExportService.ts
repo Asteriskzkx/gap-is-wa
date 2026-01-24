@@ -16,10 +16,6 @@ export class UserExportService {
 
   async exportUsers() {
     const totalRows = await this.repo.getUserCount();
-    const adminRole = await this.repo.getByRole(this.RoleEnum.ADMIN);
-    const committeeRole = await this.repo.getByRole(this.RoleEnum.COMMITTEE);
-    const farmerRole = await this.repo.getByRole(this.RoleEnum.FARMER);
-    const auditorRole = await this.repo.getByRole(this.RoleEnum.AUDITOR);
 
     // 🔴 condition สำคัญ
     if (totalRows > this.CSV_ROW_LIMIT) {
@@ -33,7 +29,7 @@ export class UserExportService {
       return {
         type: "csv" as const,
         stream: csvStream,
-        filename: "users.csv",
+        filename: "รายงานผู้ใช้งาน.csv",
       };
     }
 
@@ -58,7 +54,7 @@ export class UserExportService {
     return {
         type: "xlsx" as const,
         workbook,
-        filename: "users.xlsx",
+        filename: "รายงานผู้ใช้งาน.xlsx",
     };
   }
 }
