@@ -13,7 +13,7 @@ export class UserExportService {
     AUDITOR: "AUDITOR",
   }
   private CSV_ROW_LIMIT = 1_000_000;
-  
+
   async exportUsers() {
     const totalRows = await this.repo.getUserCount();
     const adminRole = await this.repo.getByRole(this.RoleEnum.ADMIN);
@@ -37,20 +37,28 @@ export class UserExportService {
       };
     }
 
-    // → XLSX summary (หรือ full xlsx ถ้าข้อมูลไม่เยอะ)
+        // 🟢 SMALL DATA → XLSX (RAW DATA)
+    const users = await this.repo.getAllUsers();
+
     const workbook = createWorkbook("Users");
 
+    // Raw data sheet
     await writeSheet(
-      workbook,
-      "Users Summary",
-      [{ header: "ผู้ใช้ทั้งหมด", key: "total" },{header: "ผู้ดูแลระบบ", key: "admin" },{header: "คณะกรรมการ", key: "committee" },{header: "เกษตรกร", key: "farmer" },{header: "ผู้ตรวจประเมิน", key: "auditor" }],
-      [{ total: totalRows , admin: adminRole.length , committee: committeeRole.length , farmer: farmerRole.length , auditor: auditorRole.length }],
+        workbook,
+        "Users",
+        [
+        { header: "อีเมลล์", key: "email", width: 30 },
+        { header: "ชื่อ-นามสกุล", key: "name", width: 25 },
+        { header: "บทบาท", key: "role", width: 15 },
+        { header: "สร้างเมื่อ", key: "createdAt", width: 20 },
+        ],
+        users
     );
 
     return {
-      type: "xlsx" as const,
-      workbook,
-      filename: "users.xlsx",
+        type: "xlsx" as const,
+        workbook,
+        filename: "users.xlsx",
     };
   }
 }
