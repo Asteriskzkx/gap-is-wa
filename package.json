@@ -48,6 +48,7 @@
     "next-auth": "^4.24.13",
     "pg": "^8.11.3",
     "pg-hstore": "^2.3.4",
+    "pg-query-stream": "^4.11.2",
     "primeicons": "^7.0.0",
     "primereact": "^10.9.7",
     "prisma": "^5.10.0",
