@@ -24,4 +24,14 @@ export class UserExportRepository extends BaseExportRepository {
 
     return result[0]?.count ?? 0;
   }
+
+  async getByRole(role: string): Promise<UserRow[]> {
+    const sql = `
+      SELECT "userId", "email", "createdAt"
+      FROM "User"
+      WHERE "role" = '${role}'
+      ORDER BY "userId"
+    `;
+    return this.executeAggregation<UserRow>(sql);
+  }
 }
