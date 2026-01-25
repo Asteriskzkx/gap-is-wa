@@ -2,11 +2,12 @@ import { RubberFarmExportRepository } from "@/repositories/export/RubberFarmExpo
 import { streamToCsv } from "@/lib/csv/streamToCsv";
 import { createWorkbook } from "@/lib/xlsx/createWorkbook";
 import { writeSheet } from "@/lib/xlsx/writeSummarySheet";
+import { ExportResult } from "@/lib/export/types";
 
 export class RubberFarmExportService {
     private repo = new RubberFarmExportRepository();
     private CSV_ROW_LIMIT = 1_000_000;  
-    async exportRubberFarms() {
+    async exportRubberFarms() : Promise<ExportResult> {
         const totalRows = await this.repo.getRubberFarmCount();
         // 🔴 condition สำคัญ
         if (totalRows > this.CSV_ROW_LIMIT) {

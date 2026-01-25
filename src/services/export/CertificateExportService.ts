@@ -2,11 +2,11 @@ import { streamToCsv } from "@/lib/csv/streamToCsv";
 import { createWorkbook } from "@/lib/xlsx/createWorkbook";
 import { writeSheet } from "@/lib/xlsx/writeSummarySheet";
 import { CertificateExportRepository } from "@/repositories/export/CertificateExportRepository";
-
+import { ExportResult } from "@/lib/export/types";
 export class CertificateExportService {
     private repo = new CertificateExportRepository();
     private CSV_ROW_LIMIT = 1_000_000;
-    async exportCertificates() {
+    async exportCertificates() : Promise<ExportResult> {
         const totalRows = await this.repo.getCertificateCount();
         // 🔴 condition สำคัญ
         if (totalRows > this.CSV_ROW_LIMIT) {  

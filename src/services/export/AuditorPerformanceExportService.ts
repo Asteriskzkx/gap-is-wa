@@ -2,10 +2,13 @@ import { streamToCsv } from "@/lib/csv/streamToCsv";
 import { createWorkbook } from "@/lib/xlsx/createWorkbook";
 import { writeSheet } from "@/lib/xlsx/writeSummarySheet";
 import { AuditorPerformanceExportRepository } from "@/repositories/export/AuditorPerformanceExportRepository";
+import { ExportResult } from "@/lib/export/types";
+
 export class AuditorPerformanceExportService {
     private repo = new AuditorPerformanceExportRepository()
     private CSV_ROW_LIMIT = 1_000_000;
-    async exportAuditorPerformances() {
+    
+    async exportAuditorPerformances() : Promise<ExportResult> {
         const totalRows = await this.repo.getAuditorPerformanceCount();
         // 🔴 condition สำคัญ
         if (totalRows > this.CSV_ROW_LIMIT) {

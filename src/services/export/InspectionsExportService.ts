@@ -2,11 +2,12 @@ import { InspectionsExportRepository } from "@/repositories/export/InspectionsEx
 import { streamToCsv } from "@/lib/csv/streamToCsv";
 import { createWorkbook } from "@/lib/xlsx/createWorkbook";
 import { writeSheet } from "@/lib/xlsx/writeSummarySheet";
-
+import { ExportResult } from "@/lib/export/types";
+    
 export class InspectionsExportService {
     private repo = new InspectionsExportRepository();
     private CSV_ROW_LIMIT = 1_000_000;
-    async exportInspections() {
+    async exportInspections() : Promise<ExportResult> {
         const totalRows = await this.repo.getInspectionCount();
         // 🔴 condition สำคัญ
         if (totalRows > this.CSV_ROW_LIMIT) {

@@ -445,22 +445,43 @@ export default function AdminReportPage() {
     setExporting(true);
 
     try {
-      const selectedSections = Object.entries(exportSections)
+      const sections = Object.entries(exportSections)
         .filter(([_, checked]) => checked)
-        .map(([key]) => key as keyof typeof exportSections);
+        .map(([key]) => key);
 
-      if (selectedSections.length === 0) return;
+      if (sections.length === 0) return;
 
-      for (const section of selectedSections) {
-        const baseUrl = EXPORT_XLSX_API_MAP[section];
-        const url = buildUrl(baseUrl);
+      const body: any = { sections };
 
-        // เปิด download
-        window.open(url, "_blank");
-
-        // หน่วงนิดนึง กัน browser block popup
-        await new Promise((r) => setTimeout(r, 400));
+      if (dates && dates[0] && dates[1]) {
+        body.startDate = formatDateLocal(dates[0]);
+        body.endDate = formatDateLocal(dates[1]);
       }
+
+      const res = await fetch("/api/v1/reports/export-excel", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) {
+        throw new Error("Export failed");
+      }
+
+      const blob = await res.blob();
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `reports_${new Date()
+        .toISOString()
+        .slice(0, 10)}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
 
       setShowExportXlsxDialog(false);
     } catch (err) {
@@ -469,6 +490,7 @@ export default function AdminReportPage() {
       setExporting(false);
     }
   };
+
 
   const data = useMemo(() => {
     if (!reportData) {

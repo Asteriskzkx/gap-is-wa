@@ -2,7 +2,7 @@ import { UserExportRepository } from "@/repositories/export/UserExportRepository
 import { streamToCsv } from "@/lib/csv/streamToCsv";
 import { createWorkbook } from "@/lib/xlsx/createWorkbook";
 import { writeSheet } from "@/lib/xlsx/writeSummarySheet";
-
+import { ExportResult } from "@/lib/export/types";
 export class UserExportService {
   private repo = new UserExportRepository();
 
@@ -14,7 +14,7 @@ export class UserExportService {
   }
   private CSV_ROW_LIMIT = 1_000_000;
 
-  async exportUsers() {
+  async exportUsers() : Promise<ExportResult> {
     const totalRows = await this.repo.getUserCount();
 
     // 🔴 condition สำคัญ
