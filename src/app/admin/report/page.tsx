@@ -153,6 +153,14 @@ const getPointStyle = (role: string): string => {
   return styles[role] || "circle";
 };
 
+const EXPORT_XLSX_API_MAP = {
+  users: "/api/v1/users/csv",
+  inspections: "/api/v1/inspections/csv",
+  rubberFarms: "/api/v1/rubber-farms/csv",
+  certificates: "/api/v1/certificates/csv",
+  auditors: "/api/v1/auditors/performance-csv",
+} as const;
+
 export default function AdminReportPage() {
   const [dates, setDates] = useState<(Date | null)[] | null>(null);
   const [reportData, setReportData] = useState<UserReportSummary | null>(null);
@@ -189,6 +197,9 @@ export default function AdminReportPage() {
 
   // Export PDF states
   const [showExportDialog, setShowExportDialog] = useState(false);
+
+    // Export Xlsx states
+  const [showExportXlsxDialog, setShowExportXlsxDialog] = useState(false);
   const [exportSections, setExportSections] = useState({
     users: true,
     inspections: true,
@@ -426,6 +437,35 @@ export default function AdminReportPage() {
       });
     } finally {
       resetChartsAfterPDF();
+      setExporting(false);
+    }
+  };
+
+  const handleExportXlsx = async () => {
+    setExporting(true);
+
+    try {
+      const selectedSections = Object.entries(exportSections)
+        .filter(([_, checked]) => checked)
+        .map(([key]) => key as keyof typeof exportSections);
+
+      if (selectedSections.length === 0) return;
+
+      for (const section of selectedSections) {
+        const baseUrl = EXPORT_XLSX_API_MAP[section];
+        const url = buildUrl(baseUrl);
+
+        // เปิด download
+        window.open(url, "_blank");
+
+        // หน่วงนิดนึง กัน browser block popup
+        await new Promise((r) => setTimeout(r, 400));
+      }
+
+      setShowExportXlsxDialog(false);
+    } catch (err) {
+      console.error("Export Excel error:", err);
+    } finally {
       setExporting(false);
     }
   };
@@ -679,15 +719,164 @@ export default function AdminReportPage() {
               ตรวจสอบรายงานสรุปข้อมูลต่างๆ สำหรับผู้ดูแลระบบ
             </p>
           </div>
-          <div className="lg:col-start-6 self-end">
+          <div className="lg:col-start-6 self-end flex gap-2">
             <PrimaryButton
               label="ส่งออก PDF"
               icon="pi pi-file-pdf"
               fullWidth
               onClick={() => setShowExportDialog(true)}
             />
+              <PrimaryButton
+              label="ส่งออก Excel"
+              icon="pi pi-file-pdf"
+              fullWidth
+              onClick={() => setShowExportXlsxDialog(true)}
+            />
+            
           </div>
+          
         </div>
+
+            <Dialog
+          header="เลือกรายงานที่ต้องการส่งออก"
+          visible={showExportXlsxDialog}
+          blockScroll={true}
+          draggable={false}
+          style={{ width: "450px" }}
+          onHide={() => setShowExportXlsxDialog(false)}
+          footer={
+            <div className="flex-col gap-2">
+              <hr></hr>
+              <div className="text-gray-400 p-2">*หมายเหตุ* หากข้อมูลมากกว่า 1 ล้านแถวจะส่งออกเป็น Csv</div>
+              <hr></hr>
+              <div className="flex justify-end gap-2">
+                <Button
+                  label="ยกเลิก"
+                  icon="pi pi-times"
+                  className="p-button-text p-2"
+                  onClick={() => setShowExportXlsxDialog(false)}
+                />
+                <Button
+                  label={exporting ? "กำลังส่งออก..." : "ส่งออก Excel"}
+                  icon="pi pi-file-pdf"
+                  className="p-button-success p-2"
+                  onClick={handleExportXlsx}
+                  disabled={
+                    exporting || !Object.values(exportSections).some(Boolean)
+                  }
+                  loading={exporting}
+                />
+            </div></div>
+          }
+        >
+          <div className="flex flex-col gap-3 py-2">
+            {/* Select All */}
+            <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
+              <Checkbox
+                inputId="export-all"
+                checked={Object.values(exportSections).every(Boolean)}
+                onChange={(e) => {
+                  const checked = e.checked ?? false;
+                  setExportSections({
+                    users: checked,
+                    inspections: checked,
+                    rubberFarms: checked,
+                    certificates: checked,
+                    auditors: checked,
+                  });
+                }}
+                className="border border-gray-300 rounded"
+              />
+              <label
+                htmlFor="export-all"
+                className="cursor-pointer font-medium"
+              >
+                ✅ เลือกทั้งหมด
+              </label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                inputId="export-users"
+                checked={exportSections.users}
+                onChange={(e) =>
+                  setExportSections({
+                    ...exportSections,
+                    users: e.checked ?? false,
+                  })
+                }
+                className="border border-gray-300 rounded"
+              />
+              <label htmlFor="export-users" className="cursor-pointer">
+                รายงานผู้ใช้งาน
+              </label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                inputId="export-inspections"
+                checked={exportSections.inspections}
+                onChange={(e) =>
+                  setExportSections({
+                    ...exportSections,
+                    inspections: e.checked ?? false,
+                  })
+                }
+                className="border border-gray-300 rounded"
+              />
+              <label htmlFor="export-inspections" className="cursor-pointer">
+                รายงานการตรวจประเมิน
+              </label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                inputId="export-rubberFarms"
+                checked={exportSections.rubberFarms}
+                onChange={(e) =>
+                  setExportSections({
+                    ...exportSections,
+                    rubberFarms: e.checked ?? false,
+                  })
+                }
+                className="border border-gray-300 rounded"
+              />
+              <label htmlFor="export-rubberFarms" className="cursor-pointer">
+                รายงานแปลงสวนยางพารา
+              </label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                inputId="export-certificates"
+                checked={exportSections.certificates}
+                onChange={(e) =>
+                  setExportSections({
+                    ...exportSections,
+                    certificates: e.checked ?? false,
+                  })
+                }
+                className="border border-gray-300 rounded"
+              />
+              <label htmlFor="export-certificates" className="cursor-pointer">
+                รายงานใบรับรอง
+              </label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                inputId="export-auditors"
+                checked={exportSections.auditors}
+                onChange={(e) =>
+                  setExportSections({
+                    ...exportSections,
+                    auditors: e.checked ?? false,
+                  })
+                }
+                className="border border-gray-300 rounded"
+              />
+              <label htmlFor="export-auditors" className="cursor-pointer">
+                รายงานประสิทธิภาพผู้ตรวจประเมิน
+              </label>
+            </div>
+          </div>
+        </Dialog>
+
 
         {/* Export PDF Dialog */}
         <Dialog
