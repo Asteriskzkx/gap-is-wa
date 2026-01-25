@@ -1,17 +1,27 @@
+import { checkAuthorization } from "@/lib/session";
 import { UserExportService } from "@/services/export/UserExportService";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const { authorized, error } = await checkAuthorization(req, ["ADMIN"]);
+
+  if (!authorized) {
+    return NextResponse.json(
+      { message: error || "Unauthorized" },
+      { status: 401 },
+    );
+  }
   const service = new UserExportService();
   const result = await service.exportUsers();
-
+  const encoded = encodeURIComponent(result.filename);
   if (result.type === "csv") {
+    
     return new NextResponse(result.stream as any, {
       headers: {
         "Content-Type": "text/csv",
-        "Content-Disposition": `attachment; filename="${result.filename}"`,
+        "Content-Disposition": `attachment; filename="${encoded}"`,
       },
     });
   }
@@ -23,7 +33,7 @@ export async function GET() {
     headers: {
       "Content-Type":
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "Content-Disposition": `attachment; filename="${result.filename}"`,
+      "Content-Disposition": `attachment; filename="${encoded}"`,
     },
   });
 }
