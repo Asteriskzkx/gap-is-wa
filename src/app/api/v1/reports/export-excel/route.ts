@@ -43,7 +43,6 @@ export async function POST(req: NextRequest) {
   // === ZIP STREAM ===
   const archive = archiver("zip", { zlib: { level: 9 } });
 
-  console.log("Preparing export...");
   const passThrough = new PassThrough();
   archive.pipe(passThrough); // ⭐ จุดสำคัญที่สุด
 
@@ -82,7 +81,6 @@ export async function POST(req: NextRequest) {
     await appendExportResult(archive, result);
   }
 
-  console.log("Finalizing archive...");
   await archive.finalize();
 
   return new NextResponse(passThrough as any, {
