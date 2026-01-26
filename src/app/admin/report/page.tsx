@@ -771,6 +771,7 @@ export default function AdminReportPage() {
               <hr></hr>
               <div className="text-gray-400 p-2">*หมายเหตุ* หากข้อมูลมากกว่า 1 ล้านแถวจะส่งออกเป็น Csv</div>
               <hr></hr>
+              <br />
               <div className="flex justify-end gap-2">
                 <Button
                   label="ยกเลิก"
