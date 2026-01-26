@@ -9,7 +9,6 @@ import { AuditorPerformanceExportService } from "@/services/export/AuditorPerfor
 import { appendExportResult } from "@/lib/export/appendExportResult";
 import { PassThrough } from "stream";
 
-
 export const runtime = "nodejs";
 
 
@@ -126,6 +125,30 @@ export async function POST(req: NextRequest) {
     const result = await service.exportCommitteePerformances(committeeId, session.user.name || "");
     await appendExportResult(archive, result);
   }
+
+  if (sections.includes("specificAuditorPerformance")) {
+    // 🔒 allow AUDITOR only
+    if (session?.user?.role !== "AUDITOR") {
+      return NextResponse.json(
+        { message: "specific auditor performance report is allowed for AUDITOR only" },
+        { status: 403 }
+      );
+    }
+    const auditorId = session.user.roleData?.auditorId;
+    if (!auditorId) {
+      return NextResponse.json(
+        { message: "auditorId not found in session" },
+        { status: 400 }
+      );
+    }
+    const { SpecificAuditorPerformanceExportService } = await import(
+      "@/services/export/SpecificAuditorPerformanceExportService"
+    );
+    const service = new SpecificAuditorPerformanceExportService();
+    const result = await service.exportSpecificAuditorPerformance(auditorId, session.user.name || "");
+    await appendExportResult(archive, result);
+  }
+
 
 
   await archive.finalize();
