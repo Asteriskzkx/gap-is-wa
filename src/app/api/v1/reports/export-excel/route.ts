@@ -100,15 +100,33 @@ export async function POST(req: NextRequest) {
     await appendExportResult(archive, result);
   }
 
+  // ===== COMMITTEE PERFORMANCES =====
   if (sections.includes("committeePerformances")) {
+    // 🔒 allow COMMITTEE only
+    if (session?.user?.role !== "COMMITTEE") {
+      return NextResponse.json(
+        { message: "committee performance report is allowed for COMMITTEE only" },
+        { status: 403 }
+      );
+    }
+
+    const committeeId = session.user.roleData?.committeeId;
+    if (!committeeId) {
+      return NextResponse.json(
+        { message: "committeeId not found in session" },
+        { status: 400 }
+      );
+    }
+
     const { CommitteePerformanceExportService } = await import(
       "@/services/export/CommitteePerformanceExportService"
     );
 
     const service = new CommitteePerformanceExportService();
-    const result = await service.exportCommitteePerformances(committeeId!);
+    const result = await service.exportCommitteePerformances(committeeId);
     await appendExportResult(archive, result);
   }
+
 
   await archive.finalize();
 
