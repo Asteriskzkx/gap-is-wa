@@ -121,12 +121,21 @@ export default function CommitteeReportPage() {
 
   // Export PDF states
   const [showExportDialog, setShowExportDialog] = useState(false);
+
+   // Export Xlsx states
+  const [showExportXlsxDialog, setShowExportXlsxDialog] = useState(false);
+
   const [exportSections, setExportSections] = useState({
     myCommitteeStats: true,
     certificateStats: true,
     expiryAlerts: true,
     charts: true,
     inspectionStats: true,
+  });
+  const [exportSectionsExcel, setExportSectionsExcel] = useState({
+    committeePerformances: true,
+    certificates: true,
+    inspectionsByType: true,
   });
   const [exporting, setExporting] = useState(false);
 
@@ -462,6 +471,56 @@ export default function CommitteeReportPage() {
     }
   };
 
+   const handleExportXlsx = async () => {
+    setExporting(true);
+
+    try {
+      const sections = Object.entries(exportSectionsExcel)
+        .filter(([_, checked]) => checked)
+        .map(([key]) => key);
+
+      if (sections.length === 0) return;
+
+      const body: any = { sections };
+
+      if (dates && dates[0] && dates[1]) {
+        body.startDate = formatDateLocal(dates[0]);
+        body.endDate = formatDateLocal(dates[1]);
+      }
+
+      const res = await fetch("/api/v1/reports/export-excel", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) {
+        throw new Error("Export failed");
+      }
+
+      const blob = await res.blob();
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `reports_${new Date()
+        .toISOString()
+        .slice(0, 10)}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+
+      setShowExportXlsxDialog(false);
+    } catch (err) {
+      console.error("Export Excel error:", err);
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const recentCertificatesColumns: PrimaryDataTableColumn[] = [
     {
       field: "certificateId",
@@ -573,8 +632,119 @@ export default function CommitteeReportPage() {
               fullWidth
               onClick={() => setShowExportDialog(true)}
             />
+            <PrimaryButton
+              label="ส่งออก Excel"
+              icon="pi pi-file-pdf"
+              fullWidth
+              onClick={() => setShowExportXlsxDialog(true)}
+            />
           </div>
         </div>
+          <Dialog
+          header="เลือกรายงานที่ต้องการส่งออก"
+          visible={showExportXlsxDialog}
+          blockScroll={true}
+          draggable={false}
+          style={{ width: "450px" }}
+          onHide={() => setShowExportXlsxDialog(false)}
+          footer={
+            <div className="flex-col gap-2">
+              <hr></hr>
+              <div className="text-gray-400 p-2">*หมายเหตุ* หากข้อมูลมากกว่า 1 ล้านแถวจะส่งออกเป็น Csv</div>
+              <hr></hr>
+              <div className="flex justify-end gap-2">
+                <Button
+                  label="ยกเลิก"
+                  icon="pi pi-times"
+                  className="p-button-text p-2"
+                  onClick={() => setShowExportXlsxDialog(false)}
+                />
+                <Button
+                  label={exporting ? "กำลังส่งออก..." : "ส่งออก Excel"}
+                  icon="pi pi-file-pdf"
+                  className="p-button-success p-2"
+                  onClick={handleExportXlsx}
+                  disabled={
+                    exporting || !Object.values(exportSectionsExcel).some(Boolean)
+                  }
+                  loading={exporting}
+                />
+            </div></div>
+          }
+        >
+          <div className="flex flex-col gap-3 py-2">
+            {/* Select All */}
+            <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
+              <Checkbox
+                inputId="export-all"
+                checked={Object.values(exportSectionsExcel).every(Boolean)}
+                onChange={(e) => {
+                  const checked = e.checked ?? false;
+                  setExportSectionsExcel({
+                   committeePerformances: checked,
+                   certificates: checked,
+                   inspectionsByType: checked,
+                  });
+                }}
+                className="border border-gray-300 rounded"
+              />
+              <label
+                htmlFor="export-all"
+                className="cursor-pointer font-medium"
+              >
+                ✅ เลือกทั้งหมด
+              </label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                inputId="export-my-committee-stats"
+                checked={exportSectionsExcel.committeePerformances}
+                onChange={(e) =>
+                  setExportSectionsExcel({
+                    ...exportSectionsExcel,
+                    committeePerformances: e.checked ?? false,
+                  })
+                }
+                className="border border-gray-300 rounded"
+              />
+              <label htmlFor="export-my-committee-stats" className="cursor-pointer">
+                รายงานประสิทธิภาพของฉัน
+              </label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                inputId="export-certificates"
+                checked={exportSectionsExcel.certificates}
+                onChange={(e) =>
+                  setExportSectionsExcel({
+                    ...exportSectionsExcel,
+                    certificates: e.checked ?? false,
+                  })
+                }
+                className="border border-gray-300 rounded"
+              />
+              <label htmlFor="export-certificates" className="cursor-pointer">
+                รายงานใบรับรอง
+              </label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                inputId="export-inspection-by-type"
+                checked={exportSectionsExcel.inspectionsByType}
+                onChange={(e) =>
+                  setExportSectionsExcel({
+                    ...exportSectionsExcel,
+                    inspectionsByType: e.checked ?? false,
+                  })
+                }
+                className="border border-gray-300 rounded"
+              />
+              <label htmlFor="export-inspection-by-type" className="cursor-pointer">
+                ผลการตรวจประเมินตามประเภท
+              </label>
+            </div>
+          </div>
+        </Dialog>
 
         {/* Export PDF Dialog */}
         <Dialog

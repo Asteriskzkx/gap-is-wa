@@ -9,16 +9,20 @@ import { AuditorPerformanceExportService } from "@/services/export/AuditorPerfor
 import { appendExportResult } from "@/lib/export/appendExportResult";
 import { PassThrough } from "stream";
 
+
 export const runtime = "nodejs";
 
+
 export async function POST(req: NextRequest) {
-  const { authorized, error } = await checkAuthorization(req, ["ADMIN"]);
+  const { authorized, error, session } = await checkAuthorization(req, ["ADMIN","AUDITOR","COMMITTEE"]);
   if (!authorized) {
     return NextResponse.json(
       { message: error || "Unauthorized" },
       { status: 401 },
     );
   }
+  let committeeId: number | undefined;
+
 
   /**
    * body example:
@@ -37,6 +41,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       { message: "No report selected" },
       { status: 400 },
+    );
+  }
+
+  if (session?.user?.role === "COMMITTEE") {
+    committeeId = session.user.roleData?.committeeId;
+  }
+
+  if (!committeeId && body.committeeId) {
+    committeeId = body.committeeId; // ADMIN / AUDITOR
+  }
+
+  if (sections.includes("committeePerformances") && !committeeId) {
+    return NextResponse.json(
+      { message: "committeeId is required" },
+      { status: 400 }
     );
   }
 
@@ -78,6 +97,16 @@ export async function POST(req: NextRequest) {
   if (sections.includes("auditors")) {
     const service = new AuditorPerformanceExportService();
     const result = await service.exportAuditorPerformances();
+    await appendExportResult(archive, result);
+  }
+
+  if (sections.includes("committeePerformances")) {
+    const { CommitteePerformanceExportService } = await import(
+      "@/services/export/CommitteePerformanceExportService"
+    );
+
+    const service = new CommitteePerformanceExportService();
+    const result = await service.exportCommitteePerformances(committeeId!);
     await appendExportResult(archive, result);
   }
 
