@@ -625,19 +625,20 @@ export default function CommitteeReportPage() {
               ดูสรุปรายงานใบรับรอง การตรวจประเมิน และประสิทธิภาพผู้ตรวจประเมิน
             </p>
           </div>
-          <div className="lg:col-start-6 self-end">
+          <div className="lg:col-start-6 self-end flex gap-2">
             <PrimaryButton
               label="ส่งออก PDF"
               icon="pi pi-file-pdf"
               fullWidth
               onClick={() => setShowExportDialog(true)}
             />
-            <PrimaryButton
+              <PrimaryButton
               label="ส่งออก Excel"
               icon="pi pi-file-pdf"
               fullWidth
               onClick={() => setShowExportXlsxDialog(true)}
             />
+            
           </div>
         </div>
           <Dialog

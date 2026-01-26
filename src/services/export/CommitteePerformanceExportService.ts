@@ -7,7 +7,7 @@ import { CommitteePerformanceExportRepository } from "@/repositories/export/Comm
 export class CommitteePerformanceExportService {
   private repo = new CommitteePerformanceExportRepository();   
     private CSV_ROW_LIMIT = 1_000_000;
-    async exportCommitteePerformances(committeeId:number) : Promise<ExportResult> {
+    async exportCommitteePerformances(committeeId:number,committeeName:string) : Promise<ExportResult> {
         const totalRows = await this.repo.getCommitteePerformanceCount(committeeId);
         // 🔴 condition สำคัญ
         if (totalRows > this.CSV_ROW_LIMIT) {
@@ -19,7 +19,7 @@ export class CommitteePerformanceExportService {
             return {
             type: "csv" as const,
             stream: csvStream,
-            filename: "รายงานผลการปฏิบัติงานคณะกรรมการ.csv",
+            filename: `รายงานผลการปฏิบัติงานคณะกรรมการ_${committeeName}.csv`,
             };
         }
         // 🟢 SMALL DATA → XLSX (RAW DATA
@@ -43,7 +43,7 @@ export class CommitteePerformanceExportService {
         return {
             type: "xlsx" as const,
             workbook,
-            filename: "รายงานผลการปฏิบัติงานคณะกรรมการ.xlsx",
+            filename: `รายงานผลการปฏิบัติงานคณะกรรมการ_${committeeName}.xlsx`,
         };
     }
 }

@@ -123,7 +123,7 @@ export async function POST(req: NextRequest) {
     );
 
     const service = new CommitteePerformanceExportService();
-    const result = await service.exportCommitteePerformances(committeeId);
+    const result = await service.exportCommitteePerformances(committeeId, session.user.name || "");
     await appendExportResult(archive, result);
   }
 
