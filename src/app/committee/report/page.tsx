@@ -135,7 +135,7 @@ export default function CommitteeReportPage() {
   const [exportSectionsExcel, setExportSectionsExcel] = useState({
     committeePerformances: true,
     certificates: true,
-    inspectionsByType: true,
+    inspections: true,
   });
   const [exporting, setExporting] = useState(false);
 
@@ -683,7 +683,7 @@ export default function CommitteeReportPage() {
                   setExportSectionsExcel({
                    committeePerformances: checked,
                    certificates: checked,
-                   inspectionsByType: checked,
+                   inspections: checked,
                   });
                 }}
                 className="border border-gray-300 rounded"
@@ -730,17 +730,17 @@ export default function CommitteeReportPage() {
             <div className="flex items-center gap-2">
               <Checkbox
                 inputId="export-inspection-by-type"
-                checked={exportSectionsExcel.inspectionsByType}
+                checked={exportSectionsExcel.inspections}
                 onChange={(e) =>
                   setExportSectionsExcel({
                     ...exportSectionsExcel,
-                    inspectionsByType: e.checked ?? false,
+                    inspections: e.checked ?? false,
                   })
                 }
                 className="border border-gray-300 rounded"
               />
               <label htmlFor="export-inspection-by-type" className="cursor-pointer">
-                ผลการตรวจประเมินตามประเภท
+                รายงานการตรวจประเมิน
               </label>
             </div>
           </div>
