@@ -1,12 +1,12 @@
 import QueryStream from "pg-query-stream";
-import { pool } from "@/lib/pg/pg";
+import { pgPool } from "@/lib/pg/pg";
 import { streamToCsv } from "./streamToCsv";
 
 export async function dbToCsv(
   sql: string,
   headers: string[]
 ) {
-  const client = await pool.connect();
+  const client = await pgPool.connect();
 
   const queryStream = new QueryStream(sql);
   const dbStream = client.query(queryStream);
