@@ -19,7 +19,7 @@ export class CommitteePerformanceExportService {
             return {
             type: "csv" as const,
             stream: csvStream,
-            filename: `รายงานผลการปฏิบัติงานคณะกรรมการ_${committeeName}.csv`,
+            filename: `รายงานประสิทธิภาพคณะกรรมการ_${committeeName}.csv`,
             };
         }
         // 🟢 SMALL DATA → XLSX (RAW DATA
@@ -43,7 +43,7 @@ export class CommitteePerformanceExportService {
         return {
             type: "xlsx" as const,
             workbook,
-            filename: `รายงานผลการปฏิบัติงานคณะกรรมการ_${committeeName}.xlsx`,
+            filename: `รายงานประสิทธิภาพคณะกรรมการ_${committeeName}.xlsx`,
         };
     }
 }
