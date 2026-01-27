@@ -20,7 +20,7 @@ export class RubberFarmExportService {
             return {    
                 type: "csv" as const,
                 stream: csvStream,
-                filename: "รายงานแปลงสวนยาง.csv",
+                filename: "รายงานแปลงสวนยางพารา.csv",
             };
         }
         // 🟢 SMALL DATA → XLSX (RAW DATA
@@ -49,7 +49,7 @@ export class RubberFarmExportService {
         return {
             type: "xlsx" as const,
             workbook,
-            filename: "รายงานแปลงสวนยาง.xlsx",
+            filename: "รายงานแปลงสวนยางพารา.xlsx",
         };
     }
 }
