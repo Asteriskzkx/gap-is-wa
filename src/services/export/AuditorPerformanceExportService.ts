@@ -20,7 +20,7 @@ export class AuditorPerformanceExportService {
             return {
                 type: "csv" as const,
                 stream: csvStream,
-                filename: "รายงานผลการปฏิบัติงานผู้ตรวจสอบ.csv",
+                filename: "รายงานผลการปฏิบัติงานผู้ตรวจประเมิน.csv",
             };
         }
         // 🟢 SMALL DATA → XLSX (RAW DATA)
@@ -31,11 +31,11 @@ export class AuditorPerformanceExportService {
             workbook,
             "AuditorPerformances",
             [
-                { header: "รหัสผู้ตรวจสอบ", key: "auditorId", width: 20 },
-                { header: "ชื่อผู้ตรวจสอบ", key: "auditor_name", width: 30 },
-                { header: "จำนวนการตรวจสอบทั้งหมด", key: "total_inspections", width: 25 },
-                { header: "จำนวนการตรวจสอบที่ผ่าน", key: "passed_inspections", width: 25 },
-                { header: "จำนวนการตรวจสอบที่ไม่ผ่าน", key: "failed_inspections", width: 25 },
+                { header: "รหัสผู้ตรวจประเมิน", key: "auditorId", width: 20 },
+                { header: "ชื่อผู้ตรวจประเมิน", key: "auditor_name", width: 30 },
+                { header: "จำนวนการตรวจประเมินทั้งหมด", key: "total_inspections", width: 25 },
+                { header: "จำนวนการตรวจประเมินที่ผ่าน", key: "passed_inspections", width: 25 },
+                { header: "จำนวนการตรวจประเมินที่ไม่ผ่าน", key: "failed_inspections", width: 25 },
                 { header: "อัตราการผ่าน (%)", key: "pass_rate", width: 20 },
             ],
             auditorPerformances
@@ -43,7 +43,7 @@ export class AuditorPerformanceExportService {
         return {
             type: "xlsx" as const,
             workbook,
-            filename: "รายงานผลการปฏิบัติงานผู้ตรวจสอบ.xlsx",
+            filename: "รายงานผลการปฏิบัติงานผู้ตรวจประเมิน.xlsx",
         };
     }
 }
