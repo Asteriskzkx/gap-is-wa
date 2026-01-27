@@ -72,10 +72,17 @@ export default function AuditorReportPage() {
 
   // Export PDF states
   const [showExportDialog, setShowExportDialog] = useState(false);
+      // Export Xlsx states
+  const [showExportXlsxDialog, setShowExportXlsxDialog] = useState(false);
+
   const [exportSections, setExportSections] = useState({
     stats: true,
     recentInspections: true,
     inspectedFarms: true,
+  });
+
+   const [exportSectionsExcel, setExportSectionsExcel] = useState({
+    specificAuditorPerformance: true,
   });
   const [exporting, setExporting] = useState(false);
 
@@ -150,6 +157,56 @@ export default function AuditorReportPage() {
       });
     } finally {
       resetChartsAfterPDF();
+      setExporting(false);
+    }
+  };
+
+  const handleExportXlsx = async () => {
+    setExporting(true);
+
+    try {
+      const sections = Object.entries(exportSectionsExcel)
+        .filter(([_, checked]) => checked)
+        .map(([key]) => key);
+
+      if (sections.length === 0) return;
+
+      const body: any = { sections };
+
+      if (dates && dates[0] && dates[1]) {
+        body.startDate = formatDateLocal(dates[0]);
+        body.endDate = formatDateLocal(dates[1]);
+      }
+
+      const res = await fetch("/api/v1/reports/export-excel", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) {
+        throw new Error("Export failed");
+      }
+
+      const blob = await res.blob();
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `reports_${new Date()
+        .toISOString()
+        .slice(0, 10)}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+
+      setShowExportXlsxDialog(false);
+    } catch (err) {
+      console.error("Export Excel error:", err);
+    } finally {
       setExporting(false);
     }
   };
@@ -305,15 +362,80 @@ export default function AuditorReportPage() {
               ดูสรุปผลการตรวจประเมินของคุณ
             </p>
           </div>
-          <div className="lg:col-start-6 self-end">
+          <div className="lg:col-start-6 self-end flex gap-2">
             <PrimaryButton
               label="ส่งออก PDF"
               icon="pi pi-file-pdf"
               fullWidth
               onClick={() => setShowExportDialog(true)}
             />
+              <PrimaryButton
+              label="ส่งออก Excel"
+              icon="pi pi-file-pdf"
+              fullWidth
+              onClick={() => setShowExportXlsxDialog(true)}
+            />
+            
           </div>
         </div>
+
+        {/* Export Excel Dialog */}
+        <Dialog
+          header="เลือกรายงานที่ต้องการส่งออก"
+          visible={showExportXlsxDialog}
+          blockScroll={true}
+          draggable={false}
+          style={{ width: "450px" }}
+          onHide={() => setShowExportXlsxDialog(false)}
+          footer={
+            <div className="flex-col gap-2">
+              <hr></hr>
+              <div className="text-gray-400 p-2">*หมายเหตุ* หากข้อมูลมากกว่า 1 ล้านแถวจะส่งออกเป็น Csv</div>
+              <hr></hr>
+              <br />
+              <div className="flex justify-end gap-2">
+                <Button
+                  label="ยกเลิก"
+                  icon="pi pi-times"
+                  className="p-button-text p-2"
+                  onClick={() => setShowExportXlsxDialog(false)}
+                />
+                <Button
+                  label={exporting ? "กำลังส่งออก..." : "ส่งออก Excel"}
+                  icon="pi pi-file-pdf"
+                  className="p-button-success p-2"
+                  onClick={handleExportXlsx}
+                  disabled={
+                    exporting || !Object.values(exportSections).some(Boolean)
+                  }
+                  loading={exporting}
+                />
+            </div></div>
+          }
+        >
+          <div className="flex flex-col gap-3 py-2">
+            {/* Select All */}
+            
+            <div className="flex items-center gap-2">
+              <Checkbox
+                inputId="export-auditor-performance"
+                checked={exportSectionsExcel.specificAuditorPerformance}
+                onChange={(e) =>
+                  setExportSectionsExcel({
+                    ...exportSectionsExcel,
+                    specificAuditorPerformance: e.checked ?? false,
+                  })
+                }
+                className="border border-gray-300 rounded"
+              />
+              <label htmlFor="export-auditor-performance" className="cursor-pointer">
+                รายงานประสิทธิภาพและการตรวจประเมิน
+              </label>
+            </div>
+            
+            
+          </div>
+        </Dialog>
 
         {/* Export PDF Dialog */}
         <Dialog
