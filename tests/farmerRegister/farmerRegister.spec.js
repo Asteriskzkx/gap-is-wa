@@ -19,7 +19,7 @@ async function completeStep1(page) {
   await page.fill('input[name="confirmPassword"]', "Password123");
   await page.click('button:has-text("ถัดไป")');
   await expect(
-    page.getByRole("heading", { name: "ข้อมูลส่วนตัว" })
+    page.getByRole("heading", { name: "ข้อมูลส่วนตัว" }),
   ).toBeVisible();
 }
 
@@ -41,7 +41,7 @@ async function completeStep1And2(page) {
   await page.fill('input[name="confirmPassword"]', "Password123");
   await page.click('button:has-text("ถัดไป")');
   await expect(
-    page.getByRole("heading", { name: "ข้อมูลส่วนตัว" })
+    page.getByRole("heading", { name: "ข้อมูลส่วนตัว" }),
   ).toBeVisible();
 
   // Step 2
@@ -62,7 +62,7 @@ async function completeStep1And2(page) {
 
   await page.click('button:has-text("ถัดไป")');
   await expect(
-    page.getByRole("heading", { name: "ข้อมูลที่อยู่" })
+    page.getByRole("heading", { name: "ข้อมูลที่อยู่" }),
   ).toBeVisible();
 }
 
@@ -84,7 +84,7 @@ async function completeStep1To3(page) {
   await page.fill('input[name="confirmPassword"]', "Password123");
   await page.click('button:has-text("ถัดไป")');
   await expect(
-    page.getByRole("heading", { name: "ข้อมูลส่วนตัว" })
+    page.getByRole("heading", { name: "ข้อมูลส่วนตัว" }),
   ).toBeVisible();
 
   // Step 2
@@ -105,7 +105,7 @@ async function completeStep1To3(page) {
 
   await page.click('button:has-text("ถัดไป")');
   await expect(
-    page.getByRole("heading", { name: "ข้อมูลที่อยู่" })
+    page.getByRole("heading", { name: "ข้อมูลที่อยู่" }),
   ).toBeVisible();
 
   // Step 3
@@ -144,7 +144,7 @@ async function completeStep1To3(page) {
 
   await page.click('button:has-text("ถัดไป")');
   await expect(
-    page.getByRole("heading", { name: "ข้อมูลการติดต่อ" })
+    page.getByRole("heading", { name: "ข้อมูลการติดต่อ" }),
   ).toBeVisible();
 }
 
@@ -196,7 +196,7 @@ test.describe("1. Form Validation - Step 1: ข้อมูลบัญชีผ
     await page.click('button:has-text("ถัดไป")');
 
     await expect(
-      page.locator("text=/รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร/")
+      page.locator("text=/รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร/"),
     ).toBeVisible();
   });
 
@@ -210,7 +210,7 @@ test.describe("1. Form Validation - Step 1: ข้อมูลบัญชีผ
     await page.click('button:has-text("ถัดไป")');
 
     await expect(
-      page.locator('text="รหัสผ่านต้องมีตัวพิมพ์ใหญ่"')
+      page.locator('text="รหัสผ่านต้องมีตัวพิมพ์ใหญ่"'),
     ).toBeVisible();
   });
 
@@ -235,7 +235,12 @@ test.describe("1. Form Validation - Step 1: ข้อมูลบัญชีผ
 
     await page.click('button:has-text("ถัดไป")');
 
-    await expect(page.locator('text="รหัสผ่านไม่ตรงกัน"')).toBeVisible();
+    // บางหน้าจอ error message อาจอยู่ต่ำกว่าจอ ต้องเลื่อนให้เห็นก่อน
+    const passwordMismatchError = page
+      .locator('text="รหัสผ่านไม่ตรงกัน"')
+      .first();
+    await passwordMismatchError.scrollIntoViewIfNeeded();
+    await expect(passwordMismatchError).toBeVisible();
   });
 
   test("TC-008: กรอกข้อมูล Step 1 ครบถ้วนถูกต้อง", async ({ page }) => {
@@ -258,8 +263,11 @@ test.describe("1. Form Validation - Step 1: ข้อมูลบัญชีผ
 
     // ตรวจสอบว่าไปหน้า Step 2
     await expect(
-      page.getByRole("heading", { name: "ข้อมูลส่วนตัว" })
+      page.getByRole("heading", { name: "ข้อมูลส่วนตัว" }),
     ).toBeVisible();
+
+    // รอ 3 วิ ก่อนจบ test (ช่วยให้เห็นผลลัพธ์บนหน้าจอ)
+    await page.waitForTimeout(3000);
   });
 
   test("TC-009: กดปุ่มกลับไปหน้าเข้าสู่ระบบ", async ({ page }) => {
@@ -320,6 +328,9 @@ test.describe("2. Form Validation - Step 2: ข้อมูลส่วนตั
 
     const firstNameInput = page.locator('input[name="firstName"]');
     await expect(firstNameInput).toHaveValue("สมชาย");
+
+    // รอ 3 วิ ก่อนจบ test (ช่วยให้เห็นผลลัพธ์บนหน้าจอ)
+    await page.waitForTimeout(3000);
   });
 
   test("TC-014: กรอกชื่อเกิน 100 ตัวอักษร", async ({ page }) => {
@@ -374,7 +385,7 @@ test.describe("2. Form Validation - Step 2: ข้อมูลส่วนตั
     await page.click('button:has-text("ถัดไป")');
 
     await expect(
-      page.locator("text=เลขบัตรประชาชนไม่ถูกต้อง ต้องเป็นตัวเลข 13 หลัก")
+      page.locator("text=เลขบัตรประชาชนไม่ถูกต้อง ต้องเป็นตัวเลข 13 หลัก"),
     ).toBeVisible();
   });
 
@@ -411,7 +422,7 @@ test.describe("2. Form Validation - Step 2: ข้อมูลส่วนตั
 
     // ตรวจสอบว่ากลับไป Step 1
     await expect(
-      page.getByRole("heading", { name: "ข้อมูลบัญชีผู้ใช้" })
+      page.getByRole("heading", { name: "ข้อมูลบัญชีผู้ใช้" }),
     ).toBeVisible();
 
     // ตรวจสอบว่าข้อมูลยังอยู่
@@ -540,7 +551,7 @@ test.describe("3. Form Validation - Step 3: ข้อมูลที่อยู
 
     // ตรวจสอบว่ากลับไป Step 2
     await expect(
-      page.getByRole("heading", { name: "ข้อมูลส่วนตัว" })
+      page.getByRole("heading", { name: "ข้อมูลส่วนตัว" }),
     ).toBeVisible();
   });
 });
@@ -557,7 +568,7 @@ test.describe("4. Form Validation - Step 4: ข้อมูลการติด
     await page.click('button:has-text("ลงทะเบียน")');
 
     await expect(
-      page.locator('text="กรุณากรอกเบอร์โทรศัพท์"').first()
+      page.locator('text="กรุณากรอกเบอร์โทรศัพท์"').first(),
     ).toBeVisible();
   });
 
@@ -573,7 +584,7 @@ test.describe("4. Form Validation - Step 4: ข้อมูลการติด
     await page.click('button:has-text("ลงทะเบียน")');
 
     await expect(
-      page.locator("text=/เบอร์โทรศัพท์ต้องเป็นตัวเลข 9 หลัก/").first()
+      page.locator("text=/เบอร์โทรศัพท์ต้องเป็นตัวเลข 9 หลัก/").first(),
     ).toBeVisible();
   });
 
@@ -588,7 +599,7 @@ test.describe("4. Form Validation - Step 4: ข้อมูลการติด
     await page.click('button:has-text("ลงทะเบียน")');
 
     await expect(
-      page.locator('text="กรุณากรอกเบอร์โทรศัพท์มือถือ"').first()
+      page.locator('text="กรุณากรอกเบอร์โทรศัพท์มือถือ"').first(),
     ).toBeVisible();
   });
 
@@ -604,7 +615,7 @@ test.describe("4. Form Validation - Step 4: ข้อมูลการติด
     await page.click('button:has-text("ลงทะเบียน")');
 
     await expect(
-      page.locator("text=/เบอร์โทรศัพท์มือถือต้องเป็นตัวเลข 10 หลัก/").first()
+      page.locator("text=/เบอร์โทรศัพท์มือถือต้องเป็นตัวเลข 10 หลัก/").first(),
     ).toBeVisible();
   });
 
@@ -615,7 +626,7 @@ test.describe("4. Form Validation - Step 4: ข้อมูลการติด
 
     // ตรวจสอบว่ากลับไป Step 3
     await expect(
-      page.getByRole("heading", { name: "ข้อมูลที่อยู่" })
+      page.getByRole("heading", { name: "ข้อมูลที่อยู่" }),
     ).toBeVisible();
   });
 
@@ -655,16 +666,16 @@ test.describe("5. UI/UX และ Navigation", () => {
 
     // ตรวจสอบว่ามี progress bar แสดง 4 steps (desktop version)
     await expect(
-      page.locator('[class*="stepLabel"]').filter({ hasText: "บัญชีผู้ใช้" })
+      page.locator('[class*="stepLabel"]').filter({ hasText: "บัญชีผู้ใช้" }),
     ).toBeVisible();
     await expect(
-      page.locator('[class*="stepLabel"]').filter({ hasText: "ข้อมูลส่วนตัว" })
+      page.locator('[class*="stepLabel"]').filter({ hasText: "ข้อมูลส่วนตัว" }),
     ).toBeVisible();
     await expect(
-      page.locator('[class*="stepLabel"]').filter({ hasText: "ที่อยู่" })
+      page.locator('[class*="stepLabel"]').filter({ hasText: "ที่อยู่" }),
     ).toBeVisible();
     await expect(
-      page.locator('[class*="stepLabel"]').filter({ hasText: "ติดต่อ" })
+      page.locator('[class*="stepLabel"]').filter({ hasText: "ติดต่อ" }),
     ).toBeVisible();
   });
 
@@ -675,7 +686,7 @@ test.describe("5. UI/UX และ Navigation", () => {
     // ตรวจสอบว่าแสดงตัวเลข step ปัจจุบัน (mobile version)
     await expect(page.locator('[class*="stepInfoTitle"]')).toBeVisible();
     await expect(page.locator('[class*="stepInfoTitle"]')).toContainText(
-      "ขั้นตอนที่ 1"
+      "ขั้นตอนที่ 1",
     );
   });
 
