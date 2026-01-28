@@ -11,12 +11,9 @@ import { PassThrough } from "stream";
 
 export const runtime = "nodejs";
 
+
 export async function POST(req: NextRequest) {
-  const { authorized, error, session } = await checkAuthorization(req, [
-    "ADMIN",
-    "AUDITOR",
-    "COMMITTEE",
-  ]);
+  const { authorized, error, session } = await checkAuthorization(req, ["ADMIN","AUDITOR","COMMITTEE"]);
   if (!authorized) {
     return NextResponse.json(
       { message: error || "Unauthorized" },
@@ -24,6 +21,7 @@ export async function POST(req: NextRequest) {
     );
   }
   let committeeId: number | undefined;
+
 
   /**
    * body example:
@@ -37,14 +35,6 @@ export async function POST(req: NextRequest) {
    */
   const body = await req.json();
   const sections: string[] = body.sections ?? [];
-  const dateRange =
-    body.startDate || body.endDate
-      ? {
-          startDate: body.startDate,
-          endDate: body.endDate,
-        }
-      : undefined;
-  // { startDate: string, endDate: string }
 
   if (sections.length === 0) {
     return NextResponse.json(
@@ -64,7 +54,7 @@ export async function POST(req: NextRequest) {
   if (sections.includes("committeePerformances") && !committeeId) {
     return NextResponse.json(
       { message: "committeeId is required" },
-      { status: 400 },
+      { status: 400 }
     );
   }
 
@@ -77,7 +67,7 @@ export async function POST(req: NextRequest) {
   // ===== USERS =====
   if (sections.includes("users")) {
     const service = new UserExportService();
-    const result = await service.exportUsers(dateRange);
+    const result = await service.exportUsers();
     await appendExportResult(archive, result);
   }
 
@@ -114,10 +104,8 @@ export async function POST(req: NextRequest) {
     // 🔒 allow COMMITTEE only
     if (session?.user?.role !== "COMMITTEE") {
       return NextResponse.json(
-        {
-          message: "committee performance report is allowed for COMMITTEE only",
-        },
-        { status: 403 },
+        { message: "committee performance report is allowed for COMMITTEE only" },
+        { status: 403 }
       );
     }
 
@@ -125,7 +113,7 @@ export async function POST(req: NextRequest) {
     if (!committeeId) {
       return NextResponse.json(
         { message: "committeeId not found in session" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -134,10 +122,7 @@ export async function POST(req: NextRequest) {
     );
 
     const service = new CommitteePerformanceExportService();
-    const result = await service.exportCommitteePerformances(
-      committeeId,
-      session.user.name || "",
-    );
+    const result = await service.exportCommitteePerformances(committeeId, session.user.name || "");
     await appendExportResult(archive, result);
   }
 
@@ -145,30 +130,26 @@ export async function POST(req: NextRequest) {
     // 🔒 allow AUDITOR only
     if (session?.user?.role !== "AUDITOR") {
       return NextResponse.json(
-        {
-          message:
-            "specific auditor performance report is allowed for AUDITOR only",
-        },
-        { status: 403 },
+        { message: "specific auditor performance report is allowed for AUDITOR only" },
+        { status: 403 }
       );
     }
     const auditorId = session.user.roleData?.auditorId;
     if (!auditorId) {
       return NextResponse.json(
         { message: "auditorId not found in session" },
-        { status: 400 },
+        { status: 400 }
       );
     }
     const { SpecificAuditorPerformanceExportService } = await import(
       "@/services/export/SpecificAuditorPerformanceExportService"
     );
     const service = new SpecificAuditorPerformanceExportService();
-    const result = await service.exportSpecificAuditorPerformance(
-      auditorId,
-      session.user.name || "",
-    );
+    const result = await service.exportSpecificAuditorPerformance(auditorId, session.user.name || "");
     await appendExportResult(archive, result);
   }
+
+
 
   await archive.finalize();
 

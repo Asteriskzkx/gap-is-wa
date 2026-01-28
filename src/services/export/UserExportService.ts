@@ -3,8 +3,6 @@ import { streamToCsv } from "@/lib/csv/streamToCsv";
 import { createWorkbook } from "@/lib/xlsx/createWorkbook";
 import { writeSheet } from "@/lib/xlsx/writeSummarySheet";
 import { ExportResult } from "@/lib/export/types";
-import { dateRange } from "@/types/dateRange";
-import { date } from "zod";
 export class UserExportService {
   private repo = new UserExportRepository();
 
@@ -16,13 +14,13 @@ export class UserExportService {
   }
   private CSV_ROW_LIMIT = 1_000_000;
 
-  async exportUsers(dateRange?: dateRange) : Promise<ExportResult> {
-    const totalRows = await this.repo.getUserCount(dateRange);
+  async exportUsers() : Promise<ExportResult> {
+    const totalRows = await this.repo.getUserCount();
 
     // 🔴 condition สำคัญ
     if (totalRows > this.CSV_ROW_LIMIT) {
       // → CSV streaming
-      const dbStream = await this.repo.streamAllUsers(dateRange);
+      const dbStream = await this.repo.streamAllUsers();
 
       const csvStream = streamToCsv(dbStream, {
         headers: ["email", "name", "role", "createdAt"],
@@ -36,7 +34,7 @@ export class UserExportService {
     }
 
         // 🟢 SMALL DATA → XLSX (RAW DATA)
-    const users = await this.repo.getAllUsers(dateRange);
+    const users = await this.repo.getAllUsers();
 
     const workbook = createWorkbook("Users");
 
