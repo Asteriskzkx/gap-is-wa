@@ -66,6 +66,15 @@ export async function POST(req: NextRequest) {
 
   // ===== USERS =====
   if (sections.includes("users")) {
+
+    if (session?.user?.role !== "ADMIN") {
+      return NextResponse.json(
+        { message: "user report is allowed for ADMIN only" },
+        { status: 403 }
+      );
+    }
+
+    console.log("Exporting users...");
     const service = new UserExportService();
     const result = await service.exportUsers();
     await appendExportResult(archive, result);
@@ -73,6 +82,13 @@ export async function POST(req: NextRequest) {
 
   // ===== INSPECTIONS =====
   if (sections.includes("inspections")) {
+    if (session?.user?.role !== "ADMIN" && session?.user?.role !== "COMMITTEE") {
+      return NextResponse.json(
+        { message: "inspection report is allowed for ADMIN and COMMITTEE only" },
+        { status: 403 }
+      );
+    }
+    console.log("Exporting inspections...");
     const service = new InspectionsExportService();
     const result = await service.exportInspections();
     await appendExportResult(archive, result);
@@ -80,6 +96,14 @@ export async function POST(req: NextRequest) {
 
   // ===== RUBBER FARMS =====
   if (sections.includes("rubberFarms")) {
+    if (session?.user?.role !== "ADMIN") {
+      return NextResponse.json(
+        { message: "rubber farm report is allowed for ADMIN only" },
+        { status: 403 }
+      );
+    }
+
+    console.log("Exporting rubber farms...");
     const service = new RubberFarmExportService();
     const result = await service.exportRubberFarms();
     await appendExportResult(archive, result);
@@ -87,6 +111,14 @@ export async function POST(req: NextRequest) {
 
   // ===== CERTIFICATES =====
   if (sections.includes("certificates")) {
+
+    if (session?.user?.role !== "ADMIN" && session?.user?.role !== "COMMITTEE") {
+      return NextResponse.json(
+        { message: "certificate report is allowed for ADMIN and COMMITTEE only" },
+        { status: 403 }
+      );
+    }
+    console.log("Exporting certificates...");
     const service = new CertificateExportService();
     const result = await service.exportCertificates();
     await appendExportResult(archive, result);
@@ -94,6 +126,13 @@ export async function POST(req: NextRequest) {
 
   // ===== AUDITORS =====
   if (sections.includes("auditors")) {
+    if (session?.user?.role !== "ADMIN") {
+      return NextResponse.json(
+        { message: "auditor report is allowed for ADMIN only" },
+        { status: 403 }
+      );
+    }
+    console.log("Exporting auditors...");
     const service = new AuditorPerformanceExportService();
     const result = await service.exportAuditorPerformances();
     await appendExportResult(archive, result);
@@ -141,6 +180,7 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+
     const { SpecificAuditorPerformanceExportService } = await import(
       "@/services/export/SpecificAuditorPerformanceExportService"
     );
