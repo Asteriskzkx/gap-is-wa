@@ -26,8 +26,6 @@ async function loginAsFarmer(page) {
 }
 
 test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง", () => {
-  test.describe.configure({ mode: "serial" });
-
   test.beforeEach(async ({ page }) => {
     // Login ก่อนทุก test
     await loginAsFarmer(page);
@@ -45,9 +43,9 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
     await page.click('button:has-text("ถัดไป")');
 
     // ตรวจสอบว่าแสดงข้อความเตือน
-    await expect(
-      page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน"),
-    ).toBeVisible();
+    const errorMessage = page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน");
+    await errorMessage.scrollIntoViewIfNeeded();
+    await expect(errorMessage).toBeVisible();
   });
 
   test("TC-002: ไม่กรอกหมู่ที่", async ({ page }) => {
@@ -59,9 +57,9 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
     await page.click('button:has-text("ถัดไป")');
 
     // ตรวจสอบว่าแสดงข้อความเตือน
-    await expect(
-      page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน"),
-    ).toBeVisible();
+    const errorMessage = page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน");
+    await errorMessage.scrollIntoViewIfNeeded();
+    await expect(errorMessage).toBeVisible();
   });
 
   test("TC-003: กรอกหมู่ที่ 1", async ({ page }) => {
@@ -73,9 +71,9 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
     await page.click('button:has-text("ถัดไป")');
 
     // ตรวจสอบว่าแสดงข้อความเตือน
-    await expect(
-      page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน"),
-    ).toBeVisible();
+    const errorMessage = page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน");
+    await errorMessage.scrollIntoViewIfNeeded();
+    await expect(errorMessage).toBeVisible();
   });
 
   test("TC-004: ไม่กรอกถนน", async ({ page }) => {
@@ -89,9 +87,9 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
     await page.click('button:has-text("ถัดไป")');
 
     // ตรวจสอบว่าแสดงข้อความเตือน
-    await expect(
-      page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน"),
-    ).toBeVisible();
+    const errorMessage = page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน");
+    await errorMessage.scrollIntoViewIfNeeded();
+    await expect(errorMessage).toBeVisible();
   });
 
   test("TC-005: ไม่กรอกซอย", async ({ page }) => {
@@ -106,9 +104,9 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
     await page.click('button:has-text("ถัดไป")');
 
     // ตรวจสอบว่าแสดงข้อความเตือน
-    await expect(
-      page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน"),
-    ).toBeVisible();
+    const errorMessage = page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน");
+    await errorMessage.scrollIntoViewIfNeeded();
+    await expect(errorMessage).toBeVisible();
   });
 
   test("TC-006: ไม่เลือกรูปแบบการจำหน่ายผลผลิต", async ({ page }) => {
@@ -124,9 +122,9 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
     await page.click('button:has-text("ถัดไป")');
 
     // ตรวจสอบว่าแสดงข้อความเตือน
-    await expect(
-      page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน"),
-    ).toBeVisible();
+    const errorMessage = page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน");
+    await errorMessage.scrollIntoViewIfNeeded();
+    await expect(errorMessage).toBeVisible();
   });
 
   test("TC-007: เลือกรูปแบบการจำหน่าย: ก่อนเปิดกรีด", async ({ page }) => {
@@ -200,9 +198,9 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
     await page.click('button:has-text("ถัดไป")');
 
     // ตรวจสอบว่าแสดงข้อความเตือน
-    await expect(
-      page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน"),
-    ).toBeVisible();
+    const errorMessage = page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน");
+    await errorMessage.scrollIntoViewIfNeeded();
+    await expect(errorMessage).toBeVisible();
   });
 
   test("TC-011: เลือกจังหวัด", async ({ page }) => {
@@ -256,9 +254,9 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
     await page.click('button:has-text("ถัดไป")');
 
     // ตรวจสอบว่าแสดงข้อความเตือน
-    await expect(
-      page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน"),
-    ).toBeVisible();
+    const errorMessage = page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน");
+    await errorMessage.scrollIntoViewIfNeeded();
+    await expect(errorMessage).toBeVisible();
   });
 
   test("TC-013: เลือกอำเภอ/เขต", async ({ page }) => {
@@ -345,9 +343,9 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
     await page.click('button:has-text("ถัดไป")');
 
     // ตรวจสอบว่าแสดงข้อความเตือน
-    await expect(
-      page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน"),
-    ).toBeVisible();
+    const errorMessage = page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน");
+    await errorMessage.scrollIntoViewIfNeeded();
+    await expect(errorMessage).toBeVisible();
   });
 
   test("TC-015: เลือกตำบล/แขวง", async ({ page }) => {
@@ -431,9 +429,11 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
     await page.click('button:has-text("ถัดไป")');
 
     // ตรวจสอบว่าแสดงข้อความเตือน
-    await expect(
-      page.locator("text=กรุณาคลิกบนแผนที่เพื่อระบุตำแหน่งสวนยางของคุณ"),
-    ).toBeVisible();
+    const errorMessage = page.locator(
+      "text=กรุณาคลิกบนแผนที่เพื่อระบุตำแหน่งสวนยางของคุณ",
+    );
+    await errorMessage.scrollIntoViewIfNeeded();
+    await expect(errorMessage).toBeVisible();
   });
 
   test("TC-017: กรอกข้อมูล Step 1 ครบถ้วนถูกต้อง", async ({ page }) => {
@@ -566,8 +566,6 @@ async function completeStep1(page) {
 }
 
 test.describe("2. Form Validation - Step 2: รายละเอียดการปลูก", () => {
-  test.describe.configure({ mode: "serial" });
-
   test.beforeEach(async ({ page }) => {
     // Login ก่อนทุก test
     await loginAsFarmer(page);
@@ -1389,8 +1387,6 @@ async function completeStep2(page) {
 }
 
 test.describe("3. Form Validation - Step 3: ยืนยันข้อมูล", () => {
-  test.describe.configure({ mode: "serial" });
-
   test.beforeEach(async ({ page }) => {
     // Login และเข้าสู่ระบบ
     await loginAsFarmer(page);
@@ -1761,8 +1757,6 @@ test.describe("3. Form Validation - Step 3: ยืนยันข้อมูล
 });
 
 test.describe("4. UI/UX และ Navigation", () => {
-  test.describe.configure({ mode: "serial" });
-
   test.beforeEach(async ({ page }) => {
     await loginAsFarmer(page);
     await page.goto("/farmer/applications/new");
