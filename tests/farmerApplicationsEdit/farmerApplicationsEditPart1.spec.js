@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 const USERS = {
   withFarms: {
@@ -71,7 +71,7 @@ test.describe("Farmer Applications Edit — Part 1 (Step 1: เลือกส�
     });
 
     await expect(
-      page.getByRole("heading", { name: "แก้ไขข้อมูลสวนยางพารา" })
+      page.getByRole("heading", { name: "แก้ไขข้อมูลสวนยางพารา" }),
     ).toBeVisible({ timeout: 10000 });
 
     const table = getStep1Table(page);
@@ -113,10 +113,10 @@ test.describe("Farmer Applications Edit — Part 1 (Step 1: เลือกส�
     });
 
     await expect(
-      page.getByText("คุณยังไม่มีสวนยางในระบบ กรุณาลงทะเบียนสวนยางก่อน")
+      page.getByText("คุณยังไม่มีสวนยางในระบบ กรุณาลงทะเบียนสวนยางก่อน"),
     ).toBeVisible();
     await expect(
-      page.getByRole("button", { name: "ลงทะเบียนสวนยาง" })
+      page.getByRole("button", { name: "ลงทะเบียนสวนยาง" }),
     ).toBeVisible();
 
     await expect(getStep1Table(page)).toHaveCount(0);
@@ -148,7 +148,7 @@ test.describe("Farmer Applications Edit — Part 1 (Step 1: เลือกส�
     const headers = ["รหัสสวน", "สถานที่", "จังหวัด", "อำเภอ", "ตำบล"];
     for (const header of headers) {
       await expect(
-        table.locator("th", { hasText: header }).first()
+        table.locator("th", { hasText: header }).first(),
       ).toBeVisible();
     }
   });
@@ -193,7 +193,7 @@ test.describe("Farmer Applications Edit — Part 1 (Step 1: เลือกส�
     });
 
     await expect(
-      page.getByRole("heading", { name: "แก้ไขข้อมูลสวนยางพารา" })
+      page.getByRole("heading", { name: "แก้ไขข้อมูลสวนยางพารา" }),
     ).toBeVisible({ timeout: 10000 });
 
     const nextButton = getFormNextButton(page);
@@ -201,7 +201,9 @@ test.describe("Farmer Applications Edit — Part 1 (Step 1: เลือกส�
 
     await nextButton.click();
     await expect(
-      page.locator(".bg-red-50", { hasText: "กรุณาเลือกสวนยางที่ต้องการแก้ไข" })
+      page.locator(".bg-red-50", {
+        hasText: "กรุณาเลือกสวนยางที่ต้องการแก้ไข",
+      }),
     ).toBeVisible();
   });
 
@@ -219,8 +221,8 @@ test.describe("Farmer Applications Edit — Part 1 (Step 1: เลือกส�
 
     await expect(
       paginator.locator(
-        "text=/แสดง\\s+\\d+\\s+ถึง\\s+\\d+\\s+จาก\\s+\\d+\\s+รายการ/"
-      )
+        "text=/แสดง\\s+\\d+\\s+ถึง\\s+\\d+\\s+จาก\\s+\\d+\\s+รายการ/",
+      ),
     ).toBeVisible();
   });
 
@@ -287,7 +289,7 @@ test.describe("Farmer Applications Edit — Part 1 (Step 1: เลือกส�
     });
 
     await expect(
-      page.locator(".bg-red-50", { hasText: "ไม่สามารถดึงข้อมูลสวนยางได้" })
+      page.locator(".bg-red-50", { hasText: "ไม่สามารถดึงข้อมูลสวนยางได้" }),
     ).toBeVisible();
   });
 
