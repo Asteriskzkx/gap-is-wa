@@ -65,7 +65,7 @@ async function navigateAndSelectFarm(page) {
 
   await getFormNextButton(page).click();
   await expect(
-    page.getByRole("heading", { name: "ข้อมูลสวนยาง", exact: true })
+    page.getByRole("heading", { name: "ข้อมูลสวนยาง", exact: true }),
   ).toBeVisible({ timeout: 10000 });
 }
 
@@ -148,7 +148,7 @@ async function gotoEditStep3(page) {
   await ensureCanProceedFromStep2(page);
 
   await expect(
-    page.getByRole("heading", { name: "รายละเอียดการปลูก", exact: true })
+    page.getByRole("heading", { name: "รายละเอียดการปลูก", exact: true }),
   ).toBeVisible({ timeout: 10000 });
 }
 
@@ -163,34 +163,13 @@ function getAutoCompleteInput(page, name) {
     .first();
 }
 
-async function selectFromAutoCompleteByTyping(page, { name, query, option }) {
-  const input = getAutoCompleteInput(page, name);
-  await expect(input).toBeVisible({ timeout: 10000 });
-  await input.click();
-  await clearAndType(input, query);
-
-  const dropdownButton = page
-    .locator(`#${name}`)
-    .locator("button.p-autocomplete-dropdown")
-    .first();
-
-  for (let attempt = 1; attempt <= 3; attempt++) {
-    await dropdownButton.click();
-
-    const panel = page.locator(".p-autocomplete-panel:visible").first();
-    await expect(panel).toBeVisible({ timeout: 10000 });
-
-    const desiredOption = panel.getByRole("option", { name: option }).first();
-    await expect(desiredOption).toBeVisible({ timeout: 10000 });
-
-    try {
-      await desiredOption.click({ timeout: 5000, force: true });
-      await expect(panel).toBeHidden({ timeout: 10000 });
-      return;
-    } catch (error) {
-      if (attempt === 3) throw error;
-    }
-  }
+async function selectFromDropdown(page, { id, optionText }) {
+  const dropdown = page.locator(`#${id}`);
+  await dropdown.scrollIntoViewIfNeeded();
+  await dropdown.click();
+  await page.waitForSelector('[role="option"]', { timeout: 10000 });
+  await page.click(`[role="option"]:has-text("${optionText}")`);
+  await page.keyboard.press("Escape");
 }
 
 async function setInputNumberById(page, id, value) {
@@ -219,10 +198,9 @@ async function selectMonthByText(page, { id, monthText }) {
 }
 
 async function fillPlantingDetailItem(page, index) {
-  await selectFromAutoCompleteByTyping(page, {
-    name: `specie-${index}`,
-    query: "RR",
-    option: "RRIT 251",
+  await selectFromDropdown(page, {
+    id: `specie-${index}`,
+    optionText: "RRIT 251",
   });
   await setInputNumberById(page, `areaOfPlot-${index}`, 10.5);
   await setInputNumberById(page, `numberOfRubber-${index}`, 500);
@@ -259,10 +237,9 @@ async function ensureStep3ValidAndGoNext(page) {
     }
 
     if (errorText.includes("กรุณาเลือกพันธุ์ยางพารา")) {
-      await selectFromAutoCompleteByTyping(page, {
-        name: "specie-0",
-        query: "RR",
-        option: "RRIT 251",
+      await selectFromDropdown(page, {
+        id: "specie-0",
+        optionText: "RRIT 251",
       });
       continue;
     }
@@ -322,7 +299,7 @@ test.describe("Farmer Applications Edit — Part 3 (Step 3: รายละเ�
 
   test("TC-027: โหลดรายละเอียดการปลูกที่มีอยู่", async ({ page }) => {
     await expect(
-      page.getByRole("heading", { name: "รายละเอียดการปลูก", exact: true })
+      page.getByRole("heading", { name: "รายละเอียดการปลูก", exact: true }),
     ).toBeVisible();
     await expect(page.getByText("รายการที่ 1")).toBeVisible();
 
@@ -349,7 +326,7 @@ test.describe("Farmer Applications Edit — Part 3 (Step 3: รายละเ�
       page.getByRole("heading", {
         name: "ตรวจสอบและยืนยันข้อมูล",
         exact: true,
-      })
+      }),
     ).toBeVisible({ timeout: 10000 });
   });
 
@@ -399,7 +376,7 @@ test.describe("Farmer Applications Edit — Part 3 (Step 3: รายละเ�
           body: JSON.stringify(json),
         });
       },
-      { times: 1 }
+      { times: 1 },
     );
 
     await gotoEditStep3(page);
@@ -410,7 +387,7 @@ test.describe("Farmer Applications Edit — Part 3 (Step 3: รายละเ�
     await expect(
       getErrorAlert(page).filter({
         hasText: "กรุณาเพิ่มรายละเอียดการปลูกอย่างน้อย 1 รายการ",
-      })
+      }),
     ).toBeVisible({ timeout: 10000 });
   });
 
@@ -430,10 +407,10 @@ test.describe("Farmer Applications Edit — Part 3 (Step 3: รายละเ�
     await expect(
       getErrorAlert(page).filter({
         hasText: "รายการที่ 1: กรุณาเลือกพันธุ์ยางพารา",
-      })
+      }),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "รายละเอียดการปลูก", exact: true })
+      page.getByRole("heading", { name: "รายละเอียดการปลูก", exact: true }),
     ).toBeVisible();
   });
 
@@ -444,7 +421,7 @@ test.describe("Farmer Applications Edit — Part 3 (Step 3: รายละเ�
     await expect(
       getErrorAlert(page).filter({
         hasText: "รายการที่ 1: กรุณากรอกพื้นที่แปลง",
-      })
+      }),
     ).toBeVisible({ timeout: 10000 });
   });
 
@@ -455,7 +432,7 @@ test.describe("Farmer Applications Edit — Part 3 (Step 3: รายละเ�
     await expect(
       getErrorAlert(page).filter({
         hasText: "รายการที่ 1: กรุณากรอกพื้นที่แปลงให้ถูกต้อง",
-      })
+      }),
     ).toBeVisible();
   });
 
@@ -466,7 +443,7 @@ test.describe("Farmer Applications Edit — Part 3 (Step 3: รายละเ�
     await expect(
       getErrorAlert(page).filter({
         hasText: "รายการที่ 1: กรุณากรอกจำนวนต้นยางทั้งหมด",
-      })
+      }),
     ).toBeVisible({ timeout: 10000 });
   });
 
@@ -477,14 +454,14 @@ test.describe("Farmer Applications Edit — Part 3 (Step 3: รายละเ�
     await expect(
       getErrorAlert(page).filter({
         hasText: "รายการที่ 1: กรุณากรอกจำนวนต้นยางทั้งหมดให้ถูกต้อง",
-      })
+      }),
     ).toBeVisible();
   });
 
   test("TC-037: กดปุ่มย้อนกลับจาก Step 3 กลับ Step 2", async ({ page }) => {
     await getFormBackButton(page).click();
     await expect(
-      page.getByRole("heading", { name: "ข้อมูลสวนยาง", exact: true })
+      page.getByRole("heading", { name: "ข้อมูลสวนยาง", exact: true }),
     ).toBeVisible({ timeout: 10000 });
 
     const villageInput = page
@@ -501,7 +478,7 @@ test.describe("Farmer Applications Edit — Part 3 (Step 3: รายละเ�
       page.getByRole("heading", {
         name: "ตรวจสอบและยืนยันข้อมูล",
         exact: true,
-      })
+      }),
     ).toBeVisible({ timeout: 10000 });
   });
 });
