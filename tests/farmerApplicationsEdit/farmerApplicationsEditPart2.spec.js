@@ -188,6 +188,10 @@ test.describe("Farmer Applications Edit — Part 2 (Step 2: ข้อมูล�
     // Check province/amphure/tambon are prefilled (PrimaryDropdown)
     const provinceDropdown = page.locator("#provinceId");
     await expect(provinceDropdown).toContainText(/.+/, { timeout: 10000 });
+    await provinceDropdown.scrollIntoViewIfNeeded();
+    await expect(provinceDropdown).toBeVisible();
+
+    await page.waitForTimeout(3000);
   });
 
   test('TC-014: ล้าง "หมู่บ้าน/ชุมชน" แล้วกด "ถัดไป" — แสดง error', async ({
@@ -206,9 +210,9 @@ test.describe("Farmer Applications Edit — Part 2 (Step 2: ข้อมูล�
     const nextButton = getFormNextButton(page);
     await nextButton.click();
 
-    await expect(page.getByText(/กรุณากรอกข้อมูลสวนยางให้ครบถ้วน/)).toBeVisible(
-      { timeout: 5000 },
-    );
+    const errorMessage = page.getByText(/กรุณากรอกข้อมูลสวนยางให้ครบถ้วน/);
+    await errorMessage.scrollIntoViewIfNeeded();
+    await expect(errorMessage).toBeVisible({ timeout: 5000 });
   });
 
   test('TC-015: ล้าง "หมู่ที่" (InputNumber) แล้วกด "ถัดไป" — แสดง error', async ({
@@ -231,10 +235,11 @@ test.describe("Farmer Applications Edit — Part 2 (Step 2: ข้อมูล�
     const nextButton = getFormNextButton(page);
     await nextButton.click();
 
-    await expect(getErrorAlert(page)).toContainText(
-      /กรุณากรอกข้อมูลสวนยางให้ครบถ้วน/,
-      { timeout: 5000 },
-    );
+    const errorAlert = getErrorAlert(page);
+    await errorAlert.scrollIntoViewIfNeeded();
+    await expect(errorAlert).toContainText(/กรุณากรอกข้อมูลสวนยางให้ครบถ้วน/, {
+      timeout: 5000,
+    });
   });
 
   test('TC-016: ล้าง "ถนน" แล้วกด "ถัดไป" — แสดง error', async ({ page }) => {
@@ -251,10 +256,11 @@ test.describe("Farmer Applications Edit — Part 2 (Step 2: ข้อมูล�
     const nextButton = getFormNextButton(page);
     await nextButton.click();
 
-    await expect(getErrorAlert(page)).toContainText(
-      /กรุณากรอกข้อมูลสวนยางให้ครบถ้วน/,
-      { timeout: 5000 },
-    );
+    const errorAlert = getErrorAlert(page);
+    await errorAlert.scrollIntoViewIfNeeded();
+    await expect(errorAlert).toContainText(/กรุณากรอกข้อมูลสวนยางให้ครบถ้วน/, {
+      timeout: 5000,
+    });
   });
 
   test('TC-017: ล้าง "ซอย" แล้วกด "ถัดไป" — แสดง error', async ({ page }) => {
@@ -271,10 +277,11 @@ test.describe("Farmer Applications Edit — Part 2 (Step 2: ข้อมูล�
     const nextButton = getFormNextButton(page);
     await nextButton.click();
 
-    await expect(getErrorAlert(page)).toContainText(
-      /กรุณากรอกข้อมูลสวนยางให้ครบถ้วน/,
-      { timeout: 5000 },
-    );
+    const errorAlert = getErrorAlert(page);
+    await errorAlert.scrollIntoViewIfNeeded();
+    await expect(errorAlert).toContainText(/กรุณากรอกข้อมูลสวนยางให้ครบถ้วน/, {
+      timeout: 5000,
+    });
   });
 
   test("TC-018: ช่องจังหวัด/อำเภอ/ตำบล แสดงค่าเดิมและโต้ตอบได้", async ({
@@ -321,6 +328,7 @@ test.describe("Farmer Applications Edit — Part 2 (Step 2: ข้อมูล�
 
     // Find the productDistributionType dropdown (PrimaryDropdown component)
     const distributionDropdown = page.locator("#productDistributionType");
+    await distributionDropdown.scrollIntoViewIfNeeded();
     await expect(distributionDropdown).toHaveAttribute(
       "data-p-disabled",
       "true",

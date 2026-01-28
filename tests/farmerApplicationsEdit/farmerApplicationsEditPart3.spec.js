@@ -384,11 +384,11 @@ test.describe("Farmer Applications Edit — Part 3 (Step 3: รายละเ�
     await expect(page.getByText("รายการที่ 1")).toHaveCount(0);
 
     await getFormNextButton(page).click();
-    await expect(
-      getErrorAlert(page).filter({
-        hasText: "กรุณาเพิ่มรายละเอียดการปลูกอย่างน้อย 1 รายการ",
-      }),
-    ).toBeVisible({ timeout: 10000 });
+    const errorAlert1 = getErrorAlert(page).filter({
+      hasText: "กรุณาเพิ่มรายละเอียดการปลูกอย่างน้อย 1 รายการ",
+    });
+    await errorAlert1.scrollIntoViewIfNeeded();
+    await expect(errorAlert1).toBeVisible({ timeout: 10000 });
   });
 
   test("TC-032: ไม่เลือกพันธุ์ยางพารา แล้วกดถัดไป", async ({ page }) => {
@@ -404,58 +404,64 @@ test.describe("Farmer Applications Edit — Part 3 (Step 3: รายละเ�
     await expect(page.getByText("รายการที่ 2")).toHaveCount(0);
 
     await getFormNextButton(page).click();
-    await expect(
-      getErrorAlert(page).filter({
-        hasText: "รายการที่ 1: กรุณาเลือกพันธุ์ยางพารา",
-      }),
-    ).toBeVisible();
+    const errorAlert2 = getErrorAlert(page).filter({
+      hasText: "รายการที่ 1: กรุณาเลือกพันธุ์ยางพารา",
+    });
+
     await expect(
       page.getByRole("heading", { name: "รายละเอียดการปลูก", exact: true }),
     ).toBeVisible();
+    await errorAlert2.scrollIntoViewIfNeeded();
+    await expect(errorAlert2).toBeVisible();
+    await page.waitForTimeout(3000);
   });
 
   test("TC-033: ไม่กรอกพื้นที่แปลง แล้วกดถัดไป", async ({ page }) => {
     await clearInputNumberById(page, "areaOfPlot-0");
 
     await getFormNextButton(page).click();
-    await expect(
-      getErrorAlert(page).filter({
-        hasText: "รายการที่ 1: กรุณากรอกพื้นที่แปลง",
-      }),
-    ).toBeVisible({ timeout: 10000 });
+    const errorAlert3 = getErrorAlert(page).filter({
+      hasText: "รายการที่ 1: กรุณากรอกพื้นที่แปลง",
+    });
+    await errorAlert3.scrollIntoViewIfNeeded();
+    await expect(errorAlert3).toBeVisible({ timeout: 10000 });
+    await page.waitForTimeout(3000);
   });
 
   test("TC-034: กรอกพื้นที่แปลงเป็น 0 แล้วกดถัดไป", async ({ page }) => {
     await setInputNumberById(page, "areaOfPlot-0", 0);
 
     await getFormNextButton(page).click();
-    await expect(
-      getErrorAlert(page).filter({
-        hasText: "รายการที่ 1: กรุณากรอกพื้นที่แปลงให้ถูกต้อง",
-      }),
-    ).toBeVisible();
+    const errorAlert4 = getErrorAlert(page).filter({
+      hasText: "รายการที่ 1: กรุณากรอกพื้นที่แปลงให้ถูกต้อง",
+    });
+    await errorAlert4.scrollIntoViewIfNeeded();
+    await expect(errorAlert4).toBeVisible();
+    await page.waitForTimeout(3000);
   });
 
   test("TC-035: ไม่กรอกจำนวนต้นยางทั้งหมด แล้วกดถัดไป", async ({ page }) => {
     await clearInputNumberById(page, "numberOfRubber-0");
 
     await getFormNextButton(page).click();
-    await expect(
-      getErrorAlert(page).filter({
-        hasText: "รายการที่ 1: กรุณากรอกจำนวนต้นยางทั้งหมด",
-      }),
-    ).toBeVisible({ timeout: 10000 });
+    const errorAlert5 = getErrorAlert(page).filter({
+      hasText: "รายการที่ 1: กรุณากรอกจำนวนต้นยางทั้งหมด",
+    });
+    await errorAlert5.scrollIntoViewIfNeeded();
+    await expect(errorAlert5).toBeVisible({ timeout: 10000 });
+    await page.waitForTimeout(3000);
   });
 
   test("TC-036: กรอกจำนวนต้นยางทั้งหมดเป็น 0 แล้วกดถัดไป", async ({ page }) => {
     await setInputNumberById(page, "numberOfRubber-0", 0);
 
     await getFormNextButton(page).click();
-    await expect(
-      getErrorAlert(page).filter({
-        hasText: "รายการที่ 1: กรุณากรอกจำนวนต้นยางทั้งหมดให้ถูกต้อง",
-      }),
-    ).toBeVisible();
+    const errorAlert6 = getErrorAlert(page).filter({
+      hasText: "รายการที่ 1: กรุณากรอกจำนวนต้นยางทั้งหมดให้ถูกต้อง",
+    });
+    await errorAlert6.scrollIntoViewIfNeeded();
+    await expect(errorAlert6).toBeVisible();
+    await page.waitForTimeout(3000);
   });
 
   test("TC-037: กดปุ่มย้อนกลับจาก Step 3 กลับ Step 2", async ({ page }) => {

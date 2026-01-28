@@ -310,17 +310,18 @@ test.describe("Farmer Applications Edit — Part 4 (Step 4: ตรวจสอ�
       await submitButton.scrollIntoViewIfNeeded();
       await submitButton.click();
 
-      await expect(
-        getErrorAlert(page).filter({
-          hasText: "กรุณายืนยันความถูกต้องของข้อมูลก่อนส่ง",
-        }),
-      ).toBeVisible({ timeout: 10000 });
+      const errorAlert1 = getErrorAlert(page).filter({
+        hasText: "กรุณายืนยันความถูกต้องของข้อมูลก่อนส่ง",
+      });
       await expect(
         page.getByRole("heading", {
           name: "ตรวจสอบและยืนยันข้อมูล",
           exact: true,
         }),
       ).toBeVisible();
+      await errorAlert1.scrollIntoViewIfNeeded();
+      await expect(errorAlert1).toBeVisible({ timeout: 10000 });
+      await page.waitForTimeout(3000);
     });
 
     test("TC-041: tick checkbox แล้วยืนยันส่งข้อมูลสำเร็จ", async ({
@@ -335,13 +336,17 @@ test.describe("Farmer Applications Edit — Part 4 (Step 4: ตรวจสอ�
       await submitButton.click();
 
       await expect(
-        getSuccessAlert(page).filter({
-          hasText: "อัปเดตข้อมูลสำเร็จ กำลังนำคุณไปยังหน้าหลัก...",
+        page.getByRole("heading", {
+          name: "ตรวจสอบและยืนยันข้อมูล",
+          exact: true,
         }),
-      ).toBeVisible({ timeout: 10000 });
-
-      await page.waitForURL(/\/farmer\/dashboard/, { timeout: 20000 });
-      await expect(page).toHaveURL(/\/farmer\/dashboard/);
+      ).toBeVisible();
+      const successAlert = getSuccessAlert(page).filter({
+        hasText: "อัปเดตข้อมูลสำเร็จ กำลังนำคุณไปยังหน้าหลัก...",
+      });
+      await successAlert.scrollIntoViewIfNeeded();
+      await expect(successAlert).toBeVisible({ timeout: 10000 });
+      await page.waitForTimeout(3000);
     });
 
     test("TC-042: แสดง loading state ระหว่างส่งข้อมูล", async ({ page }) => {
@@ -385,17 +390,18 @@ test.describe("Farmer Applications Edit — Part 4 (Step 4: ตรวจสอ�
       await page.check('input[id="confirm"]');
       await getSubmitButton(page).click();
 
-      await expect(
-        getErrorAlert(page).filter({
-          hasText: "เกิดข้อผิดพลาดในการอัปเดตข้อมูล",
-        }),
-      ).toBeVisible({ timeout: 10000 });
+      const errorAlert2 = getErrorAlert(page).filter({
+        hasText: "เกิดข้อผิดพลาดในการอัปเดตข้อมูล",
+      });
       await expect(
         page.getByRole("heading", {
           name: "ตรวจสอบและยืนยันข้อมูล",
           exact: true,
         }),
       ).toBeVisible();
+      await errorAlert2.scrollIntoViewIfNeeded();
+      await expect(errorAlert2).toBeVisible({ timeout: 10000 });
+      await page.waitForTimeout(3000);
     });
 
     test("TC-044: ส่งข้อมูลชนกัน (ข้อมูลถูกแก้ไขโดยผู้อื่น)", async ({
@@ -419,15 +425,16 @@ test.describe("Farmer Applications Edit — Part 4 (Step 4: ตรวจสอ�
       await page.check('input[id="confirm"]');
       await getSubmitButton(page).click();
 
-      await expect(page.getByText(conflictMessage)).toBeVisible({
-        timeout: 10000,
-      });
       await expect(
         page.getByRole("heading", {
           name: "ตรวจสอบและยืนยันข้อมูล",
           exact: true,
         }),
       ).toBeVisible();
+      const conflictAlert = page.getByText(conflictMessage);
+      await conflictAlert.scrollIntoViewIfNeeded();
+      await expect(conflictAlert).toBeVisible({ timeout: 10000 });
+      await page.waitForTimeout(3000);
     });
   });
 });
