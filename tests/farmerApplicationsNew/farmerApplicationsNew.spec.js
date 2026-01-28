@@ -1,5 +1,5 @@
 // tests/farmerApplicationsNew/farmerApplicationsNew.spec.js (Playwright E2E Tests)
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 // ข้อมูลผู้ใช้สำหรับการทดสอบ
 const TEST_USER = {
@@ -26,6 +26,8 @@ async function loginAsFarmer(page) {
 }
 
 test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง", () => {
+  test.describe.configure({ mode: "serial" });
+
   test.beforeEach(async ({ page }) => {
     // Login ก่อนทุก test
     await loginAsFarmer(page);
@@ -33,7 +35,7 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
     await page.goto("/farmer/applications/new");
     // รอให้หน้าโหลดเสร็จ
     await expect(
-      page.getByRole("heading", { name: "ยื่นขอใบรับรองแหล่งผลิต" })
+      page.getByRole("heading", { name: "ยื่นขอใบรับรองแหล่งผลิต" }),
     ).toBeVisible({ timeout: 10000 });
   });
 
@@ -44,7 +46,7 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
 
     // ตรวจสอบว่าแสดงข้อความเตือน
     await expect(
-      page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน")
+      page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน"),
     ).toBeVisible();
   });
 
@@ -58,7 +60,7 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
 
     // ตรวจสอบว่าแสดงข้อความเตือน
     await expect(
-      page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน")
+      page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน"),
     ).toBeVisible();
   });
 
@@ -72,7 +74,7 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
 
     // ตรวจสอบว่าแสดงข้อความเตือน
     await expect(
-      page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน")
+      page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน"),
     ).toBeVisible();
   });
 
@@ -88,7 +90,7 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
 
     // ตรวจสอบว่าแสดงข้อความเตือน
     await expect(
-      page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน")
+      page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน"),
     ).toBeVisible();
   });
 
@@ -105,7 +107,7 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
 
     // ตรวจสอบว่าแสดงข้อความเตือน
     await expect(
-      page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน")
+      page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน"),
     ).toBeVisible();
   });
 
@@ -123,7 +125,7 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
 
     // ตรวจสอบว่าแสดงข้อความเตือน
     await expect(
-      page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน")
+      page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน"),
     ).toBeVisible();
   });
 
@@ -141,7 +143,7 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
 
     // ตรวจสอบว่าระบบยอมรับข้อมูล
     await expect(page.locator('[id*="productDistributionType"]')).toContainText(
-      "ก่อนเปิดกรีด"
+      "ก่อนเปิดกรีด",
     );
   });
 
@@ -159,7 +161,7 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
 
     // ตรวจสอบว่าระบบยอมรับข้อมูล
     await expect(page.locator('[id*="productDistributionType"]')).toContainText(
-      "น้ำยางสด"
+      "น้ำยางสด",
     );
   });
 
@@ -177,7 +179,7 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
 
     // ตรวจสอบว่าระบบยอมรับข้อมูล
     await expect(page.locator('[id*="productDistributionType"]')).toContainText(
-      "ยางก้อนถ้วย"
+      "ยางก้อนถ้วย",
     );
   });
 
@@ -199,7 +201,7 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
 
     // ตรวจสอบว่าแสดงข้อความเตือน
     await expect(
-      page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน")
+      page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน"),
     ).toBeVisible();
   });
 
@@ -255,7 +257,7 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
 
     // ตรวจสอบว่าแสดงข้อความเตือน
     await expect(
-      page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน")
+      page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน"),
     ).toBeVisible();
   });
 
@@ -287,7 +289,7 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
 
     // ตรวจสอบว่าระบบยอมรับข้อมูล และแสดงรายการตำบลของหาดใหญ่
     await expect(page.locator('[id*="amphureId"] input')).toHaveValue(
-      "หาดใหญ่"
+      "หาดใหญ่",
     );
 
     // รอให้ dropdown ตำบลพร้อมใช้งาน
@@ -344,7 +346,7 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
 
     // ตรวจสอบว่าแสดงข้อความเตือน
     await expect(
-      page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน")
+      page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน"),
     ).toBeVisible();
   });
 
@@ -430,7 +432,7 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
 
     // ตรวจสอบว่าแสดงข้อความเตือน
     await expect(
-      page.locator("text=กรุณาคลิกบนแผนที่เพื่อระบุตำแหน่งสวนยางของคุณ")
+      page.locator("text=กรุณาคลิกบนแผนที่เพื่อระบุตำแหน่งสวนยางของคุณ"),
     ).toBeVisible();
   });
 
@@ -498,7 +500,7 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
 
     // ตรวจสอบว่าไปยังหน้า Step 2 รายละเอียดการปลูก
     await expect(
-      page.getByRole("heading", { name: "รายละเอียดการปลูก" })
+      page.getByRole("heading", { name: "รายละเอียดการปลูก" }),
     ).toBeVisible({ timeout: 10000 });
   });
 });
@@ -507,7 +509,7 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
 async function completeStep1(page) {
   await page.goto("/farmer/applications/new");
   await expect(
-    page.getByRole("heading", { name: "ยื่นขอใบรับรองแหล่งผลิต" })
+    page.getByRole("heading", { name: "ยื่นขอใบรับรองแหล่งผลิต" }),
   ).toBeVisible({ timeout: 10000 });
 
   // กรอกข้อมูลสวนยาง
@@ -559,11 +561,13 @@ async function completeStep1(page) {
 
   // รอให้ไปยัง Step 2
   await expect(
-    page.getByRole("heading", { name: "รายละเอียดการปลูก" })
+    page.getByRole("heading", { name: "รายละเอียดการปลูก" }),
   ).toBeVisible({ timeout: 10000 });
 }
 
 test.describe("2. Form Validation - Step 2: รายละเอียดการปลูก", () => {
+  test.describe.configure({ mode: "serial" });
+
   test.beforeEach(async ({ page }) => {
     // Login ก่อนทุก test
     await loginAsFarmer(page);
@@ -579,7 +583,7 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
 
     // ตรวจสอบว่าแสดงข้อความเตือน
     await expect(
-      page.locator("text=รายการที่ 1: กรุณาเลือกพันธุ์ยางพารา")
+      page.locator("text=รายการที่ 1: กรุณาเลือกพันธุ์ยางพารา"),
     ).toBeVisible();
   });
 
@@ -614,7 +618,7 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
 
     // ตรวจสอบว่าแสดงข้อความเตือน
     await expect(
-      page.locator("text=รายการที่ 1: กรุณากรอกพื้นที่แปลง")
+      page.locator("text=รายการที่ 1: กรุณากรอกพื้นที่แปลง"),
     ).toBeVisible();
   });
 
@@ -636,7 +640,7 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
 
     // ตรวจสอบว่าแสดงข้อความเตือน
     await expect(
-      page.locator("text=รายการที่ 1: กรุณากรอกพื้นที่แปลงให้ถูกต้อง")
+      page.locator("text=รายการที่ 1: กรุณากรอกพื้นที่แปลงให้ถูกต้อง"),
     ).toBeVisible();
   });
 
@@ -678,7 +682,7 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
 
     // ตรวจสอบว่าแสดงข้อความเตือน
     await expect(
-      page.locator("text=รายการที่ 1: กรุณากรอกจำนวนต้นยางทั้งหมด")
+      page.locator("text=รายการที่ 1: กรุณากรอกจำนวนต้นยางทั้งหมด"),
     ).toBeVisible();
   });
 
@@ -708,7 +712,7 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
 
     // ตรวจสอบว่าแสดงข้อความเตือน
     await expect(
-      page.locator("text=รายการที่ 1: กรุณากรอกจำนวนต้นยางทั้งหมดให้ถูกต้อง")
+      page.locator("text=รายการที่ 1: กรุณากรอกจำนวนต้นยางทั้งหมดให้ถูกต้อง"),
     ).toBeVisible();
   });
 
@@ -763,7 +767,7 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
 
     // ตรวจสอบว่าแสดงข้อความเตือน
     await expect(
-      page.locator("text=รายการที่ 1: กรุณากรอกจำนวนต้นกรีดที่กรีดได้")
+      page.locator("text=รายการที่ 1: กรุณากรอกจำนวนต้นกรีดที่กรีดได้"),
     ).toBeVisible();
   });
 
@@ -860,7 +864,7 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
 
     // ตรวจสอบว่าแสดงข้อความเตือน
     await expect(
-      page.locator("text=รายการที่ 1: กรุณากรอกอายุต้นยาง")
+      page.locator("text=รายการที่ 1: กรุณากรอกอายุต้นยาง"),
     ).toBeVisible();
   });
 
@@ -1005,7 +1009,7 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
 
     // ตรวจสอบว่าไปยังหน้า Step 3 ยืนยันข้อมูล
     await expect(
-      page.getByRole("heading", { name: "ยืนยันข้อมูล" })
+      page.getByRole("heading", { name: "ยืนยันข้อมูล" }),
     ).toBeVisible({ timeout: 10000 });
   });
 
@@ -1172,7 +1176,7 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
 
     // ตรวจสอบว่าไปยังหน้า Step 3 และแสดงรายการทั้ง 2
     await expect(
-      page.getByRole("heading", { name: "ยืนยันข้อมูล" })
+      page.getByRole("heading", { name: "ยืนยันข้อมูล" }),
     ).toBeVisible({ timeout: 10000 });
     await expect(page.locator("text=รายการที่ 1")).toBeVisible();
     await expect(page.locator("text=รายการที่ 2")).toBeVisible();
@@ -1303,12 +1307,12 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
 
     // ตรวจสอบว่ากลับไป Step 1
     await expect(
-      page.getByRole("heading", { name: "ข้อมูลสวนยาง" })
+      page.getByRole("heading", { name: "ข้อมูลสวนยาง" }),
     ).toBeVisible({ timeout: 10000 });
 
     // ตรวจสอบว่าข้อมูลที่กรอกไว้ยังคงอยู่
     await expect(page.locator('input[name="villageName"]')).toHaveValue(
-      "หมู่บ้านสวนยางทดสอบ"
+      "หมู่บ้านสวนยางทดสอบ",
     );
   });
 });
@@ -1380,11 +1384,13 @@ async function completeStep2(page) {
 
   // รอให้ไปยัง Step 3
   await expect(page.getByRole("heading", { name: "ยืนยันข้อมูล" })).toBeVisible(
-    { timeout: 10000 }
+    { timeout: 10000 },
   );
 }
 
 test.describe("3. Form Validation - Step 3: ยืนยันข้อมูล", () => {
+  test.describe.configure({ mode: "serial" });
+
   test.beforeEach(async ({ page }) => {
     // Login และเข้าสู่ระบบ
     await loginAsFarmer(page);
@@ -1397,12 +1403,12 @@ test.describe("3. Form Validation - Step 3: ยืนยันข้อมูล
   test("TC-039: แสดงสรุปข้อมูลสวนยาง", async ({ page }) => {
     // ตรวจสอบว่าอยู่ Step 3
     await expect(
-      page.getByRole("heading", { name: "ยืนยันข้อมูล" })
+      page.getByRole("heading", { name: "ยืนยันข้อมูล" }),
     ).toBeVisible();
 
     // ตรวจสอบ section ข้อมูลสวนยาง
     await expect(
-      page.getByRole("heading", { name: "ข้อมูลสวนยาง" })
+      page.getByRole("heading", { name: "ข้อมูลสวนยาง" }),
     ).toBeVisible();
 
     // ตรวจสอบข้อมูลที่แสดง
@@ -1423,12 +1429,12 @@ test.describe("3. Form Validation - Step 3: ยืนยันข้อมูล
   test("TC-040: แสดงสรุปรายละเอียดการปลูก", async ({ page }) => {
     // ตรวจสอบว่าอยู่ Step 3
     await expect(
-      page.getByRole("heading", { name: "ยืนยันข้อมูล" })
+      page.getByRole("heading", { name: "ยืนยันข้อมูล" }),
     ).toBeVisible();
 
     // ตรวจสอบ section รายละเอียดการปลูก
     await expect(
-      page.getByRole("heading", { name: "รายละเอียดการปลูก" })
+      page.getByRole("heading", { name: "รายละเอียดการปลูก" }),
     ).toBeVisible();
     await expect(page.locator("text=รายการที่ 1")).toBeVisible();
 
@@ -1451,7 +1457,7 @@ test.describe("3. Form Validation - Step 3: ยืนยันข้อมูล
     // ย้อนกลับไป Step 2 เพื่อเพิ่มรายการที่ 2 และ 3
     await page.click('button:has-text("ย้อนกลับ")');
     await expect(
-      page.getByRole("heading", { name: "รายละเอียดการปลูก" })
+      page.getByRole("heading", { name: "รายละเอียดการปลูก" }),
     ).toBeVisible();
 
     // เพิ่มรายการที่ 2
@@ -1587,7 +1593,7 @@ test.describe("3. Form Validation - Step 3: ยืนยันข้อมูล
     // กดถัดไปไป Step 3
     await page.click('button:has-text("ถัดไป")');
     await expect(
-      page.getByRole("heading", { name: "ยืนยันข้อมูล" })
+      page.getByRole("heading", { name: "ยืนยันข้อมูล" }),
     ).toBeVisible({ timeout: 10000 });
 
     // ตรวจสอบว่าแสดงรายการทั้ง 3
@@ -1602,7 +1608,7 @@ test.describe("3. Form Validation - Step 3: ยืนยันข้อมูล
   test("TC-042: ไม่ tick checkbox ยืนยันข้อมูล", async ({ page }) => {
     // ตรวจสอบว่าอยู่ Step 3
     await expect(
-      page.getByRole("heading", { name: "ยืนยันข้อมูล" })
+      page.getByRole("heading", { name: "ยืนยันข้อมูล" }),
     ).toBeVisible();
 
     // scroll ลงไปหาปุ่มส่งคำขอ
@@ -1615,19 +1621,19 @@ test.describe("3. Form Validation - Step 3: ยืนยันข้อมูล
 
     // ตรวจสอบข้อความแจ้งเตือน
     await expect(
-      page.locator("text=กรุณายืนยันความถูกต้องของข้อมูลก่อนส่ง")
+      page.locator("text=กรุณายืนยันความถูกต้องของข้อมูลก่อนส่ง"),
     ).toBeVisible({ timeout: 5000 });
 
     // ตรวจสอบว่ายังคงอยู่ที่ Step 3
     await expect(
-      page.getByRole("heading", { name: "ยืนยันข้อมูล" })
+      page.getByRole("heading", { name: "ยืนยันข้อมูล" }),
     ).toBeVisible();
   });
 
   test("TC-043: tick checkbox ยืนยันข้อมูล", async ({ page }) => {
     // ตรวจสอบว่าอยู่ Step 3
     await expect(
-      page.getByRole("heading", { name: "ยืนยันข้อมูล" })
+      page.getByRole("heading", { name: "ยืนยันข้อมูล" }),
     ).toBeVisible();
 
     // scroll ลงไปหา checkbox
@@ -1648,14 +1654,14 @@ test.describe("3. Form Validation - Step 3: ยืนยันข้อมูล
 
     // รอข้อความสำเร็จ - ควรมี API ส่งข้อมูลสำเร็จ
     await expect(
-      page.locator("text=บันทึกข้อมูลสำเร็จ กำลังนำคุณไปยังหน้าติดตามสถานะ...")
+      page.locator("text=บันทึกข้อมูลสำเร็จ กำลังนำคุณไปยังหน้าติดตามสถานะ..."),
     ).toBeVisible({ timeout: 10000 });
   });
 
   test("TC-044: กดปุ่มย้อนกลับจาก Step 3", async ({ page }) => {
     // ตรวจสอบว่าอยู่ Step 3
     await expect(
-      page.getByRole("heading", { name: "ยืนยันข้อมูล" })
+      page.getByRole("heading", { name: "ยืนยันข้อมูล" }),
     ).toBeVisible();
 
     // tick checkbox ก่อน
@@ -1667,7 +1673,7 @@ test.describe("3. Form Validation - Step 3: ยืนยันข้อมูล
 
     // ตรวจสอบว่ากลับไป Step 2
     await expect(
-      page.getByRole("heading", { name: "รายละเอียดการปลูก" })
+      page.getByRole("heading", { name: "รายละเอียดการปลูก" }),
     ).toBeVisible({ timeout: 10000 });
 
     // ตรวจสอบว่าข้อมูลที่กรอกไว้ยังคงอยู่
@@ -1681,7 +1687,7 @@ test.describe("3. Form Validation - Step 3: ยืนยันข้อมูล
     // กดถัดไปกลับมา Step 3
     await page.click('button:has-text("ถัดไป")');
     await expect(
-      page.getByRole("heading", { name: "ยืนยันข้อมูล" })
+      page.getByRole("heading", { name: "ยืนยันข้อมูล" }),
     ).toBeVisible();
 
     // ตรวจสอบว่า checkbox ถูก reset (ไม่ถูกเลือก)
@@ -1691,7 +1697,7 @@ test.describe("3. Form Validation - Step 3: ยืนยันข้อมูล
   test("TC-045: ส่งข้อมูลสำเร็จ", async ({ page }) => {
     // ตรวจสอบว่าอยู่ Step 3
     await expect(
-      page.getByRole("heading", { name: "ยืนยันข้อมูล" })
+      page.getByRole("heading", { name: "ยืนยันข้อมูล" }),
     ).toBeVisible();
 
     // scroll ลงไปหา checkbox
@@ -1710,7 +1716,7 @@ test.describe("3. Form Validation - Step 3: ยืนยันข้อมูล
 
     // รอข้อความสำเร็จและการ redirect
     await expect(
-      page.locator("text=บันทึกข้อมูลสำเร็จ กำลังนำคุณไปยังหน้าติดตามสถานะ...")
+      page.locator("text=บันทึกข้อมูลสำเร็จ กำลังนำคุณไปยังหน้าติดตามสถานะ..."),
     ).toBeVisible({ timeout: 10000 });
 
     // รอให้ redirect ไปหน้าติดตามสถานะ
@@ -1723,7 +1729,7 @@ test.describe("3. Form Validation - Step 3: ยืนยันข้อมูล
   test("TC-046: ตรวจสอบ loading state", async ({ page }) => {
     // ตรวจสอบว่าอยู่ Step 3
     await expect(
-      page.getByRole("heading", { name: "ยืนยันข้อมูล" })
+      page.getByRole("heading", { name: "ยืนยันข้อมูล" }),
     ).toBeVisible();
 
     // scroll ลงไปหา checkbox
@@ -1746,7 +1752,7 @@ test.describe("3. Form Validation - Step 3: ยืนยันข้อมูล
 
     // รอให้ข้อความสำเร็จปรากฏ
     await expect(
-      page.locator("text=บันทึกข้อมูลสำเร็จ กำลังนำคุณไปยังหน้าติดตามสถานะ...")
+      page.locator("text=บันทึกข้อมูลสำเร็จ กำลังนำคุณไปยังหน้าติดตามสถานะ..."),
     ).toBeVisible({ timeout: 10000 });
 
     // ตรวจสอบว่า redirect
@@ -1755,11 +1761,13 @@ test.describe("3. Form Validation - Step 3: ยืนยันข้อมูล
 });
 
 test.describe("4. UI/UX และ Navigation", () => {
+  test.describe.configure({ mode: "serial" });
+
   test.beforeEach(async ({ page }) => {
     await loginAsFarmer(page);
     await page.goto("/farmer/applications/new");
     await expect(
-      page.getByRole("heading", { name: "ยื่นขอใบรับรองแหล่งผลิต" })
+      page.getByRole("heading", { name: "ยื่นขอใบรับรองแหล่งผลิต" }),
     ).toBeVisible({ timeout: 10000 });
   });
 
@@ -1768,23 +1776,23 @@ test.describe("4. UI/UX และ Navigation", () => {
     const stepIndicator = formContainer.locator("div.mb-8").first();
 
     await expect(
-      stepIndicator.getByText("ข้อมูลสวนยาง", { exact: true })
+      stepIndicator.getByText("ข้อมูลสวนยาง", { exact: true }),
     ).toBeVisible();
     await expect(
-      stepIndicator.getByText("รายละเอียดการปลูก", { exact: true })
+      stepIndicator.getByText("รายละเอียดการปลูก", { exact: true }),
     ).toBeVisible();
     await expect(
-      stepIndicator.getByText("ยืนยันข้อมูล", { exact: true })
+      stepIndicator.getByText("ยืนยันข้อมูล", { exact: true }),
     ).toBeVisible();
 
     await expect(
-      stepIndicator.getByText("ขั้นตอนที่ 1", { exact: true })
+      stepIndicator.getByText("ขั้นตอนที่ 1", { exact: true }),
     ).toBeVisible();
     await expect(
-      stepIndicator.getByText("ขั้นตอนที่ 2", { exact: true })
+      stepIndicator.getByText("ขั้นตอนที่ 2", { exact: true }),
     ).toBeVisible();
     await expect(
-      stepIndicator.getByText("ขั้นตอนที่ 3", { exact: true })
+      stepIndicator.getByText("ขั้นตอนที่ 3", { exact: true }),
     ).toBeVisible();
   });
 
@@ -1793,30 +1801,30 @@ test.describe("4. UI/UX และ Navigation", () => {
     await page.setViewportSize({ width: 1280, height: 720 });
     await page.reload();
     await expect(
-      page.getByRole("heading", { name: "ยื่นขอใบรับรองแหล่งผลิต" })
+      page.getByRole("heading", { name: "ยื่นขอใบรับรองแหล่งผลิต" }),
     ).toBeVisible({ timeout: 10000 });
     await expect(
-      page.getByRole("heading", { name: "ข้อมูลสวนยาง" })
+      page.getByRole("heading", { name: "ข้อมูลสวนยาง" }),
     ).toBeVisible();
 
     // Tablet
     await page.setViewportSize({ width: 820, height: 1180 });
     await page.reload();
     await expect(
-      page.getByRole("heading", { name: "ยื่นขอใบรับรองแหล่งผลิต" })
+      page.getByRole("heading", { name: "ยื่นขอใบรับรองแหล่งผลิต" }),
     ).toBeVisible({ timeout: 10000 });
     await expect(
-      page.getByRole("heading", { name: "ข้อมูลสวนยาง" })
+      page.getByRole("heading", { name: "ข้อมูลสวนยาง" }),
     ).toBeVisible();
 
     // Mobile
     await page.setViewportSize({ width: 390, height: 844 });
     await page.reload();
     await expect(
-      page.getByRole("heading", { name: "ยื่นขอใบรับรองแหล่งผลิต" })
+      page.getByRole("heading", { name: "ยื่นขอใบรับรองแหล่งผลิต" }),
     ).toBeVisible({ timeout: 10000 });
     await expect(
-      page.getByText("ขั้นตอนที่ 1: ข้อมูลสวนยาง", { exact: true })
+      page.getByText("ขั้นตอนที่ 1: ข้อมูลสวนยาง", { exact: true }),
     ).toBeVisible();
   });
 
@@ -1868,7 +1876,7 @@ test.describe("4. UI/UX และ Navigation", () => {
 
     // ควรมีรายการที่ขึ้นต้นด้วย "สง" เช่น "สงขลา"
     await expect(page.locator('[role="option"]:has-text("สงขลา")')).toBeVisible(
-      { timeout: 10000 }
+      { timeout: 10000 },
     );
   });
 
