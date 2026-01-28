@@ -1,5 +1,5 @@
 import { BaseExportRepository } from "../base/BaseExportRepository";
-
+import { dateRange } from "@/types/dateRange";
 interface UserRow {
   id: number;
   email: string;
@@ -7,32 +7,39 @@ interface UserRow {
 }
 
 export class UserExportRepository extends BaseExportRepository {
-  async streamAllUsers() {
+  async streamAllUsers(dateRange?: dateRange) {
+    const where = this.buildDateWhere(`"createdAt"`, dateRange);
     const sql = `
       SELECT "email", "name", "role", "createdAt"
       FROM "User"
+      ${where}
       ORDER BY "userId"
     `;
 
     return this.createQueryStream(sql);
   }
 
-  async getUserCount(): Promise<number> {
+  async getUserCount(dateRange? : dateRange): Promise<number> {
+    const where = this.buildDateWhere(`"createdAt"`, dateRange);
     const result = await this.executeAggregation<{ count: number }>(`
-        SELECT COUNT(*)::int AS count FROM "User"
+        SELECT COUNT(*)::int AS count FROM "User" ${where}
     `);
 
     return result[0]?.count ?? 0;
   }
-  async getAllUsers(): Promise<{
+  async getAllUsers(dateRange? : dateRange): Promise<{
     email: string;
     name: string;
     role: string;
     createdAt: Date;
     }[]> {
+
+    const where = this.buildDateWhere(`"createdAt"`, dateRange);
+
     const sql = `
         SELECT "email", "name", "role", "createdAt"
         FROM "User"
+        ${where}
         ORDER BY "userId"
     `;
 
@@ -40,11 +47,15 @@ export class UserExportRepository extends BaseExportRepository {
     }
 
 
-  async getByRole(role: string): Promise<UserRow[]> {
+  async getByRole(role: string,dateRange? : dateRange): Promise<UserRow[]> {
+
+    const where = this.buildDateWhere(`"createdAt"`, dateRange, [
+      `"role" = '${role}'`,
+    ]);
     const sql = `
       SELECT "userId", "email", "createdAt"
       FROM "User"
-      WHERE "role" = '${role}'
+      ${where}
       ORDER BY "userId"
     `;
     return this.executeAggregation<UserRow>(sql);
