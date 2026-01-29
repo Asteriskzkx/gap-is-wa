@@ -40,9 +40,19 @@ function buildAdviceAndDefect({
   return { adviceAndDefectId, date, adviceList, defectList };
 }
 
+function formatFarmId(value) {
+  return `RF${String(value).padStart(5, "0")}`;
+}
+
+const INSPECTION_BASE = 2025050000;
+
+function inspectionNoFromSequence(sequence) {
+  return String(INSPECTION_BASE + sequence);
+}
+
 function buildInspection({
   inspectionId = 1,
-  inspectionNo = "INSP-0001",
+  inspectionNo = INSPECTION_BASE + 1,
   inspectionDateAndTime = null,
   inspectionStatus = "รอการตรวจประเมิน",
   inspectionResult = "",
@@ -51,7 +61,7 @@ function buildInspection({
 } = {}) {
   return {
     inspectionId,
-    inspectionNo,
+    inspectionNo: String(inspectionNo ?? ""),
     inspectionDateAndTime,
     inspectionStatus,
     inspectionResult,
@@ -104,7 +114,7 @@ function getApplicationsTable(page) {
 async function gotoApplicationsPage(page) {
   await page.goto("/farmer/applications", { waitUntil: "domcontentloaded" });
   await expect(
-    page.getByRole("heading", { name: "ติดตามสถานะการรับรอง" })
+    page.getByRole("heading", { name: "ติดตามสถานะการรับรอง" }),
   ).toBeVisible({ timeout: 10000 });
 }
 
@@ -122,7 +132,13 @@ async function mockRubberFarmsApi(page, handler) {
       multiSortMeta = null;
     }
 
-    const response = await handler({ url, offset, limit, multiSortMeta, route });
+    const response = await handler({
+      url,
+      offset,
+      limit,
+      multiSortMeta,
+      route,
+    });
 
     if (response?.__passthrough) {
       await route.continue();
@@ -172,8 +188,9 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
 
       await gotoApplicationsPage(page);
       await expect(
-        page.getByText("ตรวจสอบสถานะคำขอและผลการรับรองแหล่งผลิต")
+        page.getByText("ตรวจสอบสถานะคำขอและผลการรับรองแหล่งผลิต"),
       ).toBeVisible();
+      // await page.waitForTimeout(3000);
     });
 
     test("TC-003: แสดง loading ระหว่างดึงข้อมูล", async () => {
@@ -189,6 +206,7 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
 
       const loadingOverlay = table.locator(".p-datatable-loading-overlay");
       await expect(loadingOverlay).toBeVisible();
+      // await page.waitForTimeout(3000);
     });
 
     test("TC-004: แสดง error เมื่อ API ดึงข้อมูลล้มเหลว", async () => {
@@ -199,7 +217,7 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
 
       await gotoApplicationsPage(page);
       await expect(
-        page.getByText("ไม่สามารถดึงข้อมูลได้ กรุณาลองใหม่อีกครั้ง")
+        page.getByText("ไม่สามารถดึงข้อมูลได้ กรุณาลองใหม่อีกครั้ง"),
       ).toBeVisible();
       await expect(getApplicationsTable(page)).toHaveCount(0);
     });
@@ -212,10 +230,10 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
       await gotoApplicationsPage(page);
       await expect(page.getByText("ยังไม่มีข้อมูลสวนยาง")).toBeVisible();
       await expect(
-        page.getByText("กรุณาลงทะเบียนสวนยางเพื่อยื่นขอรับรอง")
+        page.getByText("กรุณาลงทะเบียนสวนยางเพื่อยื่นขอรับรอง"),
       ).toBeVisible();
       await expect(
-        page.getByRole("button", { name: "ลงทะเบียนสวนยาง" })
+        page.getByRole("button", { name: "ลงทะเบียนสวนยาง" }),
       ).toBeVisible();
     });
 
@@ -253,7 +271,7 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
       const farms = [
         buildFarm({
           rubberFarmId: 12,
-          farmId: "FARM-001",
+          farmId: formatFarmId(12),
           location: "สถานที่ A",
           villageName: "บ้าน A",
           moo: 1,
@@ -295,7 +313,7 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
     });
 
     test("TC-009: แสดงคอลัมน์หลักครบถ้วน", async () => {
-      const farms = [buildFarm({ rubberFarmId: 1, farmId: "FARM-001" })];
+      const farms = [buildFarm({ rubberFarmId: 1, farmId: formatFarmId(1) })];
       await mockRubberFarmsApi(page, async () => ({
         body: buildPagedResponse({ results: farms }),
       }));
@@ -303,26 +321,31 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
       await gotoApplicationsPage(page);
       const table = getApplicationsTable(page);
       await expect(
-        table.getByRole("columnheader", { name: "รหัสสวน" })
+        table.getByRole("columnheader", { name: "รหัสสวน" }),
       ).toBeVisible();
       await expect(
-        table.getByRole("columnheader", { name: "สถานที่" })
+        table.getByRole("columnheader", { name: "สถานที่" }),
       ).toBeVisible();
       await expect(
-        table.getByRole("columnheader", { name: "จังหวัด" })
+        table.getByRole("columnheader", { name: "จังหวัด" }),
       ).toBeVisible();
       await expect(
-        table.getByRole("columnheader", { name: "อำเภอ" })
+        table.getByRole("columnheader", { name: "อำเภอ" }),
       ).toBeVisible();
-      await expect(table.getByRole("columnheader", { name: "ตำบล" })).toBeVisible();
       await expect(
-        table.getByRole("columnheader", { name: "กำหนดการตรวจประเมิน" })
+        table.getByRole("columnheader", { name: "ตำบล" }),
       ).toBeVisible();
-      await expect(table.getByRole("columnheader", { name: "สถานะ" })).toBeVisible();
+      await expect(
+        table.getByRole("columnheader", { name: "กำหนดการตรวจประเมิน" }),
+      ).toBeVisible();
+      await expect(
+        table.getByRole("columnheader", { name: "สถานะ" }),
+      ).toBeVisible();
+      await page.waitForTimeout(3000);
     });
 
     test("TC-010: แสดงรหัสสวนจาก `farmId` เมื่อมีค่า", async () => {
-      const farms = [buildFarm({ rubberFarmId: 12, farmId: "FARM-001" })];
+      const farms = [buildFarm({ rubberFarmId: 12, farmId: formatFarmId(12) })];
       await mockRubberFarmsApi(page, async () => ({
         body: buildPagedResponse({ results: farms }),
       }));
@@ -330,7 +353,7 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
       await gotoApplicationsPage(page);
       const table = getApplicationsTable(page);
       await expect(table.locator('td[data-label="รหัสสวน"]')).toContainText(
-        "FARM-001"
+        "RF00012",
       );
     });
 
@@ -343,13 +366,13 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
       await gotoApplicationsPage(page);
       const table = getApplicationsTable(page);
       await expect(table.locator('td[data-label="รหัสสวน"]')).toContainText(
-        "RF00007"
+        "RF00007",
       );
     });
 
     test("TC-012: แสดงสถานที่จาก `location` เมื่อมีค่า", async () => {
       const farms = [
-        buildFarm({ rubberFarmId: 1, location: "ถนนทดสอบ 123" }),
+        buildFarm({ rubberFarmId: 1, location: "หมู่บ้านทดสอบ 1 หมู่ 1" }),
       ];
       await mockRubberFarmsApi(page, async () => ({
         body: buildPagedResponse({ results: farms }),
@@ -358,7 +381,7 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
       await gotoApplicationsPage(page);
       const table = getApplicationsTable(page);
       await expect(table.locator('td[data-label="สถานที่"]')).toContainText(
-        "ถนนทดสอบ 123"
+        "หมู่บ้านทดสอบ 1 หมู่ 1",
       );
     });
 
@@ -378,7 +401,7 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
       await gotoApplicationsPage(page);
       const table = getApplicationsTable(page);
       await expect(table.locator('td[data-label="สถานที่"]')).toContainText(
-        "บ้าน B หมู่ 2"
+        "บ้าน B หมู่ 2",
       );
     });
 
@@ -399,7 +422,7 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
       await gotoApplicationsPage(page);
       const table = getApplicationsTable(page);
       await expect(
-        table.locator('td[data-label="กำหนดการตรวจประเมิน"]')
+        table.locator('td[data-label="กำหนดการตรวจประเมิน"]'),
       ).toContainText("-");
     });
 
@@ -419,9 +442,11 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
 
       await gotoApplicationsPage(page);
       const table = getApplicationsTable(page);
-      await expect(table.locator("tbody tr")).toHaveCount(1, { timeout: 10000 });
+      await expect(table.locator("tbody tr")).toHaveCount(1, {
+        timeout: 10000,
+      });
       await expect(
-        table.locator('td[data-label="กำหนดการตรวจประเมิน"]').first()
+        table.locator('td[data-label="กำหนดการตรวจประเมิน"]').first(),
       ).toContainText("1 ธันวาคม 2568");
     });
 
@@ -434,7 +459,7 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
       await gotoApplicationsPage(page);
       const table = getApplicationsTable(page);
       await expect(table.locator('td[data-label="สถานะ"]')).toContainText(
-        "รอกำหนดวันตรวจประเมิน"
+        "รอกำหนดวันตรวจประเมิน",
       );
     });
 
@@ -455,7 +480,7 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
       await gotoApplicationsPage(page);
       const table = getApplicationsTable(page);
       await expect(table.locator('td[data-label="สถานะ"]')).toContainText(
-        "รอการตรวจประเมิน"
+        "รอการตรวจประเมิน",
       );
     });
 
@@ -477,7 +502,7 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
       await gotoApplicationsPage(page);
       const table = getApplicationsTable(page);
       await expect(table.locator('td[data-label="สถานะ"]')).toContainText(
-        "ตรวจประเมินแล้ว รอสรุปผล"
+        "ตรวจประเมินแล้ว รอสรุปผล",
       );
     });
 
@@ -499,7 +524,7 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
       await gotoApplicationsPage(page);
       const table = getApplicationsTable(page);
       await expect(table.locator('td[data-label="สถานะ"]')).toContainText(
-        "ผ่านการรับรอง"
+        "ผ่านการรับรอง",
       );
     });
 
@@ -521,14 +546,14 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
       await gotoApplicationsPage(page);
       const table = getApplicationsTable(page);
       await expect(table.locator('td[data-label="สถานะ"]')).toContainText(
-        "ไม่ผ่านการรับรอง"
+        "ไม่ผ่านการรับรอง",
       );
     });
 
     test("TC-021: แสดง paginator เมื่อมีหลายรายการ", async () => {
       const total = 11;
       const farms = Array.from({ length: 10 }, (_, i) =>
-        buildFarm({ rubberFarmId: i + 1, farmId: `FARM-${i + 1}` })
+        buildFarm({ rubberFarmId: i + 1, farmId: formatFarmId(i + 1) }),
       );
 
       await mockRubberFarmsApi(page, async ({ offset, limit }) => ({
@@ -536,15 +561,20 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
       }));
 
       await gotoApplicationsPage(page);
-      const paginator = getApplicationsTable(page).locator(".p-paginator").first();
+      const paginator = getApplicationsTable(page)
+        .locator(".p-paginator")
+        .first();
+      await paginator.scrollIntoViewIfNeeded();
       await expect(paginator).toBeVisible();
-      await expect(paginator.getByRole("button", { name: "2" })).toBeVisible();
+      const page2Button = paginator.getByRole("button", { name: "2" });
+      await page2Button.scrollIntoViewIfNeeded();
+      await expect(page2Button).toBeVisible();
     });
 
     test("TC-022: เปลี่ยนหน้า pagination", async () => {
       const total = 20;
       const all = Array.from({ length: total }, (_, i) =>
-        buildFarm({ rubberFarmId: i + 1, farmId: `P-${i + 1}` })
+        buildFarm({ rubberFarmId: i + 1, farmId: formatFarmId(i + 1) }),
       );
 
       await mockRubberFarmsApi(page, async ({ offset, limit }) => {
@@ -556,8 +586,8 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
       const table = getApplicationsTable(page);
 
       await expect(
-        table.locator('td[data-label="รหัสสวน"]').first()
-      ).toContainText("P-1");
+        table.locator('td[data-label="รหัสสวน"]').first(),
+      ).toContainText("RF00001");
 
       const page2Button = table.locator(".p-paginator").getByRole("button", {
         name: "2",
@@ -572,14 +602,14 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
       ]);
 
       await expect(
-        table.locator('td[data-label="รหัสสวน"]').first()
-      ).toContainText("P-11");
+        table.locator('td[data-label="รหัสสวน"]').first(),
+      ).toContainText("RF00011");
     });
 
     test("TC-023: เปลี่ยนจำนวนรายการต่อหน้าเป็น 25", async () => {
       const total = 60;
       const all = Array.from({ length: total }, (_, i) =>
-        buildFarm({ rubberFarmId: i + 1, farmId: `R-${i + 1}` })
+        buildFarm({ rubberFarmId: i + 1, farmId: formatFarmId(i + 1) }),
       );
 
       await mockRubberFarmsApi(page, async ({ offset, limit }) => {
@@ -592,24 +622,34 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
       const paginator = table.locator(".p-paginator").first();
 
       const rowsPerPageDropdown = paginator.locator(".p-dropdown").first();
+      await rowsPerPageDropdown.scrollIntoViewIfNeeded();
+      await expect(rowsPerPageDropdown).toBeVisible();
       await rowsPerPageDropdown.click();
 
       const dropdownPanel = page.locator(".p-dropdown-panel").first();
       await expect(dropdownPanel).toBeVisible();
 
-      await dropdownPanel
+      const option25 = dropdownPanel
         .locator(".p-dropdown-items li", { hasText: "25" })
-        .first()
-        .click();
+        .first();
+      await option25.scrollIntoViewIfNeeded();
+      await expect(option25).toBeVisible();
+      await option25.click();
 
-      await expect(table.locator("tbody tr")).toHaveCount(25, { timeout: 20000 });
-      await expect(paginator.locator("text=/แสดง\\s+1\\s+ถึง\\s+25\\s+จาก\\s+60\\s+รายการ/")).toBeVisible();
+      await expect(table.locator("tbody tr")).toHaveCount(25, {
+        timeout: 20000,
+      });
+      await expect(
+        paginator.locator(
+          "text=/แสดง\\s+1\\s+ถึง\\s+25\\s+จาก\\s+60\\s+รายการ/",
+        ),
+      ).toBeVisible();
     });
 
     test("TC-024: เปลี่ยนจำนวนรายการต่อหน้าเป็น 50", async () => {
       const total = 60;
       const all = Array.from({ length: total }, (_, i) =>
-        buildFarm({ rubberFarmId: i + 1, farmId: `R-${i + 1}` })
+        buildFarm({ rubberFarmId: i + 1, farmId: formatFarmId(i + 1) }),
       );
 
       await mockRubberFarmsApi(page, async ({ offset, limit }) => {
@@ -622,25 +662,35 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
       const paginator = table.locator(".p-paginator").first();
 
       const rowsPerPageDropdown = paginator.locator(".p-dropdown").first();
+      await rowsPerPageDropdown.scrollIntoViewIfNeeded();
+      await expect(rowsPerPageDropdown).toBeVisible();
       await rowsPerPageDropdown.click();
 
       const dropdownPanel = page.locator(".p-dropdown-panel").first();
       await expect(dropdownPanel).toBeVisible();
 
-      await dropdownPanel
+      const option50 = dropdownPanel
         .locator(".p-dropdown-items li", { hasText: "50" })
-        .first()
-        .click();
+        .first();
+      await option50.scrollIntoViewIfNeeded();
+      await expect(option50).toBeVisible();
+      await option50.click();
 
-      await expect(table.locator("tbody tr")).toHaveCount(50, { timeout: 20000 });
-      await expect(paginator.locator("text=/แสดง\\s+1\\s+ถึง\\s+50\\s+จาก\\s+60\\s+รายการ/")).toBeVisible();
+      await expect(table.locator("tbody tr")).toHaveCount(50, {
+        timeout: 20000,
+      });
+      await expect(
+        paginator.locator(
+          "text=/แสดง\\s+1\\s+ถึง\\s+50\\s+จาก\\s+60\\s+รายการ/",
+        ),
+      ).toBeVisible();
     });
 
     test("TC-025: เรียงลำดับตาม “รหัสสวน” (ascending)", async () => {
       const base = [
-        buildFarm({ rubberFarmId: 3, farmId: "S-3" }),
-        buildFarm({ rubberFarmId: 1, farmId: "S-1" }),
-        buildFarm({ rubberFarmId: 2, farmId: "S-2" }),
+        buildFarm({ rubberFarmId: 3, farmId: formatFarmId(3) }),
+        buildFarm({ rubberFarmId: 1, farmId: formatFarmId(1) }),
+        buildFarm({ rubberFarmId: 2, farmId: formatFarmId(2) }),
       ];
 
       await mockRubberFarmsApi(page, async ({ multiSortMeta }) => {
@@ -656,23 +706,23 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
       const table = getApplicationsTable(page);
 
       await expect(
-        table.locator('td[data-label="รหัสสวน"]').first()
-      ).toContainText("S-3");
+        table.locator('td[data-label="รหัสสวน"]').first(),
+      ).toContainText("RF00003");
 
       const header = table.locator("th", { hasText: "รหัสสวน" }).first();
       await header.click();
 
       await expect(header).toHaveAttribute("aria-sort", /ascending|descending/);
       await expect(
-        table.locator('td[data-label="รหัสสวน"]').first()
-      ).toContainText("S-1");
+        table.locator('td[data-label="รหัสสวน"]').first(),
+      ).toContainText("RF00001");
     });
 
     test("TC-026: เรียงลำดับตาม “รหัสสวน” (descending)", async () => {
       const base = [
-        buildFarm({ rubberFarmId: 1, farmId: "S-1" }),
-        buildFarm({ rubberFarmId: 3, farmId: "S-3" }),
-        buildFarm({ rubberFarmId: 2, farmId: "S-2" }),
+        buildFarm({ rubberFarmId: 1, farmId: formatFarmId(1) }),
+        buildFarm({ rubberFarmId: 3, farmId: formatFarmId(3) }),
+        buildFarm({ rubberFarmId: 2, farmId: formatFarmId(2) }),
       ];
 
       await mockRubberFarmsApi(page, async ({ multiSortMeta }) => {
@@ -695,19 +745,19 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
 
       await expect(header).toHaveAttribute("aria-sort", /ascending|descending/);
       await expect(
-        table.locator('td[data-label="รหัสสวน"]').first()
-      ).toContainText("S-3");
+        table.locator('td[data-label="รหัสสวน"]').first(),
+      ).toContainText("RF00003");
     });
 
     test("TC-027: เรียงลำดับตาม “จังหวัด”", async () => {
       const base = [
-        buildFarm({ rubberFarmId: 1, farmId: "P-1", province: "สงขลา" }),
+        buildFarm({ rubberFarmId: 1, farmId: formatFarmId(1), province: "สงขลา" }),
         buildFarm({
           rubberFarmId: 2,
-          farmId: "P-2",
+          farmId: formatFarmId(2),
           province: "กรุงเทพมหานคร",
         }),
-        buildFarm({ rubberFarmId: 3, farmId: "P-3", province: "เชียงใหม่" }),
+        buildFarm({ rubberFarmId: 3, farmId: formatFarmId(3), province: "เชียงใหม่" }),
       ];
 
       await mockRubberFarmsApi(page, async ({ multiSortMeta }) => {
@@ -727,14 +777,14 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
 
       await expect(header).toHaveAttribute("aria-sort", /ascending|descending/);
       await expect(
-        table.locator('td[data-label="จังหวัด"]').first()
+        table.locator('td[data-label="จังหวัด"]').first(),
       ).toContainText("กรุงเทพมหานคร");
     });
 
     test("TC-028: แสดงปุ่มดูรายละเอียด (ไอคอนตา) ในทุกแถว", async () => {
       const farms = [
-        buildFarm({ rubberFarmId: 1, farmId: "EYE-1" }),
-        buildFarm({ rubberFarmId: 2, farmId: "EYE-2" }),
+        buildFarm({ rubberFarmId: 1, farmId: formatFarmId(1) }),
+        buildFarm({ rubberFarmId: 2, farmId: formatFarmId(2) }),
       ];
 
       await mockRubberFarmsApi(page, async () => ({
@@ -744,14 +794,16 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
       await gotoApplicationsPage(page);
       const table = getApplicationsTable(page);
       await expect(table.locator("tbody tr")).toHaveCount(2);
-      await expect(table.locator("tbody tr button:has(.pi-eye)")).toHaveCount(2);
+      await expect(table.locator("tbody tr button:has(.pi-eye)")).toHaveCount(
+        2,
+      );
     });
 
     test("TC-029: ปุ่มดูรายละเอียด disabled เมื่อไม่มีข้อมูลคำแนะนำ/ข้อบกพร่อง", async () => {
       const farms = [
         buildFarm({
           rubberFarmId: 1,
-          farmId: "EYE-DISABLED",
+          farmId: formatFarmId(1),
           inspection: buildInspection({
             rubberFarmId: 1,
             inspectionStatus: "รอการตรวจประเมิน",
@@ -766,7 +818,9 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
 
       await gotoApplicationsPage(page);
       const table = getApplicationsTable(page);
-      const row = table.locator("tbody tr", { hasText: "EYE-DISABLED" }).first();
+      const row = table
+        .locator("tbody tr", { hasText: "RF00001" })
+        .first();
       const eyeButton = row.locator("button:has(.pi-eye)").first();
       await expect(eyeButton).toBeDisabled();
 
@@ -777,7 +831,7 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
       const farms = [
         buildFarm({
           rubberFarmId: 1,
-          farmId: "EYE-ENABLED",
+          farmId: formatFarmId(1),
           inspection: buildInspection({
             rubberFarmId: 1,
             inspectionStatus: "ตรวจประเมินแล้ว",
@@ -796,7 +850,7 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
 
       await gotoApplicationsPage(page);
       const table = getApplicationsTable(page);
-      const row = table.locator("tbody tr", { hasText: "EYE-ENABLED" }).first();
+      const row = table.locator("tbody tr", { hasText: "RF00001" }).first();
       const eyeButton = row.locator("button:has(.pi-eye)").first();
       await expect(eyeButton).toBeEnabled();
     });
@@ -805,10 +859,10 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
       const farms = [
         buildFarm({
           rubberFarmId: 1,
-          farmId: "DIALOG-OPEN",
+          farmId: formatFarmId(1),
           inspection: buildInspection({
             rubberFarmId: 1,
-            inspectionNo: "INSP-0001",
+            inspectionNo: inspectionNoFromSequence(1),
             inspectionStatus: "ตรวจประเมินแล้ว",
             inspectionResult: "ไม่ผ่าน",
             adviceAndDefect: buildAdviceAndDefect({
@@ -825,14 +879,14 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
 
       await gotoApplicationsPage(page);
       const row = getApplicationsTable(page)
-        .locator("tbody tr", { hasText: "DIALOG-OPEN" })
+        .locator("tbody tr", { hasText: "RF00001" })
         .first();
       await row.locator("button:has(.pi-eye)").first().click();
 
       const dialog = page.getByRole("dialog");
       await expect(dialog).toBeVisible();
       await expect(
-        dialog.getByText("ข้อมูลการให้คำปรึกษาและข้อบกพร่อง")
+        dialog.getByText("ข้อมูลการให้คำปรึกษาและข้อบกพร่อง"),
       ).toBeVisible();
     });
 
@@ -840,10 +894,10 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
       const farms = [
         buildFarm({
           rubberFarmId: 1,
-          farmId: "DIALOG-INFO",
+          farmId: formatFarmId(1),
           inspection: buildInspection({
             rubberFarmId: 1,
-            inspectionNo: "INSP-0999",
+            inspectionNo: inspectionNoFromSequence(999),
             inspectionStatus: "ตรวจประเมินแล้ว",
             inspectionResult: "ไม่ผ่าน",
             adviceAndDefect: buildAdviceAndDefect({
@@ -860,7 +914,7 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
 
       await gotoApplicationsPage(page);
       await getApplicationsTable(page)
-        .locator("tbody tr", { hasText: "DIALOG-INFO" })
+        .locator("tbody tr", { hasText: "RF00001" })
         .first()
         .locator("button:has(.pi-eye)")
         .first()
@@ -869,7 +923,7 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
       const dialog = page.getByRole("dialog");
       await expect(dialog.getByText("ข้อมูลการตรวจประเมิน")).toBeVisible();
       await expect(dialog.getByText("รหัสการตรวจ:")).toBeVisible();
-      await expect(dialog.getByText("INSP-0999")).toBeVisible();
+      await expect(dialog.getByText("2025050999")).toBeVisible();
       await expect(dialog.getByText("วันที่บันทึก:")).toBeVisible();
       await expect(dialog.getByText("1 ธันวาคม 2568")).toBeVisible();
     });
@@ -878,10 +932,10 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
       const farms = [
         buildFarm({
           rubberFarmId: 1,
-          farmId: "ADVICE-YES",
+          farmId: formatFarmId(1),
           inspection: buildInspection({
             rubberFarmId: 1,
-            inspectionNo: "INSP-0001",
+            inspectionNo: inspectionNoFromSequence(1),
             inspectionStatus: "ตรวจประเมินแล้ว",
             inspectionResult: "ไม่ผ่าน",
             adviceAndDefect: buildAdviceAndDefect({
@@ -906,7 +960,7 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
 
       await gotoApplicationsPage(page);
       await getApplicationsTable(page)
-        .locator("tbody tr", { hasText: "ADVICE-YES" })
+        .locator("tbody tr", { hasText: "RF00001" })
         .first()
         .locator("button:has(.pi-eye)")
         .first()
@@ -914,7 +968,7 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
 
       const dialog = page.getByRole("dialog");
       await expect(
-        dialog.getByRole("heading", { name: "รายการให้คำปรึกษา" })
+        dialog.getByRole("heading", { name: "รายการให้คำปรึกษา" }),
       ).toBeVisible();
       await expect(dialog.getByText("ปรับปรุงการใส่ปุ๋ย")).toBeVisible();
       await expect(dialog.getByText("ใส่ปุ๋ยอินทรีย์")).toBeVisible();
@@ -925,10 +979,10 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
       const farms = [
         buildFarm({
           rubberFarmId: 1,
-          farmId: "ADVICE-NO",
+          farmId: formatFarmId(1),
           inspection: buildInspection({
             rubberFarmId: 1,
-            inspectionNo: "INSP-0001",
+            inspectionNo: inspectionNoFromSequence(1),
             inspectionStatus: "ตรวจประเมินแล้ว",
             inspectionResult: "ไม่ผ่าน",
             adviceAndDefect: buildAdviceAndDefect({
@@ -947,7 +1001,7 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
 
       await gotoApplicationsPage(page);
       await getApplicationsTable(page)
-        .locator("tbody tr", { hasText: "ADVICE-NO" })
+        .locator("tbody tr", { hasText: "RF00001" })
         .first()
         .locator("button:has(.pi-eye)")
         .first()
@@ -961,10 +1015,10 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
       const farms = [
         buildFarm({
           rubberFarmId: 1,
-          farmId: "DEFECT-YES",
+          farmId: formatFarmId(1),
           inspection: buildInspection({
             rubberFarmId: 1,
-            inspectionNo: "INSP-0001",
+            inspectionNo: inspectionNoFromSequence(1),
             inspectionStatus: "ตรวจประเมินแล้ว",
             inspectionResult: "ไม่ผ่าน",
             adviceAndDefect: buildAdviceAndDefect({
@@ -989,7 +1043,7 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
 
       await gotoApplicationsPage(page);
       await getApplicationsTable(page)
-        .locator("tbody tr", { hasText: "DEFECT-YES" })
+        .locator("tbody tr", { hasText: "RF00001" })
         .first()
         .locator("button:has(.pi-eye)")
         .first()
@@ -997,7 +1051,7 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
 
       const dialog = page.getByRole("dialog");
       await expect(
-        dialog.getByRole("heading", { name: "ข้อบกพร่อง" })
+        dialog.getByRole("heading", { name: "ข้อบกพร่อง" }),
       ).toBeVisible();
       await expect(dialog.getByText("พบโรคใบจุด")).toBeVisible();
       await expect(dialog.getByText("รายละเอียดโรคใบจุด")).toBeVisible();
@@ -1008,10 +1062,10 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
       const farms = [
         buildFarm({
           rubberFarmId: 1,
-          farmId: "DEFECT-NO",
+          farmId: formatFarmId(1),
           inspection: buildInspection({
             rubberFarmId: 1,
-            inspectionNo: "INSP-0001",
+            inspectionNo: inspectionNoFromSequence(1),
             inspectionStatus: "ตรวจประเมินแล้ว",
             inspectionResult: "ไม่ผ่าน",
             adviceAndDefect: buildAdviceAndDefect({
@@ -1030,7 +1084,7 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
 
       await gotoApplicationsPage(page);
       await getApplicationsTable(page)
-        .locator("tbody tr", { hasText: "DEFECT-NO" })
+        .locator("tbody tr", { hasText: "RF00001" })
         .first()
         .locator("button:has(.pi-eye)")
         .first()
@@ -1044,10 +1098,10 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
       const farms = [
         buildFarm({
           rubberFarmId: 1,
-          farmId: "DIALOG-CLOSE",
+          farmId: formatFarmId(1),
           inspection: buildInspection({
             rubberFarmId: 1,
-            inspectionNo: "INSP-0001",
+            inspectionNo: inspectionNoFromSequence(1),
             inspectionStatus: "ตรวจประเมินแล้ว",
             inspectionResult: "ไม่ผ่าน",
             adviceAndDefect: buildAdviceAndDefect({
@@ -1064,7 +1118,7 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
 
       await gotoApplicationsPage(page);
       await getApplicationsTable(page)
-        .locator("tbody tr", { hasText: "DIALOG-CLOSE" })
+        .locator("tbody tr", { hasText: "RF00001" })
         .first()
         .locator("button:has(.pi-eye)")
         .first()
@@ -1088,10 +1142,10 @@ test.describe("Farmer Applications — ติดตามสถานะกา�
 
       await gotoApplicationsPage(page);
       await expect(
-        page.getByRole("heading", { name: "ติดตามสถานะการรับรอง" })
+        page.getByRole("heading", { name: "ติดตามสถานะการรับรอง" }),
       ).toBeVisible();
       await expect(
-        page.getByRole("button", { name: "ลงทะเบียนสวนยาง" })
+        page.getByRole("button", { name: "ลงทะเบียนสวนยาง" }),
       ).toBeVisible();
     });
   });
