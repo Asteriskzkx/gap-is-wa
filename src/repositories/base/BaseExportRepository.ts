@@ -16,16 +16,7 @@ export abstract class BaseExportRepository {
     params: any[] = []
   ): Promise<Readable> {
 
-     if (this.isMockExport() && !/count\s*\(/i.test(sql)) {
-      console.log("🧪 MOCK STREAM:", sql);
-
-      const mockRows = Array.from({ length: 100 }).map((_, i) => ({
-        id: i + 1,
-      }));
-
-      return Readable.from(mockRows);
-    }
-    
+     
     const client = await pgPool.connect();
 
     const query = new QueryStream(sql, params);
@@ -67,7 +58,7 @@ export abstract class BaseExportRepository {
       //   return [{ count: 1_00 }] as any;
       // }
 
-      return [{ count: 1_000_000 }] as any;
+      return [{ count: 1_100_000 }] as any;
     }
 
     const client = await pgPool.connect();
