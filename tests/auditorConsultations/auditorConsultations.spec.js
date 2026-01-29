@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import fs from "fs";
 import path from "path";
 
@@ -43,15 +43,15 @@ function readThaiProvinceSample() {
     process.cwd(),
     "src",
     "data",
-    "thai-provinces.json"
+    "thai-provinces.json",
   );
   const raw = fs.readFileSync(jsonPath, "utf-8");
   const provinces = JSON.parse(raw);
   const province = provinces.find(
-    (p) => Array.isArray(p.amphure) && p.amphure.length
+    (p) => Array.isArray(p.amphure) && p.amphure.length,
   );
   const district = province?.amphure?.find(
-    (a) => Array.isArray(a.tambon) && a.tambon.length
+    (a) => Array.isArray(a.tambon) && a.tambon.length,
   );
   const subDistrict = district?.tambon?.[0];
   return {
@@ -91,7 +91,7 @@ async function ensureTableHasRows(page, primaryTab, fallbackTab) {
   const loadTab = async (tabLabel) => {
     if (tabLabel) {
       await clickAndWaitInspectionsReload(page, () =>
-        page.getByRole("button", { name: tabLabel, exact: true }).click()
+        page.getByRole("button", { name: tabLabel, exact: true }).click(),
       );
     }
 
@@ -122,10 +122,12 @@ async function waitForFirstRow(page, tabLabel, fallbackTab) {
   const { table, rows, rowCount, tabUsed } = await ensureTableHasRows(
     page,
     tabLabel,
-    fallbackTab
+    fallbackTab,
   );
   if (!rowCount) {
-    throw new Error(`No inspection rows available for ${tabUsed || "current"} tab`);
+    throw new Error(
+      `No inspection rows available for ${tabUsed || "current"} tab`,
+    );
   }
 
   const firstRow = rows.first();
@@ -155,7 +157,7 @@ async function goToStep2FromFirstRow(page, tabLabel, fallbackTab) {
   await expect(
     page.getByRole("heading", {
       name: /1\.\s*แบบบันทึกคำแนะนำการให้คำปรึกษา/,
-    })
+    }),
   ).toBeVisible();
 }
 
@@ -235,7 +237,9 @@ test.describe("บันทึกการให้คำปรึกษาแ�
   });
 
   test("TC-002: แสดงชื่อหน้าและคำอธิบาย", async ({ page }) => {
-    await expect(page.getByRole("heading", { name: PAGE_HEADING })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: PAGE_HEADING }),
+    ).toBeVisible();
     await expect(page.getByText(PAGE_SUBTITLE)).toBeVisible();
   });
 
@@ -246,21 +250,21 @@ test.describe("บันทึกการให้คำปรึกษาแ�
     await expect(
       stepIndicator.locator("div.text-xs.text-gray-500.mt-1", {
         hasText: STEP_1_LABEL,
-      })
+      }),
     ).toBeVisible();
     await expect(
       stepIndicator.locator("div.text-xs.text-gray-500.mt-1", {
         hasText: STEP_2_LABEL,
-      })
+      }),
     ).toBeVisible();
   });
 
   test("TC-004: แสดงแท็บสถานะ 2 ปุ่ม", async ({ page }) => {
     await expect(
-      page.getByRole("button", { name: TAB_IN_PROGRESS, exact: true })
+      page.getByRole("button", { name: TAB_IN_PROGRESS, exact: true }),
     ).toBeVisible();
     await expect(
-      page.getByRole("button", { name: TAB_COMPLETED, exact: true })
+      page.getByRole("button", { name: TAB_COMPLETED, exact: true }),
     ).toBeVisible();
   });
 
@@ -268,8 +272,12 @@ test.describe("บันทึกการให้คำปรึกษาแ�
     await expect(page.getByPlaceholder("เลือกจังหวัด").first()).toBeVisible();
     await expect(page.getByPlaceholder("เลือกอำเภอ/เขต").first()).toBeVisible();
     await expect(page.getByPlaceholder("เลือกตำบล/แขวง").first()).toBeVisible();
-    await expect(page.getByRole("button", { name: BUTTON_SEARCH })).toBeVisible();
-    await expect(page.getByRole("button", { name: BUTTON_CLEAR })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: BUTTON_SEARCH }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: BUTTON_CLEAR }),
+    ).toBeVisible();
   });
 
   test("TC-006: อำเภอ/เขต disabled จนกว่าจะเลือกจังหวัด", async ({ page }) => {
@@ -319,28 +327,50 @@ test.describe("บันทึกการให้คำปรึกษาแ�
 
     await chooseAutoCompleteByTypingExact(page, "เลือกจังหวัด", provinceName);
     await chooseAutoCompleteByTypingExact(page, "เลือกอำเภอ/เขต", districtName);
-    await chooseAutoCompleteByTypingExact(page, "เลือกตำบล/แขวง", subDistrictName);
+    await chooseAutoCompleteByTypingExact(
+      page,
+      "เลือกตำบล/แขวง",
+      subDistrictName,
+    );
 
     const districtInput = page.getByPlaceholder("เลือกอำเภอ/เขต").first();
     const subDistrictInput = page.getByPlaceholder("เลือกตำบล/แขวง").first();
     await expect(districtInput).toHaveValue(districtName);
     await expect(subDistrictInput).toHaveValue(subDistrictName);
 
-    const jsonPath = path.join(process.cwd(), "src", "data", "thai-provinces.json");
+    const jsonPath = path.join(
+      process.cwd(),
+      "src",
+      "data",
+      "thai-provinces.json",
+    );
     const provinces = JSON.parse(fs.readFileSync(jsonPath, "utf-8"));
-    const nextProvince = provinces.find((p) => p.name_th && p.name_th !== provinceName);
+    const nextProvince = provinces.find(
+      (p) => p.name_th && p.name_th !== provinceName,
+    );
     expect(nextProvince?.name_th).toBeTruthy();
 
-    await chooseAutoCompleteByTypingExact(page, "เลือกจังหวัด", nextProvince.name_th);
+    await chooseAutoCompleteByTypingExact(
+      page,
+      "เลือกจังหวัด",
+      nextProvince.name_th,
+    );
     await expect(districtInput).toHaveValue("");
     await expect(subDistrictInput).toHaveValue("");
     await expect(subDistrictInput).toBeDisabled();
   });
 
   test("TC-011: เปลี่ยนอำเภอแล้วรีเซ็ตตำบล", async ({ page }) => {
-    const jsonPath = path.join(process.cwd(), "src", "data", "thai-provinces.json");
+    const jsonPath = path.join(
+      process.cwd(),
+      "src",
+      "data",
+      "thai-provinces.json",
+    );
     const provinces = JSON.parse(fs.readFileSync(jsonPath, "utf-8"));
-    const province = provinces.find((p) => Array.isArray(p.amphure) && p.amphure.length >= 2);
+    const province = provinces.find(
+      (p) => Array.isArray(p.amphure) && p.amphure.length >= 2,
+    );
     const districtA = province?.amphure?.[0];
     const districtB = province?.amphure?.[1];
     const subDistrictA = districtA?.tambon?.[0];
@@ -350,14 +380,30 @@ test.describe("บันทึกการให้คำปรึกษาแ�
     expect(districtB?.name_th).toBeTruthy();
     expect(subDistrictA?.name_th).toBeTruthy();
 
-    await chooseAutoCompleteByTypingExact(page, "เลือกจังหวัด", province.name_th);
-    await chooseAutoCompleteByTypingExact(page, "เลือกอำเภอ/เขต", districtA.name_th);
-    await chooseAutoCompleteByTypingExact(page, "เลือกตำบล/แขวง", subDistrictA.name_th);
+    await chooseAutoCompleteByTypingExact(
+      page,
+      "เลือกจังหวัด",
+      province.name_th,
+    );
+    await chooseAutoCompleteByTypingExact(
+      page,
+      "เลือกอำเภอ/เขต",
+      districtA.name_th,
+    );
+    await chooseAutoCompleteByTypingExact(
+      page,
+      "เลือกตำบล/แขวง",
+      subDistrictA.name_th,
+    );
 
     const subDistrictInput = page.getByPlaceholder("เลือกตำบล/แขวง").first();
     await expect(subDistrictInput).toHaveValue(subDistrictA.name_th);
 
-    await chooseAutoCompleteByTypingExact(page, "เลือกอำเภอ/เขต", districtB.name_th);
+    await chooseAutoCompleteByTypingExact(
+      page,
+      "เลือกอำเภอ/เขต",
+      districtB.name_th,
+    );
     await expect(subDistrictInput).toHaveValue("");
     await expect(subDistrictInput).toBeEnabled();
   });
@@ -368,7 +414,7 @@ test.describe("บันทึกการให้คำปรึกษาแ�
 
     await chooseAutoCompleteByTypingExact(page, "เลือกจังหวัด", provinceName);
     await clickAndWaitInspectionsReload(page, () =>
-      page.getByRole("button", { name: BUTTON_SEARCH }).click()
+      page.getByRole("button", { name: BUTTON_SEARCH }).click(),
     );
 
     const table = await waitForInspectionsTable(page);
@@ -386,10 +432,18 @@ test.describe("บันทึกการให้คำปรึกษาแ�
     await page.getByRole("button", { name: BUTTON_CLEAR }).click();
 
     await expect(page.getByPlaceholder("เลือกจังหวัด").first()).toHaveValue("");
-    await expect(page.getByPlaceholder("เลือกอำเภอ/เขต").first()).toHaveValue("");
-    await expect(page.getByPlaceholder("เลือกตำบล/แขวง").first()).toHaveValue("");
-    await expect(page.getByPlaceholder("เลือกอำเภอ/เขต").first()).toBeDisabled();
-    await expect(page.getByPlaceholder("เลือกตำบล/แขวง").first()).toBeDisabled();
+    await expect(page.getByPlaceholder("เลือกอำเภอ/เขต").first()).toHaveValue(
+      "",
+    );
+    await expect(page.getByPlaceholder("เลือกตำบล/แขวง").first()).toHaveValue(
+      "",
+    );
+    await expect(
+      page.getByPlaceholder("เลือกอำเภอ/เขต").first(),
+    ).toBeDisabled();
+    await expect(
+      page.getByPlaceholder("เลือกตำบล/แขวง").first(),
+    ).toBeDisabled();
   });
 
   test("TC-014: แสดงตาราง 5 คอลัมน์ตาม UI จริง", async ({ page }) => {
@@ -404,7 +458,7 @@ test.describe("บันทึกการให้คำปรึกษาแ�
     const { table } = await ensureTableHasRows(
       page,
       TAB_IN_PROGRESS,
-      TAB_COMPLETED
+      TAB_COMPLETED,
     );
     const dateTexts = await getColumnTexts(table, 1);
     const withDate = dateTexts.filter((t) => t && t !== "-");
@@ -421,12 +475,14 @@ test.describe("บันทึกการให้คำปรึกษาแ�
     const { table } = await ensureTableHasRows(
       page,
       TAB_IN_PROGRESS,
-      TAB_COMPLETED
+      TAB_COMPLETED,
     );
     const dateTexts = await getColumnTexts(table, 1);
     const hasDash = dateTexts.some((text) => text === "-");
     if (hasDash) {
-      expect(dateTexts.filter((text) => text === "-").length).toBeGreaterThan(0);
+      expect(dateTexts.filter((text) => text === "-").length).toBeGreaterThan(
+        0,
+      );
     } else {
       expect(dateTexts.every((text) => text.length)).toBeTruthy();
     }
@@ -436,12 +492,14 @@ test.describe("บันทึกการให้คำปรึกษาแ�
     const { table } = await ensureTableHasRows(
       page,
       TAB_IN_PROGRESS,
-      TAB_COMPLETED
+      TAB_COMPLETED,
     );
     const locationTexts = await getColumnTexts(table, 3);
     const hasDash = locationTexts.some((text) => text === "-");
     if (hasDash) {
-      expect(locationTexts.filter((text) => text === "-").length).toBeGreaterThan(0);
+      expect(
+        locationTexts.filter((text) => text === "-").length,
+      ).toBeGreaterThan(0);
     } else {
       expect(locationTexts.every((text) => text.length)).toBeTruthy();
     }
@@ -451,12 +509,14 @@ test.describe("บันทึกการให้คำปรึกษาแ�
     const { table } = await ensureTableHasRows(
       page,
       TAB_IN_PROGRESS,
-      TAB_COMPLETED
+      TAB_COMPLETED,
     );
     const farmerTexts = await getColumnTexts(table, 4);
     const hasUnknown = farmerTexts.some((text) => text === "ไม่ระบุ");
     if (hasUnknown) {
-      expect(farmerTexts.filter((text) => text === "ไม่ระบุ").length).toBeGreaterThan(0);
+      expect(
+        farmerTexts.filter((text) => text === "ไม่ระบุ").length,
+      ).toBeGreaterThan(0);
     } else {
       expect(farmerTexts.every((text) => text.length)).toBeTruthy();
     }
@@ -466,26 +526,30 @@ test.describe("บันทึกการให้คำปรึกษาแ�
     const { table } = await ensureTableHasRows(
       page,
       TAB_IN_PROGRESS,
-      TAB_COMPLETED
+      TAB_COMPLETED,
     );
     const paginator = table.locator(".p-paginator").first();
     await expect(paginator).toBeVisible();
 
-    const currentPage = paginator.locator(".p-paginator-page.p-highlight").first();
+    const currentPage = paginator
+      .locator(".p-paginator-page.p-highlight")
+      .first();
     const currentText = (await currentPage.textContent())?.trim() || "";
 
     const nextPageButton = paginator.locator(".p-paginator-next").first();
     if (await nextPageButton.isDisabled()) {
       await expect(nextPageButton).toBeDisabled();
-      await expect(paginator.locator(".p-paginator-page.p-highlight").first()).toHaveText(
-        currentText || "1"
-      );
+      await expect(
+        paginator.locator(".p-paginator-page.p-highlight").first(),
+      ).toHaveText(currentText || "1");
       return;
     }
 
     await clickAndWaitInspectionsReload(page, () => nextPageButton.click());
 
-    const newCurrentPage = paginator.locator(".p-paginator-page.p-highlight").first();
+    const newCurrentPage = paginator
+      .locator(".p-paginator-page.p-highlight")
+      .first();
     await expect(newCurrentPage).not.toHaveText(currentText);
   });
 
@@ -493,7 +557,7 @@ test.describe("บันทึกการให้คำปรึกษาแ�
     const { table } = await ensureTableHasRows(
       page,
       TAB_IN_PROGRESS,
-      TAB_COMPLETED
+      TAB_COMPLETED,
     );
     const paginator = table.locator(".p-paginator").first();
     await expect(paginator).toBeVisible();
@@ -523,22 +587,29 @@ test.describe("บันทึกการให้คำปรึกษาแ�
     const { table } = await ensureTableHasRows(
       page,
       TAB_IN_PROGRESS,
-      TAB_COMPLETED
+      TAB_COMPLETED,
     );
-    const headerCell = table.locator("thead th", { hasText: "รหัสการตรวจ" }).first();
+    const headerCell = table
+      .locator("thead th", { hasText: "รหัสการตรวจ" })
+      .first();
     await expect(headerCell).toBeVisible();
 
     await clickAndWaitInspectionsReload(page, () => headerCell.click());
-    await expect(headerCell).toHaveAttribute("aria-sort", /ascending|descending/);
+    await expect(headerCell).toHaveAttribute(
+      "aria-sort",
+      /ascending|descending/,
+    );
   });
 
   test("TC-022: Multi-sort บนตาราง", async ({ page }) => {
     const { table } = await ensureTableHasRows(
       page,
       TAB_IN_PROGRESS,
-      TAB_COMPLETED
+      TAB_COMPLETED,
     );
-    const codeHeader = table.locator("thead th", { hasText: "รหัสการตรวจ" }).first();
+    const codeHeader = table
+      .locator("thead th", { hasText: "รหัสการตรวจ" })
+      .first();
     const typeHeader = table.locator("thead th", { hasText: "ประเภท" }).first();
 
     await clickAndWaitInspectionsReload(page, () => codeHeader.click());
@@ -547,40 +618,56 @@ test.describe("บันทึกการให้คำปรึกษาแ�
     await clickAndWaitInspectionsReload(page, () => typeHeader.click());
     await page.keyboard.up("Control");
 
-    await expect(codeHeader).toHaveAttribute("aria-sort", /ascending|descending/);
-    await expect(typeHeader).toHaveAttribute("aria-sort", /ascending|descending/);
+    await expect(codeHeader).toHaveAttribute(
+      "aria-sort",
+      /ascending|descending/,
+    );
+    await expect(typeHeader).toHaveAttribute(
+      "aria-sort",
+      /ascending|descending/,
+    );
   });
 
   test("TC-023: สลับแท็บแล้วล้างการเลือกแถว", async ({ page }) => {
     const { firstRow, tabUsed } = await waitForFirstRow(
       page,
       TAB_IN_PROGRESS,
-      TAB_COMPLETED
+      TAB_COMPLETED,
     );
     await firstRow.click();
-    await expect(page.getByRole("button", { name: BUTTON_NEXT, exact: true })).toBeEnabled();
+    await expect(
+      page.getByRole("button", { name: BUTTON_NEXT, exact: true }),
+    ).toBeEnabled();
 
     const targetTab =
       tabUsed === TAB_IN_PROGRESS ? TAB_COMPLETED : TAB_IN_PROGRESS;
     await clickAndWaitInspectionsReload(page, () =>
-      page.getByRole("button", { name: targetTab, exact: true }).click()
+      page.getByRole("button", { name: targetTab, exact: true }).click(),
     );
 
-    await expect(page.getByRole("button", { name: BUTTON_NEXT, exact: true })).toBeDisabled();
+    await expect(
+      page.getByRole("button", { name: BUTTON_NEXT, exact: true }),
+    ).toBeDisabled();
   });
 
-  test("TC-024: ปุ่ม “ถัดไป” disabled เมื่อยังไม่เลือกแถว", async ({ page }) => {
-    await expect(page.getByRole("button", { name: BUTTON_NEXT, exact: true })).toBeDisabled();
+  test("TC-024: ปุ่ม “ถัดไป” disabled เมื่อยังไม่เลือกแถว", async ({
+    page,
+  }) => {
+    await expect(
+      page.getByRole("button", { name: BUTTON_NEXT, exact: true }),
+    ).toBeDisabled();
   });
 
   test("TC-025: เลือกแถวแล้ว “ถัดไป” enabled", async ({ page }) => {
     const { firstRow } = await waitForFirstRow(
       page,
       TAB_IN_PROGRESS,
-      TAB_COMPLETED
+      TAB_COMPLETED,
     );
     await firstRow.click();
-    await expect(page.getByRole("button", { name: BUTTON_NEXT, exact: true })).toBeEnabled();
+    await expect(
+      page.getByRole("button", { name: BUTTON_NEXT, exact: true }),
+    ).toBeEnabled();
   });
 
   test("TC-026: กด “ถัดไป” ไป Step 2", async ({ page }) => {
@@ -602,7 +689,7 @@ test.describe("บันทึกการให้คำปรึกษาแ�
   test("TC-027: แสดงช่อง “วันที่บันทึกข้อมูล”", async ({ page }) => {
     await expect(page.getByText("วันที่บันทึกข้อมูล")).toBeVisible();
     await expect(
-      page.getByPlaceholder("เลือกวันที่บันทึกข้อมูล").first()
+      page.getByPlaceholder("เลือกวันที่บันทึกข้อมูล").first(),
     ).toBeVisible();
   });
 
@@ -647,7 +734,9 @@ test.describe("บันทึกการให้คำปรึกษาแ�
       .locator("..");
 
     await page.getByRole("button", { name: "เพิ่มรายการคำปรึกษา" }).click();
-    await expect(adviceSection.getByRole("button", { name: "ลบรายการ" }).first()).toBeVisible();
+    await expect(
+      adviceSection.getByRole("button", { name: "ลบรายการ" }).first(),
+    ).toBeVisible();
   });
 
   test("TC-032: ลบรายการคำปรึกษา", async ({ page }) => {
@@ -661,7 +750,10 @@ test.describe("บันทึกการให้คำปรึกษาแ�
     await page.getByRole("button", { name: "เพิ่มรายการคำปรึกษา" }).click();
     await expect(adviceItems).toHaveCount(initialCount + 1);
 
-    await adviceSection.getByRole("button", { name: "ลบรายการ" }).first().click();
+    await adviceSection
+      .getByRole("button", { name: "ลบรายการ" })
+      .first()
+      .click();
     await expect(adviceItems).toHaveCount(initialCount);
   });
 
@@ -680,15 +772,20 @@ test.describe("บันทึกการให้คำปรึกษาแ�
       .getByPlaceholder("ระบุแนวทางการแก้ไข")
       .first()
       .fill("แนะนำตัดแต่งปีละ 2 ครั้ง");
-    await adviceSection.getByPlaceholder("เลือกวันที่").first().fill("02/01/25");
+    await adviceSection
+      .getByPlaceholder("เลือกวันที่")
+      .first()
+      .fill("02/01/25");
 
     await expect(
-      adviceSection.getByPlaceholder("ระบุรายการให้คำปรึกษา").first()
+      adviceSection.getByPlaceholder("ระบุรายการให้คำปรึกษา").first(),
     ).toHaveValue("คำปรึกษาเรื่องการตัดแต่งกิ่ง");
     await expect(
-      adviceSection.getByPlaceholder("ระบุแนวทางการแก้ไข").first()
+      adviceSection.getByPlaceholder("ระบุแนวทางการแก้ไข").first(),
     ).toHaveValue("แนะนำตัดแต่งปีละ 2 ครั้ง");
-    await expect(adviceSection.getByPlaceholder("เลือกวันที่").first()).not.toHaveValue("");
+    await expect(
+      adviceSection.getByPlaceholder("เลือกวันที่").first(),
+    ).not.toHaveValue("");
   });
 
   test("TC-034: แสดง Section 2 (ข้อบกพร่อง) และมี 1 รายการเริ่มต้น", async ({
@@ -722,7 +819,9 @@ test.describe("บันทึกการให้คำปรึกษาแ�
       .locator("..");
 
     await page.getByRole("button", { name: "เพิ่มรายการข้อบกพร่อง" }).click();
-    await expect(defectSection.getByRole("button", { name: "ลบรายการ" }).first()).toBeVisible();
+    await expect(
+      defectSection.getByRole("button", { name: "ลบรายการ" }).first(),
+    ).toBeVisible();
   });
 
   test("TC-037: ลบรายการข้อบกพร่อง", async ({ page }) => {
@@ -734,7 +833,10 @@ test.describe("บันทึกการให้คำปรึกษาแ�
     await page.getByRole("button", { name: "เพิ่มรายการข้อบกพร่อง" }).click();
     await expect(defectItems).toHaveCount(initialCount + 1);
 
-    await defectSection.getByRole("button", { name: "ลบรายการ" }).first().click();
+    await defectSection
+      .getByRole("button", { name: "ลบรายการ" })
+      .first()
+      .click();
     await expect(defectItems).toHaveCount(initialCount);
   });
 
@@ -751,21 +853,30 @@ test.describe("บันทึกการให้คำปรึกษาแ�
       .getByPlaceholder("ระบุรายละเอียด")
       .first()
       .fill("ควรกำจัดวัชพืชก่อนการใส่ปุ๋ย");
-    await defectSection.getByPlaceholder("เลือกวันที่").first().fill("03/01/25");
+    await defectSection
+      .getByPlaceholder("เลือกวันที่")
+      .first()
+      .fill("03/01/25");
 
-    await expect(defectSection.getByPlaceholder("ระบุข้อบกพร่องที่พบ").first()).toHaveValue(
-      "พบวัชพืชหนาแน่น"
-    );
-    await expect(defectSection.getByPlaceholder("ระบุรายละเอียด").first()).toHaveValue(
-      "ควรกำจัดวัชพืชก่อนการใส่ปุ๋ย"
-    );
-    await expect(defectSection.getByPlaceholder("เลือกวันที่").first()).not.toHaveValue("");
+    await expect(
+      defectSection.getByPlaceholder("ระบุข้อบกพร่องที่พบ").first(),
+    ).toHaveValue("พบวัชพืชหนาแน่น");
+    await expect(
+      defectSection.getByPlaceholder("ระบุรายละเอียด").first(),
+    ).toHaveValue("ควรกำจัดวัชพืชก่อนการใส่ปุ๋ย");
+    await expect(
+      defectSection.getByPlaceholder("เลือกวันที่").first(),
+    ).not.toHaveValue("");
   });
 
   test("TC-039: ปุ่ม “ย้อนกลับ” กลับไป Step 1", async ({ page }) => {
     await page.getByRole("button", { name: BUTTON_BACK }).click();
-    await expect(page.getByRole("button", { name: BUTTON_NEXT, exact: true })).toBeEnabled();
-    await expect(page.getByRole("heading", { name: PAGE_HEADING })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: BUTTON_NEXT, exact: true }),
+    ).toBeEnabled();
+    await expect(
+      page.getByRole("heading", { name: PAGE_HEADING }),
+    ).toBeVisible();
   });
 });
 
@@ -790,7 +901,10 @@ test.describe("บันทึกการให้คำปรึกษาแ�
       });
     });
 
-    await page.getByPlaceholder("ระบุรายการให้คำปรึกษา").first().fill("ปรับปรุงข้อมูล");
+    await page
+      .getByPlaceholder("ระบุรายการให้คำปรึกษา")
+      .first()
+      .fill("ปรับปรุงข้อมูล");
 
     const [putRequest] = await Promise.all([
       page.waitForRequest((req) => {
@@ -853,7 +967,9 @@ test.describe("บันทึกการให้คำปรึกษาแ�
     expect(putRequest).toBeTruthy();
 
     await expect(
-      page.getByText(/บันทึกข้อมูลไม่สำเร็จ|Failed to update advice and defect/)
+      page.getByText(
+        /บันทึกข้อมูลไม่สำเร็จ|Failed to update advice and defect/,
+      ),
     ).toBeVisible();
   });
 });
