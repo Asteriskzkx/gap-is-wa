@@ -325,7 +325,7 @@ test.describe("กำหนดการตรวจประเมิน - ผ�
 
   test.describe("โฟลว์หลัก", () => {
     test.skip(!HAS_AUDITOR_CREDS, "ยังไม่ได้ตั้งค่า E2E auditor credentials");
-    // test.describe.configure({ mode: "serial" });
+    test.describe.configure({ mode: "serial" });
 
     test.beforeEach(async ({ page }) => {
       await mockAuditorApplicationsApis(page);
@@ -489,9 +489,7 @@ test.describe("กำหนดการตรวจประเมิน - ผ�
     test("TC-013: ค้นหาผู้ตรวจประเมิน", async ({ page }) => {
       await gotoStep3(page);
 
-      const searchInput = page
-        .getByPlaceholder("ค้นหาผู้ตรวจประเมิน")
-        .first();
+      const searchInput = page.getByPlaceholder("ค้นหาผู้ตรวจประเมิน").first();
       await searchInput.fill("สมชาย");
 
       const requestPromise = page.waitForRequest((request) => {
