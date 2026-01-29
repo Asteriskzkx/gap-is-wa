@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 const COMMITTEE_USER = {
   email: process.env.E2E_TEST_COMMITTEE_EMAIL,
@@ -6,7 +6,7 @@ const COMMITTEE_USER = {
 };
 
 const HAS_COMMITTEE_CREDS = Boolean(
-  COMMITTEE_USER.email && COMMITTEE_USER.password
+  COMMITTEE_USER.email && COMMITTEE_USER.password,
 );
 
 const PAGE_PATH = "/committee/certifications/revoke";
@@ -48,7 +48,7 @@ async function loginAsCommittee(page, { email, password }) {
     for (let attempt = 0; attempt < 2; attempt += 1) {
       await committeeRoleButton.click();
       const isActive = await committeeRoleButton.evaluate((el) =>
-        String(el.className).includes("roleButtonActive")
+        String(el.className).includes("roleButtonActive"),
       );
       if (isActive) break;
       await page.waitForTimeout(100);
@@ -139,7 +139,7 @@ async function selectFirstAvailableDate(page, input, calendarId) {
     await expectVisible(panel, { timeout: 10000 });
     const day = panel
       .locator(
-        "td:not(.p-disabled):not(.p-datepicker-other-month) span:not(.p-disabled)"
+        "td:not(.p-disabled):not(.p-datepicker-other-month) span:not(.p-disabled)",
       )
       .first();
     await expectVisible(day, { timeout: 10000 });
@@ -214,10 +214,9 @@ async function goToStep2FromFirstRow(page, testInfo) {
   await expect(nextButton).toBeEnabled();
   await nextButton.click();
 
-  await expectVisible(
-    page.getByText("รายละเอียดคำขอยกเลิกใบรับรอง"),
-    { timeout: 10000 }
-  );
+  await expectVisible(page.getByText("รายละเอียดคำขอยกเลิกใบรับรอง"), {
+    timeout: 10000,
+  });
 }
 
 test.describe("ยกเลิกใบรับรองแหล่งผลิตจีเอพี - Committee", () => {
@@ -230,7 +229,10 @@ test.describe("ยกเลิกใบรับรองแหล่งผล�
   });
 
   test.describe("Step 1 — เลือกใบรับรอง", () => {
-    test.skip(!HAS_COMMITTEE_CREDS, "ยังไม่ได้ตั้งค่า E2E committee credentials");
+    test.skip(
+      !HAS_COMMITTEE_CREDS,
+      "ยังไม่ได้ตั้งค่า E2E committee credentials",
+    );
     test.describe.configure({ mode: "serial", timeout: 60000 });
 
     test.beforeEach(async ({ page }) => {
@@ -244,21 +246,17 @@ test.describe("ยกเลิกใบรับรองแหล่งผล�
       await expectVisible(page.getByText(PAGE_SUBTITLE));
     });
 
-    test("TC-003: แสดง Step indicator และอยู่ที่ Step 1", async ({
-      page,
-    }) => {
+    test("TC-003: แสดง Step indicator และอยู่ที่ Step 1", async ({ page }) => {
       await expectVisible(page.getByText(/ขั้นตอนที่ 1/).first());
       await expectVisible(
-        page.getByText("เลือกใบรับรอง", { exact: true }).first()
+        page.getByText("เลือกใบรับรอง", { exact: true }).first(),
       );
       await expectVisible(
-        page.getByText("ยกเลิกใบรับรอง", { exact: true }).first()
+        page.getByText("ยกเลิกใบรับรอง", { exact: true }).first(),
       );
     });
 
-    test("TC-004: แสดงตัวกรองวันที่และปุ่มค้นหา/ล้างค่า", async ({
-      page,
-    }) => {
+    test("TC-004: แสดงตัวกรองวันที่และปุ่มค้นหา/ล้างค่า", async ({ page }) => {
       await expectVisible(page.getByText("ตั้งแต่", { exact: true }).first());
       await expectVisible(page.getByText("ถึง", { exact: true }).first());
       await expectVisible(page.getByPlaceholder("เลือกวันที่มีผล"));
@@ -269,10 +267,10 @@ test.describe("ยกเลิกใบรับรองแหล่งผล�
 
     test("TC-005: แสดงปุ่มแท็บ 2 แบบ", async ({ page }) => {
       await expectVisible(
-        page.getByRole("button", { name: "ใบรับรองที่มีคำขอยกเลิก" })
+        page.getByRole("button", { name: "ใบรับรองที่มีคำขอยกเลิก" }),
       );
       await expectVisible(
-        page.getByRole("button", { name: "ใบรับรองที่ไม่มีคำขอยกเลิก" })
+        page.getByRole("button", { name: "ใบรับรองที่ไม่มีคำขอยกเลิก" }),
       );
     });
 
@@ -326,7 +324,9 @@ test.describe("ยกเลิกใบรับรองแหล่งผล�
       await selectFirstAvailableDate(page, toInput, "toDate");
 
       const requestPromise = waitForRevokeListRequest(page, (url) => {
-        return url.searchParams.has("fromDate") && url.searchParams.has("toDate");
+        return (
+          url.searchParams.has("fromDate") && url.searchParams.has("toDate")
+        );
       });
 
       await page.getByRole("button", { name: BUTTON_SEARCH }).click();
@@ -343,7 +343,9 @@ test.describe("ยกเลิกใบรับรองแหล่งผล�
         testInfo.skip("ไม่สามารถตั้งวันที่เริ่มเพื่อทดสอบล้างค่า");
       }
       const requestPromise = waitForRevokeListRequest(page, (url) => {
-        return !url.searchParams.has("fromDate") && !url.searchParams.has("toDate");
+        return (
+          !url.searchParams.has("fromDate") && !url.searchParams.has("toDate")
+        );
       });
 
       await page.getByRole("button", { name: BUTTON_CLEAR }).click();
@@ -355,7 +357,10 @@ test.describe("ยกเลิกใบรับรองแหล่งผล�
   });
 
   test.describe("การดูไฟล์ (ปุ่มไอคอนรูปตา)", () => {
-    test.skip(!HAS_COMMITTEE_CREDS, "ยังไม่ได้ตั้งค่า E2E committee credentials");
+    test.skip(
+      !HAS_COMMITTEE_CREDS,
+      "ยังไม่ได้ตั้งค่า E2E committee credentials",
+    );
     test.describe.configure({ mode: "serial", timeout: 60000 });
 
     test.beforeEach(async ({ page }) => {
@@ -367,17 +372,17 @@ test.describe("ยกเลิกใบรับรองแหล่งผล�
 
     test("TC-013: เปิดไฟล์สำเร็จ (มี URL)", async ({ page }, testInfo) => {
       const fileUrl = "https://example.com/certificate-mock.pdf";
+      const fileName = "certificate-mock.pdf";
       await mockFilesApi(page, async () => ({
-        body: { files: [{ url: fileUrl }] },
+        body: { files: [{ url: fileUrl, fileName }] },
       }));
-      await installWindowOpenSpy(page);
       await clickFirstRowEyeAndWaitForFiles(page, testInfo);
 
-      await expect
-        .poll(async () => {
-          return await page.evaluate(() => window.__openedUrls?.[0] || "");
-        })
-        .toContain(fileUrl);
+      await expectVisible(page.getByRole("button", { name: BUTTON_BACK }));
+      await expectVisible(page.getByText(fileName));
+      const iframe = page.locator('iframe[title="PDF Viewer"]').first();
+      await expectVisible(iframe);
+      await expect(iframe).toHaveAttribute("src", /certificate-mock\.pdf/);
     });
 
     test("TC-014: ไม่มีไฟล์", async ({ page }, testInfo) => {
@@ -410,7 +415,10 @@ test.describe("ยกเลิกใบรับรองแหล่งผล�
   });
 
   test.describe("Step 2 — ยกเลิกใบรับรอง", () => {
-    test.skip(!HAS_COMMITTEE_CREDS, "ยังไม่ได้ตั้งค่า E2E committee credentials");
+    test.skip(
+      !HAS_COMMITTEE_CREDS,
+      "ยังไม่ได้ตั้งค่า E2E committee credentials",
+    );
     test.describe.configure({ mode: "serial", timeout: 60000 });
 
     test.beforeEach(async ({ page }) => {
@@ -491,7 +499,7 @@ test.describe("ยกเลิกใบรับรองแหล่งผล�
       await page.getByRole("button", { name: BUTTON_REVOKE }).click();
 
       await expectVisible(
-        page.getByText("ยกเลิกใบรับรองเรียบร้อยแล้ว (แต่ไม่สามารถลบไฟล์ได้)")
+        page.getByText("ยกเลิกใบรับรองเรียบร้อยแล้ว (แต่ไม่สามารถลบไฟล์ได้)"),
       );
       await expect(getStepNextButton(page)).toBeDisabled();
     });
@@ -509,12 +517,8 @@ test.describe("ยกเลิกใบรับรองแหล่งผล�
       await goToStep2FromFirstRow(page, testInfo);
       await page.getByRole("button", { name: BUTTON_REVOKE }).click();
 
-      await expectVisible(
-        page.getByText("เกิดข้อผิดพลาดขณะยกเลิกใบรับรอง")
-      );
-      await expectVisible(
-        page.getByText("รายละเอียดคำขอยกเลิกใบรับรอง")
-      );
+      await expectVisible(page.getByText("เกิดข้อผิดพลาดขณะยกเลิกใบรับรอง"));
+      await expectVisible(page.getByText("รายละเอียดคำขอยกเลิกใบรับรอง"));
     });
   });
 });
