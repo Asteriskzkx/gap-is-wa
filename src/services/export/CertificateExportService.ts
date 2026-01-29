@@ -31,7 +31,7 @@ export class CertificateExportService {
             [
                 { header: "หมายเลขใบรับรอง", key: "certificateId", width: 20 },
                 { header: "ชื่อคณะกรรมการผู้ออกใบรับรอง", key: "committee_name", width: 25 },
-                { header: "ชื่อผู้ตรวจสอบ", key: "auditor_name", width: 25 },
+                { header: "ชื่อผู้ประเมิน", key: "auditor_name", width: 25 },
                 { header: "วันที่ใบรับรองมีผล", key: "effectiveDate", width: 20 },
                 { header: "วันหมดอายุใบรับรอง", key: "expiryDate", width: 20 },   
                 { header: "สถานะใบรับรอง", key: "activeFlag", width: 15 },
