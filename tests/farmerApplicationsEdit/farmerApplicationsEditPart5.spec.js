@@ -60,13 +60,13 @@ async function gotoEditStep4(page) {
 
   await getFormNextButton(page).click();
   await expect(
-    page.getByRole("heading", { name: "ข้อมูลสวนยาง", exact: true })
+    page.getByRole("heading", { name: "ข้อมูลสวนยาง", exact: true }),
   ).toBeVisible({ timeout: 10000 });
 
   // Step 2 -> Step 3
   await getFormNextButton(page).click();
   await expect(
-    page.getByRole("heading", { name: "รายละเอียดการปลูก", exact: true })
+    page.getByRole("heading", { name: "รายละเอียดการปลูก", exact: true }),
   ).toBeVisible({ timeout: 10000 });
 
   // Step 3 -> Step 4 (use the same auto-heal behavior by clicking next until success)
@@ -89,11 +89,13 @@ async function gotoEditStep4(page) {
       }
 
       if (errorText.includes("กรุณาเลือกพันธุ์ยางพารา")) {
-        // open dropdown for specie-0 and choose a known option
-        await page.locator("#specie-0 button.p-autocomplete-dropdown").click();
-        const panel = page.locator(".p-autocomplete-panel:visible").first();
-        await expect(panel).toBeVisible({ timeout: 10000 });
-        await panel.getByRole("option", { name: "RRIT 251" }).first().click();
+        // Click PrimaryDropdown for specie-0 and choose a known option
+        const specieDropdown = page.locator("#specie-0");
+        await specieDropdown.scrollIntoViewIfNeeded();
+        await specieDropdown.click();
+        await page.waitForSelector('[role="option"]', { timeout: 10000 });
+        await page.click('[role="option"]:has-text("RRIT 251")');
+        await page.keyboard.press("Escape");
         continue;
       }
 
@@ -102,7 +104,7 @@ async function gotoEditStep4(page) {
         await expect(input).toBeVisible({ timeout: 10000 });
         await input.click();
         await input.press(
-          process.platform === "darwin" ? "Meta+A" : "Control+A"
+          process.platform === "darwin" ? "Meta+A" : "Control+A",
         );
         await input.press("Backspace");
         await input.type(String(value));
@@ -147,7 +149,7 @@ async function gotoEditStep4(page) {
     page.getByRole("heading", {
       name: "ตรวจสอบและยืนยันข้อมูล",
       exact: true,
-    })
+    }),
   ).toBeVisible({ timeout: 10000 });
 }
 
@@ -165,7 +167,7 @@ test.describe("Farmer Applications Edit — Part 5 (UI/UX และ Navigation)"
     });
     await expect(page.getByText("ข้อมูลสวนยาง", { exact: true })).toBeVisible();
     await expect(
-      page.getByText("รายละเอียดการปลูก", { exact: true })
+      page.getByText("รายละเอียดการปลูก", { exact: true }),
     ).toBeVisible();
     await expect(page.getByText("ยืนยันข้อมูล", { exact: true })).toBeVisible();
   });
@@ -210,7 +212,7 @@ test.describe("Farmer Applications Edit — Part 5 (UI/UX และ Navigation)"
         });
       } else {
         await expect(
-          page.getByText("ขั้นตอนที่ 1", { exact: true })
+          page.getByText("ขั้นตอนที่ 1", { exact: true }),
         ).toBeVisible({
           timeout: 10000,
         });

@@ -27,10 +27,10 @@ export function useAuditorGardenData(initialRows = 10) {
   const [toDate, setToDate] = useState<Date | null>(null);
   // province/district/subdistrict selection (ids)
   const [selectedProvinceId, setSelectedProvinceId] = useState<number | null>(
-    null
+    null,
   );
   const [selectedDistrictId, setSelectedDistrictId] = useState<number | null>(
-    null
+    null,
   );
   const [selectedSubDistrictId, setSelectedSubDistrictId] = useState<
     number | null
@@ -40,10 +40,10 @@ export function useAuditorGardenData(initialRows = 10) {
   const [appliedToDate, setAppliedToDate] = useState<Date | null>(null);
   // applied names for API params
   const [appliedProvinceName, setAppliedProvinceName] = useState<string | null>(
-    null
+    null,
   );
   const [appliedDistrictName, setAppliedDistrictName] = useState<string | null>(
-    null
+    null,
   );
   const [appliedSubDistrictName, setAppliedSubDistrictName] = useState<
     string | null
@@ -150,7 +150,7 @@ export function useAuditorGardenData(initialRows = 10) {
         });
         if (!resp.ok) {
           const err = await resp.json().catch(() => null);
-          throw new Error(err?.message || "Failed to create data record");
+          throw new Error(err?.userMessage || "บันทึกข้อมูลไม่สำเร็จ");
         }
         const data = await resp.json();
         // refresh list after create
@@ -164,7 +164,7 @@ export function useAuditorGardenData(initialRows = 10) {
         setSavingDataRecord(false);
       }
     },
-    [fetchItems]
+    [fetchItems],
   );
 
   const updateDataRecord = useCallback(
@@ -183,7 +183,7 @@ export function useAuditorGardenData(initialRows = 10) {
         });
         if (!resp.ok) {
           const err = await resp.json().catch(() => null);
-          throw new Error(err?.userMessage || "Failed to update data record");
+          throw new Error(err?.userMessage || "บันทึกข้อมูลไม่สำเร็จ");
         }
         const data = await resp.json();
         // refresh list after update
@@ -197,7 +197,7 @@ export function useAuditorGardenData(initialRows = 10) {
         setSavingDataRecord(false);
       }
     },
-    [fetchItems]
+    [fetchItems],
   );
 
   const handlePageChange = useCallback((event: DataTablePageEvent) => {
@@ -228,7 +228,7 @@ export function useAuditorGardenData(initialRows = 10) {
     // map selected ids to names using thaiProvinceData
     if (selectedProvinceId) {
       const prov: any = (thaiProvinceData as any).find(
-        (p: any) => p.id === selectedProvinceId
+        (p: any) => p.id === selectedProvinceId,
       );
       setAppliedProvinceName(prov?.name_th || null);
     } else {
@@ -240,7 +240,7 @@ export function useAuditorGardenData(initialRows = 10) {
       let districtName: string | null = null;
       for (const p of thaiProvinceData as any) {
         const found = (p.amphure || []).find(
-          (a: any) => a.id === selectedDistrictId
+          (a: any) => a.id === selectedDistrictId,
         );
         if (found) {
           districtName = found.name_th;
@@ -257,7 +257,7 @@ export function useAuditorGardenData(initialRows = 10) {
       for (const p of thaiProvinceData as any) {
         for (const a of p.amphure || []) {
           const found = (a.tambon || []).find(
-            (t: any) => t.id === selectedSubDistrictId
+            (t: any) => t.id === selectedSubDistrictId,
           );
           if (found) {
             subName = found.name_th;

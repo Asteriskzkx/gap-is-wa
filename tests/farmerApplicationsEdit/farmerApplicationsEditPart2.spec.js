@@ -18,39 +18,13 @@ async function clearAndType(locator, value) {
   }
 }
 
-async function selectFromAutoCompleteByTyping(page, { name, query, option }) {
-  const input = page.locator(`input[name="${name}"]`).first();
-  await expect(input).toBeVisible({ timeout: 10000 });
-
-  await input.click();
-  await clearAndType(input, query);
-
-  // Ensure suggestions panel is open (more reliable than relying on input focus).
-  const dropdownButton = page
-    .locator(`#${name}`)
-    .locator("button.p-autocomplete-dropdown")
-    .first();
-
-  // PrimeReact overlays can re-render while we click; add a small retry loop.
-  for (let attempt = 1; attempt <= 3; attempt++) {
-    await dropdownButton.click();
-
-    const panel = page.locator(".p-autocomplete-panel:visible").first();
-    await expect(panel).toBeVisible({ timeout: 10000 });
-
-    const desiredOption = panel
-      .getByRole("option", { name: option, exact: true })
-      .first();
-    await expect(desiredOption).toBeVisible({ timeout: 10000 });
-
-    try {
-      await desiredOption.click({ timeout: 5000, force: true });
-      await expect(panel).toBeHidden({ timeout: 10000 });
-      return;
-    } catch (error) {
-      if (attempt === 3) throw error;
-    }
-  }
+async function selectFromDropdown(page, { id, optionText }) {
+  const dropdown = page.locator(`#${id}`);
+  await dropdown.scrollIntoViewIfNeeded();
+  await dropdown.click();
+  await page.waitForSelector('[role="option"]', { timeout: 10000 });
+  await page.click(`[role="option"]:has-text("${optionText}")`);
+  await page.keyboard.press("Escape");
 }
 
 // ============================================================================
@@ -109,7 +83,7 @@ async function navigateAndSelectFarm(page) {
 
   // Wait for Step 2 to load
   await expect(
-    page.getByRole("heading", { name: "ข้อมูลสวนยาง", exact: true })
+    page.getByRole("heading", { name: "ข้อมูลสวนยาง", exact: true }),
   ).toBeVisible({ timeout: 10000 });
 }
 
@@ -173,41 +147,9 @@ async function fillStep2ValidData(page) {
   }
 
   // Province/amphure/tambon should already be prefilled in edit mode.
-  // Verify at least province is selected
-  const provinceInput = page.locator('input[name="provinceId"]').first();
-  const provinceValue = await provinceInput.inputValue();
-  if (!provinceValue) {
-    // If empty, select one
-    await selectFromAutoCompleteByTyping(page, {
-      name: "provinceId",
-      query: "ก",
-      option: /.+/,
-    });
-
-    // Amphure
-    const amphureInput = page.locator('input[name="amphureId"]').first();
-    await expect(amphureInput).toBeEnabled({ timeout: 10000 });
-    await page
-      .locator("#amphureId")
-      .locator("button.p-autocomplete-dropdown")
-      .first()
-      .click();
-    const amphureFirstOption = page.locator('[role="option"]:visible').first();
-    await expect(amphureFirstOption).toBeVisible({ timeout: 10000 });
-    await amphureFirstOption.click();
-
-    // Tambon
-    const tambonInput = page.locator('input[name="tambonId"]').first();
-    await expect(tambonInput).toBeEnabled({ timeout: 10000 });
-    await page
-      .locator("#tambonId")
-      .locator("button.p-autocomplete-dropdown")
-      .first()
-      .click();
-    const tambonFirstOption = page.locator('[role="option"]:visible').first();
-    await expect(tambonFirstOption).toBeVisible({ timeout: 10000 });
-    await tambonFirstOption.click();
-  }
+  // Verify at least province is selected (PrimaryDropdown)
+  const provinceDropdown = page.locator("#provinceId");
+  await expect(provinceDropdown).toContainText(/.+/, { timeout: 10000 });
 }
 
 // ============================================================================
@@ -223,7 +165,7 @@ test.describe("Farmer Applications Edit — Part 2 (Step 2: ข้อมูล�
 
     // Step 2 should now be visible with prefilled data
     await expect(
-      page.getByRole("heading", { name: "ข้อมูลสวนยาง", exact: true })
+      page.getByRole("heading", { name: "ข้อมูลสวนยาง", exact: true }),
     ).toBeVisible();
 
     // Check that at least villageName has a value (prefilled)
@@ -243,9 +185,13 @@ test.describe("Farmer Applications Edit — Part 2 (Step 2: ข้อมูล�
     const mooValue = await mooInput.inputValue();
     expect(parseInt(mooValue, 10) || 0).toBeGreaterThan(0);
 
-    // Check province/amphure/tambon are prefilled
-    const provinceInput = page.locator('input[name="provinceId"]').first();
-    await expect(provinceInput).not.toHaveValue("", { timeout: 10000 });
+    // Check province/amphure/tambon are prefilled (PrimaryDropdown)
+    const provinceDropdown = page.locator("#provinceId");
+    await expect(provinceDropdown).toContainText(/.+/, { timeout: 10000 });
+    await provinceDropdown.scrollIntoViewIfNeeded();
+    await expect(provinceDropdown).toBeVisible();
+
+    await page.waitForTimeout(3000);
   });
 
   test('TC-014: ล้าง "หมู่บ้าน/ชุมชน" แล้วกด "ถัดไป" — แสดง error', async ({
@@ -264,9 +210,9 @@ test.describe("Farmer Applications Edit — Part 2 (Step 2: ข้อมูล�
     const nextButton = getFormNextButton(page);
     await nextButton.click();
 
-    await expect(page.getByText(/กรุณากรอกข้อมูลสวนยางให้ครบถ้วน/)).toBeVisible(
-      { timeout: 5000 }
-    );
+    const errorMessage = page.getByText(/กรุณากรอกข้อมูลสวนยางให้ครบถ้วน/);
+    await errorMessage.scrollIntoViewIfNeeded();
+    await expect(errorMessage).toBeVisible({ timeout: 5000 });
   });
 
   test('TC-015: ล้าง "หมู่ที่" (InputNumber) แล้วกด "ถัดไป" — แสดง error', async ({
@@ -289,10 +235,11 @@ test.describe("Farmer Applications Edit — Part 2 (Step 2: ข้อมูล�
     const nextButton = getFormNextButton(page);
     await nextButton.click();
 
-    await expect(getErrorAlert(page)).toContainText(
-      /กรุณากรอกข้อมูลสวนยางให้ครบถ้วน/,
-      { timeout: 5000 }
-    );
+    const errorAlert = getErrorAlert(page);
+    await errorAlert.scrollIntoViewIfNeeded();
+    await expect(errorAlert).toContainText(/กรุณากรอกข้อมูลสวนยางให้ครบถ้วน/, {
+      timeout: 5000,
+    });
   });
 
   test('TC-016: ล้าง "ถนน" แล้วกด "ถัดไป" — แสดง error', async ({ page }) => {
@@ -309,10 +256,11 @@ test.describe("Farmer Applications Edit — Part 2 (Step 2: ข้อมูล�
     const nextButton = getFormNextButton(page);
     await nextButton.click();
 
-    await expect(getErrorAlert(page)).toContainText(
-      /กรุณากรอกข้อมูลสวนยางให้ครบถ้วน/,
-      { timeout: 5000 }
-    );
+    const errorAlert = getErrorAlert(page);
+    await errorAlert.scrollIntoViewIfNeeded();
+    await expect(errorAlert).toContainText(/กรุณากรอกข้อมูลสวนยางให้ครบถ้วน/, {
+      timeout: 5000,
+    });
   });
 
   test('TC-017: ล้าง "ซอย" แล้วกด "ถัดไป" — แสดง error', async ({ page }) => {
@@ -329,10 +277,11 @@ test.describe("Farmer Applications Edit — Part 2 (Step 2: ข้อมูล�
     const nextButton = getFormNextButton(page);
     await nextButton.click();
 
-    await expect(getErrorAlert(page)).toContainText(
-      /กรุณากรอกข้อมูลสวนยางให้ครบถ้วน/,
-      { timeout: 5000 }
-    );
+    const errorAlert = getErrorAlert(page);
+    await errorAlert.scrollIntoViewIfNeeded();
+    await expect(errorAlert).toContainText(/กรุณากรอกข้อมูลสวนยางให้ครบถ้วน/, {
+      timeout: 5000,
+    });
   });
 
   test("TC-018: ช่องจังหวัด/อำเภอ/ตำบล แสดงค่าเดิมและโต้ตอบได้", async ({
@@ -341,33 +290,31 @@ test.describe("Farmer Applications Edit — Part 2 (Step 2: ข้อมูล�
     await loginAsFarmer(page, USER_WITH_FARMS);
     await navigateAndSelectFarm(page);
 
-    const provinceInput = page.locator('input[name="provinceId"]').first();
-    const amphureInput = page.locator('input[name="amphureId"]').first();
-    const tambonInput = page.locator('input[name="tambonId"]').first();
+    // PrimaryDropdown - check they contain text (prefilled)
+    const provinceDropdown = page.locator("#provinceId");
+    const amphureDropdown = page.locator("#amphureId");
+    const tambonDropdown = page.locator("#tambonId");
 
-    await expect(provinceInput).not.toHaveValue("", { timeout: 10000 });
-    await expect(amphureInput).not.toHaveValue("", { timeout: 10000 });
-    await expect(tambonInput).not.toHaveValue("", { timeout: 10000 });
+    await expect(provinceDropdown).toContainText(/.+/, { timeout: 10000 });
+    await expect(amphureDropdown).toContainText(/.+/, { timeout: 10000 });
+    await expect(tambonDropdown).toContainText(/.+/, { timeout: 10000 });
 
-    // Open each listbox once to ensure it's interactive
-    // PrimeReact AutoComplete reliably opens via its dropdown button.
-    const provinceWidget = page.locator("#provinceId").first();
-    await provinceWidget.locator("button.p-autocomplete-dropdown").click();
-    await expect(page.locator("#provinceId_list")).toBeVisible({
+    // Open each dropdown once to ensure it's interactive
+    await provinceDropdown.scrollIntoViewIfNeeded();
+    await provinceDropdown.click();
+    await expect(page.locator('[role="option"]').first()).toBeVisible({
       timeout: 10000,
     });
     await page.keyboard.press("Escape");
 
-    const amphureWidget = page.locator("#amphureId").first();
-    await amphureWidget.locator("button.p-autocomplete-dropdown").click();
-    await expect(page.locator("#amphureId_list")).toBeVisible({
+    await amphureDropdown.click();
+    await expect(page.locator('[role="option"]').first()).toBeVisible({
       timeout: 10000,
     });
     await page.keyboard.press("Escape");
 
-    const tambonWidget = page.locator("#tambonId").first();
-    await tambonWidget.locator("button.p-autocomplete-dropdown").click();
-    await expect(page.locator("#tambonId_list")).toBeVisible({
+    await tambonDropdown.click();
+    await expect(page.locator('[role="option"]').first()).toBeVisible({
       timeout: 10000,
     });
     await page.keyboard.press("Escape");
@@ -379,11 +326,13 @@ test.describe("Farmer Applications Edit — Part 2 (Step 2: ข้อมูล�
     await loginAsFarmer(page, USER_WITH_FARMS);
     await navigateAndSelectFarm(page);
 
-    // Find the productDistributionType dropdown (Dropdown component)
-    const distributionDropdown = page
-      .locator("#productDistributionType")
-      .first();
-    await expect(distributionDropdown).toHaveClass(/p-disabled/);
+    // Find the productDistributionType dropdown (PrimaryDropdown component)
+    const distributionDropdown = page.locator("#productDistributionType");
+    await distributionDropdown.scrollIntoViewIfNeeded();
+    await expect(distributionDropdown).toHaveAttribute(
+      "data-p-disabled",
+      "true",
+    );
   });
 
   test("TC-020: เปลี่ยนจังหวัดแล้วสามารถเลือกอำเภอ/ตำบลใหม่ได้", async ({
@@ -392,33 +341,41 @@ test.describe("Farmer Applications Edit — Part 2 (Step 2: ข้อมูล�
     await loginAsFarmer(page, USER_WITH_FARMS);
     await navigateAndSelectFarm(page);
 
-    await selectFromAutoCompleteByTyping(page, {
-      name: "provinceId",
-      query: "เชียง",
-      option: "เชียงใหม่",
+    // Select new province using PrimaryDropdown
+    await selectFromDropdown(page, {
+      id: "provinceId",
+      optionText: "เชียงใหม่",
     });
 
-    const amphureInput = page.locator('input[name="amphureId"]').first();
-    await expect(amphureInput).toBeEnabled({ timeout: 10000 });
-    await page
-      .locator("#amphureId")
-      .locator("button.p-autocomplete-dropdown")
-      .first()
-      .click();
-    const amphureFirstOption = page.locator('[role="option"]:visible').first();
-    await expect(amphureFirstOption).toBeVisible({ timeout: 10000 });
-    await amphureFirstOption.click();
+    // Wait for amphure dropdown to be enabled
+    await page.waitForTimeout(1000);
+    const amphureDropdown = page.locator("#amphureId");
+    await expect(amphureDropdown).not.toHaveAttribute(
+      "data-p-disabled",
+      "true",
+      { timeout: 10000 },
+    );
 
-    const tambonInput = page.locator('input[name="tambonId"]').first();
-    await expect(tambonInput).toBeEnabled({ timeout: 10000 });
-    await page
-      .locator("#tambonId")
-      .locator("button.p-autocomplete-dropdown")
-      .first()
-      .click();
-    const tambonFirstOption = page.locator('[role="option"]:visible').first();
-    await expect(tambonFirstOption).toBeVisible({ timeout: 10000 });
-    await tambonFirstOption.click();
+    // Select amphure
+    await amphureDropdown.click();
+    await page.waitForSelector('[role="option"]', { timeout: 10000 });
+    await page.locator('[role="option"]').first().click();
+    await page.keyboard.press("Escape");
+
+    // Wait for tambon dropdown to be enabled
+    await page.waitForTimeout(1000);
+    const tambonDropdown = page.locator("#tambonId");
+    await expect(tambonDropdown).not.toHaveAttribute(
+      "data-p-disabled",
+      "true",
+      { timeout: 10000 },
+    );
+
+    // Select tambon
+    await tambonDropdown.click();
+    await page.waitForSelector('[role="option"]', { timeout: 10000 });
+    await page.locator('[role="option"]').first().click();
+    await page.keyboard.press("Escape");
   });
 
   test("TC-021: เปลี่ยนจังหวัดแล้วเลือกอำเภอ/ตำบลใหม่จนผ่านได้", async ({
@@ -430,34 +387,41 @@ test.describe("Farmer Applications Edit — Part 2 (Step 2: ข้อมูล�
     // Fill all other required fields first
     await fillStep2ValidData(page);
 
-    // Now change province and complete amphure/tambon
-    await selectFromAutoCompleteByTyping(page, {
-      name: "provinceId",
-      query: "เชียง",
-      option: "เชียงใหม่",
+    // Now change province and complete amphure/tambon using PrimaryDropdown
+    await selectFromDropdown(page, {
+      id: "provinceId",
+      optionText: "เชียงใหม่",
     });
 
-    const amphureInput = page.locator('input[name="amphureId"]').first();
-    await expect(amphureInput).toBeEnabled({ timeout: 10000 });
-    await page
-      .locator("#amphureId")
-      .locator("button.p-autocomplete-dropdown")
-      .first()
-      .click();
-    const amphureFirstOption = page.locator('[role="option"]:visible').first();
-    await expect(amphureFirstOption).toBeVisible({ timeout: 10000 });
-    await amphureFirstOption.click();
+    // Wait for amphure dropdown to be enabled
+    await page.waitForTimeout(1000);
+    const amphureDropdown = page.locator("#amphureId");
+    await expect(amphureDropdown).not.toHaveAttribute(
+      "data-p-disabled",
+      "true",
+      { timeout: 10000 },
+    );
 
-    const tambonInput = page.locator('input[name="tambonId"]').first();
-    await expect(tambonInput).toBeEnabled({ timeout: 10000 });
-    await page
-      .locator("#tambonId")
-      .locator("button.p-autocomplete-dropdown")
-      .first()
-      .click();
-    const tambonFirstOption = page.locator('[role="option"]:visible').first();
-    await expect(tambonFirstOption).toBeVisible({ timeout: 10000 });
-    await tambonFirstOption.click();
+    // Select amphure
+    await amphureDropdown.click();
+    await page.waitForSelector('[role="option"]', { timeout: 10000 });
+    await page.locator('[role="option"]').first().click();
+    await page.keyboard.press("Escape");
+
+    // Wait for tambon dropdown to be enabled
+    await page.waitForTimeout(1000);
+    const tambonDropdown = page.locator("#tambonId");
+    await expect(tambonDropdown).not.toHaveAttribute(
+      "data-p-disabled",
+      "true",
+      { timeout: 10000 },
+    );
+
+    // Select tambon
+    await tambonDropdown.click();
+    await page.waitForSelector('[role="option"]', { timeout: 10000 });
+    await page.locator('[role="option"]').first().click();
+    await page.keyboard.press("Escape");
 
     // Now try next
     const nextButton = getFormNextButton(page);
@@ -465,7 +429,7 @@ test.describe("Farmer Applications Edit — Part 2 (Step 2: ข้อมูล�
 
     // Should proceed to Step 3
     await expect(
-      page.getByRole("heading", { name: "รายละเอียดการปลูก" })
+      page.getByRole("heading", { name: "รายละเอียดการปลูก" }),
     ).toBeVisible({ timeout: 10000 });
   });
 
@@ -510,7 +474,7 @@ test.describe("Farmer Applications Edit — Part 2 (Step 2: ข้อมูล�
 
     // Now in Step 2
     await expect(
-      page.getByRole("heading", { name: "ข้อมูลสวนยาง", exact: true })
+      page.getByRole("heading", { name: "ข้อมูลสวนยาง", exact: true }),
     ).toBeVisible();
 
     const backButton = getFormBackButton(page);
@@ -518,7 +482,7 @@ test.describe("Farmer Applications Edit — Part 2 (Step 2: ข้อมูล�
 
     // Should be back at Step 1
     await expect(
-      page.getByRole("heading", { name: "เลือกสวนยางที่ต้องการแก้ไข" })
+      page.getByRole("heading", { name: "เลือกสวนยางที่ต้องการแก้ไข" }),
     ).toBeVisible({ timeout: 5000 });
 
     // The selected farm should still be highlighted
@@ -539,7 +503,7 @@ test.describe("Farmer Applications Edit — Part 2 (Step 2: ข้อมูล�
 
     // Should proceed to Step 3
     await expect(
-      page.getByRole("heading", { name: "รายละเอียดการปลูก" })
+      page.getByRole("heading", { name: "รายละเอียดการปลูก" }),
     ).toBeVisible({ timeout: 10000 });
   });
 
@@ -559,12 +523,12 @@ test.describe("Farmer Applications Edit — Part 2 (Step 2: ข้อมูล�
     });
 
     await expect(
-      page.getByRole("heading", { name: "เลือกสวนยางที่ต้องการแก้ไข" })
+      page.getByRole("heading", { name: "เลือกสวนยางที่ต้องการแก้ไข" }),
     ).toBeVisible({ timeout: 10000 });
 
     await expect(getErrorAlert(page)).toContainText(
       /ไม่สามารถดึงข้อมูลสวนยางได้/,
-      { timeout: 20000 }
+      { timeout: 20000 },
     );
   });
 
@@ -589,7 +553,7 @@ test.describe("Farmer Applications Edit — Part 2 (Step 2: ข้อมูล�
     await nextButton.click();
 
     await expect(
-      page.getByRole("heading", { name: "รายละเอียดการปลูก" })
+      page.getByRole("heading", { name: "รายละเอียดการปลูก" }),
     ).toBeVisible({ timeout: 10000 });
 
     // Go back to Step 2
@@ -597,7 +561,7 @@ test.describe("Farmer Applications Edit — Part 2 (Step 2: ข้อมูล�
     await backButton.click();
 
     await expect(
-      page.getByRole("heading", { name: "ข้อมูลสวนยาง", exact: true })
+      page.getByRole("heading", { name: "ข้อมูลสวนยาง", exact: true }),
     ).toBeVisible({ timeout: 5000 });
 
     // Check that modified value is still there

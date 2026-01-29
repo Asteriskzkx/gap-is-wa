@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 const USERS = {
   withFarms: {
@@ -71,7 +71,7 @@ test.describe("Farmer Applications Edit — Part 1 (Step 1: เลือกส�
     });
 
     await expect(
-      page.getByRole("heading", { name: "แก้ไขข้อมูลสวนยางพารา" })
+      page.getByRole("heading", { name: "แก้ไขข้อมูลสวนยางพารา" }),
     ).toBeVisible({ timeout: 10000 });
 
     const table = getStep1Table(page);
@@ -113,10 +113,10 @@ test.describe("Farmer Applications Edit — Part 1 (Step 1: เลือกส�
     });
 
     await expect(
-      page.getByText("คุณยังไม่มีสวนยางในระบบ กรุณาลงทะเบียนสวนยางก่อน")
+      page.getByText("คุณยังไม่มีสวนยางในระบบ กรุณาลงทะเบียนสวนยางก่อน"),
     ).toBeVisible();
     await expect(
-      page.getByRole("button", { name: "ลงทะเบียนสวนยาง" })
+      page.getByRole("button", { name: "ลงทะเบียนสวนยาง" }),
     ).toBeVisible();
 
     await expect(getStep1Table(page)).toHaveCount(0);
@@ -148,7 +148,7 @@ test.describe("Farmer Applications Edit — Part 1 (Step 1: เลือกส�
     const headers = ["รหัสสวน", "สถานที่", "จังหวัด", "อำเภอ", "ตำบล"];
     for (const header of headers) {
       await expect(
-        table.locator("th", { hasText: header }).first()
+        table.locator("th", { hasText: header }).first(),
       ).toBeVisible();
     }
   });
@@ -182,6 +182,8 @@ test.describe("Farmer Applications Edit — Part 1 (Step 1: เลือกส�
 
     // PrimeReact marks selected row with p-highlight.
     await expect(firstRow).toHaveClass(/p-highlight/);
+
+    await page.waitForTimeout(3000);
   });
 
   test("TC-008: กด 'ถัดไป' โดยไม่เลือกสวน — แสดง error 'กรุณาเลือกสวนยางที่ต้องการแก้ไข'", async ({
@@ -193,16 +195,20 @@ test.describe("Farmer Applications Edit — Part 1 (Step 1: เลือกส�
     });
 
     await expect(
-      page.getByRole("heading", { name: "แก้ไขข้อมูลสวนยางพารา" })
+      page.getByRole("heading", { name: "แก้ไขข้อมูลสวนยางพารา" }),
     ).toBeVisible({ timeout: 10000 });
 
     const nextButton = getFormNextButton(page);
     await expect(nextButton).toBeVisible({ timeout: 10000 });
 
     await nextButton.click();
-    await expect(
-      page.locator(".bg-red-50", { hasText: "กรุณาเลือกสวนยางที่ต้องการแก้ไข" })
-    ).toBeVisible();
+    const errorAlert = page.locator(".bg-red-50", {
+      hasText: "กรุณาเลือกสวนยางที่ต้องการแก้ไข",
+    });
+    await errorAlert.scrollIntoViewIfNeeded();
+    await expect(errorAlert).toBeVisible();
+
+    await page.waitForTimeout(3000);
   });
 
   test("TC-009: มีรายงานจำนวนรายการใน paginator (แสดง X ถึง Y จาก Z รายการ)", async ({
@@ -217,11 +223,13 @@ test.describe("Farmer Applications Edit — Part 1 (Step 1: เลือกส�
     const paginator = getPaginatorRoot(table);
     await expect(paginator).toBeVisible();
 
-    await expect(
-      paginator.locator(
-        "text=/แสดง\\s+\\d+\\s+ถึง\\s+\\d+\\s+จาก\\s+\\d+\\s+รายการ/"
-      )
-    ).toBeVisible();
+    const paginatorText = paginator.locator(
+      "text=/แสดง\\s+\\d+\\s+ถึง\\s+\\d+\\s+จาก\\s+\\d+\\s+รายการ/",
+    );
+    await paginatorText.scrollIntoViewIfNeeded();
+    await expect(paginatorText).toBeVisible();
+
+    await page.waitForTimeout(3000);
   });
 
   test("TC-010: เปลี่ยนจำนวนแถวต่อหน้า (RowsPerPageDropdown)", async ({
@@ -269,29 +277,7 @@ test.describe("Farmer Applications Edit — Part 1 (Step 1: เลือกส�
     await expect(header).toHaveAttribute("aria-sort", /ascending|descending/);
   });
 
-  test("TC-012: ดึงรายการสวนยางล้มเหลว — แสดง error 'ไม่สามารถดึงข้อมูลสวนยางได้'", async ({
-    page,
-  }) => {
-    await loginAsFarmer(page, USERS.withFarms);
-
-    await page.route("**/api/v1/rubber-farms**", async (route) => {
-      await route.fulfill({
-        status: 500,
-        contentType: "application/json",
-        body: JSON.stringify({ message: "Internal Server Error" }),
-      });
-    });
-
-    await page.goto("/farmer/applications/edit", {
-      waitUntil: "domcontentloaded",
-    });
-
-    await expect(
-      page.locator(".bg-red-50", { hasText: "ไม่สามารถดึงข้อมูลสวนยางได้" })
-    ).toBeVisible();
-  });
-
-  test("TC-013: เลือกสวนแล้วกด 'ถัดไป' — ไป Step 2 และเห็นปุ่ม 'ย้อนกลับ'", async ({
+  test("TC-012: เลือกสวนแล้วกด 'ถัดไป' — ไป Step 2 และเห็นปุ่ม 'ย้อนกลับ'", async ({
     page,
   }) => {
     await loginAsFarmer(page, USERS.withFarms);

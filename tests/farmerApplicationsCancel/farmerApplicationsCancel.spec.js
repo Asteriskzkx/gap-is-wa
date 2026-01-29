@@ -8,6 +8,16 @@ const USERS = {
   },
 };
 
+const INSPECTION_BASE = 2025050000;
+
+function formatInspectionNo(value) {
+  return String(value ?? "").replace(/,/g, "");
+}
+
+function inspectionNoFromSequence(sequence) {
+  return formatInspectionNo(INSPECTION_BASE + sequence);
+}
+
 async function loginAsFarmer(page) {
   await page.goto("/", { waitUntil: "domcontentloaded" });
   await page.getByRole("button", { name: "เกษตรกร" }).click();
@@ -48,7 +58,7 @@ async function gotoCancelPage(page) {
     waitUntil: "domcontentloaded",
   });
   await expect(
-    page.getByRole("heading", { name: "ขอยกเลิกใบรับรองแหล่งผลิต" })
+    page.getByRole("heading", { name: "ขอยกเลิกใบรับรองแหล่งผลิต" }),
   ).toBeVisible({ timeout: 10000 });
 }
 
@@ -86,12 +96,12 @@ function buildCertificate({
 }
 
 function buildInspection({
-  inspectionNo = "INSP-0001",
+  inspectionNo = INSPECTION_BASE + 1,
   inspectionDateAndTime = "2025-11-15T10:00:00+07:00",
   rubberFarm = {},
 } = {}) {
   return {
-    inspectionNo,
+    inspectionNo: formatInspectionNo(inspectionNo),
     inspectionDateAndTime,
     rubberFarm: {
       villageName: "บ้านทดสอบ",
@@ -119,7 +129,7 @@ async function mockRevokeList(page, handler) {
           : JSON.stringify(response?.body ?? {});
 
       await route.fulfill({ status, contentType: "application/json", body });
-    }
+    },
   );
 }
 
@@ -155,7 +165,7 @@ async function mockEditCancelRequestDetail(page, handler) {
           ? response.body
           : JSON.stringify(response?.body ?? {});
       await route.fulfill({ status, contentType: "application/json", body });
-    }
+    },
   );
 }
 
@@ -209,13 +219,13 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
 
       await gotoCancelPage(page);
       await expect(
-        page.getByText("ขอยกเลิกใบรับรองแหล่งผลิตที่ไม่ประสงค์จะรับรองต่อ")
+        page.getByText("ขอยกเลิกใบรับรองแหล่งผลิตที่ไม่ประสงค์จะรับรองต่อ"),
       ).toBeVisible();
       await expect(
-        page.getByText("เลือกใบรับรอง", { exact: true })
+        page.getByText("เลือกใบรับรอง", { exact: true }),
       ).toBeVisible();
       await expect(
-        page.getByText("ขอยกเลิกใบรับรอง", { exact: true })
+        page.getByText("ขอยกเลิกใบรับรอง", { exact: true }),
       ).toBeVisible();
     });
 
@@ -230,14 +240,14 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
       await expect(page.getByRole("button", { name: "ค้นหา" })).toBeVisible();
       await expect(page.getByRole("button", { name: "ล้างค่า" })).toBeVisible();
       await expect(
-        page.getByRole("button", { name: "ใบรับรองทั้งหมด" })
+        page.getByRole("button", { name: "ใบรับรองทั้งหมด" }),
       ).toBeVisible();
       await expect(
-        page.getByRole("button", { name: "ใบรับรองที่ขอยกเลิก" })
+        page.getByRole("button", { name: "ใบรับรองที่ขอยกเลิก" }),
       ).toBeVisible();
 
       await expect(page.getByText("รายละเอียดคำขอยกเลิกใบรับรอง")).toHaveCount(
-        0
+        0,
       );
       await expect(page.locator("#cancelRequestDetail")).toHaveCount(0);
     });
@@ -271,7 +281,9 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
       const certs = [
         buildCertificate({
           certificateId: 1001,
-          inspection: buildInspection({ inspectionNo: "INSP-1001" }),
+          inspection: buildInspection({
+            inspectionNo: inspectionNoFromSequence(1),
+          }),
         }),
       ];
 
@@ -288,27 +300,27 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
       const table = getTable(page);
 
       await expect(
-        table.getByRole("columnheader", { name: "รหัสใบรับรอง" })
+        table.getByRole("columnheader", { name: "รหัสใบรับรอง" }),
       ).toBeVisible();
       await expect(
-        table.getByRole("columnheader", { name: "รหัสการตรวจ" })
+        table.getByRole("columnheader", { name: "รหัสการตรวจ" }),
       ).toBeVisible();
       await expect(
-        table.getByRole("columnheader", { name: "วันที่ตรวจ" })
+        table.getByRole("columnheader", { name: "วันที่ตรวจ" }),
       ).toBeVisible();
       await expect(
-        table.getByRole("columnheader", { name: "สถานที่" })
+        table.getByRole("columnheader", { name: "สถานที่" }),
       ).toBeVisible();
       await expect(
-        table.getByRole("columnheader", { name: "วันที่มีผล" })
+        table.getByRole("columnheader", { name: "วันที่มีผล" }),
       ).toBeVisible();
       await expect(
-        table.getByRole("columnheader", { name: "วันที่หมดอายุ" })
+        table.getByRole("columnheader", { name: "วันที่หมดอายุ" }),
       ).toBeVisible();
 
       await expect(table.locator("tbody tr")).toHaveCount(1);
       await expect(table.locator("tbody tr button:has(.pi-eye)")).toHaveCount(
-        1
+        1,
       );
     });
 
@@ -329,13 +341,13 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
       await expect(table.locator("tbody tr")).toHaveCount(1);
 
       await expect(table.locator('td[data-label="รหัสการตรวจ"]')).toContainText(
-        "-"
+        "-",
       );
       await expect(table.locator('td[data-label="วันที่ตรวจ"]')).toContainText(
-        "-"
+        "-",
       );
       await expect(table.locator('td[data-label="สถานที่"]')).toContainText(
-        "-"
+        "-",
       );
     });
 
@@ -412,7 +424,9 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
           certificateId: 2001,
           cancelRequestFlag: true,
           activeFlag: true,
-          inspection: buildInspection({ inspectionNo: "INSP-2001" }),
+          inspection: buildInspection({
+            inspectionNo: inspectionNoFromSequence(2),
+          }),
         }),
       ];
 
@@ -428,9 +442,9 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
       await page.getByRole("button", { name: "ใบรับรองที่ขอยกเลิก" }).click();
 
       const table = getTable(page);
-      await expect(table.locator('td[data-label="สถานะ"]')).toContainText(
-        "ยื่นขอยกเลิกแล้ว"
-      );
+      const row = table.locator("tbody tr").first();
+      await expect(row).toBeVisible();
+      await expect(row).toContainText("ยื่นขอยกเลิกแล้ว");
     });
 
     test("TC-012: แสดงสถานะ “ยกเลิกใบรับรองแล้ว”", async ({ page }) => {
@@ -439,7 +453,9 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
           certificateId: 2002,
           cancelRequestFlag: true,
           activeFlag: false,
-          inspection: buildInspection({ inspectionNo: "INSP-2002" }),
+          inspection: buildInspection({
+            inspectionNo: inspectionNoFromSequence(3),
+          }),
         }),
       ];
 
@@ -455,7 +471,7 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
 
       const table = getTable(page);
       await expect(table.locator('td[data-label="สถานะ"]')).toContainText(
-        "ยกเลิกใบรับรองแล้ว"
+        "ยกเลิกใบรับรองแล้ว",
       );
     });
 
@@ -474,7 +490,7 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
 
       // Wait for the cancel-request tab UI to render (it shows "สถานะ" column instead of actions).
       await expect(
-        getTable(page).getByRole("columnheader", { name: "สถานะ" })
+        getTable(page).getByRole("columnheader", { name: "สถานะ" }),
       ).toBeVisible();
       await expect(getStepNextButton(page)).toHaveCount(0);
     });
@@ -502,7 +518,9 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
       const certs = [
         buildCertificate({
           certificateId: 3001,
-          inspection: buildInspection({ inspectionNo: "INSP-3001" }),
+          inspection: buildInspection({
+            inspectionNo: inspectionNoFromSequence(4),
+          }),
         }),
       ];
       await mockRevokeList(page, async () => ({
@@ -519,7 +537,9 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
       const certs = [
         buildCertificate({
           certificateId: 3002,
-          inspection: buildInspection({ inspectionNo: "INSP-3002" }),
+          inspection: buildInspection({
+            inspectionNo: inspectionNoFromSequence(5),
+          }),
         }),
       ];
       await mockRevokeList(page, async () => ({
@@ -539,11 +559,15 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
       const certs = [
         buildCertificate({
           certificateId: 3003,
-          inspection: buildInspection({ inspectionNo: "INSP-3003" }),
+          inspection: buildInspection({
+            inspectionNo: inspectionNoFromSequence(6),
+          }),
         }),
         buildCertificate({
           certificateId: 3004,
-          inspection: buildInspection({ inspectionNo: "INSP-3004" }),
+          inspection: buildInspection({
+            inspectionNo: inspectionNoFromSequence(7),
+          }),
         }),
       ];
       await mockRevokeList(page, async () => ({
@@ -567,8 +591,10 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
       const all = Array.from({ length: total }, (_, i) =>
         buildCertificate({
           certificateId: 4000 + i + 1,
-          inspection: buildInspection({ inspectionNo: `INSP-${4000 + i + 1}` }),
-        })
+          inspection: buildInspection({
+            inspectionNo: inspectionNoFromSequence(10 + i),
+          }),
+        }),
       );
 
       await mockRevokeList(page, async ({ offset, limit }) => {
@@ -583,6 +609,9 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
 
       const paginator = table.locator(".p-paginator").first();
       const rowsPerPageDropdown = paginator.locator(".p-dropdown").first();
+      await rowsPerPageDropdown.scrollIntoViewIfNeeded();
+      await expect(rowsPerPageDropdown).toBeVisible();
+      await page.waitForTimeout(3000);
       await rowsPerPageDropdown.click();
       const dropdownPanel = page.locator(".p-dropdown-panel").first();
       await expect(dropdownPanel).toBeVisible();
@@ -601,8 +630,10 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
       const all = Array.from({ length: total }, (_, i) =>
         buildCertificate({
           certificateId: 5000 + i + 1,
-          inspection: buildInspection({ inspectionNo: `INSP-${5000 + i + 1}` }),
-        })
+          inspection: buildInspection({
+            inspectionNo: inspectionNoFromSequence(100 + i),
+          }),
+        }),
       );
 
       await mockRevokeList(page, async ({ offset, limit }) => {
@@ -614,7 +645,7 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
       const table = getTable(page);
 
       await expect(
-        table.locator('td[data-label="รหัสใบรับรอง"]').first()
+        table.locator('td[data-label="รหัสใบรับรอง"]').first(),
       ).toContainText("5001");
 
       await table
@@ -623,7 +654,7 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
         .click();
 
       await expect(
-        table.locator('td[data-label="รหัสใบรับรอง"]').first()
+        table.locator('td[data-label="รหัสใบรับรอง"]').first(),
       ).toContainText("5011");
     });
 
@@ -664,7 +695,7 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
       await gotoCancelPage(page);
       const table = getTable(page);
       await expect(
-        table.locator('td[data-label="รหัสใบรับรอง"]').first()
+        table.locator('td[data-label="รหัสใบรับรอง"]').first(),
       ).toContainText("6003");
 
       const header = table.locator("th", { hasText: "รหัสใบรับรอง" }).first();
@@ -672,7 +703,7 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
 
       await expect(header).toHaveAttribute("aria-sort", /ascending|descending/);
       await expect(
-        table.locator('td[data-label="รหัสใบรับรอง"]').first()
+        table.locator('td[data-label="รหัสใบรับรอง"]').first(),
       ).toContainText("6001");
     });
 
@@ -680,11 +711,15 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
       const certs = [
         buildCertificate({
           certificateId: 7001,
-          inspection: buildInspection({ inspectionNo: "INSP-7001" }),
+          inspection: buildInspection({
+            inspectionNo: inspectionNoFromSequence(20),
+          }),
         }),
         buildCertificate({
           certificateId: 7002,
-          inspection: buildInspection({ inspectionNo: "INSP-7002" }),
+          inspection: buildInspection({
+            inspectionNo: inspectionNoFromSequence(21),
+          }),
         }),
       ];
 
@@ -710,12 +745,12 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
     });
 
     test("TC-022: กดปุ่ม eye แล้วเปิดไฟล์ได้", async ({ page }) => {
-      await installWindowOpenSpy(page);
-
       const certs = [
         buildCertificate({
           certificateId: 8001,
-          inspection: buildInspection({ inspectionNo: "INSP-8001" }),
+          inspection: buildInspection({
+            inspectionNo: inspectionNoFromSequence(30),
+          }),
         }),
       ];
 
@@ -727,7 +762,12 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
         if (url.searchParams.get("idReference") === "8001") {
           return {
             body: {
-              files: [{ url: "https://example.com/certificate-8001.pdf" }],
+              files: [
+                {
+                  url: "https://example.com/certificate-8001.pdf",
+                  fileName: "certificate-8001.pdf",
+                },
+              ],
             },
           };
         }
@@ -738,25 +778,23 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
       const table = getTable(page);
       await table.locator("tbody tr button:has(.pi-eye)").first().click();
 
-      await expect
-        .poll(async () => {
-          return await page.evaluate(() => window.__openedUrls?.length || 0);
-        })
-        .toBeGreaterThan(0);
-
-      await expect
-        .poll(async () => {
-          const urls = await page.evaluate(() => window.__openedUrls || []);
-          return urls[0] || "";
-        })
-        .toContain("certificate-8001.pdf");
+      await expect(
+        page.getByRole("button", { name: "ย้อนกลับ" }),
+      ).toBeVisible();
+      await expect(page.getByText("certificate-8001.pdf")).toBeVisible();
+      await expect(page.locator('iframe[title="PDF Viewer"]')).toHaveAttribute(
+        "src",
+        /certificate-8001\.pdf/,
+      );
     });
 
     test("TC-023: กดปุ่ม eye แต่ไม่มีไฟล์", async ({ page }) => {
       const certs = [
         buildCertificate({
           certificateId: 8002,
-          inspection: buildInspection({ inspectionNo: "INSP-8002" }),
+          inspection: buildInspection({
+            inspectionNo: inspectionNoFromSequence(31),
+          }),
         }),
       ];
 
@@ -772,14 +810,18 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
       const table = getTable(page);
       await table.locator("tbody tr button:has(.pi-eye)").first().click();
 
-      await expect(page.getByText("ไม่พบไฟล์สำหรับใบรับรองนี้")).toBeVisible();
+      const noFileToast = page.getByText("ไม่พบไฟล์สำหรับใบรับรองนี้");
+      await noFileToast.scrollIntoViewIfNeeded();
+      await expect(noFileToast).toBeVisible();
     });
 
     test("TC-024: กดปุ่ม eye แล้ว API error", async ({ page }) => {
       const certs = [
         buildCertificate({
           certificateId: 8003,
-          inspection: buildInspection({ inspectionNo: "INSP-8003" }),
+          inspection: buildInspection({
+            inspectionNo: inspectionNoFromSequence(32),
+          }),
         }),
       ];
 
@@ -796,14 +838,18 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
       const table = getTable(page);
       await table.locator("tbody tr button:has(.pi-eye)").first().click();
 
-      await expect(page.getByText("เกิดข้อผิดพลาดขณะดึงไฟล์")).toBeVisible();
+      const errorToast = page.getByText("เกิดข้อผิดพลาดขณะดึงไฟล์");
+      await errorToast.scrollIntoViewIfNeeded();
+      await expect(errorToast).toBeVisible();
     });
 
     test("TC-025: ไป Step 2 ได้เมื่อเลือกใบรับรอง", async ({ page }) => {
       const certs = [
         buildCertificate({
           certificateId: 9001,
-          inspection: buildInspection({ inspectionNo: "INSP-9001" }),
+          inspection: buildInspection({
+            inspectionNo: inspectionNoFromSequence(40),
+          }),
         }),
       ];
 
@@ -817,7 +863,7 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
       await getStepNextButton(page).click();
 
       await expect(
-        page.getByText("รายละเอียดคำขอยกเลิกใบรับรอง")
+        page.getByText("รายละเอียดคำขอยกเลิกใบรับรอง"),
       ).toBeVisible();
       await expect(page.locator("#cancelRequestDetail")).toBeVisible();
     });
@@ -829,7 +875,9 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
         buildCertificate({
           certificateId: 9002,
           cancelRequestDetail: "รายละเอียดเดิม",
-          inspection: buildInspection({ inspectionNo: "INSP-9002" }),
+          inspection: buildInspection({
+            inspectionNo: inspectionNoFromSequence(41),
+          }),
         }),
       ];
 
@@ -843,7 +891,7 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
       await getStepNextButton(page).click();
 
       await expect(page.locator("#cancelRequestDetail")).toHaveValue(
-        "รายละเอียดเดิม"
+        "รายละเอียดเดิม",
       );
     });
 
@@ -854,7 +902,9 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
         buildCertificate({
           certificateId: 9003,
           cancelRequestDetail: "",
-          inspection: buildInspection({ inspectionNo: "INSP-9003" }),
+          inspection: buildInspection({
+            inspectionNo: inspectionNoFromSequence(42),
+          }),
         }),
       ];
 
@@ -867,7 +917,7 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
       await getStepNextButton(page).click();
 
       await expect(
-        page.getByRole("button", { name: "บันทึกคำขอยกเลิก" })
+        page.getByRole("button", { name: "บันทึกคำขอยกเลิก" }),
       ).toBeDisabled();
     });
 
@@ -878,7 +928,9 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
         buildCertificate({
           certificateId: 9004,
           cancelRequestDetail: "",
-          inspection: buildInspection({ inspectionNo: "INSP-9004" }),
+          inspection: buildInspection({
+            inspectionNo: inspectionNoFromSequence(43),
+          }),
         }),
       ];
 
@@ -892,7 +944,7 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
 
       await page.locator("#cancelRequestDetail").fill("   ");
       await expect(
-        page.getByRole("button", { name: "บันทึกคำขอยกเลิก" })
+        page.getByRole("button", { name: "บันทึกคำขอยกเลิก" }),
       ).toBeDisabled();
     });
 
@@ -901,7 +953,9 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
         buildCertificate({
           certificateId: 9005,
           cancelRequestDetail: "",
-          inspection: buildInspection({ inspectionNo: "INSP-9005" }),
+          inspection: buildInspection({
+            inspectionNo: inspectionNoFromSequence(44),
+          }),
         }),
       ];
 
@@ -925,7 +979,9 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
           certificateId: 9200,
           cancelRequestDetail: "",
           version: 3,
-          inspection: buildInspection({ inspectionNo: "INSP-9200" }),
+          inspection: buildInspection({
+            inspectionNo: inspectionNoFromSequence(50),
+          }),
         }),
       ];
 
@@ -949,14 +1005,14 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
       await saveButton.click();
 
       await expect(
-        page.getByText("บันทึกคำขอยกเลิกเรียบร้อยแล้ว")
+        page.getByText("บันทึกคำขอยกเลิกเรียบร้อยแล้ว"),
       ).toBeVisible();
       await expect(page.getByText("รายละเอียดคำขอยกเลิกใบรับรอง")).toHaveCount(
-        0
+        0,
       );
       await expect(getStepNextButton(page)).toBeDisabled();
       await expect(getTable(page).locator("tbody tr.bg-green-50")).toHaveCount(
-        0
+        0,
       );
     });
 
@@ -966,7 +1022,9 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
           certificateId: 9300,
           cancelRequestDetail: "",
           version: 1,
-          inspection: buildInspection({ inspectionNo: "INSP-9300" }),
+          inspection: buildInspection({
+            inspectionNo: inspectionNoFromSequence(51),
+          }),
         }),
       ];
 
@@ -986,14 +1044,14 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
       await page.locator("#cancelRequestDetail").fill("ข้อความจะต้องยังอยู่");
       await page.getByRole("button", { name: "บันทึกคำขอยกเลิก" }).click();
 
+      const errorToast = page.getByText("เกิดข้อผิดพลาดขณะบันทึกคำขอยกเลิก");
+      await errorToast.scrollIntoViewIfNeeded();
+      await expect(errorToast).toBeVisible();
       await expect(
-        page.getByText("เกิดข้อผิดพลาดขณะบันทึกคำขอยกเลิก")
-      ).toBeVisible();
-      await expect(
-        page.getByText("รายละเอียดคำขอยกเลิกใบรับรอง")
+        page.getByText("รายละเอียดคำขอยกเลิกใบรับรอง"),
       ).toBeVisible();
       await expect(page.locator("#cancelRequestDetail")).toHaveValue(
-        "ข้อความจะต้องยังอยู่"
+        "ข้อความจะต้องยังอยู่",
       );
     });
 
@@ -1005,7 +1063,9 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
           certificateId: 9400,
           cancelRequestDetail: "",
           version: 1,
-          inspection: buildInspection({ inspectionNo: "INSP-9400" }),
+          inspection: buildInspection({
+            inspectionNo: inspectionNoFromSequence(52),
+          }),
         }),
       ];
 

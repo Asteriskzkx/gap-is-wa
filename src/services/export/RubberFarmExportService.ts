@@ -41,8 +41,8 @@ export class RubberFarmExportService {
                 { header: "วันที่และเวลาตรวจสอบ", key: "inspectionDateAndTime", width: 25 },
                 { header: "สถานะการตรวจสอบ", key: "inspectionStatus", width: 20 },
                 { header: "ผลการตรวจสอบ", key: "inspectionResult", width: 20 },
-                { header: "รหัสหัวหน้าผู้ตรวจสอบ", key: "auditorChiefId", width: 20 },
-                { header: "ชื่อหัวหน้าผู้ตรวจสอบ", key: "auditor_name", width: 25 },
+                { header: "รหัสหัวหน้าผู้ตรวจประเมิน", key: "auditorChiefId", width: 20 },
+                { header: "ชื่อหัวหน้าผู้ตรวจประเมิน", key: "auditor_name", width: 25 },
             ],
             rubberFarms
         );  

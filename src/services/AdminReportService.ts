@@ -419,7 +419,7 @@ export class AdminReportService {
   ): Promise<InspectionReportSummary> {
     try {
       const whereClause = startDate && endDate
-        ? { createdAt: { gte: startDate, lte: endDate } }
+        ? { inspectionDateAndTime: { gte: startDate, lte: endDate } }
         : {};
 
       // Get total inspections

@@ -4,6 +4,8 @@ import { expect, test } from "@playwright/test";
 const BASE_URL = "http://localhost:3000";
 
 test.describe("1. การเลือก Role และ Validation พื้นฐาน", () => {
+  test.describe.configure({ mode: "serial" });
+
   test("TC-001: เลือก Role เกษตรกร", async ({ page }) => {
     await page.goto(BASE_URL);
 
@@ -28,7 +30,7 @@ test.describe("1. การเลือก Role และ Validation พื้�
 
     // ตรวจสอบว่าซ่อนลิงก์สมัครสมาชิก
     await expect(
-      page.locator('a:has-text("สมัครสมาชิกใหม่")')
+      page.locator('a:has-text("สมัครสมาชิกใหม่")'),
     ).not.toBeVisible();
   });
 
@@ -42,7 +44,7 @@ test.describe("1. การเลือก Role และ Validation พื้�
 
     // ตรวจสอบว่าซ่อนลิงก์สมัครสมาชิก
     await expect(
-      page.locator('a:has-text("สมัครสมาชิกใหม่")')
+      page.locator('a:has-text("สมัครสมาชิกใหม่")'),
     ).not.toBeVisible();
   });
 
@@ -56,12 +58,14 @@ test.describe("1. การเลือก Role และ Validation พื้�
 
     // ตรวจสอบว่าซ่อนลิงก์สมัครสมาชิก
     await expect(
-      page.locator('a:has-text("สมัครสมาชิกใหม่")')
+      page.locator('a:has-text("สมัครสมาชิกใหม่")'),
     ).not.toBeVisible();
   });
 });
 
 test.describe("2. Form Validation", () => {
+  test.describe.configure({ mode: "serial" });
+
   test("TC-005: ไม่กรอกอีเมล", async ({ page }) => {
     await page.goto(BASE_URL);
 
@@ -113,12 +117,14 @@ test.describe("2. Form Validation", () => {
     await page.click('button[type="submit"]');
 
     await expect(
-      page.locator('text="รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร"')
+      page.locator('text="รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร"'),
     ).toBeVisible();
   });
 });
 
 test.describe("3. UI/UX และ Navigation", () => {
+  test.describe.configure({ mode: "serial" });
+
   test("TC-010: คลิกลิงก์สมัครสมาชิกใหม่ (เกษตรกร)", async ({ page }) => {
     await page.goto(BASE_URL);
 
@@ -201,7 +207,7 @@ test.describe("3. UI/UX และ Navigation", () => {
     const passwordInput = page.locator('input[name="password"]');
     await expect(passwordInput).toHaveAttribute(
       "autocomplete",
-      "current-password"
+      "current-password",
     );
   });
 
@@ -215,6 +221,8 @@ test.describe("3. UI/UX และ Navigation", () => {
 });
 
 test.describe("4. Interaction และ Behavior", () => {
+  test.describe.configure({ mode: "serial" });
+
   test("TC-017: กด Enter เพื่อ submit form", async ({ page }) => {
     await page.goto(BASE_URL);
 
@@ -226,7 +234,7 @@ test.describe("4. Interaction และ Behavior", () => {
 
     // ตรวจสอบว่า form ถูก submit (จะมี validation error)
     await expect(
-      page.locator('text="รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร"')
+      page.locator('text="รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร"'),
     ).toBeVisible();
   });
 
@@ -248,7 +256,7 @@ test.describe("4. Interaction และ Behavior", () => {
 
     // ตรวจสอบว่า error หายไป (validate on change)
     await expect(
-      page.locator('text="รูปแบบอีเมลไม่ถูกต้อง"')
+      page.locator('text="รูปแบบอีเมลไม่ถูกต้อง"'),
     ).not.toBeVisible();
   });
 

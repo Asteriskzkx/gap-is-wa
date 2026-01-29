@@ -1,5 +1,5 @@
 // tests/farmerApplicationsNew/farmerApplicationsNew.spec.js (Playwright E2E Tests)
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 // ข้อมูลผู้ใช้สำหรับการทดสอบ
 const TEST_USER = {
@@ -33,7 +33,7 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
     await page.goto("/farmer/applications/new");
     // รอให้หน้าโหลดเสร็จ
     await expect(
-      page.getByRole("heading", { name: "ยื่นขอใบรับรองแหล่งผลิต" })
+      page.getByRole("heading", { name: "ยื่นขอใบรับรองแหล่งผลิต" }),
     ).toBeVisible({ timeout: 10000 });
   });
 
@@ -43,9 +43,9 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
     await page.click('button:has-text("ถัดไป")');
 
     // ตรวจสอบว่าแสดงข้อความเตือน
-    await expect(
-      page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน")
-    ).toBeVisible();
+    const errorMessage = page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน");
+    await errorMessage.scrollIntoViewIfNeeded();
+    await expect(errorMessage).toBeVisible();
   });
 
   test("TC-002: ไม่กรอกหมู่ที่", async ({ page }) => {
@@ -57,9 +57,9 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
     await page.click('button:has-text("ถัดไป")');
 
     // ตรวจสอบว่าแสดงข้อความเตือน
-    await expect(
-      page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน")
-    ).toBeVisible();
+    const errorMessage = page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน");
+    await errorMessage.scrollIntoViewIfNeeded();
+    await expect(errorMessage).toBeVisible();
   });
 
   test("TC-003: กรอกหมู่ที่ 1", async ({ page }) => {
@@ -71,9 +71,9 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
     await page.click('button:has-text("ถัดไป")');
 
     // ตรวจสอบว่าแสดงข้อความเตือน
-    await expect(
-      page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน")
-    ).toBeVisible();
+    const errorMessage = page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน");
+    await errorMessage.scrollIntoViewIfNeeded();
+    await expect(errorMessage).toBeVisible();
   });
 
   test("TC-004: ไม่กรอกถนน", async ({ page }) => {
@@ -87,9 +87,9 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
     await page.click('button:has-text("ถัดไป")');
 
     // ตรวจสอบว่าแสดงข้อความเตือน
-    await expect(
-      page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน")
-    ).toBeVisible();
+    const errorMessage = page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน");
+    await errorMessage.scrollIntoViewIfNeeded();
+    await expect(errorMessage).toBeVisible();
   });
 
   test("TC-005: ไม่กรอกซอย", async ({ page }) => {
@@ -104,9 +104,9 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
     await page.click('button:has-text("ถัดไป")');
 
     // ตรวจสอบว่าแสดงข้อความเตือน
-    await expect(
-      page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน")
-    ).toBeVisible();
+    const errorMessage = page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน");
+    await errorMessage.scrollIntoViewIfNeeded();
+    await expect(errorMessage).toBeVisible();
   });
 
   test("TC-006: ไม่เลือกรูปแบบการจำหน่ายผลผลิต", async ({ page }) => {
@@ -122,9 +122,9 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
     await page.click('button:has-text("ถัดไป")');
 
     // ตรวจสอบว่าแสดงข้อความเตือน
-    await expect(
-      page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน")
-    ).toBeVisible();
+    const errorMessage = page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน");
+    await errorMessage.scrollIntoViewIfNeeded();
+    await expect(errorMessage).toBeVisible();
   });
 
   test("TC-007: เลือกรูปแบบการจำหน่าย: ก่อนเปิดกรีด", async ({ page }) => {
@@ -141,7 +141,7 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
 
     // ตรวจสอบว่าระบบยอมรับข้อมูล
     await expect(page.locator('[id*="productDistributionType"]')).toContainText(
-      "ก่อนเปิดกรีด"
+      "ก่อนเปิดกรีด",
     );
   });
 
@@ -159,7 +159,7 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
 
     // ตรวจสอบว่าระบบยอมรับข้อมูล
     await expect(page.locator('[id*="productDistributionType"]')).toContainText(
-      "น้ำยางสด"
+      "น้ำยางสด",
     );
   });
 
@@ -177,7 +177,7 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
 
     // ตรวจสอบว่าระบบยอมรับข้อมูล
     await expect(page.locator('[id*="productDistributionType"]')).toContainText(
-      "ยางก้อนถ้วย"
+      "ยางก้อนถ้วย",
     );
   });
 
@@ -198,14 +198,14 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
     await page.click('button:has-text("ถัดไป")');
 
     // ตรวจสอบว่าแสดงข้อความเตือน
-    await expect(
-      page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน")
-    ).toBeVisible();
+    const errorMessage = page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน");
+    await errorMessage.scrollIntoViewIfNeeded();
+    await expect(errorMessage).toBeVisible();
   });
 
   test("TC-011: เลือกจังหวัด", async ({ page }) => {
     // เลือกจังหวัด: สงขลา
-    await page.click('[id*="provinceId"] button', { timeout: 10000 });
+    await page.click("#provinceId", { timeout: 10000 });
     await page.waitForSelector('[role="option"]', { timeout: 10000 });
     await page.click('[role="option"]:has-text("สงขลา")');
 
@@ -213,11 +213,11 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
     await page.waitForTimeout(500);
 
     // ตรวจสอบว่าระบบยอมรับข้อมูล และแสดงรายการอำเภอของสงขลา
-    await expect(page.locator('[id*="provinceId"] input')).toHaveValue("สงขลา");
+    await expect(page.locator("#provinceId")).toContainText("สงขลา");
 
     // รอให้ dropdown อำเภอพร้อมใช้งาน
     await page.waitForTimeout(2000);
-    await page.waitForSelector('[id*="amphureId"] button:not([disabled])', {
+    await page.waitForSelector('#amphureId:not([data-p-disabled="true"])', {
       timeout: 10000,
     });
 
@@ -239,46 +239,46 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
     await page.click('li:has-text("น้ำยางสด")');
 
     // เลือกจังหวัด
-    await page.click('[id*="provinceId"] button', { timeout: 5000 });
+    await page.click("#provinceId", { timeout: 5000 });
     await page.waitForSelector('[role="option"]', { timeout: 5000 });
     await page.click('[role="option"]:has-text("สงขลา")');
 
     // รอให้ค่าจังหวัดถูก set (แก้ race condition)
     await page.waitForTimeout(500);
-    await expect(page.locator('[id*="provinceId"] input'), {
+    await expect(page.locator("#provinceId"), {
       timeout: 5000,
-    }).toHaveValue("สงขลา");
+    }).toContainText("สงขลา");
 
     // ไม่เลือกอำเภอ/เขต
     // กดปุ่มถัดไป
     await page.click('button:has-text("ถัดไป")');
 
     // ตรวจสอบว่าแสดงข้อความเตือน
-    await expect(
-      page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน")
-    ).toBeVisible();
+    const errorMessage = page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน");
+    await errorMessage.scrollIntoViewIfNeeded();
+    await expect(errorMessage).toBeVisible();
   });
 
   test("TC-013: เลือกอำเภอ/เขต", async ({ page }) => {
     // เลือกจังหวัด: สงขลา
-    await page.click('[id*="provinceId"] button', { timeout: 10000 });
+    await page.click("#provinceId", { timeout: 10000 });
     await page.waitForSelector('[role="option"]', { timeout: 10000 });
     await page.click('[role="option"]:has-text("สงขลา")');
 
     // รอให้ค่าจังหวัดถูก set ก่อน (แก้ race condition)
     await page.waitForTimeout(500);
-    await expect(page.locator('[id*="provinceId"] input'), {
+    await expect(page.locator("#provinceId"), {
       timeout: 5000,
-    }).toHaveValue("สงขลา");
+    }).toContainText("สงขลา");
 
     // รอให้ dropdown อำเภอพร้อมใช้งาน
     await page.waitForTimeout(2000);
-    await page.waitForSelector('[id*="amphureId"] button:not([disabled])', {
+    await page.waitForSelector('#amphureId:not([data-p-disabled="true"])', {
       timeout: 10000,
     });
 
     // เลือกอำเภอ/เขต: หาดใหญ่
-    await page.click('[id*="amphureId"] button', { timeout: 10000 });
+    await page.click("#amphureId", { timeout: 10000 });
     await page.waitForSelector('[role="option"]', { timeout: 10000 });
     await page.click('[role="option"]:has-text("หาดใหญ่")');
 
@@ -286,13 +286,11 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
     await page.waitForTimeout(500);
 
     // ตรวจสอบว่าระบบยอมรับข้อมูล และแสดงรายการตำบลของหาดใหญ่
-    await expect(page.locator('[id*="amphureId"] input')).toHaveValue(
-      "หาดใหญ่"
-    );
+    await expect(page.locator("#amphureId")).toContainText("หาดใหญ่");
 
     // รอให้ dropdown ตำบลพร้อมใช้งาน
     await page.waitForTimeout(2000);
-    await page.waitForSelector('[id*="tambonId"] button:not([disabled])', {
+    await page.waitForSelector('#tambonId:not([data-p-disabled="true"])', {
       timeout: 10000,
     });
 
@@ -314,77 +312,77 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
     await page.click('li:has-text("น้ำยางสด")');
 
     // เลือกจังหวัด
-    await page.click('[id*="provinceId"] button', { timeout: 5000 });
+    await page.click("#provinceId", { timeout: 5000 });
     await page.waitForSelector('[role="option"]', { timeout: 5000 });
     await page.click('[role="option"]:has-text("สงขลา")');
 
     // รอให้ค่าจังหวัดถูก set (แก้ race condition)
     await page.waitForTimeout(500);
-    await expect(page.locator('[id*="provinceId"] input'), {
+    await expect(page.locator("#provinceId"), {
       timeout: 5000,
-    }).toHaveValue("สงขลา");
+    }).toContainText("สงขลา");
 
     // รอให้ dropdown อำเภอพร้อมใช้งาน
     await page.waitForTimeout(2000);
 
     // เลือกอำเภอ/เขต
-    await page.click('[id*="amphureId"] button', { timeout: 5000 });
+    await page.click("#amphureId", { timeout: 5000 });
     await page.waitForSelector('[role="option"]', { timeout: 5000 });
     await page.click('[role="option"]:has-text("หาดใหญ่")');
 
     // รอให้ค่าอำเภอถูก set (แก้ race condition)
     await page.waitForTimeout(500);
-    await expect(page.locator('[id*="amphureId"] input'), {
+    await expect(page.locator("#amphureId"), {
       timeout: 5000,
-    }).toHaveValue("หาดใหญ่");
+    }).toContainText("หาดใหญ่");
 
     // ไม่เลือกตำบล/แขวง
     // กดปุ่มถัดไป
     await page.click('button:has-text("ถัดไป")');
 
     // ตรวจสอบว่าแสดงข้อความเตือน
-    await expect(
-      page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน")
-    ).toBeVisible();
+    const errorMessage = page.locator("text=กรุณากรอกข้อมูลสวนยางให้ครบถ้วน");
+    await errorMessage.scrollIntoViewIfNeeded();
+    await expect(errorMessage).toBeVisible();
   });
 
   test("TC-015: เลือกตำบล/แขวง", async ({ page }) => {
     // เลือกจังหวัด: สงขลา
-    await page.click('[id*="provinceId"] button', { timeout: 10000 });
+    await page.click("#provinceId", { timeout: 10000 });
     await page.waitForSelector('[role="option"]', { timeout: 10000 });
     await page.click('[role="option"]:has-text("สงขลา")');
 
     // รอให้ค่าจังหวัดถูก set (แก้ race condition)
     await page.waitForTimeout(500);
-    await expect(page.locator('[id*="provinceId"] input'), {
+    await expect(page.locator("#provinceId"), {
       timeout: 5000,
-    }).toHaveValue("สงขลา");
+    }).toContainText("สงขลา");
 
     // รอให้ dropdown อำเภอพร้อมใช้งาน
     await page.waitForTimeout(2000);
-    await page.waitForSelector('[id*="amphureId"] button:not([disabled])', {
+    await page.waitForSelector('#amphureId:not([data-p-disabled="true"])', {
       timeout: 10000,
     });
 
     // เลือกอำเภอ/เขต: หาดใหญ่
-    await page.click('[id*="amphureId"] button', { timeout: 10000 });
+    await page.click("#amphureId", { timeout: 10000 });
     await page.waitForSelector('[role="option"]', { timeout: 10000 });
     await page.click('[role="option"]:has-text("หาดใหญ่")');
 
     // รอให้ค่าอำเภอถูก set (แก้ race condition)
     await page.waitForTimeout(500);
-    await expect(page.locator('[id*="amphureId"] input'), {
+    await expect(page.locator("#amphureId"), {
       timeout: 5000,
-    }).toHaveValue("หาดใหญ่");
+    }).toContainText("หาดใหญ่");
 
     // รอให้ dropdown ตำบลพร้อมใช้งาน
     await page.waitForTimeout(2000);
-    await page.waitForSelector('[id*="tambonId"] button:not([disabled])', {
+    await page.waitForSelector('#tambonId:not([data-p-disabled="true"])', {
       timeout: 10000,
     });
 
     // เลือกตำบล/แขวง: หาดใหญ่
-    await page.click('[id*="tambonId"] button', { timeout: 10000 });
+    await page.click("#tambonId", { timeout: 10000 });
     await page.waitForSelector('[role="option"]', { timeout: 10000 });
     await page.click('[role="option"]:has-text("หาดใหญ่")');
 
@@ -392,7 +390,7 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
     await page.waitForTimeout(500);
 
     // ตรวจสอบว่าระบบยอมรับข้อมูล และอัปเดตตำบล/อำเภอ/จังหวัดอัตโนมัติ
-    await expect(page.locator('[id*="tambonId"] input')).toHaveValue("หาดใหญ่");
+    await expect(page.locator("#tambonId")).toContainText("หาดใหญ่");
   });
 
   test("TC-016: ไม่ระบุตำแหน่งที่ตั้งสวนยาง", async ({ page }) => {
@@ -408,19 +406,19 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
     await page.click('li:has-text("น้ำยางสด")');
 
     // เลือกจังหวัด
-    await page.click('[id*="provinceId"] button', { timeout: 5000 });
+    await page.click("#provinceId", { timeout: 5000 });
     await page.waitForSelector('[role="option"]', { timeout: 5000 });
     await page.click('[role="option"]:has-text("สงขลา")');
     await page.waitForTimeout(1000);
 
     // เลือกอำเภอ/เขต
-    await page.click('[id*="amphureId"] button', { timeout: 5000 });
+    await page.click("#amphureId", { timeout: 5000 });
     await page.waitForSelector('[role="option"]', { timeout: 5000 });
     await page.click('[role="option"]:has-text("หาดใหญ่")');
     await page.waitForTimeout(1000);
 
     // เลือกตำบล/แขวง
-    await page.click('[id*="tambonId"] button', { timeout: 5000 });
+    await page.click("#tambonId", { timeout: 5000 });
     await page.waitForSelector('[role="option"]', { timeout: 5000 });
     await page.click('[role="option"]:has-text("หาดใหญ่")');
 
@@ -429,9 +427,11 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
     await page.click('button:has-text("ถัดไป")');
 
     // ตรวจสอบว่าแสดงข้อความเตือน
-    await expect(
-      page.locator("text=กรุณาคลิกบนแผนที่เพื่อระบุตำแหน่งสวนยางของคุณ")
-    ).toBeVisible();
+    const errorMessage = page.locator(
+      "text=กรุณาคลิกบนแผนที่เพื่อระบุตำแหน่งสวนยางของคุณ",
+    );
+    await errorMessage.scrollIntoViewIfNeeded();
+    await expect(errorMessage).toBeVisible();
   });
 
   test("TC-017: กรอกข้อมูล Step 1 ครบถ้วนถูกต้อง", async ({ page }) => {
@@ -453,41 +453,41 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
     await page.click('li:has-text("น้ำยางสด")');
 
     // เลือกจังหวัด
-    await page.click('[id*="provinceId"] button', { timeout: 5000 });
+    await page.click("#provinceId", { timeout: 5000 });
     await page.waitForSelector('[role="option"]', { timeout: 5000 });
     await page.click('[role="option"]:has-text("สงขลา")');
 
     // รอให้ค่าจังหวัดถูก set (แก้ race condition)
     await page.waitForTimeout(500);
-    await expect(page.locator('[id*="provinceId"] input'), {
+    await expect(page.locator("#provinceId"), {
       timeout: 5000,
-    }).toHaveValue("สงขลา");
+    }).toContainText("สงขลา");
 
     await page.waitForTimeout(2000);
 
     // เลือกอำเภอ/เขต
-    await page.click('[id*="amphureId"] button', { timeout: 5000 });
+    await page.click("#amphureId", { timeout: 5000 });
     await page.waitForSelector('[role="option"]', { timeout: 5000 });
     await page.click('[role="option"]:has-text("หาดใหญ่")');
 
     // รอให้ค่าอำเภอถูก set (แก้ race condition)
     await page.waitForTimeout(500);
-    await expect(page.locator('[id*="amphureId"] input'), {
+    await expect(page.locator("#amphureId"), {
       timeout: 5000,
-    }).toHaveValue("หาดใหญ่");
+    }).toContainText("หาดใหญ่");
 
     await page.waitForTimeout(2000);
 
     // เลือกตำบล/แขวง
-    await page.click('[id*="tambonId"] button', { timeout: 5000 });
+    await page.click("#tambonId", { timeout: 5000 });
     await page.waitForSelector('[role="option"]', { timeout: 5000 });
     await page.click('[role="option"]:has-text("หาดใหญ่")');
 
     // รอให้ค่าตำบลถูก set (แก้ race condition)
     await page.waitForTimeout(500);
-    await expect(page.locator('[id*="tambonId"] input'), {
+    await expect(page.locator("#tambonId"), {
       timeout: 5000,
-    }).toHaveValue("หาดใหญ่");
+    }).toContainText("หาดใหญ่");
 
     // เลือกตำแหน่งบนแผนที่ (คลิกกลางแผนที่)
     const mapContainer = page.locator(".leaflet-container");
@@ -498,7 +498,7 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
 
     // ตรวจสอบว่าไปยังหน้า Step 2 รายละเอียดการปลูก
     await expect(
-      page.getByRole("heading", { name: "รายละเอียดการปลูก" })
+      page.getByRole("heading", { name: "รายละเอียดการปลูก" }),
     ).toBeVisible({ timeout: 10000 });
   });
 });
@@ -507,7 +507,7 @@ test.describe("1. Form Validation - Step 1: ข้อมูลสวนยาง
 async function completeStep1(page) {
   await page.goto("/farmer/applications/new");
   await expect(
-    page.getByRole("heading", { name: "ยื่นขอใบรับรองแหล่งผลิต" })
+    page.getByRole("heading", { name: "ยื่นขอใบรับรองแหล่งผลิต" }),
   ).toBeVisible({ timeout: 10000 });
 
   // กรอกข้อมูลสวนยาง
@@ -524,29 +524,29 @@ async function completeStep1(page) {
   await page.click('li:has-text("น้ำยางสด")');
 
   // เลือกที่อยู่
-  const provinceInput = page.locator('[id*="provinceId"] input');
-  await page.click('[id*="provinceId"] button', { timeout: 10000 });
+  const provinceInput = page.locator("#provinceId");
+  await page.click("#provinceId", { timeout: 10000 });
   await page.waitForTimeout(1000);
   await page.waitForSelector('[role="option"]', { timeout: 10000 });
   await page.click('[role="option"]:has-text("สงขลา")');
   await page.keyboard.press("Escape");
-  await expect(provinceInput).toHaveValue("สงขลา", { timeout: 30000 });
+  await expect(provinceInput).toContainText("สงขลา", { timeout: 30000 });
 
-  const amphureInput = page.locator('[id*="amphureId"] input');
-  await page.click('[id*="amphureId"] button', { timeout: 10000 });
+  const amphureInput = page.locator("#amphureId");
+  await page.click("#amphureId", { timeout: 10000 });
   await page.waitForTimeout(1000);
   await page.waitForSelector('[role="option"]', { timeout: 10000 });
   await page.click('[role="option"]:has-text("หาดใหญ่")');
   await page.keyboard.press("Escape");
-  await expect(amphureInput).toHaveValue("หาดใหญ่", { timeout: 30000 });
+  await expect(amphureInput).toContainText("หาดใหญ่", { timeout: 30000 });
 
-  const tambonInput = page.locator('[id*="tambonId"] input');
-  await page.click('[id*="tambonId"] button', { timeout: 10000 });
+  const tambonInput = page.locator("#tambonId");
+  await page.click("#tambonId", { timeout: 10000 });
   await page.waitForTimeout(1000);
   await page.waitForSelector('[role="option"]', { timeout: 10000 });
   await page.click('[role="option"]:has-text("หาดใหญ่")');
   await page.keyboard.press("Escape");
-  await expect(tambonInput).toHaveValue("หาดใหญ่", { timeout: 30000 });
+  await expect(tambonInput).toContainText("หาดใหญ่", { timeout: 30000 });
 
   // คลิกบนแผนที่
   const mapContainer = page.locator(".leaflet-container");
@@ -559,7 +559,7 @@ async function completeStep1(page) {
 
   // รอให้ไปยัง Step 2
   await expect(
-    page.getByRole("heading", { name: "รายละเอียดการปลูก" })
+    page.getByRole("heading", { name: "รายละเอียดการปลูก" }),
   ).toBeVisible({ timeout: 10000 });
 }
 
@@ -578,9 +578,11 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
     await page.click('button:has-text("ถัดไป")');
 
     // ตรวจสอบว่าแสดงข้อความเตือน
-    await expect(
-      page.locator("text=รายการที่ 1: กรุณาเลือกพันธุ์ยางพารา")
-    ).toBeVisible();
+    const errorMessage = page.locator(
+      "text=รายการที่ 1: กรุณาเลือกพันธุ์ยางพารา",
+    );
+    await errorMessage.scrollIntoViewIfNeeded();
+    await expect(errorMessage).toBeVisible();
   });
 
   test("TC-019: เลือกพันธุ์ยางพารา: RRIT 251", async ({ page }) => {
@@ -588,7 +590,7 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
     await completeStep1(page);
 
     // เลือกพันธุ์ยางพารา: RRIT 251
-    await page.click('[id*="specie"] button');
+    await page.click('[id*="specie"]');
     await page.waitForSelector('[role="option"]', { timeout: 5000 });
     await page.click('[role="option"]:has-text("RRIT 251")');
 
@@ -596,7 +598,9 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
     await page.waitForTimeout(500);
 
     // ตรวจสอบว่าระบบยอมรับข้อมูล
-    await expect(page.locator('[id*="specie"] input')).toHaveValue("RRIT 251");
+    await expect(page.locator('[id*="specie"]').first()).toContainText(
+      "RRIT 251",
+    );
   });
 
   test("TC-020: ไม่กรอกพื้นที่แปลง", async ({ page }) => {
@@ -604,7 +608,7 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
     await completeStep1(page);
 
     // เลือกพันธุ์ยางพารา
-    await page.click('[id*="specie"] button');
+    await page.click('[id*="specie"]');
     await page.waitForSelector('[role="option"]', { timeout: 5000 });
     await page.click('[role="option"]:has-text("RRIT 251")');
 
@@ -613,9 +617,9 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
     await page.click('button:has-text("ถัดไป")');
 
     // ตรวจสอบว่าแสดงข้อความเตือน
-    await expect(
-      page.locator("text=รายการที่ 1: กรุณากรอกพื้นที่แปลง")
-    ).toBeVisible();
+    const errorMessage = page.locator("text=รายการที่ 1: กรุณากรอกพื้นที่แปลง");
+    await errorMessage.scrollIntoViewIfNeeded();
+    await expect(errorMessage).toBeVisible();
   });
 
   test("TC-021: กรอกพื้นที่แปลง 0", async ({ page }) => {
@@ -623,7 +627,7 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
     await completeStep1(page);
 
     // เลือกพันธุ์ยางพารา
-    await page.click('[id*="specie"] button');
+    await page.click('[id*="specie"]');
     await page.waitForSelector('[role="option"]', { timeout: 5000 });
     await page.click('[role="option"]:has-text("RRIT 251")');
 
@@ -635,9 +639,11 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
     await page.click('button:has-text("ถัดไป")');
 
     // ตรวจสอบว่าแสดงข้อความเตือน
-    await expect(
-      page.locator("text=รายการที่ 1: กรุณากรอกพื้นที่แปลงให้ถูกต้อง")
-    ).toBeVisible();
+    const errorMessage = page.locator(
+      "text=รายการที่ 1: กรุณากรอกพื้นที่แปลงให้ถูกต้อง",
+    );
+    await errorMessage.scrollIntoViewIfNeeded();
+    await expect(errorMessage).toBeVisible();
   });
 
   test("TC-022: กรอกพื้นที่แปลงถูกต้อง", async ({ page }) => {
@@ -645,7 +651,7 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
     await completeStep1(page);
 
     // เลือกพันธุ์ยางพารา
-    await page.click('[id*="specie"] button');
+    await page.click('[id*="specie"]');
     await page.waitForSelector('[role="option"]', { timeout: 5000 });
     await page.click('[role="option"]:has-text("RRIT 251")');
 
@@ -664,7 +670,7 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
     await completeStep1(page);
 
     // เลือกพันธุ์และกรอกพื้นที่
-    await page.click('[id*="specie"] button');
+    await page.click('[id*="specie"]');
     await page.waitForSelector('[role="option"]', { timeout: 5000 });
     await page.click('[role="option"]:has-text("RRIT 251")');
     const areaInput = page.locator('input[id*="areaOfPlot"]').first();
@@ -677,9 +683,11 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
     await page.click('button:has-text("ถัดไป")');
 
     // ตรวจสอบว่าแสดงข้อความเตือน
-    await expect(
-      page.locator("text=รายการที่ 1: กรุณากรอกจำนวนต้นยางทั้งหมด")
-    ).toBeVisible();
+    const errorMessage = page.locator(
+      "text=รายการที่ 1: กรุณากรอกจำนวนต้นยางทั้งหมด",
+    );
+    await errorMessage.scrollIntoViewIfNeeded();
+    await expect(errorMessage).toBeVisible();
   });
 
   test("TC-024: กรอกจำนวนต้นยางทั้งหมด 0", async ({ page }) => {
@@ -687,7 +695,7 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
     await completeStep1(page);
 
     // เลือกพันธุ์และกรอกพื้นที่
-    await page.click('[id*="specie"] button');
+    await page.click('[id*="specie"]');
     await page.waitForSelector('[role="option"]', { timeout: 5000 });
     await page.click('[role="option"]:has-text("RRIT 251")');
     const areaInput = page.locator('input[id*="areaOfPlot"]').first();
@@ -707,9 +715,11 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
     await page.click('button:has-text("ถัดไป")');
 
     // ตรวจสอบว่าแสดงข้อความเตือน
-    await expect(
-      page.locator("text=รายการที่ 1: กรุณากรอกจำนวนต้นยางทั้งหมดให้ถูกต้อง")
-    ).toBeVisible();
+    const errorMessage = page.locator(
+      "text=รายการที่ 1: กรุณากรอกจำนวนต้นยางทั้งหมดให้ถูกต้อง",
+    );
+    await errorMessage.scrollIntoViewIfNeeded();
+    await expect(errorMessage).toBeVisible();
   });
 
   test("TC-025: กรอกจำนวนต้นยางทั้งหมดถูกต้อง", async ({ page }) => {
@@ -717,7 +727,7 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
     await completeStep1(page);
 
     // เลือกพันธุ์และกรอกพื้นที่
-    await page.click('[id*="specie"] button');
+    await page.click('[id*="specie"]');
     await page.waitForSelector('[role="option"]', { timeout: 5000 });
     await page.click('[role="option"]:has-text("RRIT 251")');
     const areaInput = page.locator('input[id*="areaOfPlot"]').first();
@@ -742,7 +752,7 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
     await completeStep1(page);
 
     // กรอกพันธุ์, พื้นที่, จำนวนต้นยาง
-    await page.click('[id*="specie"] button');
+    await page.click('[id*="specie"]');
     await page.waitForSelector('[role="option"]', { timeout: 5000 });
     await page.click('[role="option"]:has-text("RRIT 251")');
     const areaInput = page.locator('input[id*="areaOfPlot"]').first();
@@ -762,9 +772,11 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
     await page.click('button:has-text("ถัดไป")');
 
     // ตรวจสอบว่าแสดงข้อความเตือน
-    await expect(
-      page.locator("text=รายการที่ 1: กรุณากรอกจำนวนต้นกรีดที่กรีดได้")
-    ).toBeVisible();
+    const errorMessage = page.locator(
+      "text=รายการที่ 1: กรุณากรอกจำนวนต้นกรีดที่กรีดได้",
+    );
+    await errorMessage.scrollIntoViewIfNeeded();
+    await expect(errorMessage).toBeVisible();
   });
 
   test("TC-027: กรอกจำนวนต้นยางที่กรีดได้ 0", async ({ page }) => {
@@ -772,7 +784,7 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
     await completeStep1(page);
 
     // กรอกข้อมูลอื่น
-    await page.click('[id*="specie"] button');
+    await page.click('[id*="specie"]');
     await page.waitForSelector('[role="option"]', { timeout: 5000 });
     await page.click('[role="option"]:has-text("RRIT 251")');
     const areaInput = page.locator('input[id*="areaOfPlot"]').first();
@@ -803,7 +815,7 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
     await completeStep1(page);
 
     // กรอกข้อมูลอื่น
-    await page.click('[id*="specie"] button');
+    await page.click('[id*="specie"]');
     await page.waitForSelector('[role="option"]', { timeout: 5000 });
     await page.click('[role="option"]:has-text("RRIT 251")');
     const areaInput = page.locator('input[id*="areaOfPlot"]').first();
@@ -834,7 +846,7 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
     await completeStep1(page);
 
     // กรอกข้อมูลอื่น
-    await page.click('[id*="specie"] button');
+    await page.click('[id*="specie"]');
     await page.waitForSelector('[role="option"]', { timeout: 5000 });
     await page.click('[role="option"]:has-text("RRIT 251")');
     const areaInput = page.locator('input[id*="areaOfPlot"]').first();
@@ -859,9 +871,9 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
     await page.click('button:has-text("ถัดไป")');
 
     // ตรวจสอบว่าแสดงข้อความเตือน
-    await expect(
-      page.locator("text=รายการที่ 1: กรุณากรอกอายุต้นยาง")
-    ).toBeVisible();
+    const errorMessage = page.locator("text=รายการที่ 1: กรุณากรอกอายุต้นยาง");
+    await errorMessage.scrollIntoViewIfNeeded();
+    await expect(errorMessage).toBeVisible();
   });
 
   test("TC-030: กรอกอายุต้นยาง 0", async ({ page }) => {
@@ -869,7 +881,7 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
     await completeStep1(page);
 
     // กรอกข้อมูลอื่น
-    await page.click('[id*="specie"] button');
+    await page.click('[id*="specie"]');
     await page.waitForSelector('[role="option"]', { timeout: 5000 });
     await page.click('[role="option"]:has-text("RRIT 251")');
     const areaInput = page.locator('input[id*="areaOfPlot"]').first();
@@ -904,7 +916,7 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
     await completeStep1(page);
 
     // กรอกข้อมูลอื่น
-    await page.click('[id*="specie"] button');
+    await page.click('[id*="specie"]');
     await page.waitForSelector('[role="option"]', { timeout: 5000 });
     await page.click('[role="option"]:has-text("RRIT 251")');
     const areaInput = page.locator('input[id*="areaOfPlot"]').first();
@@ -939,7 +951,7 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
     await completeStep1(page);
 
     // กรอกข้อมูลรายละเอียดการปลูก
-    await page.click('[id*="specie"] button');
+    await page.click('[id*="specie"]');
     await page.waitForSelector('[role="option"]', { timeout: 5000 });
     await page.click('[role="option"]:has-text("RRIT 251")');
     const areaInput = page.locator('input[id*="areaOfPlot"]').first();
@@ -1005,7 +1017,7 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
 
     // ตรวจสอบว่าไปยังหน้า Step 3 ยืนยันข้อมูล
     await expect(
-      page.getByRole("heading", { name: "ยืนยันข้อมูล" })
+      page.getByRole("heading", { name: "ยืนยันข้อมูล" }),
     ).toBeVisible({ timeout: 10000 });
   });
 
@@ -1014,7 +1026,7 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
     await completeStep1(page);
 
     // กรอกรายการที่ 1 ครบถ้วน
-    await page.click('[id*="specie"] button');
+    await page.click('[id*="specie"]');
     await page.waitForSelector('[role="option"]', { timeout: 5000 });
     await page.click('[role="option"]:has-text("RRIT 251")');
     const areaInput = page.locator('input[id*="areaOfPlot"]').first();
@@ -1050,7 +1062,7 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
     await completeStep1(page);
 
     // กรอกรายการที่ 1
-    await page.click('[id*="specie"] button');
+    await page.click('[id*="specie"]');
     await page.waitForSelector('[role="option"]', { timeout: 5000 });
     await page.click('[role="option"]:has-text("RRIT 251")');
     let areaInput = page.locator('input[id*="areaOfPlot"]').first();
@@ -1119,8 +1131,8 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
     await allSpecieDropdowns
       .nth(1)
       .waitFor({ state: "visible", timeout: 5000 });
-    const secondSpecieButton = allSpecieDropdowns.nth(1).locator("button");
-    await secondSpecieButton.click();
+    const secondSpecieDropdown = allSpecieDropdowns.nth(1);
+    await secondSpecieDropdown.click();
     await page.waitForSelector('[role="option"]', { timeout: 5000 });
     await page.click('[role="option"]:has-text("RRIM 600")');
     areaInput = page.locator('input[id*="areaOfPlot"]').nth(1);
@@ -1172,7 +1184,7 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
 
     // ตรวจสอบว่าไปยังหน้า Step 3 และแสดงรายการทั้ง 2
     await expect(
-      page.getByRole("heading", { name: "ยืนยันข้อมูล" })
+      page.getByRole("heading", { name: "ยืนยันข้อมูล" }),
     ).toBeVisible({ timeout: 10000 });
     await expect(page.locator("text=รายการที่ 1")).toBeVisible();
     await expect(page.locator("text=รายการที่ 2")).toBeVisible();
@@ -1185,7 +1197,7 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
     await completeStep1(page);
 
     // กรอกรายการที่ 1 ครบถ้วน
-    await page.click('[id*="specie"] button');
+    await page.click('[id*="specie"]');
     await page.waitForSelector('[role="option"]', { timeout: 5000 });
     await page.click('[role="option"]:has-text("RRIT 251")');
     let areaInput = page.locator('input[id*="areaOfPlot"]').first();
@@ -1247,7 +1259,7 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
 
     // กรอกรายการที่ 2 ไม่ครบ (เฉพาะพันธุ์)
     const allSpecieDropdowns = page.locator('[id*="specie"]');
-    await allSpecieDropdowns.nth(1).locator("button").click();
+    await allSpecieDropdowns.nth(1).click();
     await page.waitForSelector('[role="option"]', { timeout: 5000 });
     await page.click('[role="option"]:has-text("RRIM 600")');
 
@@ -1255,7 +1267,9 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
     await page.click('button:has-text("ถัดไป")');
 
     // ตรวจสอบว่าแสดงข้อความเตือน
-    await expect(page.locator("text=รายการที่ 2: กรุณา")).toBeVisible();
+    const errorMessage = page.locator("text=รายการที่ 2: กรุณา");
+    await errorMessage.scrollIntoViewIfNeeded();
+    await expect(errorMessage).toBeVisible();
   });
 
   test("TC-036: กดปุ่มลบรายการ (มีเพียง 1 รายการ)", async ({ page }) => {
@@ -1263,7 +1277,7 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
     await completeStep1(page);
 
     // กรอกรายการที่ 1
-    await page.click('[id*="specie"] button');
+    await page.click('[id*="specie"]');
     await page.waitForSelector('[role="option"]', { timeout: 5000 });
     await page.click('[role="option"]:has-text("RRIT 251")');
 
@@ -1277,7 +1291,7 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
     await completeStep1(page);
 
     // กรอกรายการที่ 1
-    await page.click('[id*="specie"] button');
+    await page.click('[id*="specie"]');
     await page.waitForSelector('[role="option"]', { timeout: 5000 });
     await page.click('[role="option"]:has-text("RRIT 251")');
 
@@ -1303,12 +1317,12 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
 
     // ตรวจสอบว่ากลับไป Step 1
     await expect(
-      page.getByRole("heading", { name: "ข้อมูลสวนยาง" })
+      page.getByRole("heading", { name: "ข้อมูลสวนยาง" }),
     ).toBeVisible({ timeout: 10000 });
 
     // ตรวจสอบว่าข้อมูลที่กรอกไว้ยังคงอยู่
     await expect(page.locator('input[name="villageName"]')).toHaveValue(
-      "หมู่บ้านสวนยางทดสอบ"
+      "หมู่บ้านสวนยางทดสอบ",
     );
   });
 });
@@ -1316,7 +1330,7 @@ test.describe("2. Form Validation - Step 2: รายละเอียดกา
 // Helper function สำหรับกรอก Step 2 ให้สำเร็จ
 async function completeStep2(page) {
   // กรอกรายการปลูก 1 รายการ
-  await page.click('[id*="specie"] button');
+  await page.click('[id*="specie"]');
   await page.waitForSelector('[role="option"]', { timeout: 5000 });
   await page.click('[role="option"]:has-text("RRIT 251")');
 
@@ -1380,7 +1394,7 @@ async function completeStep2(page) {
 
   // รอให้ไปยัง Step 3
   await expect(page.getByRole("heading", { name: "ยืนยันข้อมูล" })).toBeVisible(
-    { timeout: 10000 }
+    { timeout: 10000 },
   );
 }
 
@@ -1397,12 +1411,12 @@ test.describe("3. Form Validation - Step 3: ยืนยันข้อมูล
   test("TC-039: แสดงสรุปข้อมูลสวนยาง", async ({ page }) => {
     // ตรวจสอบว่าอยู่ Step 3
     await expect(
-      page.getByRole("heading", { name: "ยืนยันข้อมูล" })
+      page.getByRole("heading", { name: "ยืนยันข้อมูล" }),
     ).toBeVisible();
 
     // ตรวจสอบ section ข้อมูลสวนยาง
     await expect(
-      page.getByRole("heading", { name: "ข้อมูลสวนยาง" })
+      page.getByRole("heading", { name: "ข้อมูลสวนยาง" }),
     ).toBeVisible();
 
     // ตรวจสอบข้อมูลที่แสดง
@@ -1423,12 +1437,12 @@ test.describe("3. Form Validation - Step 3: ยืนยันข้อมูล
   test("TC-040: แสดงสรุปรายละเอียดการปลูก", async ({ page }) => {
     // ตรวจสอบว่าอยู่ Step 3
     await expect(
-      page.getByRole("heading", { name: "ยืนยันข้อมูล" })
+      page.getByRole("heading", { name: "ยืนยันข้อมูล" }),
     ).toBeVisible();
 
     // ตรวจสอบ section รายละเอียดการปลูก
     await expect(
-      page.getByRole("heading", { name: "รายละเอียดการปลูก" })
+      page.getByRole("heading", { name: "รายละเอียดการปลูก" }),
     ).toBeVisible();
     await expect(page.locator("text=รายการที่ 1")).toBeVisible();
 
@@ -1451,7 +1465,7 @@ test.describe("3. Form Validation - Step 3: ยืนยันข้อมูล
     // ย้อนกลับไป Step 2 เพื่อเพิ่มรายการที่ 2 และ 3
     await page.click('button:has-text("ย้อนกลับ")');
     await expect(
-      page.getByRole("heading", { name: "รายละเอียดการปลูก" })
+      page.getByRole("heading", { name: "รายละเอียดการปลูก" }),
     ).toBeVisible();
 
     // เพิ่มรายการที่ 2
@@ -1463,8 +1477,8 @@ test.describe("3. Form Validation - Step 3: ยืนยันข้อมูล
     await allSpecieDropdowns
       .nth(1)
       .waitFor({ state: "visible", timeout: 5000 });
-    const secondSpecieButton = allSpecieDropdowns.nth(1).locator("button");
-    await secondSpecieButton.click();
+    const secondSpecieDropdown = allSpecieDropdowns.nth(1);
+    await secondSpecieDropdown.click();
     await page.waitForSelector('[role="option"]', { timeout: 5000 });
     await page.click('[role="option"]:has-text("RRIM 600")');
 
@@ -1526,8 +1540,8 @@ test.describe("3. Form Validation - Step 3: ยืนยันข้อมูล
     await allSpecieDropdowns
       .nth(2)
       .waitFor({ state: "visible", timeout: 5000 });
-    const thirdSpecieButton = allSpecieDropdowns.nth(2).locator("button");
-    await thirdSpecieButton.click();
+    const thirdSpecieDropdown = allSpecieDropdowns.nth(2);
+    await thirdSpecieDropdown.click();
     await page.waitForSelector('[role="option"]', { timeout: 5000 });
     await page.click('[role="option"]:has-text("PB 235")');
 
@@ -1587,7 +1601,7 @@ test.describe("3. Form Validation - Step 3: ยืนยันข้อมูล
     // กดถัดไปไป Step 3
     await page.click('button:has-text("ถัดไป")');
     await expect(
-      page.getByRole("heading", { name: "ยืนยันข้อมูล" })
+      page.getByRole("heading", { name: "ยืนยันข้อมูล" }),
     ).toBeVisible({ timeout: 10000 });
 
     // ตรวจสอบว่าแสดงรายการทั้ง 3
@@ -1602,7 +1616,7 @@ test.describe("3. Form Validation - Step 3: ยืนยันข้อมูล
   test("TC-042: ไม่ tick checkbox ยืนยันข้อมูล", async ({ page }) => {
     // ตรวจสอบว่าอยู่ Step 3
     await expect(
-      page.getByRole("heading", { name: "ยืนยันข้อมูล" })
+      page.getByRole("heading", { name: "ยืนยันข้อมูล" }),
     ).toBeVisible();
 
     // scroll ลงไปหาปุ่มส่งคำขอ
@@ -1615,19 +1629,19 @@ test.describe("3. Form Validation - Step 3: ยืนยันข้อมูล
 
     // ตรวจสอบข้อความแจ้งเตือน
     await expect(
-      page.locator("text=กรุณายืนยันความถูกต้องของข้อมูลก่อนส่ง")
+      page.locator("text=กรุณายืนยันความถูกต้องของข้อมูลก่อนส่ง"),
     ).toBeVisible({ timeout: 5000 });
 
     // ตรวจสอบว่ายังคงอยู่ที่ Step 3
     await expect(
-      page.getByRole("heading", { name: "ยืนยันข้อมูล" })
+      page.getByRole("heading", { name: "ยืนยันข้อมูล" }),
     ).toBeVisible();
   });
 
   test("TC-043: tick checkbox ยืนยันข้อมูล", async ({ page }) => {
     // ตรวจสอบว่าอยู่ Step 3
     await expect(
-      page.getByRole("heading", { name: "ยืนยันข้อมูล" })
+      page.getByRole("heading", { name: "ยืนยันข้อมูล" }),
     ).toBeVisible();
 
     // scroll ลงไปหา checkbox
@@ -1648,14 +1662,14 @@ test.describe("3. Form Validation - Step 3: ยืนยันข้อมูล
 
     // รอข้อความสำเร็จ - ควรมี API ส่งข้อมูลสำเร็จ
     await expect(
-      page.locator("text=บันทึกข้อมูลสำเร็จ กำลังนำคุณไปยังหน้าติดตามสถานะ...")
+      page.locator("text=บันทึกข้อมูลสำเร็จ กำลังนำคุณไปยังหน้าติดตามสถานะ..."),
     ).toBeVisible({ timeout: 10000 });
   });
 
   test("TC-044: กดปุ่มย้อนกลับจาก Step 3", async ({ page }) => {
     // ตรวจสอบว่าอยู่ Step 3
     await expect(
-      page.getByRole("heading", { name: "ยืนยันข้อมูล" })
+      page.getByRole("heading", { name: "ยืนยันข้อมูล" }),
     ).toBeVisible();
 
     // tick checkbox ก่อน
@@ -1667,21 +1681,18 @@ test.describe("3. Form Validation - Step 3: ยืนยันข้อมูล
 
     // ตรวจสอบว่ากลับไป Step 2
     await expect(
-      page.getByRole("heading", { name: "รายละเอียดการปลูก" })
+      page.getByRole("heading", { name: "รายละเอียดการปลูก" }),
     ).toBeVisible({ timeout: 10000 });
 
     // ตรวจสอบว่าข้อมูลที่กรอกไว้ยังคงอยู่
     await expect(page.locator("text=รายการที่ 1")).toBeVisible();
-    const firstSpecieInput = page
-      .locator('[id*="specie"]')
-      .first()
-      .locator("input");
-    await expect(firstSpecieInput).toHaveValue("RRIT 251");
+    const firstSpecieDropdown = page.locator('[id*="specie"]').first();
+    await expect(firstSpecieDropdown).toContainText("RRIT 251");
 
     // กดถัดไปกลับมา Step 3
     await page.click('button:has-text("ถัดไป")');
     await expect(
-      page.getByRole("heading", { name: "ยืนยันข้อมูล" })
+      page.getByRole("heading", { name: "ยืนยันข้อมูล" }),
     ).toBeVisible();
 
     // ตรวจสอบว่า checkbox ถูก reset (ไม่ถูกเลือก)
@@ -1691,7 +1702,7 @@ test.describe("3. Form Validation - Step 3: ยืนยันข้อมูล
   test("TC-045: ส่งข้อมูลสำเร็จ", async ({ page }) => {
     // ตรวจสอบว่าอยู่ Step 3
     await expect(
-      page.getByRole("heading", { name: "ยืนยันข้อมูล" })
+      page.getByRole("heading", { name: "ยืนยันข้อมูล" }),
     ).toBeVisible();
 
     // scroll ลงไปหา checkbox
@@ -1709,9 +1720,11 @@ test.describe("3. Form Validation - Step 3: ยืนยันข้อมูล
     await submitButton.click();
 
     // รอข้อความสำเร็จและการ redirect
-    await expect(
-      page.locator("text=บันทึกข้อมูลสำเร็จ กำลังนำคุณไปยังหน้าติดตามสถานะ...")
-    ).toBeVisible({ timeout: 10000 });
+    const successMessage = page.locator(
+      "text=บันทึกข้อมูลสำเร็จ กำลังนำคุณไปยังหน้าติดตามสถานะ...",
+    );
+    await successMessage.scrollIntoViewIfNeeded();
+    await expect(successMessage).toBeVisible({ timeout: 10000 });
 
     // รอให้ redirect ไปหน้าติดตามสถานะ
     await page.waitForURL(/\/farmer\/applications/, { timeout: 15000 });
@@ -1723,7 +1736,7 @@ test.describe("3. Form Validation - Step 3: ยืนยันข้อมูล
   test("TC-046: ตรวจสอบ loading state", async ({ page }) => {
     // ตรวจสอบว่าอยู่ Step 3
     await expect(
-      page.getByRole("heading", { name: "ยืนยันข้อมูล" })
+      page.getByRole("heading", { name: "ยืนยันข้อมูล" }),
     ).toBeVisible();
 
     // scroll ลงไปหา checkbox
@@ -1746,7 +1759,7 @@ test.describe("3. Form Validation - Step 3: ยืนยันข้อมูล
 
     // รอให้ข้อความสำเร็จปรากฏ
     await expect(
-      page.locator("text=บันทึกข้อมูลสำเร็จ กำลังนำคุณไปยังหน้าติดตามสถานะ...")
+      page.locator("text=บันทึกข้อมูลสำเร็จ กำลังนำคุณไปยังหน้าติดตามสถานะ..."),
     ).toBeVisible({ timeout: 10000 });
 
     // ตรวจสอบว่า redirect
@@ -1759,7 +1772,7 @@ test.describe("4. UI/UX และ Navigation", () => {
     await loginAsFarmer(page);
     await page.goto("/farmer/applications/new");
     await expect(
-      page.getByRole("heading", { name: "ยื่นขอใบรับรองแหล่งผลิต" })
+      page.getByRole("heading", { name: "ยื่นขอใบรับรองแหล่งผลิต" }),
     ).toBeVisible({ timeout: 10000 });
   });
 
@@ -1768,24 +1781,25 @@ test.describe("4. UI/UX และ Navigation", () => {
     const stepIndicator = formContainer.locator("div.mb-8").first();
 
     await expect(
-      stepIndicator.getByText("ข้อมูลสวนยาง", { exact: true })
+      stepIndicator.getByText("ข้อมูลสวนยาง", { exact: true }),
     ).toBeVisible();
     await expect(
-      stepIndicator.getByText("รายละเอียดการปลูก", { exact: true })
+      stepIndicator.getByText("รายละเอียดการปลูก", { exact: true }),
     ).toBeVisible();
     await expect(
-      stepIndicator.getByText("ยืนยันข้อมูล", { exact: true })
+      stepIndicator.getByText("ยืนยันข้อมูล", { exact: true }),
     ).toBeVisible();
 
     await expect(
-      stepIndicator.getByText("ขั้นตอนที่ 1", { exact: true })
+      stepIndicator.getByText("ขั้นตอนที่ 1", { exact: true }),
     ).toBeVisible();
     await expect(
-      stepIndicator.getByText("ขั้นตอนที่ 2", { exact: true })
+      stepIndicator.getByText("ขั้นตอนที่ 2", { exact: true }),
     ).toBeVisible();
     await expect(
-      stepIndicator.getByText("ขั้นตอนที่ 3", { exact: true })
+      stepIndicator.getByText("ขั้นตอนที่ 3", { exact: true }),
     ).toBeVisible();
+    await page.waitForTimeout(3000);
   });
 
   test("TC-048: ตรวจสอบ responsive design", async ({ page }) => {
@@ -1793,37 +1807,39 @@ test.describe("4. UI/UX และ Navigation", () => {
     await page.setViewportSize({ width: 1280, height: 720 });
     await page.reload();
     await expect(
-      page.getByRole("heading", { name: "ยื่นขอใบรับรองแหล่งผลิต" })
+      page.getByRole("heading", { name: "ยื่นขอใบรับรองแหล่งผลิต" }),
     ).toBeVisible({ timeout: 10000 });
     await expect(
-      page.getByRole("heading", { name: "ข้อมูลสวนยาง" })
+      page.getByRole("heading", { name: "ข้อมูลสวนยาง" }),
     ).toBeVisible();
 
     // Tablet
     await page.setViewportSize({ width: 820, height: 1180 });
     await page.reload();
     await expect(
-      page.getByRole("heading", { name: "ยื่นขอใบรับรองแหล่งผลิต" })
+      page.getByRole("heading", { name: "ยื่นขอใบรับรองแหล่งผลิต" }),
     ).toBeVisible({ timeout: 10000 });
     await expect(
-      page.getByRole("heading", { name: "ข้อมูลสวนยาง" })
+      page.getByRole("heading", { name: "ข้อมูลสวนยาง" }),
     ).toBeVisible();
 
     // Mobile
     await page.setViewportSize({ width: 390, height: 844 });
     await page.reload();
     await expect(
-      page.getByRole("heading", { name: "ยื่นขอใบรับรองแหล่งผลิต" })
+      page.getByRole("heading", { name: "ยื่นขอใบรับรองแหล่งผลิต" }),
     ).toBeVisible({ timeout: 10000 });
     await expect(
-      page.getByText("ขั้นตอนที่ 1: ข้อมูลสวนยาง", { exact: true })
+      page.getByText("ขั้นตอนที่ 1: ข้อมูลสวนยาง", { exact: true }),
     ).toBeVisible();
+    await page.waitForTimeout(3000);
   });
 
   test("TC-049: กดปุ่มกลับไปหน้าหลักจาก Step 1", async ({ page }) => {
     await page.getByRole("button", { name: "กลับไปหน้าหลัก" }).click();
     await page.waitForURL(/\/farmer\/dashboard/, { timeout: 10000 });
     await expect(page).toHaveURL(/\/farmer\/dashboard/);
+    await page.waitForTimeout(3000);
   });
 
   test("TC-050: ตรวจสอบการแสดง error message", async ({ page }) => {
@@ -1833,6 +1849,7 @@ test.describe("4. UI/UX และ Navigation", () => {
     const errorAlert = page
       .locator("div.bg-red-50")
       .filter({ hasText: "กรุณากรอกข้อมูลสวนยางให้ครบถ้วน" });
+    await errorAlert.scrollIntoViewIfNeeded();
     await expect(errorAlert).toHaveCount(1);
     await expect(errorAlert.first()).toBeVisible();
   });
@@ -1855,39 +1872,37 @@ test.describe("4. UI/UX และ Navigation", () => {
       .locator("div.bg-green-50")
       .filter({ hasText: /บันทึกข้อมูลสำเร็จ กำลังนำคุณไปยังหน้าติดตามสถานะ/ });
     await expect(successAlert).toHaveCount(1, { timeout: 10000 });
+    await successAlert.first().scrollIntoViewIfNeeded();
     await expect(successAlert.first()).toBeVisible();
   });
 
-  test("TC-052: ตรวจสอบ autocomplete (จังหวัด/อำเภอ/ตำบล)", async ({
-    page,
-  }) => {
-    const provinceInput = page.locator('[id*="provinceId"] input');
-    await provinceInput.click();
-    await provinceInput.clear();
-    await provinceInput.pressSequentially("สง");
+  test("TC-052: ตรวจสอบ dropdown (จังหวัด/อำเภอ/ตำบล)", async ({ page }) => {
+    // คลิก dropdown จังหวัด
+    await page.click("#provinceId");
+    await page.waitForSelector('[role="option"]', { timeout: 10000 });
 
-    // ควรมีรายการที่ขึ้นต้นด้วย "สง" เช่น "สงขลา"
+    // ควรมีรายการจังหวัด เช่น "สงขลา"
     await expect(page.locator('[role="option"]:has-text("สงขลา")')).toBeVisible(
-      { timeout: 10000 }
+      { timeout: 10000 },
     );
   });
 
   test("TC-053: ตรวจสอบการ disable dropdown อำเภอ", async ({ page }) => {
-    const amphureButton = page.locator('[id*="amphureId"] button');
-    await expect(amphureButton).toBeDisabled();
+    const amphureDropdown = page.locator("#amphureId");
+    await expect(amphureDropdown).toHaveAttribute("data-p-disabled", "true");
   });
 
   test("TC-054: ตรวจสอบการ disable dropdown ตำบล", async ({ page }) => {
     // เลือกจังหวัด แต่ยังไม่เลือกอำเภอ
-    const provinceInput = page.locator('[id*="provinceId"] input');
-    await page.click('[id*="provinceId"] button', { timeout: 10000 });
+    const provinceInput = page.locator("#provinceId");
+    await page.click("#provinceId", { timeout: 10000 });
     await page.waitForSelector('[role="option"]', { timeout: 10000 });
     await page.click('[role="option"]:has-text("สงขลา")');
     await page.keyboard.press("Escape");
-    await expect(provinceInput).toHaveValue("สงขลา", { timeout: 30000 });
+    await expect(provinceInput).toContainText("สงขลา", { timeout: 30000 });
 
-    const tambonButton = page.locator('[id*="tambonId"] button');
-    await expect(tambonButton).toBeDisabled();
+    const tambonDropdown = page.locator("#tambonId");
+    await expect(tambonDropdown).toHaveAttribute("data-p-disabled", "true");
   });
 
   test("TC-055: ตรวจสอบแผนที่โต้ตอบได้", async ({ page }) => {

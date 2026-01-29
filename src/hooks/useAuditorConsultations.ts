@@ -30,10 +30,10 @@ export function useAuditorConsultations(initialRows = 10) {
 
   // province/district/subdistrict selection (ids)
   const [selectedProvinceId, setSelectedProvinceId] = useState<number | null>(
-    null
+    null,
   );
   const [selectedDistrictId, setSelectedDistrictId] = useState<number | null>(
-    null
+    null,
   );
   const [selectedSubDistrictId, setSelectedSubDistrictId] = useState<
     number | null
@@ -43,10 +43,10 @@ export function useAuditorConsultations(initialRows = 10) {
   const [appliedFromDate, setAppliedFromDate] = useState<Date | null>(null);
   const [appliedToDate, setAppliedToDate] = useState<Date | null>(null);
   const [appliedProvinceName, setAppliedProvinceName] = useState<string | null>(
-    null
+    null,
   );
   const [appliedDistrictName, setAppliedDistrictName] = useState<string | null>(
-    null
+    null,
   );
   const [appliedSubDistrictName, setAppliedSubDistrictName] = useState<
     string | null
@@ -152,9 +152,7 @@ export function useAuditorConsultations(initialRows = 10) {
 
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(
-            errorData.message || "Failed to create advice and defect"
-          );
+          throw new Error(errorData.message || "บันทึกข้อมูลไม่สำเร็จ");
         }
 
         const data = await response.json();
@@ -168,7 +166,7 @@ export function useAuditorConsultations(initialRows = 10) {
         setSavingAdviceAndDefect(false);
       }
     },
-    [fetchItems]
+    [fetchItems],
   );
 
   const updateAdviceAndDefect = useCallback(
@@ -188,9 +186,7 @@ export function useAuditorConsultations(initialRows = 10) {
 
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(
-            errorData.userMessage || "Failed to update advice and defect"
-          );
+          throw new Error(errorData.userMessage || "บันทึกข้อมูลไม่สำเร็จ");
         }
 
         const data = await response.json();
@@ -204,7 +200,7 @@ export function useAuditorConsultations(initialRows = 10) {
         setSavingAdviceAndDefect(false);
       }
     },
-    [fetchItems]
+    [fetchItems],
   );
 
   const handlePageChange = useCallback((event: DataTablePageEvent) => {
@@ -235,7 +231,7 @@ export function useAuditorConsultations(initialRows = 10) {
     // map selected ids to names using thaiProvinceData
     if (selectedProvinceId) {
       const prov: any = (thaiProvinceData as any).find(
-        (p: any) => p.id === selectedProvinceId
+        (p: any) => p.id === selectedProvinceId,
       );
       setAppliedProvinceName(prov?.name_th || null);
     } else {
@@ -247,7 +243,7 @@ export function useAuditorConsultations(initialRows = 10) {
       let districtName: string | null = null;
       for (const p of thaiProvinceData as any) {
         const found = (p.amphure || []).find(
-          (a: any) => a.id === selectedDistrictId
+          (a: any) => a.id === selectedDistrictId,
         );
         if (found) {
           districtName = found.name_th;
@@ -264,7 +260,7 @@ export function useAuditorConsultations(initialRows = 10) {
       for (const p of thaiProvinceData as any) {
         for (const a of p.amphure || []) {
           const found = (a.tambon || []).find(
-            (t: any) => t.id === selectedSubDistrictId
+            (t: any) => t.id === selectedSubDistrictId,
           );
           if (found) {
             subName = found.name_th;

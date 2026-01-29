@@ -1,4 +1,4 @@
-﻿import { test, expect } from "@playwright/test";
+﻿import { expect, test } from "@playwright/test";
 
 const AUDITOR_USER = {
   email: process.env.E2E_TEST_AUDITOR_EMAIL,
@@ -246,7 +246,7 @@ async function gotoStep2(page) {
   const { next } = getNavButtons(page);
   await next.click();
   await expect(
-    page.locator('input[name="inspectionType"]').first()
+    page.locator('input[name="inspectionType"]').first(),
   ).toBeVisible({ timeout: 10000 });
 }
 
@@ -265,7 +265,7 @@ async function gotoStep3(page) {
   const { next } = getNavButtons(page);
   await next.click();
   await expect(
-    page.locator('input[type="checkbox"][id^="auditor-"]').first()
+    page.locator('input[type="checkbox"][id^="auditor-"]').first(),
   ).toBeVisible({ timeout: 10000 });
 }
 
@@ -292,7 +292,7 @@ async function setInspectionDate(page) {
   await expect(panel).toBeVisible({ timeout: 10000 });
   await panel
     .locator(
-      "td:not(.p-disabled):not(.p-datepicker-other-month) span:not(.p-disabled)"
+      "td:not(.p-disabled):not(.p-datepicker-other-month) span:not(.p-disabled)",
     )
     .first()
     .click();
@@ -338,7 +338,7 @@ test.describe("กำหนดการตรวจประเมิน - ผ�
 
     test("TC-002: ล็อกอินผู้ตรวจประเมินและเปิดหน้าแอป", async ({ page }) => {
       await expect(
-        getAutoCompleteInput(page, "searchProvinceId")
+        getAutoCompleteInput(page, "searchProvinceId"),
       ).toBeVisible();
       await expect(page.locator(".primary-datatable-wrapper")).toBeVisible();
     });
@@ -415,25 +415,26 @@ test.describe("กำหนดการตรวจประเมิน - ผ�
 
       await resetRequest;
       await expect(getAutoCompleteInput(page, "searchProvinceId")).toHaveValue(
-        ""
+        "",
       );
       await expect(getAutoCompleteInput(page, "searchAmphureId")).toHaveValue(
-        ""
+        "",
       );
       await expect(getAutoCompleteInput(page, "searchTambonId")).toHaveValue(
-        ""
+        "",
       );
     });
 
     test("TC-007: เลือกแถวสวนยางสำเร็จ", async ({ page }) => {
       await selectFirstFarmRow(page);
+      await page.waitForTimeout(3000);
     });
 
     test("TC-008: กดถัดไปโดยไม่เลือกสวนยาง", async ({ page }) => {
       const { next } = getNavButtons(page);
       await next.click();
       await expect(
-        getAutoCompleteInput(page, "searchProvinceId")
+        getAutoCompleteInput(page, "searchProvinceId"),
       ).toBeVisible();
       await expect(page.locator('input[name="inspectionType"]')).toHaveCount(0);
     });
@@ -443,12 +444,17 @@ test.describe("กำหนดการตรวจประเมิน - ผ�
       const firstRow = table.locator("tbody tr").first();
       await getRowActionButton(firstRow).click();
 
-      const modal = page.locator(".fixed.inset-0");
+      const modal = page.getByRole("dialog", { name: "รายละเอียดสวนยางพารา" });
       await expect(modal).toBeVisible({ timeout: 10000 });
+      await expect(modal.getByText("ที่ตั้งสวนยาง")).toBeVisible();
       await expect(modal.locator(".primary-datatable-wrapper")).toBeVisible();
 
-      const closeButton = modal.locator("div.mt-6.flex.justify-end button");
-      await closeButton.first().click();
+      const closeButton = modal
+        .locator(".p-dialog-footer")
+        .getByRole("button", {
+          name: "ปิด",
+        });
+      await closeButton.click();
       await expect(modal).toBeHidden({ timeout: 10000 });
     });
 
@@ -457,10 +463,10 @@ test.describe("กำหนดการตรวจประเมิน - ผ�
       const { next } = getNavButtons(page);
       await next.click();
       await expect(
-        page.locator('input[name="inspectionType"]').first()
+        page.locator('input[name="inspectionType"]').first(),
       ).toBeVisible({ timeout: 10000 });
       await expect(
-        page.locator('input[type="checkbox"][id^="auditor-"]')
+        page.locator('input[type="checkbox"][id^="auditor-"]'),
       ).toHaveCount(0);
     });
 
@@ -470,7 +476,7 @@ test.describe("กำหนดการตรวจประเมิน - ผ�
       const { next } = getNavButtons(page);
       await next.click();
       await expect(
-        page.locator('input[type="checkbox"][id^="auditor-"]').first()
+        page.locator('input[type="checkbox"][id^="auditor-"]').first(),
       ).toBeVisible({ timeout: 10000 });
     });
 
@@ -483,7 +489,7 @@ test.describe("กำหนดการตรวจประเมิน - ผ�
     test("TC-013: ค้นหาผู้ตรวจประเมิน", async ({ page }) => {
       await gotoStep3(page);
 
-      const searchInput = page.locator("div.mb-4.flex.gap-2 input").first();
+      const searchInput = page.getByPlaceholder("ค้นหาผู้ตรวจประเมิน").first();
       await searchInput.fill("สมชาย");
 
       const requestPromise = page.waitForRequest((request) => {
@@ -494,7 +500,7 @@ test.describe("กำหนดการตรวจประเมิน - ผ�
         return params.get("search") === "สมชาย";
       });
 
-      await page.locator("div.mb-4.flex.gap-2 button").first().click();
+      await page.getByRole("button", { name: "ค้นหา" }).first().click();
 
       await requestPromise;
     });
@@ -537,7 +543,7 @@ test.describe("กำหนดการตรวจประเมิน - ผ�
       const submitButton = getNavButtons(page).next;
       await Promise.all([
         page.waitForRequest((request) =>
-          request.url().includes("/api/v1/inspections/schedule")
+          request.url().includes("/api/v1/inspections/schedule"),
         ),
         submitButton.click(),
       ]);
@@ -548,7 +554,7 @@ test.describe("กำหนดการตรวจประเมิน - ผ�
         additionalAuditorIds: [MOCK_AUDITORS[0].id],
       });
       expect(
-        new Date(capturedPayload.inspectionDateAndTime).toString()
+        new Date(capturedPayload.inspectionDateAndTime).toString(),
       ).not.toBe("Invalid Date");
 
       await page.waitForURL(/\/auditor\/dashboard/, {
