@@ -1,4 +1,4 @@
-﻿import { test, expect } from "@playwright/test";
+﻿import { expect, test } from "@playwright/test";
 
 const AUDITOR_USER = {
   email: process.env.E2E_TEST_AUDITOR_WITH_INSP_EMAIL,
@@ -131,7 +131,7 @@ const EXTRA_INSPECTIONS = Array.from({ length: 20 }, (_, index) => {
     inspectionId: id,
     inspectionNo: 2025120000 + id,
     inspectionDateAndTime: new Date(
-      Date.UTC(2025, 1, 1 + index, 9, 0, 0)
+      Date.UTC(2025, 1, 1 + index, 9, 0, 0),
     ).toISOString(),
     inspectionTypeId: 1,
     rubberFarmId: 200 + id,
@@ -363,7 +363,9 @@ function makeInspection({
 }
 
 function getValueByPath(obj, path) {
-  return path.split(".").reduce((acc, key) => (acc ? acc[key] : undefined), obj);
+  return path
+    .split(".")
+    .reduce((acc, key) => (acc ? acc[key] : undefined), obj);
 }
 
 function compareValues(a, b, order) {
@@ -444,9 +446,14 @@ function getAutoCompleteInput(page, id) {
     .first();
 }
 
+async function expectVisible(locator, options) {
+  await locator.scrollIntoViewIfNeeded();
+  await expect(locator).toBeVisible(options);
+}
+
 async function selectAutoCompleteOptionByText(page, id, text) {
   const input = getAutoCompleteInput(page, id);
-  await expect(input).toBeVisible({ timeout: 10000 });
+  await expectVisible(input, { timeout: 10000 });
   await input.click();
   await input.fill(text);
 
@@ -455,10 +462,10 @@ async function selectAutoCompleteOptionByText(page, id, text) {
   await dropdown.click();
 
   const panel = page.locator(".p-autocomplete-panel:visible").first();
-  await expect(panel).toBeVisible({ timeout: 10000 });
+  await expectVisible(panel, { timeout: 10000 });
 
   const option = panel.getByRole("option", { name: text, exact: true }).first();
-  await expect(option).toBeVisible({ timeout: 10000 });
+  await expectVisible(option, { timeout: 10000 });
   await option.click();
   await expect(input).toHaveValue(text, { timeout: 10000 });
   await page.keyboard.press("Escape");
@@ -470,7 +477,7 @@ async function selectAutoCompleteOptionByText(page, id, text) {
 
 async function selectAutoCompleteOptionByIndex(page, id, index) {
   const input = getAutoCompleteInput(page, id);
-  await expect(input).toBeVisible({ timeout: 10000 });
+  await expectVisible(input, { timeout: 10000 });
   await input.click();
 
   const widget = getAutoCompleteWidget(page, id);
@@ -478,10 +485,10 @@ async function selectAutoCompleteOptionByIndex(page, id, index) {
   await dropdown.click();
 
   const panel = page.locator(".p-autocomplete-panel:visible").first();
-  await expect(panel).toBeVisible({ timeout: 10000 });
+  await expectVisible(panel, { timeout: 10000 });
 
   const option = panel.getByRole("option").nth(index);
-  await expect(option).toBeVisible({ timeout: 10000 });
+  await expectVisible(option, { timeout: 10000 });
   await option.click();
   await expect(input).not.toHaveValue("", { timeout: 10000 });
   await page.keyboard.press("Escape");
@@ -493,8 +500,8 @@ async function selectAutoCompleteOptionByIndex(page, id, index) {
 
 async function waitForInspectionsTable(page) {
   const table = page.locator(".primary-datatable-wrapper").first();
-  await expect(table).toBeVisible({ timeout: 10000 });
-  await expect(table.locator("table")).toBeVisible({ timeout: 10000 });
+  await expectVisible(table, { timeout: 10000 });
+  await expectVisible(table.locator("table"), { timeout: 10000 });
   return table;
 }
 
@@ -504,7 +511,7 @@ async function getInspectionRow(page, inspectionNo) {
     .locator("tbody tr")
     .filter({ hasText: String(inspectionNo) })
     .first();
-  await expect(row).toBeVisible({ timeout: 10000 });
+  await expectVisible(row, { timeout: 10000 });
   return row;
 }
 
@@ -540,9 +547,9 @@ function getFarmDetailsModal(page) {
 }
 
 function getInspectionFormModal(page) {
-  return page
-    .locator(".fixed.inset-0")
-    .filter({ has: page.getByRole("heading", { name: INSPECTION_FORM_TITLE }) });
+  return page.locator(".fixed.inset-0").filter({
+    has: page.getByRole("heading", { name: INSPECTION_FORM_TITLE }),
+  });
 }
 
 async function openFarmDetails(page, inspectionNo = INSPECTION_NO) {
@@ -550,9 +557,9 @@ async function openFarmDetails(page, inspectionNo = INSPECTION_NO) {
   const buttons = row.locator("button");
   await expect(buttons).toHaveCount(2);
   await buttons.nth(0).click();
-  await expect(
-    page.getByRole("heading", { name: FARM_DETAILS_TITLE })
-  ).toBeVisible({ timeout: 10000 });
+  await expectVisible(page.getByRole("heading", { name: FARM_DETAILS_TITLE }), {
+    timeout: 10000,
+  });
   return getFarmDetailsModal(page);
 }
 
@@ -561,18 +568,19 @@ async function openInspectionForm(page, inspectionNo = INSPECTION_NO) {
   const buttons = row.locator("button");
   await expect(buttons).toHaveCount(2);
   await buttons.nth(1).click();
-  await expect(
-    page.getByRole("heading", { name: INSPECTION_FORM_TITLE })
-  ).toBeVisible({ timeout: 10000 });
+  await expectVisible(
+    page.getByRole("heading", { name: INSPECTION_FORM_TITLE }),
+    { timeout: 10000 },
+  );
   return getInspectionFormModal(page);
 }
 
 async function selectDropdownOptionByIndex(page, dropdown, index) {
   await dropdown.click();
   const panel = page.locator(".p-dropdown-panel:visible").first();
-  await expect(panel).toBeVisible({ timeout: 10000 });
+  await expectVisible(panel, { timeout: 10000 });
   const option = panel.locator('[role="option"]').nth(index);
-  await expect(option).toBeVisible({ timeout: 10000 });
+  await expectVisible(option, { timeout: 10000 });
   await option.click();
   await expect(panel).toBeHidden({ timeout: 10000 });
 }
@@ -613,19 +621,19 @@ async function mockInspectionsListRoute(page, { inspections, delayMs = 0 }) {
 
     if (province) {
       filtered = filtered.filter(
-        (item) => item.rubberFarm?.province === province
+        (item) => item.rubberFarm?.province === province,
       );
     }
 
     if (district) {
       filtered = filtered.filter(
-        (item) => item.rubberFarm?.district === district
+        (item) => item.rubberFarm?.district === district,
       );
     }
 
     if (subDistrict) {
       filtered = filtered.filter(
-        (item) => item.rubberFarm?.subDistrict === subDistrict
+        (item) => item.rubberFarm?.subDistrict === subDistrict,
       );
     }
 
@@ -669,7 +677,7 @@ async function mockInspectionsListRoute(page, { inspections, delayMs = 0 }) {
 async function mockInspectionItemsRoute(
   page,
   itemsByInspectionId,
-  { delayMs = 0 } = {}
+  { delayMs = 0 } = {},
 ) {
   await page.route("**/api/v1/inspection-items**", async (route) => {
     if (route.request().method() !== "GET") {
@@ -704,7 +712,10 @@ async function mockFarmDetailsRoute(page, { farmDetails, delayMs = 0 }) {
       await new Promise((resolve) => setTimeout(resolve, delayMs));
     }
 
-    const match = route.request().url().match(/rubber-farms\/(\d+)/);
+    const match = route
+      .request()
+      .url()
+      .match(/rubber-farms\/(\d+)/);
     const farmId = Number(match?.[1]);
     if (farmDetails && farmId === farmDetails.rubberFarmId) {
       await route.fulfill({
@@ -768,10 +779,13 @@ async function mockSaveRoutes(page, { inspections }) {
       return;
     }
 
-    const match = route.request().url().match(/inspections\/(\d+)\/status/);
+    const match = route
+      .request()
+      .url()
+      .match(/inspections\/(\d+)\/status/);
     const inspectionId = Number(match?.[1]);
     const target = inspections.find(
-      (item) => item.inspectionId === inspectionId
+      (item) => item.inspectionId === inspectionId,
     );
     if (target) {
       target.inspectionStatus = INSPECTION_STATUS_DONE;
@@ -809,24 +823,18 @@ test.describe("ตรวจประเมินสวนยาง - ผู้�
   });
 
   test("TC-001: เข้าเมนูรายการตรวจประเมิน", async ({ page }) => {
-    await expect(
-      page.getByRole("heading", { name: PAGE_HEADING })
-    ).toBeVisible();
-    await expect(page.getByText(PAGE_SUBTITLE)).toBeVisible();
-    await expect(page.locator(".primary-datatable-wrapper")).toBeVisible();
+    await expectVisible(page.getByRole("heading", { name: PAGE_HEADING }));
+    await expectVisible(page.getByText(PAGE_SUBTITLE));
+    await expectVisible(page.locator(".primary-datatable-wrapper"));
   });
 
-  test("TC-002: แสดงรายการการตรวจประเมินเมื่อมีข้อมูล", async ({
-    page,
-  }) => {
+  test("TC-002: แสดงรายการการตรวจประเมินเมื่อมีข้อมูล", async ({ page }) => {
     const table = await waitForInspectionsTable(page);
     const rowCount = await table.locator("tbody tr").count();
     expect(rowCount).toBeGreaterThan(0);
   });
 
-  test("TC-003: แสดงข้อความเมื่อไม่มีรายการตรวจประเมิน", async ({
-    page,
-  }) => {
+  test("TC-003: แสดงข้อความเมื่อไม่มีรายการตรวจประเมิน", async ({ page }) => {
     await mockInspectionsListRoute(page, { inspections: [] });
     await page.reload({ waitUntil: "domcontentloaded" });
 
@@ -839,7 +847,7 @@ test.describe("ตรวจประเมินสวนยาง - ผู้�
     await page.reload({ waitUntil: "domcontentloaded" });
 
     const spinner = page.locator(".animate-spin").first();
-    await expect(spinner).toBeVisible();
+    await expectVisible(spinner);
     await waitForInspectionsTable(page);
   });
 
@@ -851,13 +859,11 @@ test.describe("ตรวจประเมินสวนยาง - ผู้�
   test("TC-006: แสดงรหัสการตรวจในแต่ละแถว", async ({ page }) => {
     const row = await getInspectionRow(page, INSPECTION_NO);
     await expect(row.locator("td").first()).toContainText(
-      String(INSPECTION_NO)
+      String(INSPECTION_NO),
     );
   });
 
-  test("TC-007: แสดงวันที่และเวลาตรวจในรูปแบบที่อ่านได้", async ({
-    page,
-  }) => {
+  test("TC-007: แสดงวันที่และเวลาตรวจในรูปแบบที่อ่านได้", async ({ page }) => {
     const row = await getInspectionRow(page, INSPECTION_NO);
     const dateCell = row.locator("td").nth(1);
     const dateText = (await dateCell.textContent()) || "";
@@ -868,7 +874,7 @@ test.describe("ตรวจประเมินสวนยาง - ผู้�
   test("TC-008: แสดงประเภทการตรวจประเมิน", async ({ page }) => {
     const row = await getInspectionRow(page, INSPECTION_NO);
     await expect(row.locator("td").nth(2)).toContainText(
-      INSPECTION_TYPES[0].typeName
+      INSPECTION_TYPES[0].typeName,
     );
   });
 
@@ -923,10 +929,10 @@ test.describe("ตรวจประเมินสวนยาง - ผู้�
     await selectAutoCompleteOptionByText(page, "district-search", "หาดใหญ่");
     await clickSearchButton(page);
     await expect(getAutoCompleteInput(page, "province-search")).toHaveValue(
-      PROVINCE_SONGKHLA
+      PROVINCE_SONGKHLA,
     );
     await expect(getAutoCompleteInput(page, "district-search")).toHaveValue(
-      DISTRICT_HATYAI
+      DISTRICT_HATYAI,
     );
   });
 
@@ -968,10 +974,10 @@ test.describe("ตรวจประเมินสวนยาง - ผู้�
     await selectAutoCompleteOptionByText(page, "district-search", "หาดใหญ่");
     await clickSearchButton(page);
     await expect(getAutoCompleteInput(page, "province-search")).toHaveValue(
-      PROVINCE_SONGKHLA
+      PROVINCE_SONGKHLA,
     );
     await expect(getAutoCompleteInput(page, "district-search")).toHaveValue(
-      DISTRICT_HATYAI
+      DISTRICT_HATYAI,
     );
 
     const table = await waitForInspectionsTable(page);
@@ -1016,13 +1022,11 @@ test.describe("ตรวจประเมินสวนยาง - ผู้�
     await expect(getAutoCompleteInput(page, "province-search")).toHaveValue("");
     await expect(getAutoCompleteInput(page, "district-search")).toHaveValue("");
     await expect(getAutoCompleteInput(page, "subdistrict-search")).toHaveValue(
-      ""
+      "",
     );
   });
 
-  test("TC-020: เปลี่ยนจังหวัดแล้วอำเภอ/ตำบลถูกรีเซ็ต", async ({
-    page,
-  }) => {
+  test("TC-020: เปลี่ยนจังหวัดแล้วอำเภอ/ตำบลถูกรีเซ็ต", async ({ page }) => {
     await selectAutoCompleteOptionByText(page, "province-search", "สงขลา");
     await selectAutoCompleteOptionByText(page, "district-search", "หาดใหญ่");
     await selectAutoCompleteOptionByText(page, "subdistrict-search", "คอหงส์");
@@ -1031,7 +1035,7 @@ test.describe("ตรวจประเมินสวนยาง - ผู้�
 
     await expect(getAutoCompleteInput(page, "district-search")).toHaveValue("");
     await expect(getAutoCompleteInput(page, "subdistrict-search")).toHaveValue(
-      ""
+      "",
     );
   });
 
@@ -1043,21 +1047,25 @@ test.describe("ตรวจประเมินสวนยาง - ผู้�
     await selectAutoCompleteOptionByText(page, "district-search", "สิงหนคร");
 
     await expect(getAutoCompleteInput(page, "subdistrict-search")).toHaveValue(
-      ""
+      "",
     );
   });
 
   test("TC-022: ไม่พบผลลัพธ์การค้นหา", async ({ page }) => {
     await selectAutoCompleteOptionByText(page, "province-search", "ภูเก็ต");
-    await selectAutoCompleteOptionByText(page, "district-search", "เมืองภูเก็ต");
+    await selectAutoCompleteOptionByText(
+      page,
+      "district-search",
+      "เมืองภูเก็ต",
+    );
     await page.unroute("**/api/v1/inspections**");
     await mockInspectionsListRoute(page, { inspections: [] });
     await clickSearchButton(page);
     await expect(getAutoCompleteInput(page, "province-search")).toHaveValue(
-      PROVINCE_PHUKET
+      PROVINCE_PHUKET,
     );
     await expect(getAutoCompleteInput(page, "district-search")).toHaveValue(
-      "เมืองภูเก็ต"
+      "เมืองภูเก็ต",
     );
 
     const table = await waitForInspectionsTable(page);
@@ -1092,7 +1100,7 @@ test.describe("ตรวจประเมินสวนยาง - ผู้�
     const option25 = page
       .locator(".p-dropdown-items li", { hasText: "25" })
       .first();
-    await expect(option25).toBeVisible();
+    await expectVisible(option25);
 
     const requestPromise = page.waitForRequest((request) => {
       if (!request.url().includes("/api/v1/inspections")) return false;
@@ -1178,15 +1186,18 @@ test.describe("ตรวจประเมินสวนยาง - ผู้�
 
   test("TC-029: เปิดหน้าต่างรายละเอียดสวนยาง", async ({ page }) => {
     const modal = await openFarmDetails(page);
-    await expect(modal).toBeVisible();
+    await expectVisible(modal);
   });
 
   test("TC-030: แสดงสถานะโหลดข้อมูลรายละเอียด", async ({ page }) => {
-    await mockFarmDetailsRoute(page, { farmDetails: MOCK_FARM_DETAILS, delayMs: 1200 });
+    await mockFarmDetailsRoute(page, {
+      farmDetails: MOCK_FARM_DETAILS,
+      delayMs: 1200,
+    });
     const modal = await openFarmDetails(page);
 
     const spinner = modal.locator(".animate-spin").first();
-    await expect(spinner).toBeVisible();
+    await expectVisible(spinner);
   });
 
   test("TC-031: แสดงข้อมูลสำคัญของสวนยาง", async ({ page }) => {
@@ -1195,7 +1206,9 @@ test.describe("ตรวจประเมินสวนยาง - ผู้�
     await expect(modal).toContainText(MOCK_FARM_DETAILS.province);
     await expect(modal).toContainText(MOCK_FARM_DETAILS.district);
     await expect(modal).toContainText(MOCK_FARM_DETAILS.subDistrict);
-    await expect(modal).toContainText(MOCK_FARM_DETAILS.productDistributionType);
+    await expect(modal).toContainText(
+      MOCK_FARM_DETAILS.productDistributionType,
+    );
   });
 
   test("TC-032: ปิด Dialog ด้วยปุ่มปิด", async ({ page }) => {
@@ -1212,7 +1225,7 @@ test.describe("ตรวจประเมินสวนยาง - ผู้�
 
   test("TC-034: เข้าแบบฟอร์มตรวจประเมินจากรายการ", async ({ page }) => {
     const modal = await openInspectionForm(page);
-    await expect(modal).toBeVisible();
+    await expectVisible(modal);
   });
 
   test("TC-035: แสดงข้อมูลหัวเรื่องการตรวจ", async ({ page }) => {
@@ -1222,7 +1235,7 @@ test.describe("ตรวจประเมินสวนยาง - ผู้�
 
   test("TC-036: โหลดรายการข้อกำหนด/รายการตรวจ", async ({ page }) => {
     const modal = await openInspectionForm(page);
-    await expect(modal.locator('[id^="eval-result-"]').first()).toBeVisible();
+    await expectVisible(modal.locator('[id^="eval-result-"]').first());
   });
 
   test("TC-037: เปิดดูรายละเอียดรายการตรวจ", async ({ page }) => {
@@ -1230,9 +1243,7 @@ test.describe("ตรวจประเมินสวนยาง - ผู้�
     await expect(modal).toContainText(REQUIREMENT_SAMPLE_NAME);
   });
 
-  test('TC-038: กดปุ่ม "ถัดไป" เพื่อเปลี่ยนรายการ', async ({
-    page,
-  }) => {
+  test('TC-038: กดปุ่ม "ถัดไป" เพื่อเปลี่ยนรายการ', async ({ page }) => {
     const modal = await openInspectionForm(page);
     const info = modal.locator("p", { hasText: "รายการที่" }).first();
     const beforeText = (await info.textContent()) || "";
@@ -1252,9 +1263,7 @@ test.describe("ตรวจประเมินสวนยาง - ผู้�
     await expect(info).not.toHaveText(afterNextText);
   });
 
-  test("TC-040: บันทึกรายการโดยไม่เลือกผลประเมิน", async ({
-    page,
-  }) => {
+  test("TC-040: บันทึกรายการโดยไม่เลือกผลประเมิน", async ({ page }) => {
     const modal = await openInspectionForm(page);
     let saveCalled = false;
 
@@ -1270,9 +1279,7 @@ test.describe("ตรวจประเมินสวนยาง - ผู้�
     expect(saveCalled).toBe(false);
   });
 
-  test("TC-041: บันทึกรายการเมื่อเลือกผลประเมินแล้ว", async ({
-    page,
-  }) => {
+  test("TC-041: บันทึกรายการเมื่อเลือกผลประเมินแล้ว", async ({ page }) => {
     const modal = await openInspectionForm(page);
     await fillAllRequirements(modal, page);
 
@@ -1320,7 +1327,9 @@ test.describe("ตรวจประเมินสวนยาง - ผู้�
     const modal = await openInspectionForm(page);
 
     const requestPromise = page.waitForRequest((request) => {
-      return request.url().includes(`/api/v1/inspections/${INSPECTION_ID}/status`);
+      return request
+        .url()
+        .includes(`/api/v1/inspections/${INSPECTION_ID}/status`);
     });
 
     await modal.getByRole("button", { name: "จบการตรวจประเมิน" }).click();
@@ -1331,10 +1340,9 @@ test.describe("ตรวจประเมินสวนยาง - ผู้�
     await expect(row).toContainText(INSPECTION_STATUS_DONE);
   });
 
-  test("TC-045: ป้องกันการเสร็จสิ้นเมื่อข้อมูลไม่ครบ", async ({
-    page,
-  }) => {
-    inspectionItemsById[INSPECTION_ID] = createIncompleteSingleInspectionItems();
+  test("TC-045: ป้องกันการเสร็จสิ้นเมื่อข้อมูลไม่ครบ", async ({ page }) => {
+    inspectionItemsById[INSPECTION_ID] =
+      createIncompleteSingleInspectionItems();
     await mockInspectionItemsRoute(page, inspectionItemsById);
 
     const modal = await openInspectionForm(page);
