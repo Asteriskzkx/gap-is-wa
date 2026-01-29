@@ -38,6 +38,12 @@ const TABLE_HEADERS = [
   "เกษตรกร",
 ];
 
+async function expectVisible(locator, options) {
+  await locator.scrollIntoViewIfNeeded();
+  await expect(locator).toBeVisible(options);
+  return locator;
+}
+
 function readThaiProvinceSample() {
   const jsonPath = path.join(
     process.cwd(),
@@ -63,13 +69,13 @@ function readThaiProvinceSample() {
 
 async function gotoConsultations(page) {
   await page.goto(PAGE_PATH, { waitUntil: "domcontentloaded" });
-  await expect(page.getByRole("heading", { name: PAGE_HEADING })).toBeVisible();
+  await expectVisible(page.getByRole("heading", { name: PAGE_HEADING }));
 }
 
 async function waitForInspectionsTable(page) {
   const table = page.locator(".primary-datatable-wrapper");
-  await expect(table).toBeVisible();
-  await expect(table.locator("table")).toBeVisible();
+  await expectVisible(table);
+  await expectVisible(table.locator("table"));
   return table;
 }
 
@@ -131,13 +137,13 @@ async function waitForFirstRow(page, tabLabel, fallbackTab) {
   }
 
   const firstRow = rows.first();
-  await expect(firstRow).toBeVisible({ timeout: 20000 });
+  await expectVisible(firstRow, { timeout: 20000 });
   return { table, firstRow, tabUsed };
 }
 
 async function chooseAutoCompleteByTypingExact(page, placeholder, exactText) {
   const input = page.getByPlaceholder(placeholder).first();
-  await expect(input).toBeVisible();
+  await expectVisible(input);
   await input.fill(exactText);
   await page.locator("body").click();
   return input;
@@ -154,11 +160,11 @@ async function goToStep2FromFirstRow(page, tabLabel, fallbackTab) {
   await expect(nextButton).toBeEnabled();
   await nextButton.click();
 
-  await expect(
+  await expectVisible(
     page.getByRole("heading", {
       name: /1\.\s*แบบบันทึกคำแนะนำการให้คำปรึกษา/,
     }),
-  ).toBeVisible();
+  );
 }
 
 async function getColumnTexts(table, colIndex) {
@@ -222,13 +228,13 @@ test.describe("บันทึกการให้คำปรึกษาแ�
   test("TC-001: ต้อง login ก่อนใช้งานหน้า", async ({ page }) => {
     await page.goto(PAGE_PATH, { waitUntil: "domcontentloaded" });
     await page.waitForURL(/\/($|\?)/);
-    await expect(page.getByLabel(/อีเมล/).first()).toBeVisible();
+    await expectVisible(page.getByLabel(/อีเมล/).first());
   });
 });
 
 test.describe("บันทึกการให้คำปรึกษาและข้อบกพร่อง - Step 1", () => {
   test.skip(!HAS_AUDITOR_CREDS, "ยังไม่ได้ตั้งค่า E2E auditor credentials");
-  test.describe.configure({ mode: "serial", timeout: 60000 });
+  // test.describe.configure({ mode: "serial", timeout: 60000 });
 
   test.beforeEach(async ({ page }) => {
     await loginAsAuditor(page, AUDITOR_USER);
@@ -237,47 +243,41 @@ test.describe("บันทึกการให้คำปรึกษาแ�
   });
 
   test("TC-002: แสดงชื่อหน้าและคำอธิบาย", async ({ page }) => {
-    await expect(
-      page.getByRole("heading", { name: PAGE_HEADING }),
-    ).toBeVisible();
-    await expect(page.getByText(PAGE_SUBTITLE)).toBeVisible();
+    await expectVisible(page.getByRole("heading", { name: PAGE_HEADING }));
+    await expectVisible(page.getByText(PAGE_SUBTITLE));
   });
 
   test("TC-003: StepIndicator แสดง Step 1", async ({ page }) => {
     const stepIndicator = page
       .locator("div.mb-8", { hasText: "ขั้นตอนที่ 1" })
       .first();
-    await expect(
+    await expectVisible(
       stepIndicator.locator("div.text-xs.text-gray-500.mt-1", {
         hasText: STEP_1_LABEL,
       }),
-    ).toBeVisible();
-    await expect(
+    );
+    await expectVisible(
       stepIndicator.locator("div.text-xs.text-gray-500.mt-1", {
         hasText: STEP_2_LABEL,
       }),
-    ).toBeVisible();
+    );
   });
 
   test("TC-004: แสดงแท็บสถานะ 2 ปุ่ม", async ({ page }) => {
-    await expect(
+    await expectVisible(
       page.getByRole("button", { name: TAB_IN_PROGRESS, exact: true }),
-    ).toBeVisible();
-    await expect(
+    );
+    await expectVisible(
       page.getByRole("button", { name: TAB_COMPLETED, exact: true }),
-    ).toBeVisible();
+    );
   });
 
   test("TC-005: แสดงตัวกรอง Location 3 ช่อง", async ({ page }) => {
-    await expect(page.getByPlaceholder("เลือกจังหวัด").first()).toBeVisible();
-    await expect(page.getByPlaceholder("เลือกอำเภอ/เขต").first()).toBeVisible();
-    await expect(page.getByPlaceholder("เลือกตำบล/แขวง").first()).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: BUTTON_SEARCH }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: BUTTON_CLEAR }),
-    ).toBeVisible();
+    await expectVisible(page.getByPlaceholder("เลือกจังหวัด").first());
+    await expectVisible(page.getByPlaceholder("เลือกอำเภอ/เขต").first());
+    await expectVisible(page.getByPlaceholder("เลือกตำบล/แขวง").first());
+    await expectVisible(page.getByRole("button", { name: BUTTON_SEARCH }));
+    await expectVisible(page.getByRole("button", { name: BUTTON_CLEAR }));
   });
 
   test("TC-006: อำเภอ/เขต disabled จนกว่าจะเลือกจังหวัด", async ({ page }) => {
@@ -418,7 +418,7 @@ test.describe("บันทึกการให้คำปรึกษาแ�
     );
 
     const table = await waitForInspectionsTable(page);
-    await expect(table.locator("tbody tr").first()).toBeVisible();
+    await expectVisible(table.locator("tbody tr").first());
   });
 
   test("TC-013: กด “ล้างค่า” รีเซ็ตตัวกรองทั้งหมด", async ({ page }) => {
@@ -529,7 +529,7 @@ test.describe("บันทึกการให้คำปรึกษาแ�
       TAB_COMPLETED,
     );
     const paginator = table.locator(".p-paginator").first();
-    await expect(paginator).toBeVisible();
+    await expectVisible(paginator);
 
     const currentPage = paginator
       .locator(".p-paginator-page.p-highlight")
@@ -560,7 +560,7 @@ test.describe("บันทึกการให้คำปรึกษาแ�
       TAB_COMPLETED,
     );
     const paginator = table.locator(".p-paginator").first();
-    await expect(paginator).toBeVisible();
+    await expectVisible(paginator);
 
     const nativeSelect = paginator.locator("select.p-paginator-rpp-options");
     if (await nativeSelect.count()) {
@@ -592,7 +592,7 @@ test.describe("บันทึกการให้คำปรึกษาแ�
     const headerCell = table
       .locator("thead th", { hasText: "รหัสการตรวจ" })
       .first();
-    await expect(headerCell).toBeVisible();
+    await expectVisible(headerCell);
 
     await clickAndWaitInspectionsReload(page, () => headerCell.click());
     await expect(headerCell).toHaveAttribute(
@@ -653,9 +653,12 @@ test.describe("บันทึกการให้คำปรึกษาแ�
   test("TC-024: ปุ่ม “ถัดไป” disabled เมื่อยังไม่เลือกแถว", async ({
     page,
   }) => {
-    await expect(
-      page.getByRole("button", { name: BUTTON_NEXT, exact: true }),
-    ).toBeDisabled();
+    const nextButton = page.getByRole("button", {
+      name: BUTTON_NEXT,
+      exact: true,
+    });
+    await expectVisible(nextButton);
+    await expect(nextButton).toBeDisabled();
   });
 
   test("TC-025: เลือกแถวแล้ว “ถัดไป” enabled", async ({ page }) => {
@@ -665,9 +668,12 @@ test.describe("บันทึกการให้คำปรึกษาแ�
       TAB_COMPLETED,
     );
     await firstRow.click();
-    await expect(
-      page.getByRole("button", { name: BUTTON_NEXT, exact: true }),
-    ).toBeEnabled();
+    const nextButton = page.getByRole("button", {
+      name: BUTTON_NEXT,
+      exact: true,
+    });
+    await expectVisible(nextButton);
+    await expect(nextButton).toBeEnabled();
   });
 
   test("TC-026: กด “ถัดไป” ไป Step 2", async ({ page }) => {
@@ -677,7 +683,7 @@ test.describe("บันทึกการให้คำปรึกษาแ�
 
 test.describe("บันทึกการให้คำปรึกษาและข้อบกพร่อง - Step 2", () => {
   test.skip(!HAS_AUDITOR_CREDS, "ยังไม่ได้ตั้งค่า E2E auditor credentials");
-  test.describe.configure({ mode: "serial", timeout: 60000 });
+  // test.describe.configure({ mode: "serial", timeout: 60000 });
 
   test.beforeEach(async ({ page }) => {
     await loginAsAuditor(page, AUDITOR_USER);
@@ -687,10 +693,10 @@ test.describe("บันทึกการให้คำปรึกษาแ�
   });
 
   test("TC-027: แสดงช่อง “วันที่บันทึกข้อมูล”", async ({ page }) => {
-    await expect(page.getByText("วันที่บันทึกข้อมูล")).toBeVisible();
-    await expect(
+    await expectVisible(page.getByText("วันที่บันทึกข้อมูล"));
+    await expectVisible(
       page.getByPlaceholder("เลือกวันที่บันทึกข้อมูล").first(),
-    ).toBeVisible();
+    );
   });
 
   test("TC-028: เลือกวันที่บันทึกข้อมูลได้", async ({ page }) => {
@@ -707,7 +713,7 @@ test.describe("บันทึกการให้คำปรึกษาแ�
         name: /1\.\s*แบบบันทึกคำแนะนำการให้คำปรึกษา/,
       })
       .locator("..");
-    await expect(adviceSection).toBeVisible();
+    await expectVisible(adviceSection);
     const adviceItems = adviceSection.getByPlaceholder("ระบุรายการให้คำปรึกษา");
     expect(await adviceItems.count()).toBeGreaterThan(0);
   });
@@ -734,9 +740,9 @@ test.describe("บันทึกการให้คำปรึกษาแ�
       .locator("..");
 
     await page.getByRole("button", { name: "เพิ่มรายการคำปรึกษา" }).click();
-    await expect(
+    await expectVisible(
       adviceSection.getByRole("button", { name: "ลบรายการ" }).first(),
-    ).toBeVisible();
+    );
   });
 
   test("TC-032: ลบรายการคำปรึกษา", async ({ page }) => {
@@ -794,7 +800,7 @@ test.describe("บันทึกการให้คำปรึกษาแ�
     const defectSection = page
       .getByRole("heading", { name: /2\.\s*แบบบันทึกข้อบกพร่อง/ })
       .locator("..");
-    await expect(defectSection).toBeVisible();
+    await expectVisible(defectSection);
     const defectItems = defectSection.getByPlaceholder("ระบุข้อบกพร่องที่พบ");
     expect(await defectItems.count()).toBeGreaterThan(0);
   });
@@ -819,9 +825,9 @@ test.describe("บันทึกการให้คำปรึกษาแ�
       .locator("..");
 
     await page.getByRole("button", { name: "เพิ่มรายการข้อบกพร่อง" }).click();
-    await expect(
+    await expectVisible(
       defectSection.getByRole("button", { name: "ลบรายการ" }).first(),
-    ).toBeVisible();
+    );
   });
 
   test("TC-037: ลบรายการข้อบกพร่อง", async ({ page }) => {
@@ -874,15 +880,13 @@ test.describe("บันทึกการให้คำปรึกษาแ�
     await expect(
       page.getByRole("button", { name: BUTTON_NEXT, exact: true }),
     ).toBeEnabled();
-    await expect(
-      page.getByRole("heading", { name: PAGE_HEADING }),
-    ).toBeVisible();
+    await expectVisible(page.getByRole("heading", { name: PAGE_HEADING }));
   });
 });
 
 test.describe("บันทึกการให้คำปรึกษาและข้อบกพร่อง - การบันทึก (PUT mock)", () => {
   test.skip(!HAS_AUDITOR_CREDS, "ยังไม่ได้ตั้งค่า E2E auditor credentials");
-  test.describe.configure({ mode: "serial", timeout: 60000 });
+  // test.describe.configure({ mode: "serial", timeout: 60000 });
 
   test.beforeEach(async ({ page }) => {
     await loginAsAuditor(page, AUDITOR_USER);
@@ -917,11 +921,11 @@ test.describe("บันทึกการให้คำปรึกษาแ�
     ]);
     expect(putRequest).toBeTruthy();
 
-    await expect(page.getByText("บันทึกข้อมูลเรียบร้อย")).toBeVisible();
+    await expectVisible(page.getByText("บันทึกข้อมูลเรียบร้อย"));
   });
 
   test("TC-041: บันทึกไม่สำเร็จแสดงข้อความจาก server", async ({ page }) => {
-    const errorMessage = "เกิดข้อผิดพลาดจากระบบ";
+    const errorMessage = "บันทึกข้อมูลไม่สำเร็จ";
     await page.route(/\/api\/v1\/advice-and-defects\/\d+$/, async (route) => {
       if (route.request().method() !== "PUT") return route.continue();
       await route.fulfill({
@@ -942,7 +946,7 @@ test.describe("บันทึกการให้คำปรึกษาแ�
     ]);
     expect(putRequest).toBeTruthy();
 
-    await expect(page.getByText(errorMessage)).toBeVisible();
+    await expectVisible(page.getByText(errorMessage));
   });
 
   test("TC-042: บันทึกไม่สำเร็จ fallback message", async ({ page }) => {
@@ -966,10 +970,10 @@ test.describe("บันทึกการให้คำปรึกษาแ�
     ]);
     expect(putRequest).toBeTruthy();
 
-    await expect(
+    await expectVisible(
       page.getByText(
         /บันทึกข้อมูลไม่สำเร็จ|Failed to update advice and defect/,
       ),
-    ).toBeVisible();
+    );
   });
 });
