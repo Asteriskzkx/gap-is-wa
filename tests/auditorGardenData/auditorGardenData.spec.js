@@ -163,12 +163,12 @@ async function loginAsAuditor(page, { email, password }) {
   });
 }
 
-test.describe("บันทึกข้อมูลประจำสวนยาง (serial file)", () => {
-  test.describe.configure({ mode: "serial" });
+test.describe("บันทึกข้อมูลประจำสวนยาง", () => {
+  // test.describe.configure({ mode: "serial" });
 
   test.describe("บันทึกข้อมูลประจำสวนยาง - ผู้ตรวจประเมิน", () => {
     test.skip(!HAS_AUDITOR_CREDS, "ยังไม่ได้ตั้งค่า E2E auditor credentials");
-    test.describe.configure({ mode: "serial" });
+    // test.describe.configure({ mode: "serial" });
 
     test.beforeEach(async ({ page }) => {
       await loginAsAuditor(page, AUDITOR_USER);
@@ -491,9 +491,13 @@ test.describe("บันทึกข้อมูลประจำสวนย�
     test("TC-016: เลือกแถวแล้วปุ่ม “ถัดไป” ใช้งานได้", async ({ page }) => {
       const { firstRow } = await waitForFirstRow(page);
       await firstRow.click();
-      await expect(
-        page.getByRole("button", { name: BUTTON_NEXT, exact: true }),
-      ).toBeEnabled();
+      const nextButton = page.getByRole("button", {
+        name: BUTTON_NEXT,
+        exact: true,
+      });
+      await nextButton.scrollIntoViewIfNeeded();
+      await expect(nextButton).toBeVisible();
+      await expect(nextButton).toBeEnabled();
     });
 
     test("TC-017: ไป Step 2 ได้เมื่อเลือกแถว", async ({ page }) => {
@@ -503,7 +507,7 @@ test.describe("บันทึกข้อมูลประจำสวนย�
 
   test.describe("บันทึกข้อมูลประจำสวนยาง - Step 2", () => {
     test.skip(!HAS_AUDITOR_CREDS, "ยังไม่ได้ตั้งค่า E2E auditor credentials");
-    test.describe.configure({ mode: "serial" });
+    // test.describe.configure({ mode: "serial" });
 
     test.beforeEach(async ({ page }) => {
       await loginAsAuditor(page, AUDITOR_USER);
@@ -568,6 +572,8 @@ test.describe("บันทึกข้อมูลประจำสวนย�
       const waterSection = page
         .getByRole("heading", { name: /2\.\s*ระบบการให้น้ำ/ })
         .locator("..");
+      await waterSection.scrollIntoViewIfNeeded();
+      await expect(waterSection).toBeVisible();
       const checkboxes = waterSection.locator('input[type="checkbox"]');
       await expect(checkboxes).toHaveCount(2);
       await checkboxes.first().check();
@@ -575,6 +581,8 @@ test.describe("บันทึกข้อมูลประจำสวนย�
       const textarea = page
         .getByPlaceholder("ระบุรายละเอียดระบบการให้น้ำ")
         .first();
+      await textarea.scrollIntoViewIfNeeded();
+      await expect(textarea).toBeVisible();
       await expect(textarea).toBeDisabled();
     });
 
@@ -584,6 +592,8 @@ test.describe("บันทึกข้อมูลประจำสวนย�
       const waterSection = page
         .getByRole("heading", { name: /2\.\s*ระบบการให้น้ำ/ })
         .locator("..");
+      await waterSection.scrollIntoViewIfNeeded();
+      await expect(waterSection).toBeVisible();
       const checkboxes = waterSection.locator('input[type="checkbox"]');
       await expect(checkboxes).toHaveCount(2);
       await checkboxes.nth(1).check();
@@ -591,6 +601,8 @@ test.describe("บันทึกข้อมูลประจำสวนย�
       const textarea = page
         .getByPlaceholder("ระบุรายละเอียดระบบการให้น้ำ")
         .first();
+      await textarea.scrollIntoViewIfNeeded();
+      await expect(textarea).toBeVisible();
       await expect(textarea).toBeEnabled();
       await textarea.fill("มีระบบน้ำหยด");
       await expect(textarea).toHaveValue("มีระบบน้ำหยด");
@@ -619,16 +631,27 @@ test.describe("บันทึกข้อมูลประจำสวนย�
       const chemicalSection = page
         .locator("h5", { hasText: "ปุ๋ยเคมี" })
         .locator("..");
+      await chemicalSection.scrollIntoViewIfNeeded();
+      await expect(chemicalSection).toBeVisible();
 
-      await chemicalSection
+      const formulaInput = chemicalSection
         .getByPlaceholder("สูตร/ชื่อปุ๋ย")
-        .first()
-        .fill("ยูเรีย");
-      await chemicalSection
+        .first();
+      await formulaInput.scrollIntoViewIfNeeded();
+      await expect(formulaInput).toBeVisible();
+      await formulaInput.fill("ยูเรีย");
+
+      const rateInput = chemicalSection
         .getByPlaceholder("เช่น 2 กก./ไร่ หรือ 200 ก./ต้น")
-        .first()
-        .fill("2 กก./ไร่");
-      await chemicalSection.getByPlaceholder("ครั้ง/ปี").first().fill("1");
+        .first();
+      await rateInput.scrollIntoViewIfNeeded();
+      await expect(rateInput).toBeVisible();
+      await rateInput.fill("2 กก./ไร่");
+
+      const timesInput = chemicalSection.getByPlaceholder("ครั้ง/ปี").first();
+      await timesInput.scrollIntoViewIfNeeded();
+      await expect(timesInput).toBeVisible();
+      await timesInput.fill("1");
 
       await expect(
         chemicalSection.getByPlaceholder("สูตร/ชื่อปุ๋ย").first(),
@@ -750,15 +773,22 @@ test.describe("บันทึกข้อมูลประจำสวนย�
     });
 
     test("TC-030: ศัตรูพืช/โรค: กรอกข้อมูลรายการ", async ({ page }) => {
-      await page
-        .getByPlaceholder("ชื่อศัตรูพืช/โรค/อาการ")
-        .first()
-        .fill("เพลี้ย");
-      await page.getByPlaceholder("เช่น ฤดูฝน, ฤดูแล้ง").first().fill("ฤดูฝน");
-      await page
+      const nameInput = page.getByPlaceholder("ชื่อศัตรูพืช/โรค/อาการ").first();
+      await nameInput.scrollIntoViewIfNeeded();
+      await expect(nameInput).toBeVisible();
+      await nameInput.fill("เพลี้ย");
+
+      const seasonInput = page.getByPlaceholder("เช่น ฤดูฝน, ฤดูแล้ง").first();
+      await seasonInput.scrollIntoViewIfNeeded();
+      await expect(seasonInput).toBeVisible();
+      await seasonInput.fill("ฤดูฝน");
+
+      const methodInput = page
         .getByPlaceholder("ระบุวิธีการป้องกันและการจัดการ")
-        .first()
-        .fill("ตัดแต่งกิ่ง");
+        .first();
+      await methodInput.scrollIntoViewIfNeeded();
+      await expect(methodInput).toBeVisible();
+      await methodInput.fill("ตัดแต่งกิ่ง");
 
       await expect(
         page.getByPlaceholder("ชื่อศัตรูพืช/โรค/อาการ").first(),
@@ -834,6 +864,8 @@ test.describe("บันทึกข้อมูลประจำสวนย�
         )
         .first();
 
+      await textarea.scrollIntoViewIfNeeded();
+      await expect(textarea).toBeVisible();
       await textarea.fill("มีพืชแซมในบางแปลง");
       await expect(textarea).toHaveValue("มีพืชแซมในบางแปลง");
     });
@@ -841,7 +873,7 @@ test.describe("บันทึกข้อมูลประจำสวนย�
 
   test.describe("บันทึกข้อมูลประจำสวนยาง - การบันทึก (PUT mock)", () => {
     test.skip(!HAS_AUDITOR_CREDS, "ยังไม่ได้ตั้งค่า E2E auditor credentials");
-    test.describe.configure({ mode: "serial" });
+    // test.describe.configure({ mode: "serial" });
 
     test.beforeEach(async ({ page }) => {
       await loginAsAuditor(page, AUDITOR_USER);
@@ -871,6 +903,8 @@ test.describe("บันทึกข้อมูลประจำสวนย�
           "ระบุข้อมูลอื่น ๆ เช่น ชนิดพืชร่วม พืชแซม หรือข้อมูลเพิ่มเติมอื่น ๆ",
         )
         .first();
+      await moreInfo.scrollIntoViewIfNeeded();
+      await expect(moreInfo).toBeVisible();
       await moreInfo.fill("แก้ไขข้อมูลเพื่อทดสอบการบันทึก");
 
       const [putRequest] = await Promise.all([
@@ -884,7 +918,9 @@ test.describe("บันทึกข้อมูลประจำสวนย�
       ]);
       expect(putRequest).toBeTruthy();
 
-      await expect(page.getByText("บันทึกข้อมูลเรียบร้อย")).toBeVisible();
+    const successToast = page.getByText("บันทึกข้อมูลเรียบร้อย");
+    await successToast.scrollIntoViewIfNeeded();
+    await expect(successToast).toBeVisible();
     });
 
     test("TC-035: บันทึกไม่สำเร็จแสดง toast error", async ({ page }) => {
@@ -898,6 +934,9 @@ test.describe("บันทึกข้อมูลประจำสวนย�
         });
       });
 
+      const saveButton = page.getByRole("button", { name: BUTTON_SAVE });
+      await saveButton.scrollIntoViewIfNeeded();
+      await expect(saveButton).toBeVisible();
       const [putRequest] = await Promise.all([
         page.waitForRequest((req) => {
           return (
@@ -905,11 +944,13 @@ test.describe("บันทึกข้อมูลประจำสวนย�
             /\/api\/v1\/data-records\/\d+$/.test(req.url())
           );
         }),
-        page.getByRole("button", { name: BUTTON_SAVE }).click(),
+        saveButton.click(),
       ]);
       expect(putRequest).toBeTruthy();
 
-      await expect(page.getByText(errorMessage)).toBeVisible();
-    });
+    const errorToast = page.getByText(errorMessage);
+    await errorToast.scrollIntoViewIfNeeded();
+    await expect(errorToast).toBeVisible();
+  });
   });
 });
