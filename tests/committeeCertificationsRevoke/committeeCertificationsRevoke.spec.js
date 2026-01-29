@@ -233,7 +233,7 @@ test.describe("ยกเลิกใบรับรองแหล่งผล�
       !HAS_COMMITTEE_CREDS,
       "ยังไม่ได้ตั้งค่า E2E committee credentials",
     );
-    test.describe.configure({ mode: "serial", timeout: 60000 });
+    // test.describe.configure({ mode: "serial", timeout: 60000 });
 
     test.beforeEach(async ({ page }) => {
       await loginAsCommittee(page, COMMITTEE_USER);
@@ -283,7 +283,9 @@ test.describe("ยกเลิกใบรับรองแหล่งผล�
     });
 
     test("TC-007: ปุ่ม “ถัดไป” ถูกปิดก่อนเลือกแถว", async ({ page }) => {
-      await expect(getStepNextButton(page)).toBeDisabled();
+      const nextButton = getStepNextButton(page);
+      await expectVisible(nextButton);
+      await expect(nextButton).toBeDisabled();
     });
 
     test("TC-008: เลือกแถวแล้ว “ถัดไป” ใช้งานได้", async ({
@@ -293,7 +295,9 @@ test.describe("ยกเลิกใบรับรองแหล่งผล�
       const firstRow = rows.first();
       await firstRow.click();
       await expect(firstRow).toHaveClass(/bg-green-50/);
-      await expect(getStepNextButton(page)).toBeEnabled();
+      const nextButton = getStepNextButton(page);
+      await expectVisible(nextButton);
+      await expect(nextButton).toBeEnabled();
     });
 
     test("TC-009: กด “ถัดไป” ไป Step 2", async ({ page }, testInfo) => {
@@ -361,7 +365,7 @@ test.describe("ยกเลิกใบรับรองแหล่งผล�
       !HAS_COMMITTEE_CREDS,
       "ยังไม่ได้ตั้งค่า E2E committee credentials",
     );
-    test.describe.configure({ mode: "serial", timeout: 60000 });
+    // test.describe.configure({ mode: "serial", timeout: 60000 });
 
     test.beforeEach(async ({ page }) => {
       await page.unroute("**/api/v1/files/get-files**");
@@ -419,7 +423,7 @@ test.describe("ยกเลิกใบรับรองแหล่งผล�
       !HAS_COMMITTEE_CREDS,
       "ยังไม่ได้ตั้งค่า E2E committee credentials",
     );
-    test.describe.configure({ mode: "serial", timeout: 60000 });
+    // test.describe.configure({ mode: "serial", timeout: 60000 });
 
     test.beforeEach(async ({ page }) => {
       await loginAsCommittee(page, COMMITTEE_USER);
