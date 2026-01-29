@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 const ADMIN_USER = {
   email: process.env.E2E_TEST_ADMIN_EMAIL,
@@ -67,6 +67,12 @@ function resolveActionLabel(action) {
   return ACTION_LABELS[action] || action || "-";
 }
 
+async function expectVisible(locator, options) {
+  await locator.scrollIntoViewIfNeeded();
+  await expect(locator).toBeVisible(options);
+  return locator;
+}
+
 async function loginAsAdmin(page, { email, password }) {
   await page.goto("/", { waitUntil: "domcontentloaded" });
 
@@ -81,7 +87,7 @@ async function loginAsAdmin(page, { email, password }) {
     for (let attempt = 0; attempt < 2; attempt += 1) {
       await adminRoleButton.click();
       const isActive = await adminRoleButton.evaluate((el) =>
-        String(el.className).includes("roleButtonActive")
+        String(el.className).includes("roleButtonActive"),
       );
       if (isActive) break;
       await page.waitForTimeout(100);
@@ -101,8 +107,8 @@ async function loginAsAdmin(page, { email, password }) {
     passwordInput = page.getByLabel(/รหัสผ่าน/).first();
   }
 
-  await expect(emailInput).toBeVisible();
-  await expect(passwordInput).toBeVisible();
+  await expectVisible(emailInput);
+  await expectVisible(passwordInput);
 
   const fillAndConfirm = async (locator, value) => {
     for (let attempt = 0; attempt < 2; attempt += 1) {
@@ -127,8 +133,7 @@ async function loginAsAdmin(page, { email, password }) {
 
 function isAuditLogsPaginatedRequest(req) {
   return (
-    req.method() === "GET" &&
-    req.url().includes("/api/v1/audit-logs/paginated")
+    req.method() === "GET" && req.url().includes("/api/v1/audit-logs/paginated")
   );
 }
 
@@ -172,23 +177,25 @@ async function gotoAuditLogsPageAndWaitForData(page) {
     waitForAuditLogsResponse(page),
     page.goto(PAGE_PATH, { waitUntil: "domcontentloaded" }),
   ]);
-  await expect(page.getByRole("heading", { name: PAGE_HEADING })).toBeVisible();
+  await expectVisible(page.getByRole("heading", { name: PAGE_HEADING }));
   return response;
 }
 
 async function waitForAuditLogsTable(page) {
   const table = page.locator(".primary-datatable-wrapper").first();
-  await expect(table).toBeVisible({ timeout: 20000 });
-  await expect(table.locator("table")).toBeVisible({ timeout: 20000 });
+  await expectVisible(table, { timeout: 20000 });
+  await expectVisible(table.locator("table"), { timeout: 20000 });
   return table;
 }
 
 async function getAuditLogsTableState(page) {
   const table = await waitForAuditLogsTable(page);
   const rows = table.locator("tbody tr");
-  await expect(rows.first()).toBeVisible({ timeout: 20000 });
+  await expectVisible(rows.first(), { timeout: 20000 });
   const firstRowText = ((await rows.first().textContent()) || "").trim();
-  const hasData = Boolean(firstRowText && !firstRowText.includes("ไม่พบข้อมูล"));
+  const hasData = Boolean(
+    firstRowText && !firstRowText.includes("ไม่พบข้อมูล"),
+  );
   return { table, rows, hasData, firstRowText };
 }
 
@@ -198,7 +205,10 @@ async function getCellText(row, index) {
 }
 
 function getAutoCompleteInput(page, id) {
-  return page.locator(`input#${id}`).or(page.locator(`#${id} input`)).first();
+  return page
+    .locator(`input#${id}`)
+    .or(page.locator(`#${id} input`))
+    .first();
 }
 
 function getAutoCompleteWidget(page, id) {
@@ -213,7 +223,7 @@ async function selectAutoCompleteOption(page, id, optionLabel) {
   await dropdown.click();
 
   const panel = page.locator(".p-autocomplete-panel:visible").first();
-  await expect(panel).toBeVisible({ timeout: 10000 });
+  await expectVisible(panel, { timeout: 10000 });
   await panel
     .locator('[role="option"]')
     .getByText(optionLabel, { exact: true })
@@ -223,11 +233,17 @@ async function selectAutoCompleteOption(page, id, optionLabel) {
 }
 
 function getInputNumber(page, id) {
-  return page.locator(`input#${id}`).or(page.locator(`#${id} input`)).first();
+  return page
+    .locator(`input#${id}`)
+    .or(page.locator(`#${id} input`))
+    .first();
 }
 
 function getCalendarInput(page, id) {
-  return page.locator(`#${id} input`).or(page.locator(`input#${id}`)).first();
+  return page
+    .locator(`#${id} input`)
+    .or(page.locator(`input#${id}`))
+    .first();
 }
 
 async function selectFirstAvailableDate(page, input, calendarId) {
@@ -236,13 +252,13 @@ async function selectFirstAvailableDate(page, input, calendarId) {
     const panel = calendarId
       ? page.locator(`#${calendarId}_panel`)
       : page.locator(".p-datepicker:visible").last();
-    await expect(panel).toBeVisible({ timeout: 10000 });
+    await expectVisible(panel, { timeout: 10000 });
     const day = panel
       .locator(
-        "td:not(.p-disabled):not(.p-datepicker-other-month) span:not(.p-disabled)"
+        "td:not(.p-disabled):not(.p-datepicker-other-month) span:not(.p-disabled)",
       )
       .first();
-    await expect(day).toBeVisible({ timeout: 10000 });
+    await expectVisible(day, { timeout: 10000 });
     await day.click();
     const value = await input.inputValue();
     if (value) return;
@@ -252,11 +268,17 @@ async function selectFirstAvailableDate(page, input, calendarId) {
 }
 
 function getDeleteDialog(page) {
-  return page.locator(".p-dialog").filter({ hasText: DIALOG_TITLE_DELETE }).first();
+  return page
+    .locator(".p-dialog")
+    .filter({ hasText: DIALOG_TITLE_DELETE })
+    .first();
 }
 
 function getDetailDialog(page) {
-  return page.locator(".p-dialog").filter({ hasText: DIALOG_TITLE_DETAIL }).first();
+  return page
+    .locator(".p-dialog")
+    .filter({ hasText: DIALOG_TITLE_DETAIL })
+    .first();
 }
 
 function getDetailFieldValue(dialog, label) {
@@ -294,13 +316,13 @@ async function openDeleteDialogAndReadCount(page) {
   ]);
   const count = await readOldLogsCount(response);
   const dialog = getDeleteDialog(page);
-  await expect(dialog).toBeVisible({ timeout: 10000 });
+  await expectVisible(dialog, { timeout: 10000 });
   return { dialog, count, days: 90 };
 }
 
 async function setDeleteDaysAndReadCount(page, days) {
   const input = getInputNumber(page, "deleteDays");
-  await expect(input).toBeVisible();
+  await expectVisible(input);
   const responsePromise = waitForOldLogsCountResponse(page, days);
   await input.fill(String(days));
   await page.keyboard.press("Tab");
@@ -330,23 +352,25 @@ test.describe("ตรวจสอบเหตุการณ์ในระบ�
   });
 
   test("TC-002: แสดงหัวข้อและคำอธิบายหน้า", async ({ page }) => {
-    await expect(page.getByRole("heading", { name: PAGE_HEADING })).toBeVisible();
-    await expect(page.getByText(PAGE_SUBTITLE)).toBeVisible();
+    await expectVisible(page.getByRole("heading", { name: PAGE_HEADING }));
+    await expectVisible(page.getByText(PAGE_SUBTITLE));
   });
 
   test("TC-003: แสดงตัวกรองทั้งหมด", async ({ page }) => {
-    await expect(page.getByPlaceholder(FILTER_PLACEHOLDERS.tableName)).toBeVisible();
-    await expect(page.getByPlaceholder(FILTER_PLACEHOLDERS.recordId)).toBeVisible();
-    await expect(page.getByPlaceholder(FILTER_PLACEHOLDERS.userId)).toBeVisible();
-    await expect(page.getByPlaceholder(FILTER_PLACEHOLDERS.action)).toBeVisible();
-    await expect(page.getByPlaceholder(FILTER_PLACEHOLDERS.startDate)).toBeVisible();
-    await expect(page.getByPlaceholder(FILTER_PLACEHOLDERS.endDate)).toBeVisible();
+    await expectVisible(page.getByPlaceholder(FILTER_PLACEHOLDERS.tableName));
+    await expectVisible(page.getByPlaceholder(FILTER_PLACEHOLDERS.recordId));
+    await expectVisible(page.getByPlaceholder(FILTER_PLACEHOLDERS.userId));
+    await expectVisible(page.getByPlaceholder(FILTER_PLACEHOLDERS.action));
+    await expectVisible(page.getByPlaceholder(FILTER_PLACEHOLDERS.startDate));
+    await expectVisible(page.getByPlaceholder(FILTER_PLACEHOLDERS.endDate));
   });
 
   test("TC-004: แสดงปุ่มหลักบนแถบตัวกรอง", async ({ page }) => {
-    await expect(page.getByRole("button", { name: BUTTON_DELETE_OLD_LOGS })).toBeVisible();
-    await expect(page.getByRole("button", { name: BUTTON_SEARCH })).toBeVisible();
-    await expect(page.getByRole("button", { name: BUTTON_CLEAR })).toBeVisible();
+    await expectVisible(
+      page.getByRole("button", { name: BUTTON_DELETE_OLD_LOGS }),
+    );
+    await expectVisible(page.getByRole("button", { name: BUTTON_SEARCH }));
+    await expectVisible(page.getByRole("button", { name: BUTTON_CLEAR }));
   });
 
   test("TC-005: แสดงตารางพร้อมคอลัมน์หลัก", async ({ page }) => {
@@ -374,7 +398,9 @@ test.describe("ตรวจสอบเหตุการณ์ในระบ�
     const actionCellText = await getCellText(firstRow, 2);
 
     if (firstItem) {
-      expect(tableCellText).toContain(resolveTableNameLabel(firstItem.tableName));
+      expect(tableCellText).toContain(
+        resolveTableNameLabel(firstItem.tableName),
+      );
       expect(actionCellText).toContain(resolveActionLabel(firstItem.action));
     } else {
       expect(tableCellText.length).toBeGreaterThan(0);
@@ -382,9 +408,7 @@ test.describe("ตรวจสอบเหตุการณ์ในระบ�
     }
   });
 
-  test("TC-007: กด “ค้นหา” แล้วผลลัพธ์เปลี่ยนตามตัวกรอง", async ({
-    page,
-  }) => {
+  test("TC-007: กด “ค้นหา” แล้วผลลัพธ์เปลี่ยนตามตัวกรอง", async ({ page }) => {
     await selectAutoCompleteOption(page, "tableName", "ผู้ใช้ (User)");
 
     const requestPromise = waitForAuditLogsRequest(page, (url) => {
@@ -433,7 +457,7 @@ test.describe("ตรวจสอบเหตุการณ์ในระบ�
   test("TC-009: Pagination เปลี่ยนจำนวนรายการต่อหน้า", async ({ page }) => {
     const { table } = await getAuditLogsTableState(page);
     const paginator = table.locator(".p-paginator").first();
-    await expect(paginator).toBeVisible();
+    await expectVisible(paginator);
 
     const requestPromise = waitForAuditLogsRequest(page, (url) => {
       return url.searchParams.get("limit") === "25";
@@ -466,9 +490,11 @@ test.describe("ตรวจสอบเหตุการณ์ในระบ�
   test("TC-010: Pagination เปลี่ยนหน้า", async ({ page }) => {
     const { table } = await getAuditLogsTableState(page);
     const paginator = table.locator(".p-paginator").first();
-    await expect(paginator).toBeVisible();
+    await expectVisible(paginator);
 
-    const currentPage = paginator.locator(".p-paginator-page.p-highlight").first();
+    const currentPage = paginator
+      .locator(".p-paginator-page.p-highlight")
+      .first();
     const currentText = ((await currentPage.textContent()) || "").trim();
 
     const nextButton = paginator.locator("button.p-paginator-next").first();
@@ -484,14 +510,16 @@ test.describe("ตรวจสอบเหตุการณ์ในระบ�
     await nextButton.click();
     await requestPromise;
 
-    const newCurrentPage = paginator.locator(".p-paginator-page.p-highlight").first();
+    const newCurrentPage = paginator
+      .locator(".p-paginator-page.p-highlight")
+      .first();
     await expect(newCurrentPage).not.toHaveText(currentText || "1");
   });
 
   test("TC-011: Sorting คลิกหัวคอลัมน์ให้ลำดับเปลี่ยน", async ({ page }) => {
     const table = await waitForAuditLogsTable(page);
     const header = table.locator("thead th", { hasText: "รหัส" }).first();
-    await expect(header).toBeVisible();
+    await expectVisible(header);
     await header.click();
     await expect(header).toHaveAttribute("aria-sort", /ascending|descending/);
   });
@@ -515,16 +543,16 @@ test.describe("ตรวจสอบเหตุการณ์ในระบ�
     }
 
     const eyeButton = rows.first().locator("button:has(.pi-eye)").first();
-    await expect(eyeButton).toBeVisible();
+    await expectVisible(eyeButton);
     await eyeButton.click();
 
     const dialog = getDetailDialog(page);
-    await expect(dialog).toBeVisible();
-    await expect(dialog.getByText(DIALOG_TITLE_DETAIL)).toBeVisible();
+    await expectVisible(dialog);
+    await expectVisible(dialog.getByText(DIALOG_TITLE_DETAIL));
     const closeButton = dialog
       .locator(".p-dialog-footer")
       .getByRole("button", { name: DIALOG_BUTTON_CLOSE });
-    await expect(closeButton).toBeVisible();
+    await expectVisible(closeButton);
   });
 
   test("TC-013: แสดงข้อมูลพื้นฐานใน dialog", async ({ page }) => {
@@ -541,26 +569,26 @@ test.describe("ตรวจสอบเหตุการณ์ในระบ�
     await eyeButton.click();
 
     const dialog = getDetailDialog(page);
-    await expect(dialog).toBeVisible();
-    await expect(dialog.getByText("ข้อมูลพื้นฐาน")).toBeVisible();
+    await expectVisible(dialog);
+    await expectVisible(dialog.getByText("ข้อมูลพื้นฐาน"));
 
     if (firstItem) {
       await expect(getDetailFieldValue(dialog, "รหัส")).toContainText(
-        String(firstItem.auditLogId)
+        String(firstItem.auditLogId),
       );
       await expect(getDetailFieldValue(dialog, "ตาราง")).toContainText(
-        resolveTableNameLabel(firstItem.tableName)
+        resolveTableNameLabel(firstItem.tableName),
       );
       await expect(getDetailFieldValue(dialog, "การดำเนินการ")).toContainText(
-        resolveActionLabel(firstItem.action)
+        resolveActionLabel(firstItem.action),
       );
-      await expect(getDetailFieldValue(dialog, "รหัสข้อมูลในตาราง")).toContainText(
-        String(firstItem.recordId)
-      );
+      await expect(
+        getDetailFieldValue(dialog, "รหัสข้อมูลในตาราง"),
+      ).toContainText(String(firstItem.recordId));
 
       const userIdValue = firstItem.userId ?? "-";
       await expect(getDetailFieldValue(dialog, "รหัสผู้ใช้")).toContainText(
-        String(userIdValue)
+        String(userIdValue),
       );
 
       const createdAtValue = firstItem.createdAt
@@ -573,13 +601,13 @@ test.describe("ตรวจสอบเหตุการณ์ในระบ�
             second: "2-digit",
           })
         : "-";
-      await expect(getDetailFieldValue(dialog, "วันที่ดำเนินการ")).toContainText(
-        createdAtValue
-      );
+      await expect(
+        getDetailFieldValue(dialog, "วันที่ดำเนินการ"),
+      ).toContainText(createdAtValue);
     } else {
-      await expect(dialog.getByText("รหัส")).toBeVisible();
-      await expect(dialog.getByText("ตาราง")).toBeVisible();
-      await expect(dialog.getByText("การดำเนินการ")).toBeVisible();
+      await expectVisible(dialog.getByText("รหัส"));
+      await expectVisible(dialog.getByText("ตาราง"));
+      await expectVisible(dialog.getByText("การดำเนินการ"));
     }
   });
 
@@ -599,10 +627,14 @@ test.describe("ตรวจสอบเหตุการณ์ในระบ�
     await eyeButton.click();
 
     const dialog = getDetailDialog(page);
-    await expect(dialog).toBeVisible();
+    await expectVisible(dialog);
 
-    const oldSection = dialog.getByText("ข้อมูลเก่า", { exact: true }).locator("..");
-    const newSection = dialog.getByText("ข้อมูลใหม่", { exact: true }).locator("..");
+    const oldSection = dialog
+      .getByText("ข้อมูลเก่า", { exact: true })
+      .locator("..");
+    const newSection = dialog
+      .getByText("ข้อมูลใหม่", { exact: true })
+      .locator("..");
 
     if (firstItem && firstItem.oldData === null) {
       await expect(oldSection).toContainText("ไม่มีข้อมูลเก่า");
@@ -628,7 +660,7 @@ test.describe("ตรวจสอบเหตุการณ์ในระบ�
     await eyeButton.click();
 
     const dialog = getDetailDialog(page);
-    await expect(dialog).toBeVisible();
+    await expectVisible(dialog);
     await dialog
       .locator(".p-dialog-footer")
       .getByRole("button", { name: DIALOG_BUTTON_CLOSE })
@@ -648,9 +680,9 @@ test.describe("ตรวจสอบเหตุการณ์ในระบ�
 
   test("TC-016: เปิด dialog “ล้างข้อมูลเก่า”", async ({ page }) => {
     const { dialog } = await openDeleteDialogAndReadCount(page);
-    await expect(dialog.getByText(DIALOG_TITLE_DELETE)).toBeVisible();
-    await expect(dialog.getByText("คำเตือน:")).toBeVisible();
-    await expect(getInputNumber(page, "deleteDays")).toBeVisible();
+    await expectVisible(dialog.getByText(DIALOG_TITLE_DELETE));
+    await expectVisible(dialog.getByText("คำเตือน:"));
+    await expectVisible(getInputNumber(page, "deleteDays"));
     await dialog.getByRole("button", { name: DIALOG_BUTTON_CANCEL }).click();
     await expect(dialog).toBeHidden({ timeout: 10000 });
   });
@@ -662,12 +694,12 @@ test.describe("ตรวจสอบเหตุการณ์ในระบ�
     });
 
     if (count === 0) {
-      await expect(
-        dialog.getByText(`ไม่พบข้อมูลที่เก่ากว่า ${days} วัน`)
-      ).toBeVisible();
+      await expectVisible(
+        dialog.getByText(`ไม่พบข้อมูลที่เก่ากว่า ${days} วัน`),
+      );
       await expect(confirmButton).toBeDisabled();
     } else {
-      await expect(dialog.getByText("จำนวนที่จะถูกลบ:")).toBeVisible();
+      await expectVisible(dialog.getByText("จำนวนที่จะถูกลบ:"));
       await expect(confirmButton).toBeEnabled();
     }
   });
@@ -680,9 +712,9 @@ test.describe("ตรวจสอบเหตุการณ์ในระบ�
     });
 
     if (count === 0) {
-      await expect(
-        dialog.getByText(`ไม่พบข้อมูลที่เก่ากว่า ${days} วัน`)
-      ).toBeVisible();
+      await expectVisible(
+        dialog.getByText(`ไม่พบข้อมูลที่เก่ากว่า ${days} วัน`),
+      );
       await expect(confirmButton).toBeDisabled();
       return;
     }
@@ -698,17 +730,20 @@ test.describe("ตรวจสอบเหตุการณ์ในระบ�
     });
 
     const requestPromise = page.waitForRequest((req) => {
-      return req.method() === "DELETE" && req.url().includes("/api/v1/audit-logs/old");
+      return (
+        req.method() === "DELETE" &&
+        req.url().includes("/api/v1/audit-logs/old")
+      );
     });
 
     await confirmButton.click();
     await requestPromise;
 
-    await expect(
+    await expectVisible(
       page.getByText(
-        `ลบข้อมูลเก่าที่เก่ากว่า ${days} วันสำเร็จ (ลบไปทั้งหมด ${deletedCount} รายการ)`
-      )
-    ).toBeVisible();
+        `ลบข้อมูลเก่าที่เก่ากว่า ${days} วันสำเร็จ (ลบไปทั้งหมด ${deletedCount} รายการ)`,
+      ),
+    );
     await expect(dialog).toBeHidden({ timeout: 10000 });
   });
 
@@ -720,9 +755,9 @@ test.describe("ตรวจสอบเหตุการณ์ในระบ�
     });
 
     if (count === 0) {
-      await expect(
-        dialog.getByText(`ไม่พบข้อมูลที่เก่ากว่า ${days} วัน`)
-      ).toBeVisible();
+      await expectVisible(
+        dialog.getByText(`ไม่พบข้อมูลที่เก่ากว่า ${days} วัน`),
+      );
       await expect(confirmButton).toBeDisabled();
       return;
     }
@@ -737,14 +772,17 @@ test.describe("ตรวจสอบเหตุการณ์ในระบ�
     });
 
     const requestPromise = page.waitForRequest((req) => {
-      return req.method() === "DELETE" && req.url().includes("/api/v1/audit-logs/old");
+      return (
+        req.method() === "DELETE" &&
+        req.url().includes("/api/v1/audit-logs/old")
+      );
     });
 
     await confirmButton.click();
     await requestPromise;
 
-    await expect(
-      page.getByText(/ไม่สามารถลบข้อมูลได้|เกิดข้อผิดพลาดในการลบข้อมูล/)
-    ).toBeVisible();
+    await expectVisible(
+      page.getByText(/ไม่สามารถลบข้อมูลได้|เกิดข้อผิดพลาดในการลบข้อมูล/),
+    );
   });
 });
