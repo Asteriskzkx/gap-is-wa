@@ -1,4 +1,4 @@
-﻿import { test, expect } from "@playwright/test";
+﻿import { expect, test } from "@playwright/test";
 
 const AUDITOR_USER = {
   email: process.env.E2E_TEST_AUDITOR_EMAIL,
@@ -246,7 +246,7 @@ async function gotoStep2(page) {
   const { next } = getNavButtons(page);
   await next.click();
   await expect(
-    page.locator('input[name="inspectionType"]').first()
+    page.locator('input[name="inspectionType"]').first(),
   ).toBeVisible({ timeout: 10000 });
 }
 
@@ -265,7 +265,7 @@ async function gotoStep3(page) {
   const { next } = getNavButtons(page);
   await next.click();
   await expect(
-    page.locator('input[type="checkbox"][id^="auditor-"]').first()
+    page.locator('input[type="checkbox"][id^="auditor-"]').first(),
   ).toBeVisible({ timeout: 10000 });
 }
 
@@ -292,7 +292,7 @@ async function setInspectionDate(page) {
   await expect(panel).toBeVisible({ timeout: 10000 });
   await panel
     .locator(
-      "td:not(.p-disabled):not(.p-datepicker-other-month) span:not(.p-disabled)"
+      "td:not(.p-disabled):not(.p-datepicker-other-month) span:not(.p-disabled)",
     )
     .first()
     .click();
@@ -338,7 +338,7 @@ test.describe("กำหนดการตรวจประเมิน - ผ�
 
     test("TC-002: ล็อกอินผู้ตรวจประเมินและเปิดหน้าแอป", async ({ page }) => {
       await expect(
-        getAutoCompleteInput(page, "searchProvinceId")
+        getAutoCompleteInput(page, "searchProvinceId"),
       ).toBeVisible();
       await expect(page.locator(".primary-datatable-wrapper")).toBeVisible();
     });
@@ -415,13 +415,13 @@ test.describe("กำหนดการตรวจประเมิน - ผ�
 
       await resetRequest;
       await expect(getAutoCompleteInput(page, "searchProvinceId")).toHaveValue(
-        ""
+        "",
       );
       await expect(getAutoCompleteInput(page, "searchAmphureId")).toHaveValue(
-        ""
+        "",
       );
       await expect(getAutoCompleteInput(page, "searchTambonId")).toHaveValue(
-        ""
+        "",
       );
     });
 
@@ -433,7 +433,7 @@ test.describe("กำหนดการตรวจประเมิน - ผ�
       const { next } = getNavButtons(page);
       await next.click();
       await expect(
-        getAutoCompleteInput(page, "searchProvinceId")
+        getAutoCompleteInput(page, "searchProvinceId"),
       ).toBeVisible();
       await expect(page.locator('input[name="inspectionType"]')).toHaveCount(0);
     });
@@ -457,10 +457,10 @@ test.describe("กำหนดการตรวจประเมิน - ผ�
       const { next } = getNavButtons(page);
       await next.click();
       await expect(
-        page.locator('input[name="inspectionType"]').first()
+        page.locator('input[name="inspectionType"]').first(),
       ).toBeVisible({ timeout: 10000 });
       await expect(
-        page.locator('input[type="checkbox"][id^="auditor-"]')
+        page.locator('input[type="checkbox"][id^="auditor-"]'),
       ).toHaveCount(0);
     });
 
@@ -470,7 +470,7 @@ test.describe("กำหนดการตรวจประเมิน - ผ�
       const { next } = getNavButtons(page);
       await next.click();
       await expect(
-        page.locator('input[type="checkbox"][id^="auditor-"]').first()
+        page.locator('input[type="checkbox"][id^="auditor-"]').first(),
       ).toBeVisible({ timeout: 10000 });
     });
 
@@ -537,7 +537,7 @@ test.describe("กำหนดการตรวจประเมิน - ผ�
       const submitButton = getNavButtons(page).next;
       await Promise.all([
         page.waitForRequest((request) =>
-          request.url().includes("/api/v1/inspections/schedule")
+          request.url().includes("/api/v1/inspections/schedule"),
         ),
         submitButton.click(),
       ]);
@@ -548,7 +548,7 @@ test.describe("กำหนดการตรวจประเมิน - ผ�
         additionalAuditorIds: [MOCK_AUDITORS[0].id],
       });
       expect(
-        new Date(capturedPayload.inspectionDateAndTime).toString()
+        new Date(capturedPayload.inspectionDateAndTime).toString(),
       ).not.toBe("Invalid Date");
 
       await page.waitForURL(/\/auditor\/dashboard/, {
