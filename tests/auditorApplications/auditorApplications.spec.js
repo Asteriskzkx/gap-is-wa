@@ -325,7 +325,7 @@ test.describe("กำหนดการตรวจประเมิน - ผ�
 
   test.describe("โฟลว์หลัก", () => {
     test.skip(!HAS_AUDITOR_CREDS, "ยังไม่ได้ตั้งค่า E2E auditor credentials");
-    test.describe.configure({ mode: "serial" });
+    // test.describe.configure({ mode: "serial" });
 
     test.beforeEach(async ({ page }) => {
       await mockAuditorApplicationsApis(page);
@@ -427,6 +427,7 @@ test.describe("กำหนดการตรวจประเมิน - ผ�
 
     test("TC-007: เลือกแถวสวนยางสำเร็จ", async ({ page }) => {
       await selectFirstFarmRow(page);
+      await page.waitForTimeout(3000);
     });
 
     test("TC-008: กดถัดไปโดยไม่เลือกสวนยาง", async ({ page }) => {
@@ -443,12 +444,17 @@ test.describe("กำหนดการตรวจประเมิน - ผ�
       const firstRow = table.locator("tbody tr").first();
       await getRowActionButton(firstRow).click();
 
-      const modal = page.locator(".fixed.inset-0");
+      const modal = page.getByRole("dialog", { name: "รายละเอียดสวนยางพารา" });
       await expect(modal).toBeVisible({ timeout: 10000 });
+      await expect(modal.getByText("ที่ตั้งสวนยาง")).toBeVisible();
       await expect(modal.locator(".primary-datatable-wrapper")).toBeVisible();
 
-      const closeButton = modal.locator("div.mt-6.flex.justify-end button");
-      await closeButton.first().click();
+      const closeButton = modal
+        .locator(".p-dialog-footer")
+        .getByRole("button", {
+          name: "ปิด",
+        });
+      await closeButton.click();
       await expect(modal).toBeHidden({ timeout: 10000 });
     });
 
@@ -483,7 +489,9 @@ test.describe("กำหนดการตรวจประเมิน - ผ�
     test("TC-013: ค้นหาผู้ตรวจประเมิน", async ({ page }) => {
       await gotoStep3(page);
 
-      const searchInput = page.locator("div.mb-4.flex.gap-2 input").first();
+      const searchInput = page
+        .getByPlaceholder("ค้นหาผู้ตรวจประเมิน")
+        .first();
       await searchInput.fill("สมชาย");
 
       const requestPromise = page.waitForRequest((request) => {
@@ -494,7 +502,7 @@ test.describe("กำหนดการตรวจประเมิน - ผ�
         return params.get("search") === "สมชาย";
       });
 
-      await page.locator("div.mb-4.flex.gap-2 button").first().click();
+      await page.getByRole("button", { name: "ค้นหา" }).first().click();
 
       await requestPromise;
     });
