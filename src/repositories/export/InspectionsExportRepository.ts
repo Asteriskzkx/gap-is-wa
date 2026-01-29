@@ -4,35 +4,38 @@ export class InspectionsExportRepository extends BaseExportRepository {
     // Add methods for exporting inspections data as needed
 
     async streamAllInspections() {
-        const sql = `
-      SELECT
-        i."inspectionNo",
-        i."inspectionDateAndTime",
-        i."inspectionStatus",
-        i."inspectionResult",
+      const sql = `
+            SELECT
+            i."inspectionNo",
+            i."inspectionDateAndTime",
+            i."inspectionStatus",
+            i."inspectionResult",
 
-        it."typeName" AS inspection_type,
+            it."typeName" AS inspection_type,
 
-        a."namePrefix" || '' ||a."firstName" || ' ' || a."lastName" AS auditor_name,
-        f."namePrefix" || '' ||f."firstName" || ' ' || f."lastName" AS farmer_name,
+            a."namePrefix" || '' ||a."firstName" || ' ' || a."lastName" AS auditor_name,
+            f."namePrefix" || '' ||f."firstName" || ' ' || f."lastName" AS farmer_name,
 
-        rf."villageName" || ', ' || rf."moo" || ', ' || rf."road" || ', ' || rf.alley || ', ' || rf."subDistrict" || ', ' || rf."district" || ', ' || rf."province" AS location,
+            rf."villageName" || ', ' || rf."moo" || ', ' || rf."road" || ', ' || rf.alley || ', ' || rf."subDistrict" || ', ' || rf."district" || ', ' || rf."province" AS location,
 
-        c."activeFlag",
-        c."expiryDate"
+            c."activeFlag",
+            c."expiryDate"
 
-        FROM "Inspection" i
-        JOIN "InspectionTypeMaster" it
-        ON it."inspectionTypeId" = i."inspectionTypeId"
-        JOIN "Auditor" a
-        ON a."auditorId" = i."auditorChiefId"
-        JOIN "RubberFarm" rf
-        ON rf."rubberFarmId" = i."rubberFarmId"
-        LEFT JOIN "Certificate" c
-        ON c."inspectionId" = i."inspectionId"
+            FROM "Inspection" i
+            JOIN "InspectionTypeMaster" it
+            ON it."inspectionTypeId" = i."inspectionTypeId"
+            JOIN "Auditor" a
+            ON a."auditorId" = i."auditorChiefId"
+            JOIN "RubberFarm" rf
+            ON rf."rubberFarmId" = i."rubberFarmId"
+            JOIN "Farmer" f
+            ON f."farmerId" = rf."farmerId"
+            LEFT JOIN "Certificate" c
+            ON c."inspectionId" = i."inspectionId"
 
-        ORDER BY i."inspectionDateAndTime";
-    `;
+
+            ORDER BY i."inspectionDateAndTime";
+        `;
         return this.createQueryStream(sql);
     }
 
