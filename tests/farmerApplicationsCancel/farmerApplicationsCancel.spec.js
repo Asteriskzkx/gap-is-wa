@@ -48,7 +48,7 @@ async function gotoCancelPage(page) {
     waitUntil: "domcontentloaded",
   });
   await expect(
-    page.getByRole("heading", { name: "ขอยกเลิกใบรับรองแหล่งผลิต" })
+    page.getByRole("heading", { name: "ขอยกเลิกใบรับรองแหล่งผลิต" }),
   ).toBeVisible({ timeout: 10000 });
 }
 
@@ -119,7 +119,7 @@ async function mockRevokeList(page, handler) {
           : JSON.stringify(response?.body ?? {});
 
       await route.fulfill({ status, contentType: "application/json", body });
-    }
+    },
   );
 }
 
@@ -155,7 +155,7 @@ async function mockEditCancelRequestDetail(page, handler) {
           ? response.body
           : JSON.stringify(response?.body ?? {});
       await route.fulfill({ status, contentType: "application/json", body });
-    }
+    },
   );
 }
 
@@ -209,13 +209,13 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
 
       await gotoCancelPage(page);
       await expect(
-        page.getByText("ขอยกเลิกใบรับรองแหล่งผลิตที่ไม่ประสงค์จะรับรองต่อ")
+        page.getByText("ขอยกเลิกใบรับรองแหล่งผลิตที่ไม่ประสงค์จะรับรองต่อ"),
       ).toBeVisible();
       await expect(
-        page.getByText("เลือกใบรับรอง", { exact: true })
+        page.getByText("เลือกใบรับรอง", { exact: true }),
       ).toBeVisible();
       await expect(
-        page.getByText("ขอยกเลิกใบรับรอง", { exact: true })
+        page.getByText("ขอยกเลิกใบรับรอง", { exact: true }),
       ).toBeVisible();
     });
 
@@ -230,14 +230,14 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
       await expect(page.getByRole("button", { name: "ค้นหา" })).toBeVisible();
       await expect(page.getByRole("button", { name: "ล้างค่า" })).toBeVisible();
       await expect(
-        page.getByRole("button", { name: "ใบรับรองทั้งหมด" })
+        page.getByRole("button", { name: "ใบรับรองทั้งหมด" }),
       ).toBeVisible();
       await expect(
-        page.getByRole("button", { name: "ใบรับรองที่ขอยกเลิก" })
+        page.getByRole("button", { name: "ใบรับรองที่ขอยกเลิก" }),
       ).toBeVisible();
 
       await expect(page.getByText("รายละเอียดคำขอยกเลิกใบรับรอง")).toHaveCount(
-        0
+        0,
       );
       await expect(page.locator("#cancelRequestDetail")).toHaveCount(0);
     });
@@ -288,27 +288,27 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
       const table = getTable(page);
 
       await expect(
-        table.getByRole("columnheader", { name: "รหัสใบรับรอง" })
+        table.getByRole("columnheader", { name: "รหัสใบรับรอง" }),
       ).toBeVisible();
       await expect(
-        table.getByRole("columnheader", { name: "รหัสการตรวจ" })
+        table.getByRole("columnheader", { name: "รหัสการตรวจ" }),
       ).toBeVisible();
       await expect(
-        table.getByRole("columnheader", { name: "วันที่ตรวจ" })
+        table.getByRole("columnheader", { name: "วันที่ตรวจ" }),
       ).toBeVisible();
       await expect(
-        table.getByRole("columnheader", { name: "สถานที่" })
+        table.getByRole("columnheader", { name: "สถานที่" }),
       ).toBeVisible();
       await expect(
-        table.getByRole("columnheader", { name: "วันที่มีผล" })
+        table.getByRole("columnheader", { name: "วันที่มีผล" }),
       ).toBeVisible();
       await expect(
-        table.getByRole("columnheader", { name: "วันที่หมดอายุ" })
+        table.getByRole("columnheader", { name: "วันที่หมดอายุ" }),
       ).toBeVisible();
 
       await expect(table.locator("tbody tr")).toHaveCount(1);
       await expect(table.locator("tbody tr button:has(.pi-eye)")).toHaveCount(
-        1
+        1,
       );
     });
 
@@ -329,13 +329,13 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
       await expect(table.locator("tbody tr")).toHaveCount(1);
 
       await expect(table.locator('td[data-label="รหัสการตรวจ"]')).toContainText(
-        "-"
+        "-",
       );
       await expect(table.locator('td[data-label="วันที่ตรวจ"]')).toContainText(
-        "-"
+        "-",
       );
       await expect(table.locator('td[data-label="สถานที่"]')).toContainText(
-        "-"
+        "-",
       );
     });
 
@@ -429,7 +429,7 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
 
       const table = getTable(page);
       await expect(table.locator('td[data-label="สถานะ"]')).toContainText(
-        "ยื่นขอยกเลิกแล้ว"
+        "ยื่นขอยกเลิกแล้ว",
       );
     });
 
@@ -455,7 +455,7 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
 
       const table = getTable(page);
       await expect(table.locator('td[data-label="สถานะ"]')).toContainText(
-        "ยกเลิกใบรับรองแล้ว"
+        "ยกเลิกใบรับรองแล้ว",
       );
     });
 
@@ -474,7 +474,7 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
 
       // Wait for the cancel-request tab UI to render (it shows "สถานะ" column instead of actions).
       await expect(
-        getTable(page).getByRole("columnheader", { name: "สถานะ" })
+        getTable(page).getByRole("columnheader", { name: "สถานะ" }),
       ).toBeVisible();
       await expect(getStepNextButton(page)).toHaveCount(0);
     });
@@ -568,7 +568,7 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
         buildCertificate({
           certificateId: 4000 + i + 1,
           inspection: buildInspection({ inspectionNo: `INSP-${4000 + i + 1}` }),
-        })
+        }),
       );
 
       await mockRevokeList(page, async ({ offset, limit }) => {
@@ -602,7 +602,7 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
         buildCertificate({
           certificateId: 5000 + i + 1,
           inspection: buildInspection({ inspectionNo: `INSP-${5000 + i + 1}` }),
-        })
+        }),
       );
 
       await mockRevokeList(page, async ({ offset, limit }) => {
@@ -614,7 +614,7 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
       const table = getTable(page);
 
       await expect(
-        table.locator('td[data-label="รหัสใบรับรอง"]').first()
+        table.locator('td[data-label="รหัสใบรับรอง"]').first(),
       ).toContainText("5001");
 
       await table
@@ -623,7 +623,7 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
         .click();
 
       await expect(
-        table.locator('td[data-label="รหัสใบรับรอง"]').first()
+        table.locator('td[data-label="รหัสใบรับรอง"]').first(),
       ).toContainText("5011");
     });
 
@@ -664,7 +664,7 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
       await gotoCancelPage(page);
       const table = getTable(page);
       await expect(
-        table.locator('td[data-label="รหัสใบรับรอง"]').first()
+        table.locator('td[data-label="รหัสใบรับรอง"]').first(),
       ).toContainText("6003");
 
       const header = table.locator("th", { hasText: "รหัสใบรับรอง" }).first();
@@ -672,7 +672,7 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
 
       await expect(header).toHaveAttribute("aria-sort", /ascending|descending/);
       await expect(
-        table.locator('td[data-label="รหัสใบรับรอง"]').first()
+        table.locator('td[data-label="รหัสใบรับรอง"]').first(),
       ).toContainText("6001");
     });
 
@@ -817,7 +817,7 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
       await getStepNextButton(page).click();
 
       await expect(
-        page.getByText("รายละเอียดคำขอยกเลิกใบรับรอง")
+        page.getByText("รายละเอียดคำขอยกเลิกใบรับรอง"),
       ).toBeVisible();
       await expect(page.locator("#cancelRequestDetail")).toBeVisible();
     });
@@ -843,7 +843,7 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
       await getStepNextButton(page).click();
 
       await expect(page.locator("#cancelRequestDetail")).toHaveValue(
-        "รายละเอียดเดิม"
+        "รายละเอียดเดิม",
       );
     });
 
@@ -867,7 +867,7 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
       await getStepNextButton(page).click();
 
       await expect(
-        page.getByRole("button", { name: "บันทึกคำขอยกเลิก" })
+        page.getByRole("button", { name: "บันทึกคำขอยกเลิก" }),
       ).toBeDisabled();
     });
 
@@ -892,7 +892,7 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
 
       await page.locator("#cancelRequestDetail").fill("   ");
       await expect(
-        page.getByRole("button", { name: "บันทึกคำขอยกเลิก" })
+        page.getByRole("button", { name: "บันทึกคำขอยกเลิก" }),
       ).toBeDisabled();
     });
 
@@ -949,14 +949,14 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
       await saveButton.click();
 
       await expect(
-        page.getByText("บันทึกคำขอยกเลิกเรียบร้อยแล้ว")
+        page.getByText("บันทึกคำขอยกเลิกเรียบร้อยแล้ว"),
       ).toBeVisible();
       await expect(page.getByText("รายละเอียดคำขอยกเลิกใบรับรอง")).toHaveCount(
-        0
+        0,
       );
       await expect(getStepNextButton(page)).toBeDisabled();
       await expect(getTable(page).locator("tbody tr.bg-green-50")).toHaveCount(
-        0
+        0,
       );
     });
 
@@ -987,13 +987,13 @@ test.describe("Farmer Applications Cancel — ขอยกเลิกใบร�
       await page.getByRole("button", { name: "บันทึกคำขอยกเลิก" }).click();
 
       await expect(
-        page.getByText("เกิดข้อผิดพลาดขณะบันทึกคำขอยกเลิก")
+        page.getByText("เกิดข้อผิดพลาดขณะบันทึกคำขอยกเลิก"),
       ).toBeVisible();
       await expect(
-        page.getByText("รายละเอียดคำขอยกเลิกใบรับรอง")
+        page.getByText("รายละเอียดคำขอยกเลิกใบรับรอง"),
       ).toBeVisible();
       await expect(page.locator("#cancelRequestDetail")).toHaveValue(
-        "ข้อความจะต้องยังอยู่"
+        "ข้อความจะต้องยังอยู่",
       );
     });
 
