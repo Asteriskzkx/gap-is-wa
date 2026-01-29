@@ -9,6 +9,6 @@ export function streamToCsv(
   dataStream: Readable,
   options: CsvOptions
 ) {
-  const csvStream = format({ headers: options.headers });
+  const csvStream = format({ headers: options.headers ,writeBOM: true});
   return dataStream.pipe(csvStream);
 }
