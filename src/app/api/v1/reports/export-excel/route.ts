@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
   if (sections.includes("inspections")) {
     if (session?.user?.role !== "ADMIN" && session?.user?.role !== "COMMITTEE") {
       return NextResponse.json(
-        { message: "inspection report is allowed for ADMIN and COMMITTEE only" },
+        { message: "inspection report is allowed for ADMIN or COMMITTEE only" },
         { status: 403 }
       );
     }
@@ -114,7 +114,7 @@ export async function POST(req: NextRequest) {
 
     if (session?.user?.role !== "ADMIN" && session?.user?.role !== "COMMITTEE") {
       return NextResponse.json(
-        { message: "certificate report is allowed for ADMIN and COMMITTEE only" },
+        { message: "certificate report is allowed for ADMIN or COMMITTEE only" },
         { status: 403 }
       );
     }
