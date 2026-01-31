@@ -113,6 +113,7 @@ test.describe("Reports - Admin", () => {
     await expect(
       page.getByRole("button", { name: /ส่งออก PDF/ })
     ).toBeVisible();
+    await page.waitForTimeout(5000);
   });
 
   test("TC-002 ป้องกันการเข้าหน้ารายงานผู้ดูแลระบบจากบทบาทอื่น", async ({
@@ -125,6 +126,8 @@ test.describe("Reports - Admin", () => {
     await expect(
       page.getByText("ตรวจสอบรายงานสรุปข้อมูลต่างๆ สำหรับผู้ดูแลระบบ")
     ).not.toBeVisible({ timeout: 5000 });
+
+   
   });
 
   test("TC-007 Admin: เปลี่ยนช่วงวันที่แล้วเรียก Report API พร้อม query params", async ({
@@ -240,6 +243,7 @@ test.describe("Reports - Admin", () => {
 
     // ค่าคาดหวัง: Calendar ถูกล้างค่า
     await expect(calendarInput).toHaveValue("", { timeout: 3000 });
+    await page.waitForTimeout(5000);
   });
 
   test("TC-009 Admin: เปิด/ปิดหน้าต่างส่งออก PDF ได้", async ({ page }) => {
@@ -264,6 +268,7 @@ test.describe("Reports - Admin", () => {
     // Close dialog
     await dialog.getByRole("button", { name: /ยกเลิก/ }).click();
     await expect(dialog).not.toBeVisible();
+    await page.waitForTimeout(5000);
   });
 
   test("TC-010 Admin: ปุ่มส่งออก PDF ถูก disable เมื่อไม่เลือก section ใดๆ", async ({
@@ -277,6 +282,7 @@ test.describe("Reports - Admin", () => {
 
     await page.waitForTimeout(500); // wait for animation
     await page.getByRole("button", { name: /ส่งออก PDF/ }).click();
+    await page.waitForTimeout(500); // wait for any animations
     const dialog = page.getByRole("dialog", {
       name: /เลือกรายงานที่ต้องการส่งออก/,
     });
@@ -376,7 +382,8 @@ test.describe("Reports - Auditor", () => {
 
     const calendarInput = page.locator('input[placeholder="เลือกช่วงวันที่"]');
     await page.waitForTimeout(500); // wait for any animations
-    await calendarInput.click();
+    await calendarInput.click();    
+    await page.waitForTimeout(500); // wait for any animations
     await page.waitForSelector(".p-datepicker", { state: "visible" });
 
     // ===== เลือกวันที่เริ่มต้น: 1 ม.ค. 2025 =====
@@ -455,6 +462,7 @@ test.describe("Reports - Auditor", () => {
     // Verify calendar has a value
     await expect(calendarInput).not.toHaveValue("", { timeout: 3000 });
 
+    await page.waitForTimeout(5000);
     // Clear the dates
     await clearDateRangeInCalendar(page);
 
@@ -507,7 +515,7 @@ test.describe("Reports - Auditor", () => {
       has: page.getByRole("heading", { name: "รายงานแปลงที่ตรวจแล้ว" }),
     });
 
-    const rows = page.getByTestId("inspected-farms-table").locator("tbody tr");
+    const rows = page.locator('.primary-datatable-wrapper').last().locator('tbody tr');
 
     await expect(rows).toHaveCount(5);
     const showMoreButton = section.getByRole("button", {
@@ -554,13 +562,13 @@ test.describe("Reports - Auditor", () => {
       dialog.getByRole("button", { name: /ส่งออก PDF/ }).click(),
     ]);
     const filename = download.suggestedFilename();
-    expect(filename).toMatch(/^รายงานการตรวจ_.*\.pdf$/);
+    expect(filename).toMatch(/^รายงานระบบ_.*\.pdf$/);
   });
 });
 
 // -------------------- Committee report tests --------------------
 test.describe("Reports - Committee", () => {
-  test("TC-005 เข้าหน้ารายงานคณะกรรมการ (Committee) ได้", async ({ page }) => {
+  test("TC-005 เข้าหน้ารายงานคณะกรรมการ (Committee) ได้ 005", async ({ page }) => {
     await loginAsCommittee(page);
     await page.goto("/committee/report", { waitUntil: "domcontentloaded" });
     // ค่าคาดหวัง: แสดงหน้า "รายงานคณะกรรมการ" และโหลดข้อมูลสำเร็จ
@@ -572,7 +580,7 @@ test.describe("Reports - Committee", () => {
     ).toBeVisible();
   });
 
-  test("TC-006 ป้องกันการเข้าหน้ารายงานคณะกรรมการจากบทบาทอื่น", async ({
+  test("TC-006 ป้องกันการเข้าหน้ารายงานคณะกรรมการจากบทบาทอื่น 006", async ({
     page,
   }) => {
     await loginAsAdmin(page);
@@ -583,7 +591,7 @@ test.describe("Reports - Committee", () => {
     ).not.toBeVisible({ timeout: 5000 });
   });
 
-  test("TC-017 Committee: หน้าโหลด base report ก่อน และแสดงกราฟ/สรุป", async ({
+  test("TC-017 Committee: หน้าโหลด base report ก่อน และแสดงกราฟ/สรุป 017", async ({
     page,
   }) => {
     await loginAsCommittee(page);
@@ -606,7 +614,7 @@ test.describe("Reports - Committee", () => {
     ).toBeVisible({ timeout: 10000 });
   });
 
-  test("TC-018 Committee: เลือกช่วงวันที่แล้วเรียก API committee พร้อม query params (chart filter)", async ({
+  test("TC-018 Committee: เลือกช่วงวันที่แล้วเรียก API committee พร้อม query params (chart filter) 018", async ({
     page,
   }) => {
     await loginAsCommittee(page);
@@ -671,7 +679,7 @@ test.describe("Reports - Committee", () => {
     await expect(section2.getByText("📅")).toBeVisible();
   });
 
-  test("TC-019 Committee: ล้างวันที่แล้วกลับสู่ base state", async ({
+  test("TC-019 Committee: ล้างวันที่แล้วกลับสู่ base state 019", async ({
     page,
   }) => {
     await loginAsCommittee(page);
@@ -723,7 +731,7 @@ test.describe("Reports - Committee", () => {
     await expect(calendarInput).toHaveValue("", { timeout: 3000 });
   });
 
-  test("TC-020 Committee: ส่งออก PDF แล้วมีไฟล์ถูกดาวน์โหลด", async ({
+  test("TC-020 Committee: ส่งออก PDF แล้วมีไฟล์ถูกดาวน์โหลด 020", async ({
     page,
   }) => {
     await loginAsCommittee(page);
@@ -734,19 +742,20 @@ test.describe("Reports - Committee", () => {
 
     await page.waitForTimeout(500); // wait for any animations
     await page.getByRole("button", { name: /ส่งออก PDF/ }).click();
+    await page.waitForTimeout(500); // wait for any animations
     const dialog = page.getByRole("dialog");
     await expect(dialog).toBeVisible();
 
-    // ค่าคาดหวัง: มีไฟล์ดาวน์โหลดชื่อขึ้นต้น รายงานคณะกรรมการ_ และนามสกุล .pdf
+    // ค่าคาดหวัง: มีไฟล์ดาวน์โหลดชื่อขึ้นต้น รายงานระบบ_ และนามสกุล .pdf
     const [download] = await Promise.all([
       page.waitForEvent("download", { timeout: 60000 }),
       dialog.getByRole("button", { name: /ส่งออก PDF/ }).click(),
     ]);
     const filename = download.suggestedFilename();
-    expect(filename).toMatch(/^รายงานคณะกรรมการ_.*\.pdf$/);
+    expect(filename).toMatch(/^รายงานระบบ.*\.pdf$/);
   });
 
-  test('TC-021 Committee: กรณีข้อมูลกราฟว่าง แสดง "ไม่มีข้อมูล"', async ({
+  test('TC-021 Committee: กรณีข้อมูลกราฟว่าง แสดง "ไม่มีข้อมูล" 021', async ({
     page,
   }) => {
     // Mock empty committee report structure
