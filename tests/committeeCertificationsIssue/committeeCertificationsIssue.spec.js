@@ -27,6 +27,12 @@ const TABLE_HEADERS = [
   "หัวหน้าผู้ตรวจประเมิน",
 ];
 
+async function expectVisible(locator, options) {
+  await locator.scrollIntoViewIfNeeded();
+  await expect(locator).toBeVisible(options);
+  return locator;
+}
+
 async function loginAsCommittee(page, { email, password }) {
   await page.goto("/", { waitUntil: "domcontentloaded" });
 
@@ -73,20 +79,20 @@ async function loginAsCommittee(page, { email, password }) {
 
 async function gotoIssuePage(page) {
   await page.goto(PAGE_PATH, { waitUntil: "domcontentloaded" });
-  await expect(page.getByRole("heading", { name: PAGE_HEADING })).toBeVisible();
+  await expectVisible(page.getByRole("heading", { name: PAGE_HEADING }));
 }
 
 async function waitForInspectionsTable(page) {
   const table = page.locator(".primary-datatable-wrapper").first();
-  await expect(table).toBeVisible({ timeout: 20000 });
-  await expect(table.locator("table")).toBeVisible({ timeout: 20000 });
+  await expectVisible(table, { timeout: 20000 });
+  await expectVisible(table.locator("table"), { timeout: 20000 });
   return table;
 }
 
 async function waitForTableRows(page) {
   const table = await waitForInspectionsTable(page);
   const rows = table.locator("tbody tr");
-  await expect(rows.first()).toBeVisible({ timeout: 20000 });
+  await expectVisible(rows.first(), { timeout: 20000 });
   return { table, rows };
 }
 
@@ -100,13 +106,13 @@ function getCalendarInput(page, id) {
 async function selectFirstAvailableDate(page, input) {
   await input.click();
   const panel = page.locator(".p-datepicker:visible").first();
-  await expect(panel).toBeVisible({ timeout: 10000 });
+  await expectVisible(panel, { timeout: 10000 });
   const day = panel
     .locator(
       "td:not(.p-disabled):not(.p-datepicker-other-month) span:not(.p-disabled)"
     )
     .first();
-  await expect(day).toBeVisible({ timeout: 10000 });
+  await expectVisible(day, { timeout: 10000 });
   await day.click();
   await expect(input).not.toHaveValue("");
 }
@@ -129,7 +135,7 @@ async function goToStep2FromFirstRow(page) {
   await expect(nextButton).toBeEnabled();
   await nextButton.click();
 
-  await expect(page.getByText(/การออกใบรับรองสำหรับ/)).toBeVisible({
+  await expectVisible(page.getByText(/การออกใบรับรองสำหรับ/), {
     timeout: 10000,
   });
 
@@ -176,22 +182,20 @@ test.describe("ออกใบรับรองแหล่งผลิตจ�
     });
 
     test("TC-002: แสดงชื่อหน้า + subtitle", async ({ page }) => {
-      await expect(
-        page.getByRole("heading", { name: PAGE_HEADING })
-      ).toBeVisible();
-      await expect(page.getByText(PAGE_SUBTITLE)).toBeVisible();
+      await expectVisible(page.getByRole("heading", { name: PAGE_HEADING }));
+      await expectVisible(page.getByText(PAGE_SUBTITLE));
     });
 
     test("TC-003: แสดง StepIndicator 2 ขั้น (Step 1 active)", async ({
       page,
     }) => {
-      await expect(page.getByText(/ขั้นตอนที่ 1/).first()).toBeVisible();
-      await expect(
+      await expectVisible(page.getByText(/ขั้นตอนที่ 1/).first());
+      await expectVisible(
         page.getByText("เลือกการตรวจ", { exact: true }).first()
-      ).toBeVisible();
-      await expect(
+      );
+      await expectVisible(
         page.getByText("ออกใบรับรอง", { exact: true }).first()
-      ).toBeVisible();
+      );
     });
 
     test("TC-004: ตารางแสดงสถานะ loading", async ({ page }) => {
@@ -206,11 +210,11 @@ test.describe("ออกใบรับรองแหล่งผลิตจ�
 
       const loadingOverlay = table.locator(".p-datatable-loading-overlay");
       if ((await loadingOverlay.count()) > 0) {
-        await expect(loadingOverlay).toBeVisible();
+        await expectVisible(loadingOverlay);
       }
 
       const firstRow = table.locator("tbody tr").first();
-      await expect(firstRow).toBeVisible({ timeout: 20000 });
+      await expectVisible(firstRow, { timeout: 20000 });
     });
 
     test("TC-005: ตารางมีหัวคอลัมน์ครบ", async ({ page }) => {
@@ -251,7 +255,7 @@ test.describe("ออกใบรับรองแหล่งผลิตจ�
       const firstRow = rows.first();
       const secondRow = rows.nth(1);
 
-      await expect(secondRow).toBeVisible();
+      await expectVisible(secondRow);
       await firstRow.click();
       await expect(firstRow).toHaveClass(/bg-green-50/);
 
@@ -263,7 +267,7 @@ test.describe("ออกใบรับรองแหล่งผลิตจ�
     test("TC-009: เปลี่ยนหน้า (pagination)", async ({ page }) => {
       const { table } = await waitForTableRows(page);
       const paginator = table.locator(".p-paginator").first();
-      await expect(paginator).toBeVisible();
+      await expectVisible(paginator);
 
       const nextButton = paginator.locator(".p-paginator-next").first();
       if (await nextButton.isDisabled()) {
@@ -289,7 +293,7 @@ test.describe("ออกใบรับรองแหล่งผลิตจ�
     test("TC-010: เปลี่ยนจำนวนรายการต่อหน้า", async ({ page }) => {
       const { table } = await waitForTableRows(page);
       const paginator = table.locator(".p-paginator").first();
-      await expect(paginator).toBeVisible();
+      await expectVisible(paginator);
 
       const requestPromise = waitForReadyToIssueRequest(page, (url) => {
         return url.searchParams.get("limit") === "25";
@@ -319,7 +323,7 @@ test.describe("ออกใบรับรองแหล่งผลิตจ�
       const headerCell = table.locator("thead th", {
         hasText: "รหัสการตรวจ",
       });
-      await expect(headerCell).toBeVisible();
+      await expectVisible(headerCell);
 
       await headerCell.click();
       await expect(headerCell).toHaveAttribute(
@@ -329,12 +333,10 @@ test.describe("ออกใบรับรองแหล่งผลิตจ�
     });
 
     test("TC-012: แสดงตัวกรอง “ตั้งแต่/ถึง”", async ({ page }) => {
-      await expect(
-        page.getByText("ตั้งแต่", { exact: true }).first()
-      ).toBeVisible();
-      await expect(page.getByText("ถึง", { exact: true }).first()).toBeVisible();
-      await expect(page.getByPlaceholder("เลือกวันที่เริ่ม")).toBeVisible();
-      await expect(page.getByPlaceholder("เลือกวันที่สิ้นสุด")).toBeVisible();
+      await expectVisible(page.getByText("ตั้งแต่", { exact: true }).first());
+      await expectVisible(page.getByText("ถึง", { exact: true }).first());
+      await expectVisible(page.getByPlaceholder("เลือกวันที่เริ่ม"));
+      await expectVisible(page.getByPlaceholder("เลือกวันที่สิ้นสุด"));
     });
 
     test("TC-013: กด “ค้นหา” แล้วรีเฟรชตาราง", async ({ page }) => {
@@ -349,7 +351,7 @@ test.describe("ออกใบรับรองแหล่งผลิตจ�
       await requestPromise;
 
       const { table } = await waitForTableRows(page);
-      await expect(table.locator("tbody tr").first()).toBeVisible();
+      await expectVisible(table.locator("tbody tr").first());
     });
 
     test("TC-014: กด “ล้างค่า” แล้วรีเซ็ตวันที่", async ({ page }, testInfo) => {
@@ -381,9 +383,9 @@ test.describe("ออกใบรับรองแหล่งผลิตจ�
     test("TC-015: ไป Step 2 ได้เมื่อเลือกแถว", async ({ page }) => {
       const { inspectionNo, locationText } = await goToStep2FromFirstRow(page);
 
-      await expect(
+      await expectVisible(
         page.getByText(new RegExp(`การออกใบรับรองสำหรับ:\\s*${inspectionNo}`))
-      ).toBeVisible();
+      );
 
       const locationLine = page.getByText(/สถานที่:/).first();
       const renderedLocation = (await locationLine.textContent()) || "";
@@ -400,18 +402,16 @@ test.describe("ออกใบรับรองแหล่งผลิตจ�
       page,
     }) => {
       await goToStep2FromFirstRow(page);
-      await expect(page.getByText("วันที่มีผล")).toBeVisible();
-      await expect(page.getByText("วันที่หมดอายุ")).toBeVisible();
+      await expectVisible(page.getByText("วันที่มีผล"));
+      await expectVisible(page.getByText("วันที่หมดอายุ"));
     });
 
     test("TC-017: แสดงส่วนอัปโหลดไฟล์ใบรับรอง", async ({ page }) => {
       await goToStep2FromFirstRow(page);
-      await expect(
-        page.getByText("ไฟล์ใบรับรอง (PDF) จำนวน 1 ไฟล์")
-      ).toBeVisible();
-      await expect(
+      await expectVisible(page.getByText("ไฟล์ใบรับรอง (PDF) จำนวน 1 ไฟล์"));
+      await expectVisible(
         page.locator(".p-fileupload-choose", { hasText: "เลือกไฟล์" }).first()
-      ).toBeVisible();
+      );
     });
 
     test("TC-018: คลิก “ย้อนกลับ” กลับ Step 1 (ยังคงการเลือกเดิม)", async ({
@@ -421,9 +421,7 @@ test.describe("ออกใบรับรองแหล่งผลิตจ�
       await page.getByRole("button", { name: BUTTON_BACK }).click();
 
       await waitForTableRows(page);
-      await expect(
-        page.locator("tbody tr.bg-green-50").first()
-      ).toBeVisible();
+      await expectVisible(page.locator("tbody tr.bg-green-50").first());
       await expect(
         page.getByRole("button", { name: BUTTON_NEXT, exact: true })
       ).toBeEnabled();
@@ -438,14 +436,14 @@ test.describe("ออกใบรับรองแหล่งผลิตจ�
       const firstRow = rows.first();
       const secondRow = rows.nth(1);
 
-      await expect(secondRow).toBeVisible();
+      await expectVisible(secondRow);
       await firstRow.click();
       await page.getByRole("button", { name: BUTTON_NEXT, exact: true }).click();
 
       const effectiveInput = getCalendarInput(page, "effectiveDate");
       await selectFirstAvailableDate(page, effectiveInput);
       await page.getByRole("button", { name: BUTTON_ISSUE }).click();
-      await expect(page.getByText("กรุณาเลือกวันที่หมดอายุ")).toBeVisible();
+      await expectVisible(page.getByText("กรุณาเลือกวันที่หมดอายุ"));
 
       await page.getByRole("button", { name: BUTTON_BACK }).click();
 
@@ -462,7 +460,7 @@ test.describe("ออกใบรับรองแหล่งผลิตจ�
       test("TC-020: ไม่เลือกวันที่มีผล", async ({ page }) => {
         await goToStep2FromFirstRow(page);
         await page.getByRole("button", { name: BUTTON_ISSUE }).click();
-        await expect(page.getByText("กรุณาเลือกวันที่มีผล")).toBeVisible();
+        await expectVisible(page.getByText("กรุณาเลือกวันที่มีผล"));
       });
 
       test("TC-021: เลือกวันที่มีผลแต่ไม่เลือกวันที่หมดอายุ", async ({
@@ -473,7 +471,7 @@ test.describe("ออกใบรับรองแหล่งผลิตจ�
         await selectFirstAvailableDate(page, effectiveInput);
 
         await page.getByRole("button", { name: BUTTON_ISSUE }).click();
-        await expect(page.getByText("กรุณาเลือกวันที่หมดอายุ")).toBeVisible();
+        await expectVisible(page.getByText("กรุณาเลือกวันที่หมดอายุ"));
       });
 
       test("TC-022: วันหมดอายุก่อนวันมีผล", async ({ page }) => {
@@ -499,9 +497,9 @@ test.describe("ออกใบรับรองแหล่งผลิตจ�
         }
 
         await page.getByRole("button", { name: BUTTON_ISSUE }).click();
-        await expect(
+        await expectVisible(
           page.getByText("วันที่หมดอายุต้องมากกว่าหรือเท่ากับวันที่มีผล")
-        ).toBeVisible();
+        );
       });
 
       test("TC-023: วันหมดอายุเกิน 2 ปีจากวันมีผล", async ({ page }) => {
@@ -527,9 +525,9 @@ test.describe("ออกใบรับรองแหล่งผลิตจ�
         }
 
         await page.getByRole("button", { name: BUTTON_ISSUE }).click();
-        await expect(
+        await expectVisible(
           page.getByText("วันที่หมดอายุต้องไม่เกิน 2 ปีจากวันที่มีผล")
-        ).toBeVisible();
+        );
       });
     });
 
@@ -556,7 +554,7 @@ test.describe("ออกใบรับรองแหล่งผลิตจ�
         await page.getByRole("button", { name: BUTTON_ISSUE }).click();
         await requestPromise;
 
-        await expect(page.getByText(errorMessage)).toBeVisible();
+        await expectVisible(page.getByText(errorMessage));
       });
 
       test("TC-025: API success แต่ไม่มี certificateId/id", async ({
@@ -582,9 +580,7 @@ test.describe("ออกใบรับรองแหล่งผลิตจ�
         await page.getByRole("button", { name: BUTTON_ISSUE }).click();
         await requestPromise;
 
-        await expect(
-          page.getByText("Server did not return certificate id")
-        ).toBeVisible();
+        await expectVisible(page.getByText("Server did not return certificate id"));
       });
 
       test("TC-026: ออกใบรับรองสำเร็จแล้วกลับ Step 1 และรีเซ็ต", async ({
@@ -605,9 +601,10 @@ test.describe("ออกใบรับรองแหล่งผลิตจ�
 
         await page.getByRole("button", { name: BUTTON_ISSUE }).click();
 
-        await expect(
-          page.getByRole("button", { name: BUTTON_NEXT, exact: true })
-        ).toBeVisible({ timeout: 5000 });
+        await expectVisible(
+          page.getByRole("button", { name: BUTTON_NEXT, exact: true }),
+          { timeout: 5000 }
+        );
 
         const { table } = await waitForTableRows(page);
         await expect(

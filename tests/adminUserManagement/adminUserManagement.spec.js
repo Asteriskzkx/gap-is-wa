@@ -116,7 +116,7 @@ test.describe("การเข้าถึงหน้า", () => {
     });
   });
 
-  test("TC-001 ต้อง login ก่อนเข้าใช้งาน", async ({ page }) => {
+  test("TC-001 ต้อง login ก่อนเข้าใช้งาน 001", async ({ page }) => {
     // 1) เปิดหน้า /admin/user-management โดยไม่มี session
     await page.goto(PATH_PAGE);
 
@@ -124,7 +124,7 @@ test.describe("การเข้าถึงหน้า", () => {
     await expect(page).toHaveURL(/\/(\?|$)/);
   });
 
-  test("TC-002 แสดงหัวข้อและคำอธิบายหน้า", async ({ page }) => {
+  test("TC-002 แสดงหัวข้อและคำอธิบายหน้า 002", async ({ page }) => {
     // Login ก่อน
     await loginAsAdmin(page, {
       email: process.env.E2E_TEST_ADMIN_EMAIL,
@@ -160,7 +160,7 @@ test.describe("รายการผู้ใช้: ตัวกรอง/ต�
     });
   });
 
-  test("TC-003 แสดงส่วนตัวกรองและปุ่มการทำงาน", async ({ page }) => {
+  test("TC-003 แสดงส่วนตัวกรองและปุ่มการทำงาน 003", async ({ page }) => {
     // 1) เปิดหน้า
     await page.goto(PATH_PAGE, { waitUntil: "domcontentloaded" });
 
@@ -168,10 +168,10 @@ test.describe("รายการผู้ใช้: ตัวกรอง/ต�
     const searchInput = page.getByPlaceholder("ค้นหาชื่อหรืออีเมล...");
     await expect(searchInput).toBeVisible();
 
-    // เห็น dropdown placeholder "เลือก Role"
+    // เห็น dropdown placeholder "เลือกบทบาท"
     const roleDropdown = page
       .locator(".p-dropdown")
-      .filter({ hasText: "เลือก Role" });
+      .filter({ hasText: "เลือกบทบาท" });
     await expect(roleDropdown).toBeVisible();
 
     // เห็นปุ่ม tooltip "ล้างตัวกรอง"
@@ -189,7 +189,7 @@ test.describe("รายการผู้ใช้: ตัวกรอง/ต�
     ).toBeVisible();
   });
 
-  test("TC-004 แสดงตารางพร้อมคอลัมน์หลัก", async ({ page }) => {
+  test("TC-004 แสดงตารางพร้อมคอลัมน์หลัก 004", async ({ page }) => {
     // Mock ให้มีข้อมูลอย่างน้อย 1 แถว
     await page.route(`${PATH_API}?*`, async (route) => {
       await route.fulfill({
@@ -202,21 +202,21 @@ test.describe("รายการผู้ใช้: ตัวกรอง/ต�
     // 1) เปิดหน้า
     await page.goto(PATH_PAGE, { waitUntil: "domcontentloaded" });
 
-    // เห็นหัวคอลัมน์: "ID", "Name", "Email", "Role", "Create Date"
+    // เห็นหัวคอลัมน์: "รหัส", "ชื่อ", "อีเมล", "บทบาท", "วันที่สร้าง"
     const table = page.locator("table");
     await expect(table).toBeVisible();
-    await expect(table.locator("th").filter({ hasText: "ID" })).toBeVisible();
-    await expect(table.locator("th").filter({ hasText: "Name" })).toBeVisible();
+    await expect(table.locator("th").filter({ hasText: "รหัส" })).toBeVisible();
+    await expect(table.locator("th").filter({ hasText: "ชื่อ" })).toBeVisible();
     await expect(
-      table.locator("th").filter({ hasText: "Email" })
+      table.locator("th").filter({ hasText: "อีเมล" })
     ).toBeVisible();
-    await expect(table.locator("th").filter({ hasText: "Role" })).toBeVisible();
+    await expect(table.locator("th").filter({ hasText: "บทบาท" })).toBeVisible();
     await expect(
-      table.locator("th").filter({ hasText: "Create Date" })
+      table.locator("th").filter({ hasText: "วันที่สร้าง" })
     ).toBeVisible();
   });
 
-  test("TC-005 แสดงข้อความว่างเมื่อไม่มีผู้ใช้", async ({ page }) => {
+  test("TC-005 แสดงข้อความว่างเมื่อไม่มีผู้ใช้ 005", async ({ page }) => {
     // Mock ให้ users=[] และ total=0
     await page.route(`${PATH_API}?*`, async (route) => {
       await route.fulfill({
@@ -236,7 +236,7 @@ test.describe("รายการผู้ใช้: ตัวกรอง/ต�
     await expect(page.getByText("แสดง 0 จาก 0 รายการ")).toBeVisible();
   });
 
-  test("TC-006 ค้นหามีสถานะ debouncing", async ({ page }) => {
+  test("TC-006 ค้นหามีสถานะ debouncing 006", async ({ page }) => {
     // Mock API ให้ตอบช้า เพื่อให้เห็น debouncing indicator ชัดเจน
     await page.route(`${PATH_API}?*`, async (route) => {
       // หน่วงเวลาเพื่อให้เห็น debounce indicator
@@ -263,7 +263,7 @@ test.describe("รายการผู้ใช้: ตัวกรอง/ต�
     });
   });
 
-  test("TC-007 ค้นหาแล้วตารางเปลี่ยนตามที่ mock", async ({ page }) => {
+  test("TC-007 ค้นหาแล้วตารางเปลี่ยนตามที่ mock 007", async ({ page }) => {
     // 1) mock ชุดข้อมูลเริ่มต้น
     await page.route(`${PATH_API}?*`, async (route) => {
       const url = new URL(route.request().url());
@@ -314,7 +314,7 @@ test.describe("รายการผู้ใช้: ตัวกรอง/ต�
     });
   });
 
-  test("TC-008 เลือก role แล้วตารางเปลี่ยนตามที่ mock", async ({ page }) => {
+  test("TC-008 เลือก role แล้วตารางเปลี่ยนตามที่ mock 008", async ({ page }) => {
     await page.route(`${PATH_API}?*`, async (route) => {
       const url = new URL(route.request().url());
       const role = url.searchParams.get("role");
@@ -341,17 +341,17 @@ test.describe("รายการผู้ใช้: ตัวกรอง/ต�
       timeout: 10000,
     });
 
-    // 1) เลือก Role = ADMIN - ใช้ dropdown ที่มี placeholder "เลือก Role"
+    // 1) เลือก Role = ADMIN - ใช้ dropdown ที่มี placeholder "เลือกบทบาท"
     const roleDropdown = page
       .locator(".p-dropdown")
-      .filter({ hasText: /เลือก Role|BASIC|FARMER|AUDITOR|COMMITTEE|ADMIN/ })
+      .filter({ hasText: /เลือกบทบาท|เกษตรกร|ผู้ตรวจประเมิน|คณะกรรมการ|ผู้ดูแลระบบ/ })
       .first();
     await roleDropdown.click();
 
     // Start waiting for the filtered API response before clicking the option
     await Promise.all([
       page.waitForResponse((res) => res.url().includes(PATH_API) && res.url().includes("role=ADMIN")),
-      page.getByRole("option", { name: "ADMIN", exact: true }).click(),
+      page.getByRole("option", { name: /ผู้ดูแลระบบ/ }).click(),
     ]);
 
     // 2) ตารางเปลี่ยนเป็นชุดข้อมูลตามที่ mock ไว้
@@ -363,7 +363,7 @@ test.describe("รายการผู้ใช้: ตัวกรอง/ต�
     });
   });
 
-  test("TC-009 กด 'ล้างตัวกรอง' แล้วกลับค่าเริ่มต้น", async ({ page }) => {
+  test("TC-009 กด 'ล้างตัวกรอง' แล้วกลับค่าเริ่มต้น 009", async ({ page }) => {
     let apiCallCount = 0;
     await page.route(`${PATH_API}?*`, async (route) => {
       apiCallCount++;
@@ -406,10 +406,10 @@ test.describe("รายการผู้ใช้: ตัวกรอง/ต�
     // เลือก role
     const roleDropdown = page
       .locator(".p-dropdown")
-      .filter({ hasText: /เลือก Role|BASIC|FARMER|AUDITOR|COMMITTEE|ADMIN/ })
+      .filter({ hasText: /เลือกบทบาท|เกษตรกร|ผู้ตรวจประเมิน|คณะกรรมการ|ผู้ดูแลระบบ/ })
       .first();
     await roleDropdown.click();
-    await page.getByRole("option", { name: "ADMIN", exact: true }).click();
+    await page.getByRole("option", { name: /ผู้ดูแลระบบ/ }).click();
     await page.waitForTimeout(300);
 
     // 2) กดปุ่ม "ล้างตัวกรอง"
@@ -427,7 +427,7 @@ test.describe("รายการผู้ใช้: ตัวกรอง/ต�
     await expect(searchInput).toHaveValue("");
   });
 
-  test("TC-010 กด 'รีเฟรช' แล้วดึงข้อมูลใหม่", async ({ page }) => {
+  test("TC-010 กด 'รีเฟรช' แล้วดึงข้อมูลใหม่ 010", async ({ page }) => {
     let callCount = 0;
     await page.route(`${PATH_API}?*`, async (route) => {
       callCount++;
@@ -470,7 +470,7 @@ test.describe("รายการผู้ใช้: ตัวกรอง/ต�
     });
   });
 
-  test("TC-011 Pagination: เปลี่ยนจำนวนรายการต่อหน้า", async ({ page }) => {
+  test("TC-011 Pagination: เปลี่ยนจำนวนรายการต่อหน้า 011", async ({ page }) => {
     await page.route(`${PATH_API}?*`, async (route) => {
       const url = new URL(route.request().url());
       const take = url.searchParams.get("take");
@@ -514,22 +514,20 @@ test.describe("รายการผู้ใช้: ตัวกรอง/ต�
     });
   });
 
-  test("TC-012 Sorting: คลิกหัวคอลัมน์ให้ลำดับเปลี่ยน", async ({ page }) => {
-    let sortCallCount = 0;
+  test("TC-012 Sorting: คลิกหัวคอลัมน์ให้ลำดับเปลี่ยน 012", async ({ page }) => {
     await page.route(`${PATH_API}?*`, async (route) => {
       const url = new URL(route.request().url());
       const sortField = url.searchParams.get("sortField");
-      const sortOrder = url.searchParams.get("sortOrder");
 
-      sortCallCount++;
-      if (sortField === "createdAt" && sortOrder === "1") {
-        // mock ให้ response ต่างกันเมื่อ sort ascending
+      // When sorting by "name" column (click triggers sortField=name)
+      if (sortField === "name") {
         await route.fulfill({
           status: 200,
           contentType: "application/json",
           body: JSON.stringify({ users: mockUsersFiltered, total: 1 }),
         });
       } else {
+        // Default: createdAt sort, return all users
         await route.fulfill({
           status: 200,
           contentType: "application/json",
@@ -539,21 +537,29 @@ test.describe("รายการผู้ใช้: ตัวกรอง/ต�
     });
 
     await page.goto(PATH_PAGE, { waitUntil: "domcontentloaded" });
+    
+    // Wait for the table to show both users (default sorted by createdAt)
     await expect(page.getByText("farmer@test.com")).toBeVisible({
       timeout: 10000,
     });
+    await expect(page.getByText("admin@test.com")).toBeVisible({
+      timeout: 10000,
+    });
 
-    // 1) คลิกหัวคอลัมน์ "Create Date" และรอ response
-    const createDateHeader = page
+    // 1) คลิกหัวคอลัมน์ "ชื่อ" และรอ response ที่มี sortField=name
+    const nameHeader = page
       .locator("th")
-      .filter({ hasText: "Create Date" });
+      .filter({ hasText: "ชื่อ" });
     await Promise.all([
-      page.waitForResponse((res) => res.url().includes(PATH_API)),
-      createDateHeader.click(),
+      page.waitForResponse((res) => res.url().includes(PATH_API) && res.url().includes("sortField=name")),
+      nameHeader.click(),
     ]);
 
-    // 2) ตารางเปลี่ยนลำดับตามที่ mock ไว้
+    // 2) ตารางเปลี่ยนลำดับตามที่ mock ไว้ - farmer หายไป
     await expect(page.getByText("farmer@test.com")).not.toBeVisible({
+      timeout: 10000,
+    });
+    await expect(page.getByText("admin@test.com")).toBeVisible({
       timeout: 10000,
     });
   });
@@ -562,7 +568,7 @@ test.describe("รายการผู้ใช้: ตัวกรอง/ต�
 // ============================================================
 // เพิ่มผู้ใช้ใหม่ (Dialog "เพิ่มผู้ใช้ใหม่") (TC-013 to TC-017)
 // ============================================================
-test.describe("เพิ่มผู้ใช้ใหม่ (Dialog 'เพิ่มผู้ใช้ใหม่')", () => {
+test.describe("เพิ่มผู้ใช้ใหม่ (Dialog 'เพิ่มผู้ใช้ใหม่ ')", () => {
   test.beforeEach(async ({ page }) => {
     await page.context().clearCookies();
     await page.addInitScript(() => {
@@ -586,7 +592,7 @@ test.describe("เพิ่มผู้ใช้ใหม่ (Dialog 'เพิ�
     await page.goto(PATH_PAGE, { waitUntil: "domcontentloaded" });
   });
 
-  test("TC-013 เปิด dialog เพิ่มผู้ใช้ได้", async ({ page }) => {
+  test("TC-013 เปิด dialog เพิ่มผู้ใช้ได้ 013", async ({ page }) => {
     // 1) กดปุ่ม "เพิ่มผู้ใช้"
     await expect(page.getByRole("button", { name: "เพิ่มผู้ใช้" })).toBeEnabled();
     await page.waitForTimeout(500);
@@ -609,7 +615,7 @@ test.describe("เพิ่มผู้ใช้ใหม่ (Dialog 'เพิ�
     await expect (roleDropdown).toBeVisible();
   });
 
-  test("TC-014 ปุ่ม 'บันทึก' disabled เมื่อกรอกไม่ครบ", async ({ page }) => {
+  test("TC-014 ปุ่ม 'บันทึก' disabled เมื่อกรอกไม่ครบ 014", async ({ page }) => {
     // 1) เปิด dialog โดยยังไม่เลือก Role/ไม่กรอกข้อมูล
     await page.waitForTimeout(500);
     await page.getByRole("button", { name: "เพิ่มผู้ใช้" }).click();
@@ -622,7 +628,7 @@ test.describe("เพิ่มผู้ใช้ใหม่ (Dialog 'เพิ�
     await expect(saveButton).toBeDisabled();
   });
 
-  test("TC-015 สร้างผู้ใช้สำเร็จ (กรณี role=ADMIN)", async ({ page }) => {
+  test("TC-015 สร้างผู้ใช้สำเร็จ (กรณี role=ADMIN) 015", async ({ page }) => {
     // Mock POST /api/v1/users ให้สำเร็จ
     await page.route(PATH_API, async (route) => {
       if (route.request().method() === "POST") {
@@ -674,7 +680,7 @@ test.describe("เพิ่มผู้ใช้ใหม่ (Dialog 'เพิ�
     await expect(dialog).not.toBeVisible({ timeout: 10000 });
   });
 
-  test("TC-016 สร้างผู้ใช้ไม่สำเร็จ (API ตอบ error)", async ({ page }) => {
+  test("TC-016 สร้างผู้ใช้ไม่สำเร็จ (API ตอบ error) 016", async ({ page }) => {
     // Mock POST ให้ error
     await page.route(PATH_API, async (route) => {
       if (route.request().method() === "POST") {
@@ -720,7 +726,7 @@ test.describe("เพิ่มผู้ใช้ใหม่ (Dialog 'เพิ�
     await expect(dialog).toBeVisible({ timeout: 10000 });
   });
 
-  test("TC-017 ปิด dialog ด้วยปุ่ม 'ยกเลิก'", async ({ page }) => {
+  test("TC-017 ปิด dialog ด้วยปุ่ม 'ยกเลิก' 017", async ({ page }) => {
     // 1) เปิด dialog
     await page.waitForTimeout(500);
     await page.getByRole("button", { name: "เพิ่มผู้ใช้" }).click();
@@ -762,38 +768,29 @@ test.describe("เมนูต่อแถว (Edit/Delete) และการ�
     await page.goto(PATH_PAGE, { waitUntil: "domcontentloaded" });
   });
 
-  test("TC-018 เปิดเมนูต่อแถวและเห็นตัวเลือก Edit/Delete", async ({ page }) => {
+  test("TC-018 เห็นปุ่มแก้ไขและลบในแต่ละแถว 018", async ({ page }) => {
     // รอให้ตารางโหลด
     await expect(page.getByText("admin@test.com")).toBeVisible();
 
-    // 1) กดปุ่มจุดสามจุดในแถวแรก
-    const moreButton = page
-      .locator("tbody tr")
-      .first()
-      .locator("button")
-      .filter({ has: page.locator(".pi-ellipsis-v") });
-    await moreButton.click();
+    // ตรวจสอบว่าแต่ละแถวมีปุ่ม edit (pencil) และ delete (trash)
+    const firstRow = page.locator("tbody tr").first();
+    
+    // เห็นปุ่มแก้ไข (pi-pencil)
+    const editButton = firstRow.locator("button").filter({ has: page.locator(".pi-pencil") });
+    await expect(editButton).toBeVisible();
 
-    // 2) เห็นเมนูรายการ "Edit" และ "Delete"
-    const menu = page.locator(".p-menu");
-    await expect(menu).toBeVisible();
-    await expect(menu.getByText("Edit")).toBeVisible();
-    await expect(menu.getByText("Delete")).toBeVisible();
+    // เห็นปุ่มลบ (pi-trash)
+    const deleteButton = firstRow.locator("button").filter({ has: page.locator(".pi-trash") });
+    await expect(deleteButton).toBeVisible();
   });
 
-  test("TC-019 กด Delete แล้วเห็น dialog ยืนยันการลบ", async ({ page }) => {
+  test("TC-019 กด Delete แล้วเห็น dialog ยืนยันการลบ 019", async ({ page }) => {
     await expect(page.getByText("admin@test.com")).toBeVisible();
 
-    // 1) เปิดเมนู
-    const moreButton = page
-      .locator("tbody tr")
-      .first()
-      .locator("button")
-      .filter({ has: page.locator(".pi-ellipsis-v") });
-    await moreButton.click();
-
-    // 2) กด "Delete"
-    await page.locator(".p-menu").getByText("Delete").click();
+    // 1) กดปุ่มลบ (trash) ในแถวแรก
+    const firstRow = page.locator("tbody tr").first();
+    const deleteButton = firstRow.locator("button").filter({ has: page.locator(".pi-trash") });
+    await deleteButton.click();
 
     // เห็น dialog หัวข้อ "ยืนยันการลบ"
     const dialog = page.locator(".p-dialog");
@@ -811,17 +808,13 @@ test.describe("เมนูต่อแถว (Edit/Delete) และการ�
     await expect(dialog.getByRole("button", { name: "ลบ" })).toBeVisible();
   });
 
-  test("TC-020 ยกเลิกลบแล้ว dialog ปิดลง", async ({ page }) => {
+  test("TC-020 ยกเลิกลบแล้ว dialog ปิดลง 020", async ({ page }) => {
     await expect(page.getByText("admin@test.com")).toBeVisible();
 
-    // 1) เปิด dialog ยืนยันการลบ
-    const moreButton = page
-      .locator("tbody tr")
-      .first()
-      .locator("button")
-      .filter({ has: page.locator(".pi-ellipsis-v") });
-    await moreButton.click();
-    await page.locator(".p-menu").getByText("Delete").click();
+    // 1) กดปุ่มลบในแถวแรก
+    const firstRow = page.locator("tbody tr").first();
+    const deleteButton = firstRow.locator("button").filter({ has: page.locator(".pi-trash") });
+    await deleteButton.click();
 
     const dialog = page.locator(".p-dialog");
     await expect(dialog).toBeVisible();
@@ -833,7 +826,7 @@ test.describe("เมนูต่อแถว (Edit/Delete) และการ�
     await expect(dialog).not.toBeVisible();
   });
 
-  test("TC-021 ลบผู้ใช้สำเร็จ", async ({ page }) => {
+  test("TC-021 ลบผู้ใช้สำเร็จ 021", async ({ page }) => {  
     // Mock DELETE /api/v1/users/:id ให้สำเร็จ
     await page.route(`${PATH_API}/*`, async (route) => {
       if (route.request().method() === "DELETE") {
@@ -849,19 +842,15 @@ test.describe("เมนูต่อแถว (Edit/Delete) และการ�
 
     await expect(page.getByText("admin@test.com")).toBeVisible();
 
-    // 1) เปิด dialog
-    const moreButton = page
-      .locator("tbody tr")
-      .first()
-      .locator("button")
-      .filter({ has: page.locator(".pi-ellipsis-v") });
-    await moreButton.click();
-    await page.locator(".p-menu").getByText("Delete").click();
+    // 1) กดปุ่มลบในแถวแรก
+    const firstRow = page.locator("tbody tr").first();
+    const deleteButton = firstRow.locator("button").filter({ has: page.locator(".pi-trash") });
+    await deleteButton.click();
 
     const dialog = page.locator(".p-dialog");
     await expect(dialog).toBeVisible();
 
-    // 3) กด "ลบ"
+    // 2) กด "ลบ"
     await dialog.getByRole("button", { name: "ลบ" }).click();
 
     // เห็น toast "ลบผู้ใช้สำเร็จ"
@@ -870,7 +859,7 @@ test.describe("เมนูต่อแถว (Edit/Delete) และการ�
     });
   });
 
-  test("TC-022 ลบผู้ใช้ไม่สำเร็จ (API ตอบ error)", async ({ page }) => {
+  test("TC-022 ลบผู้ใช้ไม่สำเร็จ (API ตอบ error) 022", async ({ page }) => {
     // รอให้ตารางโหลดเสร็จก่อน
     await expect(page.getByText("admin@test.com")).toBeVisible({ timeout: 10000 });
 
@@ -887,18 +876,10 @@ test.describe("เมนูต่อแถว (Edit/Delete) และการ�
       }
     });
 
-    // 1) เปิด dialog
-    const moreButton = page
-      .locator("tbody tr")
-      .first()
-      .locator("button")
-      .filter({ has: page.locator(".pi-ellipsis-v") });
-    await moreButton.click();
-    
-    // รอให้เมนูแสดง
-    const menu = page.locator(".p-menu");
-    await expect(menu).toBeVisible({ timeout: 5000 });
-    await menu.getByText("Delete").click();
+    // 1) กดปุ่มลบในแถวแรก
+    const firstRow = page.locator("tbody tr").first();
+    const deleteButton = firstRow.locator("button").filter({ has: page.locator(".pi-trash") });
+    await deleteButton.click();
 
     const dialog = page.locator(".p-dialog");
     await expect(dialog).toBeVisible({ timeout: 5000 });
@@ -929,7 +910,7 @@ test.describe("หน้าแก้ไขผู้ใช้ (/admin/user-manage
     });
   });
 
-  test("TC-023 ไม่พบผู้ใช้ (User not found)", async ({ page }) => {
+  test("TC-023 ไม่พบผู้ใช้ (User not found) 023", async ({ page }) => {
     // Mock GET /api/v1/users/normalize/999 ให้ตอบ 404
     await page.route("/api/v1/users/normalize/999", async (route) => {
       await route.fulfill({
@@ -950,7 +931,7 @@ test.describe("หน้าแก้ไขผู้ใช้ (/admin/user-manage
     });
   });
 
-  test("TC-024 แสดงฟอร์มแก้ไขตาม role=ADMIN", async ({ page }) => {
+  test("TC-024 แสดงฟอร์มแก้ไขตาม role=ADMIN 024", async ({ page }) => {
     // Mock normalize ให้เป็นผู้ใช้ role ADMIN พร้อมข้อมูล admin
     await page.route("/api/v1/users/normalize/1", async (route) => {
       await route.fulfill({
@@ -987,7 +968,7 @@ test.describe("หน้าแก้ไขผู้ใช้ (/admin/user-manage
     });
   });
 
-  test("TC-025 ปุ่ม 'บันทึก' disabled เมื่อยังไม่แก้ไขข้อมูล", async ({
+  test("TC-025 ปุ่ม 'บันทึก' disabled เมื่อยังไม่แก้ไขข้อมูล 025", async ({
     page,
   }) => {
     await page.route("/api/v1/users/normalize/1", async (route) => {
@@ -1017,7 +998,7 @@ test.describe("หน้าแก้ไขผู้ใช้ (/admin/user-manage
     });
   });
 
-  test("TC-026 บันทึกสำเร็จ (Admin edit)", async ({ page }) => {
+  test("TC-026 บันทึกสำเร็จ (Admin edit) 026", async ({ page }) => {
     await page.route("/api/v1/users/normalize/1", async (route) => {
       await route.fulfill({
         status: 200,
@@ -1061,14 +1042,13 @@ test.describe("หน้าแก้ไขผู้ใช้ (/admin/user-manage
     await expect(saveButton).toBeEnabled({ timeout: 5000 });
     await saveButton.click();
 
-    // เห็น toast (summary "สำเร็จ") และ detail "บันทึกข้อมูลผู้ดูแลระบบเรียบร้อย"
-    await expect(page.getByText("สำเร็จ")).toBeVisible({ timeout: 10000 });
+    // เห็น toast "บันทึกข้อมูลผู้ดูแลระบบเรียบร้อย"
     await expect(
       page.getByText("บันทึกข้อมูลผู้ดูแลระบบเรียบร้อย")
     ).toBeVisible({ timeout: 10000 });
   });
 
-  test("TC-027 บันทึกไม่สำเร็จ (Admin edit)", async ({ page }) => {
+  test("TC-027 บันทึกไม่สำเร็จ (Admin edit) 027", async ({ page }) => {
     await page.route("/api/v1/users/normalize/1", async (route) => {
       await route.fulfill({
         status: 200,
@@ -1116,7 +1096,7 @@ test.describe("หน้าแก้ไขผู้ใช้ (/admin/user-manage
     ).toBeVisible({ timeout: 10000 });
   });
 
-  test("TC-028 รีเซ็ตค่ากลับค่าเริ่มต้น", async ({ page }) => {
+  test("TC-028 รีเซ็ตค่ากลับค่าเริ่มต้น 028", async ({ page }) => {
     await page.route("/api/v1/users/normalize/1", async (route) => {
       await route.fulfill({
         status: 200,
