@@ -9,7 +9,6 @@ class BaseRepository~T~
 class UserModel
 class UserService
 class AuditLogService
-class UserRole
 
 class AdminModel {
   -adminId: number
