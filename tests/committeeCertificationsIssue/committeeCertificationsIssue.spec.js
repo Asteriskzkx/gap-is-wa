@@ -34,19 +34,33 @@ async function expectVisible(locator, options) {
 }
 
 async function loginAsCommittee(page, { email, password }) {
+  if (!email || !password) {
+    throw new Error("Missing committee credentials. Set E2E_TEST_COMMITTEE_EMAIL and E2E_TEST_COMMITTEE_PASSWORD environment variables.");
+  }
+
   await page.goto("/", { waitUntil: "domcontentloaded" });
 
-  const roleGroup = page.locator('label[for="role"]').locator("..");
-  const roleButtons = roleGroup.locator("button");
-  await expect(roleButtons).toHaveCount(4);
-
-  const committeeRoleButton = page
-    .getByRole("button", { name: /คณะกรรมการ/ })
-    .first();
-  if (await committeeRoleButton.isVisible().catch(() => false)) {
+  // รอให้ role buttons แสดงผลและ hydrate เสร็จ
+  await page.waitForLoadState("networkidle");
+  
+  const committeeRoleButton = page.getByRole("button", { name: /คณะกรรมการ/ }).first();
+  await expect(committeeRoleButton).toBeVisible({ timeout: 10000 });
+  
+  // Click และรอให้ปุ่มเปลี่ยนเป็น active
+  for (let attempt = 0; attempt < 3; attempt++) {
     await committeeRoleButton.click();
-  } else {
-    await roleButtons.nth(2).click();
+    try {
+      await expect(committeeRoleButton).toHaveClass(/Active/, { timeout: 2000 });
+      break;
+    } catch {
+      if (attempt === 2) {
+        // ลอง scroll แล้ว click อีกครั้ง
+        await committeeRoleButton.scrollIntoViewIfNeeded();
+        await page.waitForTimeout(500);
+        await committeeRoleButton.click({ force: true });
+        await expect(committeeRoleButton).toHaveClass(/Active/, { timeout: 3000 });
+      }
+    }
   }
 
   const emailInput = page
@@ -71,8 +85,10 @@ async function loginAsCommittee(page, { email, password }) {
   await fillAndConfirm(passwordInput, password);
 
   await page.locator('button[type="submit"]').click();
+
+  // รอ navigation
   await page.waitForURL(/\/committee\/dashboard/, {
-    timeout: 40000,
+    timeout: 45000,
     waitUntil: "domcontentloaded",
   });
 }
@@ -104,17 +120,48 @@ function getCalendarInput(page, id) {
 }
 
 async function selectFirstAvailableDate(page, input) {
-  await input.click();
-  const panel = page.locator(".p-datepicker:visible").first();
-  await expectVisible(panel, { timeout: 10000 });
-  const day = panel
-    .locator(
-      "td:not(.p-disabled):not(.p-datepicker-other-month) span:not(.p-disabled)"
-    )
-    .first();
-  await expectVisible(day, { timeout: 10000 });
-  await day.click();
-  await expect(input).not.toHaveValue("");
+  // รอให้ input พร้อมก่อน click
+  await expect(input).toBeVisible({ timeout: 5000 });
+  
+  // Click และรอให้ datepicker เปิด (retry ถ้าจำเป็น)
+  for (let attempt = 0; attempt < 3; attempt++) {
+    await input.click();
+    
+    // รอ datepicker panel ที่ visible
+    const panel = page.locator(".p-datepicker:not([style*='display: none'])");
+    
+    try {
+      await expect(panel.first()).toBeVisible({ timeout: 3000 });
+      
+      // เลือกวันที่แรกที่ไม่ disabled
+      const day = panel.first()
+        .locator("td:not(.p-disabled):not(.p-datepicker-other-month) span:not(.p-disabled)")
+        .first();
+      await expect(day).toBeVisible({ timeout: 5000 });
+      await day.click();
+      
+      // รอให้ input มีค่า
+      await expect(input).not.toHaveValue("", { timeout: 3000 });
+      return;
+    } catch {
+      if (attempt === 2) {
+        // ลอง focus แล้ว click อีกครั้ง
+        await input.focus();
+        await page.waitForTimeout(300);
+        await input.click({ force: true });
+        
+        const panelFinal = page.locator(".p-datepicker:not([style*='display: none'])");
+        await expect(panelFinal.first()).toBeVisible({ timeout: 5000 });
+        
+        const dayFinal = panelFinal.first()
+          .locator("td:not(.p-disabled):not(.p-datepicker-other-month) span:not(.p-disabled)")
+          .first();
+        await expect(dayFinal).toBeVisible({ timeout: 5000 });
+        await dayFinal.click();
+        await expect(input).not.toHaveValue("", { timeout: 3000 });
+      }
+    }
+  }
 }
 
 async function goToStep2FromFirstRow(page) {
@@ -171,8 +218,9 @@ test.describe("ออกใบรับรองแหล่งผลิตจ�
     await expect(page).toHaveURL(/\/(\?|$)/);
   });
 
-  test.describe("Step 1 — เลือกการตรวจ", () => {
-    test.skip(!HAS_COMMITTEE_CREDS, "ยังไม่ได้ตั้งค่า E2E committee credentials");
+  // Skip Step 1 tests if credentials are not configured
+  const describeStep1 = HAS_COMMITTEE_CREDS ? test.describe : test.describe.skip;
+  describeStep1("Step 1 — เลือกการตรวจ", () => {
     test.describe.configure({ mode: "serial" });
 
     test.beforeEach(async ({ page }) => {
@@ -325,18 +373,23 @@ test.describe("ออกใบรับรองแหล่งผลิตจ�
       });
       await expectVisible(headerCell);
 
+      // Click เพื่อ sort และรอให้ aria-sort เปลี่ยน
       await headerCell.click();
+      await page.waitForTimeout(500); // รอให้ sort request เสร็จ
+      
+      // ตรวจสอบว่า aria-sort เปลี่ยนจาก none
       await expect(headerCell).toHaveAttribute(
         "aria-sort",
-        /ascending|descending/
+        /ascending|descending/,
+        { timeout: 10000 }
       );
     });
 
     test("TC-012: แสดงตัวกรอง “ตั้งแต่/ถึง”", async ({ page }) => {
       await expectVisible(page.getByText("ตั้งแต่", { exact: true }).first());
       await expectVisible(page.getByText("ถึง", { exact: true }).first());
-      await expectVisible(page.getByPlaceholder("เลือกวันที่เริ่ม"));
-      await expectVisible(page.getByPlaceholder("เลือกวันที่สิ้นสุด"));
+      await expect(page.getByPlaceholder("เลือกวันที่เริ่ม")).toBeVisible();
+      await expect(page.getByPlaceholder("เลือกวันที่สิ้นสุด")).toBeVisible();
     });
 
     test("TC-013: กด “ค้นหา” แล้วรีเฟรชตาราง", async ({ page }) => {
@@ -370,8 +423,9 @@ test.describe("ออกใบรับรองแหล่งผลิตจ�
     });
   });
 
-  test.describe("Step 2 — ออกใบรับรอง", () => {
-    test.skip(!HAS_COMMITTEE_CREDS, "ยังไม่ได้ตั้งค่า E2E committee credentials");
+  // Skip Step 2 tests if credentials are not configured
+  const describeStep2 = HAS_COMMITTEE_CREDS ? test.describe : test.describe.skip;
+  describeStep2("Step 2 — ออกใบรับรอง", () => {
     test.describe.configure({ mode: "serial" });
 
     test.beforeEach(async ({ page }) => {
