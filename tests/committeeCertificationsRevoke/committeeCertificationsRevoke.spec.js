@@ -53,6 +53,7 @@ async function loginAsCommittee(page, { email, password }) {
       if (isActive) break;
       await page.waitForTimeout(100);
     }
+    await page.waitForLoadState('networkidle');
     await expect(committeeRoleButton).toHaveClass(/roleButtonActive/);
   } else {
     await roleButtons.nth(2).click();
@@ -220,7 +221,7 @@ async function goToStep2FromFirstRow(page, testInfo) {
 }
 
 test.describe("ยกเลิกใบรับรองแหล่งผลิตจีเอพี - Committee", () => {
-  test("TC-001: ไม่ได้ login → redirect", async ({ page }) => {
+  test("TC-001: ไม่ได้ login → redirect 001", async ({ page }) => {
     await page.goto(PAGE_PATH, { waitUntil: "domcontentloaded" });
     await page.waitForURL((url) => new URL(url).pathname === "/", {
       timeout: 10000,
@@ -241,12 +242,12 @@ test.describe("ยกเลิกใบรับรองแหล่งผล�
       await waitForCertificatesTable(page);
     });
 
-    test("TC-002: แสดงหัวข้อ/คำอธิบายหน้าถูกต้อง", async ({ page }) => {
+    test("TC-002: แสดงหัวข้อ/คำอธิบายหน้าถูกต้อง 002", async ({ page }) => {
       await expectVisible(page.getByRole("heading", { name: PAGE_HEADING }));
       await expectVisible(page.getByText(PAGE_SUBTITLE));
     });
 
-    test("TC-003: แสดง Step indicator และอยู่ที่ Step 1", async ({ page }) => {
+    test("TC-003: แสดง Step indicator และอยู่ที่ Step 1 003", async ({ page }) => {
       await expectVisible(page.getByText(/ขั้นตอนที่ 1/).first());
       await expectVisible(
         page.getByText("เลือกใบรับรอง", { exact: true }).first(),
@@ -256,7 +257,7 @@ test.describe("ยกเลิกใบรับรองแหล่งผล�
       );
     });
 
-    test("TC-004: แสดงตัวกรองวันที่และปุ่มค้นหา/ล้างค่า", async ({ page }) => {
+    test("TC-004: แสดงตัวกรองวันที่และปุ่มค้นหา/ล้างค่า 004", async ({ page }) => {
       await expectVisible(page.getByText("ตั้งแต่", { exact: true }).first());
       await expectVisible(page.getByText("ถึง", { exact: true }).first());
       await expectVisible(page.getByPlaceholder("เลือกวันที่มีผล"));
@@ -265,7 +266,7 @@ test.describe("ยกเลิกใบรับรองแหล่งผล�
       await expectVisible(page.getByRole("button", { name: BUTTON_CLEAR }));
     });
 
-    test("TC-005: แสดงปุ่มแท็บ 2 แบบ", async ({ page }) => {
+    test("TC-005: แสดงปุ่มแท็บ 2 แบบ 005", async ({ page }) => {
       await expectVisible(
         page.getByRole("button", { name: "ใบรับรองที่มีคำขอยกเลิก" }),
       );
@@ -274,7 +275,7 @@ test.describe("ยกเลิกใบรับรองแหล่งผล�
       );
     });
 
-    test("TC-006: แสดงตารางรายการพร้อมคอลัมน์หลัก", async ({ page }) => {
+    test("TC-006: แสดงตารางรายการพร้อมคอลัมน์หลัก 006", async ({ page }) => {
       const table = await waitForCertificatesTable(page);
       const thead = table.locator("thead");
       for (const header of TABLE_HEADERS) {
@@ -282,13 +283,13 @@ test.describe("ยกเลิกใบรับรองแหล่งผล�
       }
     });
 
-    test("TC-007: ปุ่ม “ถัดไป” ถูกปิดก่อนเลือกแถว", async ({ page }) => {
+    test("TC-007: ปุ่ม “ถัดไป” ถูกปิดก่อนเลือกแถว 007", async ({ page }) => {
       const nextButton = getStepNextButton(page);
       await expectVisible(nextButton);
       await expect(nextButton).toBeDisabled();
     });
 
-    test("TC-008: เลือกแถวแล้ว “ถัดไป” ใช้งานได้", async ({
+    test("TC-008: เลือกแถวแล้ว “ถัดไป” ใช้งานได้ 008", async ({
       page,
     }, testInfo) => {
       const { rows } = await ensureHasDataRows(page, testInfo);
@@ -300,11 +301,11 @@ test.describe("ยกเลิกใบรับรองแหล่งผล�
       await expect(nextButton).toBeEnabled();
     });
 
-    test("TC-009: กด “ถัดไป” ไป Step 2", async ({ page }, testInfo) => {
+    test("TC-009: กด “ถัดไป” ไป Step 2 009", async ({ page }, testInfo) => {
       await goToStep2FromFirstRow(page, testInfo);
     });
 
-    test("TC-010: เปลี่ยนแท็บแล้วล้างการเลือกแถว", async ({
+    test("TC-010: เปลี่ยนแท็บแล้วล้างการเลือกแถว 010", async ({
       page,
     }, testInfo) => {
       const { rows } = await ensureHasDataRows(page, testInfo);
@@ -321,7 +322,7 @@ test.describe("ยกเลิกใบรับรองแหล่งผล�
       await expect(page.locator("tbody tr.bg-green-50")).toHaveCount(0);
     });
 
-    test("TC-011: ค้นหาด้วยช่วงวันที่ (ส่งค่าไป API)", async ({ page }) => {
+    test("TC-011: ค้นหาด้วยช่วงวันที่ (ส่งค่าไป API) 011", async ({ page }) => {
       const fromInput = getCalendarInput(page, "fromDate");
       const toInput = getCalendarInput(page, "toDate");
       await selectFirstAvailableDate(page, fromInput, "fromDate");
@@ -338,7 +339,7 @@ test.describe("ยกเลิกใบรับรองแหล่งผล�
       await waitForCertificatesTable(page);
     });
 
-    test("TC-012: ล้างค่าตัวกรอง", async ({ page }, testInfo) => {
+    test("TC-012: ล้างค่าตัวกรอง 012", async ({ page }, testInfo) => {
       const fromInput = getCalendarInput(page, "fromDate");
       const toInput = getCalendarInput(page, "toDate");
       await selectFirstAvailableDate(page, fromInput, "fromDate");
@@ -374,7 +375,7 @@ test.describe("ยกเลิกใบรับรองแหล่งผล�
       await waitForCertificatesTable(page);
     });
 
-    test("TC-013: เปิดไฟล์สำเร็จ (มี URL)", async ({ page }, testInfo) => {
+    test("TC-013: เปิดไฟล์สำเร็จ (มี URL) 013", async ({ page }, testInfo) => {
       const fileUrl = "https://example.com/certificate-mock.pdf";
       const fileName = "certificate-mock.pdf";
       await mockFilesApi(page, async () => ({
@@ -389,7 +390,7 @@ test.describe("ยกเลิกใบรับรองแหล่งผล�
       await expect(iframe).toHaveAttribute("src", /certificate-mock\.pdf/);
     });
 
-    test("TC-014: ไม่มีไฟล์", async ({ page }, testInfo) => {
+    test("TC-014: ไม่มีไฟล์ 014", async ({ page }, testInfo) => {
       await mockFilesApi(page, async () => ({
         body: { files: [] },
       }));
@@ -398,7 +399,7 @@ test.describe("ยกเลิกใบรับรองแหล่งผล�
       await expectVisible(page.getByText("ไม่พบไฟล์สำหรับใบรับรองนี้"));
     });
 
-    test("TC-015: ไฟล์ไม่มี URL", async ({ page }, testInfo) => {
+    test("TC-015: ไฟล์ไม่มี URL 015", async ({ page }, testInfo) => {
       await mockFilesApi(page, async () => ({
         body: { files: [{ url: null }] },
       }));
@@ -407,7 +408,7 @@ test.describe("ยกเลิกใบรับรองแหล่งผล�
       await expectVisible(page.getByText("ไม่พบ URL ของไฟล์"));
     });
 
-    test("TC-016: ดึงไฟล์ล้มเหลว", async ({ page }, testInfo) => {
+    test("TC-016: ดึงไฟล์ล้มเหลว 016", async ({ page }, testInfo) => {
       await mockFilesApi(page, async () => ({
         status: 500,
         body: { message: "error" },
@@ -431,7 +432,7 @@ test.describe("ยกเลิกใบรับรองแหล่งผล�
       await waitForCertificatesTable(page);
     });
 
-    test("TC-017: แสดงรายละเอียดคำขอยกเลิก (อ่านอย่างเดียว)", async ({
+    test("TC-017: แสดงรายละเอียดคำขอยกเลิก (อ่านอย่างเดียว) 017", async ({
       page,
     }, testInfo) => {
       await goToStep2FromFirstRow(page, testInfo);
@@ -440,7 +441,7 @@ test.describe("ยกเลิกใบรับรองแหล่งผล�
       await expect(textarea).toBeDisabled();
     });
 
-    test("TC-018: ปุ่ม “ย้อนกลับ” กลับไป Step 1", async ({
+    test("TC-018: ปุ่ม “ย้อนกลับ” กลับไป Step 1 018", async ({
       page,
     }, testInfo) => {
       await goToStep2FromFirstRow(page, testInfo);
@@ -451,7 +452,7 @@ test.describe("ยกเลิกใบรับรองแหล่งผล�
       await expect(getStepNextButton(page)).toBeEnabled();
     });
 
-    test("TC-019: ยืนยันยกเลิกสำเร็จ (ลบไฟล์สำเร็จ)", async ({
+    test("TC-019: ยืนยันยกเลิกสำเร็จ (ลบไฟล์สำเร็จ) 019", async ({
       page,
     }, testInfo) => {
       await page.route("**/api/v1/certificates/revoke", async (route) => {
@@ -479,7 +480,7 @@ test.describe("ยกเลิกใบรับรองแหล่งผล�
       await expect(page.locator("tbody tr.bg-green-50")).toHaveCount(0);
     });
 
-    test("TC-020: ยืนยันยกเลิกสำเร็จ (แต่ลบไฟล์ไม่สำเร็จ)", async ({
+    test("TC-020: ยืนยันยกเลิกสำเร็จ (แต่ลบไฟล์ไม่สำเร็จ) 020", async ({
       page,
     }, testInfo) => {
       await page.route("**/api/v1/certificates/revoke", async (route) => {
@@ -508,7 +509,7 @@ test.describe("ยกเลิกใบรับรองแหล่งผล�
       await expect(getStepNextButton(page)).toBeDisabled();
     });
 
-    test("TC-021: ยืนยันยกเลิกล้มเหลว", async ({ page }, testInfo) => {
+    test("TC-021: ยืนยันยกเลิกล้มเหลว 021", async ({ page }, testInfo) => {
       await page.route("**/api/v1/certificates/revoke", async (route) => {
         if (route.request().method() !== "POST") return route.continue();
         await route.fulfill({
