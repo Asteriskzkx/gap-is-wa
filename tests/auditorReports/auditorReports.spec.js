@@ -25,11 +25,10 @@ async function loginAsAuditor(page, { email, password }) {
   const auditorRoleButton = page
     .getByRole("button", { name: /ผู้ตรวจประเมิน/ })
     .first();
-  if (await auditorRoleButton.isVisible().catch(() => false)) {
-    await auditorRoleButton.click();
-  } else {
-    await roleButtons.nth(1).click();
-  }
+  await page.waitForLoadState('networkidle')
+  await auditorRoleButton.click();
+  console.log("Selected auditor role");
+
 
   const emailInput = page
     .getByLabel(/อีเมล/)
@@ -184,12 +183,12 @@ test.describe("สรุปผลการตรวจประเมินส�
   test.describe.configure({ mode: "serial" });
 
   test.describe("หน้ารายการสรุปผล (/auditor/reports)", () => {
-    test("TC-001: ต้อง login ก่อนเข้าใช้งาน", async ({ page }) => {
+    test("TC-001: ต้อง login ก่อนเข้าใช้งาน 001", async ({ page }) => {
       await page.goto("/auditor/reports", { waitUntil: "domcontentloaded" });
       await page.waitForURL((url) => url.pathname === "/", { timeout: 10000 });
     });
 
-    test("TC-002: แสดงหัวข้อ/คำอธิบาย และปุ่มแท็บ", async ({ page }) => {
+    test("TC-002: แสดงหัวข้อ/คำอธิบาย และปุ่มแท็บ 002", async ({ page }) => {
       test.skip(
         !HAS_AUDITOR_CREDS,
         "Missing E2E_TEST_AUDITOR_WITH_INSP_EMAIL/PASSWORD",
@@ -214,7 +213,7 @@ test.describe("สรุปผลการตรวจประเมินส�
       await expectVisible(page.getByRole("button", { name: "เสร็จสิ้น" }));
     });
 
-    test("TC-003: ค่าเริ่มต้นแท็บ “รอสรุปผล” + empty message ถูกต้อง", async ({
+    test("TC-003: ค่าเริ่มต้นแท็บ “รอสรุปผล” + empty message ถูกต้อง 003", async ({
       page,
     }) => {
       test.skip(
@@ -233,7 +232,7 @@ test.describe("สรุปผลการตรวจประเมินส�
       );
     });
 
-    test("TC-004: สลับแท็บเป็น “เสร็จสิ้น” + empty message ถูกต้อง", async ({
+    test("TC-004: สลับแท็บเป็น “เสร็จสิ้น” + empty message ถูกต้อง 004", async ({
       page,
     }) => {
       test.skip(
@@ -274,7 +273,7 @@ test.describe("สรุปผลการตรวจประเมินส�
       );
     });
 
-    test("TC-005: ตัวกรองพื้นที่ enable/disable ตามลำดับชั้น", async ({
+    test("TC-005: ตัวกรองพื้นที่ enable/disable ตามลำดับชั้น 005", async ({
       page,
     }) => {
       test.skip(
@@ -299,7 +298,7 @@ test.describe("สรุปผลการตรวจประเมินส�
       await expect(subDistrictInput).toBeDisabled();
     });
 
-    test("TC-006: กด “ล้างค่า” รีเซ็ตตัวกรอง", async ({ page }) => {
+    test("TC-006: กด “ล้างค่า” รีเซ็ตตัวกรอง 006", async ({ page }) => {
       test.skip(
         !HAS_AUDITOR_CREDS,
         "Missing E2E_TEST_AUDITOR_WITH_INSP_EMAIL/PASSWORD",
@@ -364,7 +363,7 @@ test.describe("สรุปผลการตรวจประเมินส�
       await expect(table).toContainText(String(defaultRows[0].inspectionNo));
     });
 
-    test("TC-007: แสดงคอลัมน์หลักของตาราง", async ({ page }) => {
+    test("TC-007: แสดงคอลัมน์หลักของตาราง 007", async ({ page }) => {
       test.skip(
         !HAS_AUDITOR_CREDS,
         "Missing E2E_TEST_AUDITOR_WITH_INSP_EMAIL/PASSWORD",
@@ -396,7 +395,7 @@ test.describe("สรุปผลการตรวจประเมินส�
       await expectVisible(page.getByRole("columnheader", { name: "จัดการ" }));
     });
 
-    test("TC-008: กดปุ่ม “จัดการ” แล้วไปหน้าสรุปผล", async ({ page }) => {
+    test("TC-008: กดปุ่ม “จัดการ” แล้วไปหน้าสรุปผล 008", async ({ page }) => {
       test.skip(
         !HAS_AUDITOR_CREDS,
         "Missing E2E_TEST_AUDITOR_WITH_INSP_EMAIL/PASSWORD",
@@ -425,7 +424,7 @@ test.describe("สรุปผลการตรวจประเมินส�
       });
     });
 
-    test("TC-009: แสดง fallback ของข้อมูลบางช่อง", async ({ page }) => {
+    test("TC-009: แสดง fallback ของข้อมูลบางช่อง 009", async ({ page }) => {
       test.skip(
         !HAS_AUDITOR_CREDS,
         "Missing E2E_TEST_AUDITOR_WITH_INSP_EMAIL/PASSWORD",
@@ -458,14 +457,14 @@ test.describe("สรุปผลการตรวจประเมินส�
   });
 
   test.describe("หน้าสรุปผลการตรวจ (/auditor/inspection-summary/:id)", () => {
-    test("TC-010: ต้อง login ก่อนเข้าใช้งาน", async ({ page }) => {
+    test("TC-010: ต้อง login ก่อนเข้าใช้งาน 010", async ({ page }) => {
       await page.goto("/auditor/inspection-summary/1", {
         waitUntil: "domcontentloaded",
       });
       await page.waitForURL((url) => url.pathname === "/", { timeout: 10000 });
     });
 
-    test("TC-011: แสดงหัวข้อ/คำอธิบาย และหัวข้อ section หลัก", async ({
+    test("TC-011: แสดงหัวข้อ/คำอธิบาย และหัวข้อ section หลัก 011", async ({
       page,
     }) => {
       test.skip(
@@ -517,7 +516,7 @@ test.describe("สรุปผลการตรวจประเมินส�
       await expectVisible(summaryHeadings.nth(1));
     });
 
-    test("TC-012: ตาราง “ผลการตรวจประเมินรายหัวข้อ” และนำทางไปหน้า detail", async ({
+    test("TC-012: ตาราง “ผลการตรวจประเมินรายหัวข้อ” และนำทางไปหน้า detail 012", async ({
       page,
     }) => {
       test.skip(
@@ -562,8 +561,12 @@ test.describe("สรุปผลการตรวจประเมินส�
         page.getByRole("columnheader", { name: "รายละเอียด" }),
       );
 
-      const table = page.locator(".primary-datatable-wrapper").nth(0);
+      // Use nth(1) because first table is auditor list, second table is inspection items
+      const table = page.locator(".primary-datatable-wrapper").nth(1);
+      // Wait for table data to load before interacting
+      await expect(table).toContainText("น้ำ", { timeout: 10000 });
       const eyeButton = table.locator("button:has(.pi-eye)").first();
+      await expectVisible(eyeButton, { timeout: 10000 });
       await eyeButton.click();
       await page.waitForURL(
         `**/auditor/inspection-detail/${inspectionId}/${itemId}`,
@@ -571,7 +574,7 @@ test.describe("สรุปผลการตรวจประเมินส�
       );
     });
 
-    test("TC-013: กรณี completed: ซ่อนปุ่มบันทึกและปุ่มซ้ายเป็น “กลับ”", async ({
+    test("TC-013: กรณี completed: ซ่อนปุ่มบันทึกและปุ่มซ้ายเป็น “กลับ” 013", async ({
       page,
     }) => {
       test.skip(
@@ -601,7 +604,7 @@ test.describe("สรุปผลการตรวจประเมินส�
       ).toHaveCount(0);
     });
 
-    test("TC-014: กรณี pending: บันทึกผลสำเร็จและกลับหน้า reports", async ({
+    test("TC-014: กรณี pending: บันทึกผลสำเร็จและกลับหน้า reports 014", async ({
       page,
     }) => {
       test.skip(
@@ -644,7 +647,7 @@ test.describe("สรุปผลการตรวจประเมินส�
       await page.waitForURL("**/auditor/reports", { timeout: 10000 });
     });
 
-    test("TC-015: กรณี pending: บันทึกไม่สำเร็จ", async ({ page }) => {
+    test("TC-015: กรณี pending: บันทึกไม่สำเร็จ 015", async ({ page }) => {
       test.skip(
         !HAS_AUDITOR_CREDS,
         "Missing E2E_TEST_AUDITOR_WITH_INSP_EMAIL/PASSWORD",
@@ -679,7 +682,7 @@ test.describe("สรุปผลการตรวจประเมินส�
       );
     });
 
-    test("TC-016: กรณี pending: บันทึกชนกัน (409 conflict)", async ({
+    test("TC-016: กรณี pending: บันทึกชนกัน (409 conflict) 016", async ({
       page,
     }) => {
       test.skip(
@@ -751,7 +754,7 @@ test.describe("สรุปผลการตรวจประเมินส�
       }
     });
 
-    test("TC-017: กรณี pending: error ระดับ network/exception", async ({
+    test("TC-017: กรณี pending: error ระดับ network/exception 017", async ({
       page,
     }) => {
       test.skip(
@@ -792,14 +795,14 @@ test.describe("สรุปผลการตรวจประเมินส�
   });
 
   test.describe("หน้ารายละเอียดรายการตรวจ (/auditor/inspection-detail/:id/:itemId)", () => {
-    test("TC-018: ต้อง login ก่อนเข้าใช้งาน", async ({ page }) => {
+    test("TC-018: ต้อง login ก่อนเข้าใช้งาน 018", async ({ page }) => {
       await page.goto("/auditor/inspection-detail/1/1", {
         waitUntil: "domcontentloaded",
       });
       await page.waitForURL((url) => url.pathname === "/", { timeout: 10000 });
     });
 
-    test("TC-019: แสดงหัวข้อและข้อมูลสรุปการตรวจ", async ({ page }) => {
+    test("TC-019: แสดงหัวข้อและข้อมูลสรุปการตรวจ 019", async ({ page }) => {
       test.skip(
         !HAS_AUDITOR_CREDS,
         "Missing E2E_TEST_AUDITOR_WITH_INSP_EMAIL/PASSWORD",
@@ -837,14 +840,20 @@ test.describe("สรุปผลการตรวจประเมินส�
       );
 
       await expectVisible(
-        page.getByText("รหัสการตรวจประเมิน", { exact: true }),
+        page.getByRole("heading", { name: "รหัสการตรวจ", level: 2 }),
       );
-      await expectVisible(page.getByText("วันที่นัดหมาย", { exact: true }));
-      await expectVisible(page.getByText("ประเภทการตรวจ", { exact: true }));
-      await expectVisible(page.getByText("พื้นที่สวนยาง", { exact: true }));
+      await expectVisible(
+        page.getByRole("heading", { name: "วันที่ตรวจประเมิน", level: 2 }),
+      );
+      await expectVisible(
+        page.getByRole("heading", { name: "ประเภทการตรวจประเมิน", level: 2 }),
+      );
+      await expectVisible(
+        page.getByRole("heading", { name: "สถานที่", level: 2 }),
+      );
     });
 
-    test("TC-020: แสดงหัวข้อรายการ + ส่วนข้อกำหนด (หรือ empty)", async ({
+    test("TC-020: แสดงหัวข้อรายการ + ส่วนข้อกำหนด (หรือ empty) 020", async ({
       page,
     }) => {
       test.skip(
@@ -922,7 +931,7 @@ test.describe("สรุปผลการตรวจประเมินส�
       );
     });
 
-    test("TC-021: แสดง “ข้อมูลเพิ่มเติม” ตามประเภท item (ตัวอย่าง: น้ำ)", async ({
+    test("TC-021: แสดง “ข้อมูลเพิ่มเติม” ตามประเภท item (ตัวอย่าง: น้ำ) 021", async ({
       page,
     }) => {
       test.skip(
@@ -970,7 +979,7 @@ test.describe("สรุปผลการตรวจประเมินส�
       );
     });
 
-    test("TC-022: ปุ่มกลับไปหน้าสรุปผล", async ({ page }) => {
+    test("TC-022: ปุ่มกลับไปหน้าสรุปผล 022", async ({ page }) => {
       test.skip(
         !HAS_AUDITOR_CREDS,
         "Missing E2E_TEST_AUDITOR_WITH_INSP_EMAIL/PASSWORD",
@@ -1003,7 +1012,10 @@ test.describe("สรุปผลการตรวจประเมินส�
         waitUntil: "domcontentloaded",
       });
 
-      const summaryTable = page.locator(".primary-datatable-wrapper").first();
+      // Use nth(1) because first table is auditor list, second table is inspection items
+      const summaryTable = page.locator(".primary-datatable-wrapper").nth(1);
+      // Wait for table data to load before interacting
+      await expect(summaryTable).toContainText("น้ำ", { timeout: 10000 });
       await summaryTable.locator("button:has(.pi-eye)").first().click();
       await page.waitForURL(
         `**/auditor/inspection-detail/${inspectionId}/${itemId}`,
