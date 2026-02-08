@@ -12,7 +12,9 @@ import PrimaryDropdown from "@/components/ui/PrimaryDropdown";
 import PrimaryInputMask from "@/components/ui/PrimaryInputMask";
 import PrimaryInputText from "@/components/ui/PrimaryInputText";
 import PrimaryPassword from "@/components/ui/PrimaryPassword";
+import TermOfServiceContent from "@/components/TermOfServiceContent";
 import { useRegisterForm } from "@/hooks/useRegisterForm";
+import { Dialog } from "primereact/dialog";
 import { Message } from "primereact/message";
 import { ThaiDatePicker } from "thaidatepicker-react";
 
@@ -60,6 +62,7 @@ export default function FarmerRegisterPage() {
 
   const getStepConnectorClass = (s: number) =>
     s < step ? styles.stepConnectorActive : styles.stepConnectorInactive;
+  const [termsDialogVisible, setTermsDialogVisible] = React.useState(false);
 
   return (
     <div className={styles.registerContainer}>
@@ -704,8 +707,7 @@ export default function FarmerRegisterPage() {
                         type="button"
                         className={styles.termsLink}
                         onClick={() => {
-                          // Open terms and conditions (to be implemented)
-                          console.log("Open terms and conditions");
+                          setTermsDialogVisible(true);
                         }}
                       >
                         เงื่อนไขและข้อตกลงการใช้งาน
@@ -762,6 +764,18 @@ export default function FarmerRegisterPage() {
             </div>
           </form>
         </div>
+        <Dialog
+          visible={termsDialogVisible}
+          onHide={() => setTermsDialogVisible(false)}
+          header="เงื่อนไขและข้อตกลงการใช้งาน"
+          modal
+          blockScroll={true}
+          draggable={false}
+          style={{ width: "90vw", maxWidth: "960px" }}
+          contentStyle={{ maxHeight: "75vh", overflowY: "auto" }}
+        >
+          <TermOfServiceContent />
+        </Dialog>
         <p className={styles.footer}>
           มีบัญชีอยู่แล้ว?{" "}
           <Link href="/" className={styles.footerLink}>
