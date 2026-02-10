@@ -368,12 +368,19 @@ export default function Page() {
         );
 
         // related plants
-        const rp = dr.relatedPlants || [];
-        if (Array.isArray(rp) && rp.length) {
+        const rp = Array.isArray(dr.relatedPlants) ? dr.relatedPlants : [];
+        const hasRelatedPlants = rp.some(
+          (r: any) => typeof r?.name === "string" && r.name.trim() !== ""
+        );
+        if (hasRelatedPlants) {
           setRelatedPlantHas(true);
           setRelatedPlantHasnot(false);
           setRelatedPlants(
-            rp.map((r: any) => ({ id: genId(), name: r.name || "" }))
+            rp
+              .filter(
+                (r: any) => typeof r?.name === "string" && r.name.trim() !== ""
+              )
+              .map((r: any) => ({ id: genId(), name: r.name || "" }))
           );
         } else {
           setRelatedPlantHas(false);
@@ -429,6 +436,8 @@ export default function Page() {
       setPlantDiseases([
         { id: genId(), name: "", outbreakPeriod: "", preventionAndControl: "" },
       ]);
+      setRelatedPlantHas(false);
+      setRelatedPlantHasnot(false);
       setRelatedPlants([{ id: genId(), name: "" }]);
       setMoreInfo("");
       setDataRecordId(null);
@@ -439,6 +448,12 @@ export default function Page() {
 
   // build payload for API from local form state
   const buildPayload = useCallback(() => {
+    const payloadRelatedPlants = relatedPlantHas
+      ? relatedPlants
+          .map((r) => ({ name: (r.name || "").trim() }))
+          .filter((r) => r.name !== "")
+      : [];
+
     return {
       inspectionId: selectedInspection?.inspectionId,
       species: {
@@ -478,7 +493,7 @@ export default function Page() {
         outbreakPeriod: d.outbreakPeriod,
         preventionAndControl: d.preventionAndControl,
       })),
-      relatedPlants: relatedPlants.map((r) => ({ name: r.name })),
+      relatedPlants: payloadRelatedPlants,
       moreInfo,
       map: mapLocation ?? selectedInspection?.rubberFarm?.location ?? {},
     };
@@ -496,6 +511,7 @@ export default function Page() {
     previousCropsYear1,
     previousCropsYear2,
     plantDiseases,
+    relatedPlantHas,
     relatedPlants,
     moreInfo,
   ]);
@@ -1449,23 +1465,22 @@ export default function Page() {
                       <PrimaryCheckbox
                         checked={relatedPlantHasnot}
                         label="ไม่มี"
-                        onChange={(checked: boolean) => {
-                          setRelatedPlantHasnot(checked);
-                          if (checked) {
-                            setRelatedPlantHas(false);
-                            setRelatedPlants([{ id: genId(), name: "" }]);
-                          }
+                        onChange={() => {
+                          setRelatedPlantHasnot(true);
+                          setRelatedPlantHas(false);
+                          setRelatedPlants([{ id: genId(), name: "" }]);
                         }}
                       />
 
                       <PrimaryCheckbox
                         checked={relatedPlantHas}
                         label="มี"
-                        onChange={(checked: boolean) => {
-                          setRelatedPlantHas(checked);
-                          if (checked) setRelatedPlantHasnot(false);
-                          if (!checked)
-                            setRelatedPlants([{ id: genId(), name: "" }]);
+                        onChange={() => {
+                          setRelatedPlantHas(true);
+                          setRelatedPlantHasnot(false);
+                          setRelatedPlants((prev) =>
+                            prev.length ? prev : [{ id: genId(), name: "" }]
+                          );
                         }}
                       />
                     </div>
